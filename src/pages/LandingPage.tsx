@@ -2,6 +2,7 @@ import Navbar from '@/components/landing/Navbar';
 import HeroSection from '@/components/landing/HeroSection';
 import TrustStrip from '@/components/landing/TrustStrip';
 import FeaturesSection from '@/components/landing/FeaturesSection';
+import UseCasesSection from '@/components/landing/UseCasesSection';
 import MetricsSection from '@/components/landing/MetricsSection';
 import HowItWorks from '@/components/landing/HowItWorks';
 import PricingSection from '@/components/landing/PricingSection';
@@ -20,6 +21,7 @@ export default function LandingPage() {
       <HeroSection />
       <TrustStrip />
       <FeaturesSection />
+      <UseCasesSection />
       <MetricsSection />
       <HowItWorks />
       <PricingSection />
