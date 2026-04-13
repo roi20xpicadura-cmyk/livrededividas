@@ -54,7 +54,9 @@ export type Database = {
           current_amount: number | null
           deadline: string | null
           id: string
+          is_highlighted: boolean | null
           name: string
+          objective_type: string | null
           start_date: string | null
           target_amount: number
           user_id: string
@@ -65,7 +67,9 @@ export type Database = {
           current_amount?: number | null
           deadline?: string | null
           id?: string
+          is_highlighted?: boolean | null
           name: string
+          objective_type?: string | null
           start_date?: string | null
           target_amount: number
           user_id: string
@@ -76,7 +80,9 @@ export type Database = {
           current_amount?: number | null
           deadline?: string | null
           id?: string
+          is_highlighted?: boolean | null
           name?: string
+          objective_type?: string | null
           start_date?: string | null
           target_amount?: number
           user_id?: string
@@ -223,9 +229,12 @@ export type Database = {
           created_at: string | null
           currency: string | null
           default_save_pct: number | null
+          financial_objectives: string[] | null
           id: string
           notifications_enabled: boolean | null
           onboarding_completed: boolean | null
+          onboarding_step: number | null
+          profile_type: string | null
           project_name: string | null
           theme: string | null
           user_id: string
@@ -234,9 +243,12 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           default_save_pct?: number | null
+          financial_objectives?: string[] | null
           id?: string
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          profile_type?: string | null
           project_name?: string | null
           theme?: string | null
           user_id: string
@@ -245,9 +257,12 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           default_save_pct?: number | null
+          financial_objectives?: string[] | null
           id?: string
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          profile_type?: string | null
           project_name?: string | null
           theme?: string | null
           user_id?: string
