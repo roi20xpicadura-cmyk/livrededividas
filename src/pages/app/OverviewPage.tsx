@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -6,59 +6,81 @@ import { formatCurrency } from '@/lib/plans';
 import { OBJECTIVES, SMART_TIPS } from '@/lib/objectives';
 import {
   TrendingUp, TrendingDown, DollarSign, Percent, Hash, Zap,
-  ArrowRight, ArrowUpRight, ArrowDownRight, Lightbulb, X as XIcon,
-  PlusCircle, ReceiptText
+  ArrowRight, ArrowUpRight, Lightbulb, X as XIcon,
+  PlusCircle, ReceiptText, BarChart2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { format, parseISO, startOfMonth, endOfMonth, differenceInDays } from 'date-fns';
+import { format, parseISO, startOfMonth, endOfMonth, subDays, differenceInDays, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-function useCountUp(target: number, duration = 600) {
+/* ── helpers ───────────────────────────────────────────── */
+
+function useCountUp(target: number, duration = 800) {
   const [val, setVal] = useState(0);
-  const ref = useRef(false);
+  const started = useRef(false);
   useEffect(() => {
-    if (ref.current) return;
-    ref.current = true;
-    const start = performance.now();
-    const step = (now: number) => {
-      const t = Math.min((now - start) / duration, 1);
-      const ease = 1 - Math.pow(1 - t, 3);
+    if (started.current) return;
+    started.current = true;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min((now - t0) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
       setVal(target * ease);
-      if (t < 1) requestAnimationFrame(step);
+      if (p < 1) requestAnimationFrame(tick);
       else setVal(target);
     };
-    requestAnimationFrame(step);
+    requestAnimationFrame(tick);
   }, [target, duration]);
   return val;
 }
 
 function AnimatedCurrency({ value, currency }: { value: number; currency: string }) {
-  const animated = useCountUp(value);
-  return <>{formatCurrency(animated, currency)}</>;
+  const v = useCountUp(value);
+  return <>{formatCurrency(v, currency)}</>;
+}
+
+function AnimatedNumber({ value, suffix = '' }: { value: number; suffix?: string }) {
+  const v = useCountUp(value);
+  return <>{suffix ? `${v.toFixed(1)}${suffix}` : Math.round(v)}</>;
 }
 
 function ProgressBar({ pct, delay = 0 }: { pct: number; delay?: number }) {
   const [w, setW] = useState(0);
-  useEffect(() => {
-    const t = setTimeout(() => setW(Math.min(pct, 100)), delay);
-    return () => clearTimeout(t);
-  }, [pct, delay]);
+  useEffect(() => { const t = setTimeout(() => setW(Math.min(pct, 100)), delay); return () => clearTimeout(t); }, [pct, delay]);
   const color = pct < 30 ? 'bg-[#ef4444]' : pct < 70 ? 'bg-[#f59e0b]' : 'bg-[#16a34a]';
   return (
     <div className="h-[6px] bg-[#f1f5f9] rounded-full overflow-hidden">
-      <div className={`h-full rounded-full transition-all duration-800 ease-out ${color}`} style={{ width: `${w}%` }} />
+      <div className={`h-full rounded-full transition-all duration-[800ms] ease-out ${color}`} style={{ width: `${w}%` }} />
     </div>
   );
 }
 
+const stagger = (i: number) => ({ initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94], delay: i * 0.06 } });
+
+/* ── custom tooltip ────────────────────────────────────── */
+function ChartTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2 shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
+      <p className="text-[11px] text-[#94a3b8] mb-0.5">{label}</p>
+      <p className="text-[13px] font-bold text-[#14532d]">{formatCurrency(payload[0].value, 'R$')}</p>
+    </div>
+  );
+}
+
+/* ── main ──────────────────────────────────────────────── */
+
 export default function OverviewPage() {
   const { user } = useAuth();
   const { config } = useProfile();
+  const navigate = useNavigate();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [investments, setInvestments] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chartPeriod, setChartPeriod] = useState<'7d' | '30d' | '90d'>('30d');
   const [dismissedTips, setDismissedTips] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('dismissed_tips') || '[]'); } catch { return []; }
   });
@@ -103,11 +125,26 @@ export default function OverviewPage() {
     return { totalIncome, totalExpense, netBalance, bizIncome, bizExpense, personalExpense, personalIncome, bizProfit, personalBalance, patrimonio, savingsRate, roiBiz, avgPerDay, txCount: transactions.length };
   }, [transactions, investments]);
 
-  const dismissTip = (key: string) => {
+  /* chart data */
+  const chartData = useMemo(() => {
+    const days = chartPeriod === '7d' ? 7 : chartPeriod === '30d' ? 30 : 90;
+    const end = new Date();
+    const start = subDays(end, days - 1);
+    const interval = eachDayOfInterval({ start, end });
+    let running = 0;
+    return interval.map(day => {
+      const dateStr = format(day, 'yyyy-MM-dd');
+      const dayTxs = transactions.filter(t => t.date === dateStr);
+      dayTxs.forEach(t => { running += t.type === 'income' ? Number(t.amount) : -Number(t.amount); });
+      return { date: format(day, 'dd/MM'), saldo: running };
+    });
+  }, [transactions, chartPeriod]);
+
+  const dismissTip = useCallback((key: string) => {
     const next = [...dismissedTips, key];
     setDismissedTips(next);
     localStorage.setItem('dismissed_tips', JSON.stringify(next));
-  };
+  }, [dismissedTips]);
 
   const activeTip = objectives.find(k => SMART_TIPS[k] && !dismissedTips.includes(k));
 
@@ -116,152 +153,131 @@ export default function OverviewPage() {
   const recent = transactions.slice(0, 8);
 
   const kpis = profileType === 'personal' ? [
-    { label: 'Saldo', value: stats.netBalance, icon: TrendingUp, iconBg: 'bg-[#f0fdf4]', iconColor: 'text-[#16a34a]' },
-    { label: 'Total Receitas', value: stats.totalIncome, icon: DollarSign, iconBg: 'bg-[#f0fdf4]', iconColor: 'text-[#16a34a]' },
-    { label: 'Total Despesas', value: stats.totalExpense, icon: TrendingDown, iconBg: 'bg-[#fef2f2]', iconColor: 'text-[#ef4444]' },
-    { label: 'Total Guardado', value: Math.max(0, stats.netBalance), icon: DollarSign, iconBg: 'bg-[#f0fdf4]', iconColor: 'text-[#16a34a]' },
-    { label: 'Metas Ativas', value: goals.filter(g => Number(g.current_amount) < Number(g.target_amount)).length, icon: Hash, iconBg: 'bg-[#f5f3ff]', iconColor: 'text-[#7c3aed]', isCount: true },
-    { label: 'Taxa Poupança', value: stats.savingsRate, icon: Percent, iconBg: 'bg-[#f0fdf4]', iconColor: 'text-[#16a34a]', isPct: true, bar: Math.min(stats.savingsRate, 100) },
+    { label: 'Saldo', value: stats.netBalance, icon: TrendingUp, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
+    { label: 'Total Receitas', value: stats.totalIncome, icon: DollarSign, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
+    { label: 'Total Despesas', value: stats.totalExpense, icon: TrendingDown, iconBg: 'bg-[#fee2e2]', iconColor: 'text-[#dc2626]' },
+    { label: 'Total Guardado', value: Math.max(0, stats.netBalance), icon: DollarSign, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
+    { label: 'Metas Ativas', value: goals.filter(g => Number(g.current_amount) < Number(g.target_amount)).length, icon: Hash, iconBg: 'bg-[#f1f5f9]', iconColor: 'text-[#64748b]', isCount: true },
+    { label: 'Taxa Poupança', value: stats.savingsRate, icon: Percent, iconBg: 'bg-[#ede9fe]', iconColor: 'text-[#7c3aed]', isPct: true, bar: Math.min(stats.savingsRate, 100) },
   ] : [
-    { label: 'Receita', value: stats.totalIncome, icon: TrendingUp, iconBg: 'bg-[#f0fdf4]', iconColor: 'text-[#16a34a]' },
-    { label: 'Custos', value: stats.totalExpense, icon: TrendingDown, iconBg: 'bg-[#fef2f2]', iconColor: 'text-[#ef4444]' },
-    { label: 'Lucro', value: stats.bizProfit, icon: DollarSign, iconBg: 'bg-[#f0fdf4]', iconColor: 'text-[#16a34a]' },
-    { label: 'ROI', value: stats.roiBiz, icon: Percent, iconBg: 'bg-[#f5f3ff]', iconColor: 'text-[#7c3aed]', isPct: true },
-    { label: 'Lançamentos', value: stats.txCount, icon: Hash, iconBg: 'bg-[#f8fafc]', iconColor: 'text-[#64748b]', isCount: true },
-    { label: 'Média/Dia', value: stats.avgPerDay, icon: Zap, iconBg: 'bg-[#fffbeb]', iconColor: 'text-[#d97706]' },
+    { label: 'Receita', value: stats.totalIncome, icon: TrendingUp, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
+    { label: 'Custos', value: stats.totalExpense, icon: TrendingDown, iconBg: 'bg-[#fee2e2]', iconColor: 'text-[#dc2626]' },
+    { label: 'Lucro', value: stats.bizProfit, icon: DollarSign, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
+    { label: 'ROI', value: stats.roiBiz, icon: Percent, iconBg: 'bg-[#ede9fe]', iconColor: 'text-[#7c3aed]', isPct: true },
+    { label: 'Lançamentos', value: stats.txCount, icon: Hash, iconBg: 'bg-[#f1f5f9]', iconColor: 'text-[#64748b]', isCount: true },
+    { label: 'Média/Dia', value: stats.avgPerDay, icon: Zap, iconBg: 'bg-[#fef9c3]', iconColor: 'text-[#ca8a04]' },
   ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
-      className="space-y-5">
-
-      {/* Smart Tip */}
+    <div className="space-y-5">
+      {/* ── Tip Bar ────────────────────────────────── */}
       {activeTip && (
-        <div className="bg-white border border-[#e2e8f0] border-l-[3px] border-l-[#16a34a] rounded-r-[10px] rounded-l-none flex items-start gap-3 px-4 py-3">
-          <Lightbulb className="w-4 h-4 text-[#16a34a] flex-shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] uppercase font-bold text-[#16a34a] tracking-wide mb-0.5">Dica do dia</p>
-            <p className="text-[13px] text-[#374151] leading-relaxed">{SMART_TIPS[activeTip]}</p>
+        <motion.div {...stagger(0)}
+          className="bg-white border border-[#e2e8f0] border-l-[3px] border-l-[#16a34a] rounded-r-[10px] rounded-l-none flex items-center gap-2.5 px-4 py-2.5">
+          <Lightbulb className="w-3.5 h-3.5 text-[#16a34a] flex-shrink-0" />
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <span className="text-[9px] uppercase font-extrabold text-[#16a34a] tracking-[1px] flex-shrink-0">DICA</span>
+            <p className="text-[12px] text-[#374151] font-medium truncate">{SMART_TIPS[activeTip]?.replace(/^💡\s*/, '')}</p>
           </div>
-          <button onClick={() => dismissTip(activeTip)} className="text-[#cbd5e1] hover:text-[#ef4444] transition-colors flex-shrink-0">
-            <XIcon className="w-3.5 h-3.5" />
+          <button onClick={() => dismissTip(activeTip)} className="text-[#cbd5e1] hover:text-[#94a3b8] transition-colors flex-shrink-0">
+            <XIcon className="w-3 h-3" />
           </button>
-        </div>
-      )}
-
-      {/* Hero Cards */}
-      {profileType === 'both' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Negócio card */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-            className="bg-white border-[1.5px] border-[#e2e8f0] rounded-2xl p-6 relative overflow-hidden">
-            <div className="absolute -right-10 -top-10 w-[180px] h-[180px] rounded-full bg-[#f0fdf4] opacity-40" />
-            <div className="relative">
-              <p className="text-[10px] font-extrabold tracking-widest text-[#16a34a] flex items-center gap-1.5">
-                💼 NEGÓCIO
-              </p>
-              <p className={`text-4xl font-black tracking-tighter mt-2 ${stats.bizProfit >= 0 ? 'text-[#14532d]' : 'text-[#dc2626]'}`}>
-                <AnimatedCurrency value={stats.bizProfit} currency={currency} />
-              </p>
-              <div className="flex items-center gap-1 mt-1.5">
-                <ArrowUpRight className="w-3.5 h-3.5 text-[#16a34a]" />
-                <span className="text-[12px] font-semibold text-[#16a34a]">vs mês anterior</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                <div className="bg-[#f8faf8] rounded-[10px] p-3">
-                  <p className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wide">Receita</p>
-                  <p className="text-base font-black text-[#16a34a]">{formatCurrency(stats.bizIncome, currency)}</p>
-                </div>
-                <div className="bg-[#f8faf8] rounded-[10px] p-3">
-                  <p className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wide">Despesas</p>
-                  <p className="text-base font-black text-[#dc2626]">{formatCurrency(stats.bizExpense, currency)}</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Pessoal card */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="bg-white border-[1.5px] border-[#e2e8f0] rounded-2xl p-6 relative overflow-hidden">
-            <div className="absolute -right-10 -top-10 w-[180px] h-[180px] rounded-full bg-[#eff6ff] opacity-40" />
-            <div className="relative">
-              <p className="text-[10px] font-extrabold tracking-widest text-[#2563eb] flex items-center gap-1.5">
-                🏠 PESSOAL
-              </p>
-              <p className={`text-4xl font-black tracking-tighter mt-2 ${stats.personalBalance >= 0 ? 'text-[#14532d]' : 'text-[#dc2626]'}`}>
-                <AnimatedCurrency value={stats.personalBalance} currency={currency} />
-              </p>
-              <div className="flex items-center gap-1 mt-1.5">
-                <ArrowUpRight className="w-3.5 h-3.5 text-[#16a34a]" />
-                <span className="text-[12px] font-semibold text-[#16a34a]">vs mês anterior</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                <div className="bg-[#f8faf8] rounded-[10px] p-3">
-                  <p className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wide">Receita</p>
-                  <p className="text-base font-black text-[#16a34a]">{formatCurrency(stats.personalIncome, currency)}</p>
-                </div>
-                <div className="bg-[#f8faf8] rounded-[10px] p-3">
-                  <p className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wide">Despesas</p>
-                  <p className="text-base font-black text-[#dc2626]">{formatCurrency(stats.personalExpense, currency)}</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      ) : (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-          className="bg-white border-[1.5px] border-[#e2e8f0] rounded-2xl p-6 relative overflow-hidden">
-          <div className="absolute -right-10 -top-10 w-[180px] h-[180px] rounded-full bg-[#f0fdf4] opacity-40" />
-          <div className="relative">
-            <p className="text-[10px] font-extrabold tracking-widest text-[#16a34a]">
-              {profileType === 'personal' ? 'SALDO DO MÊS' : 'RESULTADO DO NEGÓCIO'}
-            </p>
-            <p className={`text-4xl font-black tracking-tighter mt-2 ${stats.netBalance >= 0 ? 'text-[#14532d]' : 'text-[#dc2626]'}`}>
-              <AnimatedCurrency value={stats.netBalance} currency={currency} />
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
-              {[
-                { label: 'Receitas', val: stats.totalIncome, color: 'text-[#16a34a]' },
-                { label: 'Despesas', val: stats.totalExpense, color: 'text-[#dc2626]' },
-                { label: profileType === 'business' ? 'Receita Neg.' : 'Patrimônio', val: profileType === 'business' ? stats.bizIncome : stats.patrimonio, color: 'text-[#16a34a]' },
-                { label: profileType === 'business' ? 'Gasto Neg.' : 'Poupança', val: profileType === 'business' ? stats.bizExpense : Math.max(0, stats.netBalance), color: profileType === 'business' ? 'text-[#dc2626]' : 'text-[#16a34a]' },
-              ].map(s => (
-                <div key={s.label} className="bg-[#f8faf8] rounded-[10px] p-3">
-                  <p className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wide">{s.label}</p>
-                  <p className={`text-base font-black ${s.color}`}>{formatCurrency(s.val, currency)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
         </motion.div>
       )}
 
-      {/* KPI Cards */}
+      {/* ── Hero Cards ─────────────────────────────── */}
+      {profileType === 'both' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <HeroCard type="business" balance={stats.bizProfit} income={stats.bizIncome} expense={stats.bizExpense} currency={currency} delay={1} />
+          <HeroCard type="personal" balance={stats.personalBalance} income={stats.personalIncome} expense={stats.personalExpense} currency={currency} delay={2} />
+        </div>
+      ) : (
+        <HeroCard
+          type={profileType === 'personal' ? 'personal' : 'business'}
+          balance={stats.netBalance}
+          income={stats.totalIncome}
+          expense={stats.totalExpense}
+          currency={currency}
+          delay={1}
+          single
+          stats={profileType === 'business' ? [
+            { label: 'Receitas', val: stats.totalIncome, color: 'text-[#16a34a]' },
+            { label: 'Despesas', val: stats.totalExpense, color: 'text-[#dc2626]' },
+            { label: 'Receita Neg.', val: stats.bizIncome, color: 'text-[#16a34a]' },
+            { label: 'Gasto Neg.', val: stats.bizExpense, color: 'text-[#dc2626]' },
+          ] : [
+            { label: 'Receitas', val: stats.totalIncome, color: 'text-[#16a34a]' },
+            { label: 'Despesas', val: stats.totalExpense, color: 'text-[#dc2626]' },
+            { label: 'Patrimônio', val: stats.patrimonio, color: 'text-[#16a34a]' },
+            { label: 'Poupança', val: Math.max(0, stats.netBalance), color: 'text-[#16a34a]' },
+          ]}
+        />
+      )}
+
+      {/* ── KPI Cards ──────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {kpis.map((k, i) => (
-          <motion.div key={k.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-            className="bg-white border-[1.5px] border-[#e2e8f0] rounded-[14px] p-[18px] transition-all duration-200 hover:border-[#86efac] hover:-translate-y-[2px] group">
+          <motion.div key={k.label} {...stagger(i + 3)}
+            className="bg-white border-[1.5px] border-[#e2e8f0] rounded-[14px] p-[18px] transition-all duration-200 hover:border-[#86efac] hover:-translate-y-[2px]">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wide">{k.label}</p>
+              <p className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-[0.8px]">{k.label}</p>
               <div className={`w-8 h-8 rounded-[9px] ${k.iconBg} flex items-center justify-center`}>
-                <k.icon className={`w-4 h-4 ${k.iconColor}`} />
+                <k.icon className={`w-[15px] h-[15px] ${k.iconColor}`} />
               </div>
             </div>
             <p className="text-[22px] font-black tracking-tight mt-2.5 leading-none text-[#14532d]">
-              {k.isCount ? k.value : k.isPct ? `${k.value.toFixed(1)}%` : formatCurrency(k.value, currency)}
+              {k.isCount ? <AnimatedNumber value={k.value} /> : k.isPct ? <AnimatedNumber value={k.value} suffix="%" /> : <AnimatedCurrency value={k.value} currency={currency} />}
             </p>
             {k.bar !== undefined && (
-              <div className="mt-2">
-                <ProgressBar pct={k.bar} delay={200 + i * 100} />
+              <div className="mt-2.5">
+                <ProgressBar pct={k.bar} delay={400 + i * 100} />
               </div>
             )}
           </motion.div>
         ))}
       </div>
 
-      {/* Objectives */}
+      {/* ── Balance Chart ──────────────────────────── */}
+      <motion.div {...stagger(9)} className="bg-white border-[1.5px] border-[#e2e8f0] rounded-[14px]">
+        <div className="flex items-center justify-between px-5 pt-[18px] pb-0">
+          <h3 className="text-[15px] font-extrabold text-[#14532d]">Evolução do Saldo</h3>
+          <div className="flex items-center gap-1 bg-[#f8faf8] border border-[#e2e8f0] rounded-lg p-[3px]">
+            {(['7d', '30d', '90d'] as const).map(p => (
+              <button key={p} onClick={() => setChartPeriod(p)}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                  chartPeriod === p ? 'bg-[#f0fdf4] text-[#16a34a] border border-[#d4edda]' : 'text-[#94a3b8] border border-transparent'
+                }`}>{p}</button>
+            ))}
+          </div>
+        </div>
+        <div className="px-5 pb-4 pt-2 h-[200px]">
+          {transactions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full gap-2">
+              <BarChart2 className="w-8 h-8 text-[#e2e8f0]" />
+              <p className="text-[12px] text-[#94a3b8]">Adicione lançamentos para ver o gráfico</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -10 }}>
+                <defs>
+                  <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#16a34a" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} interval="preserveStartEnd" />
+                <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={(v: number) => v >= 1000 ? `R$${(v / 1000).toFixed(0)}k` : `R$${v}`} />
+                <Tooltip content={<ChartTooltip />} />
+                <Area type="monotone" dataKey="saldo" stroke="#16a34a" strokeWidth={2.5} fill="url(#greenGradient)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </motion.div>
+
+      {/* ── Objectives ─────────────────────────────── */}
       {objectives.length > 0 && (
-        <div>
+        <motion.div {...stagger(10)}>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[15px] font-extrabold text-[#14532d]">Seus Objetivos</h3>
             <Link to="/app/goals" className="text-[12px] font-bold text-[#16a34a] hover:underline flex items-center gap-1">
@@ -278,18 +294,18 @@ export default function OverviewPage() {
               const isUrgent = obj.urgent;
 
               return (
-                <motion.div key={key} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                  className={`flex-shrink-0 w-[220px] min-w-[220px] rounded-[14px] p-[18px] transition-all duration-200 hover:-translate-y-[2px] cursor-pointer ${
+                <motion.div key={key} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + i * 0.05 }}
+                  className={`flex-shrink-0 w-[220px] min-w-[220px] min-h-[140px] rounded-[14px] p-[18px] transition-all duration-200 hover:-translate-y-[2px] cursor-pointer ${
                     goal
                       ? `bg-white border-[1.5px] ${isUrgent ? 'border-[#fecaca]' : 'border-[#e2e8f0]'} hover:border-[#86efac]`
                       : 'bg-white border-[1.5px] border-dashed border-[#d4edda] hover:border-[#16a34a]'
                   }`}>
                   <div className="flex items-start gap-2.5">
-                    <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center text-xl flex-shrink-0 ${isUrgent ? 'bg-[#fef2f2]' : 'bg-[#f0fdf4]'}`}>
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center text-[22px] flex-shrink-0 ${isUrgent ? 'bg-[#fee2e2]' : 'bg-[#f0fdf4]'}`}>
                       {obj.emoji}
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[13px] font-extrabold text-[#14532d] truncate">{obj.label}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-extrabold text-[#14532d] leading-[1.4] whitespace-normal">{obj.label}</p>
                       {isUrgent && (
                         <span className="inline-block mt-0.5 text-[9px] font-extrabold bg-[#fef2f2] text-[#dc2626] border border-[#fecaca] px-[7px] py-[2px] rounded-[5px]">
                           Urgente
@@ -300,7 +316,7 @@ export default function OverviewPage() {
 
                   {goal ? (
                     <div className="mt-3">
-                      <ProgressBar pct={pct} delay={300 + i * 100} />
+                      <ProgressBar pct={pct} delay={500 + i * 100} />
                       <div className="flex items-center justify-between mt-1.5">
                         <span className="text-[13px] font-extrabold text-[#16a34a]">{formatCurrency(Number(goal.current_amount), currency)}</span>
                         <span className="text-[12px] font-bold text-[#94a3b8]">{pct.toFixed(0)}%</span>
@@ -321,11 +337,11 @@ export default function OverviewPage() {
               );
             })}
           </div>
-        </div>
+        </motion.div>
       )}
 
-      {/* Recent Transactions */}
-      <div className="bg-white border-[1.5px] border-[#e2e8f0] rounded-[14px] overflow-hidden">
+      {/* ── Recent Transactions ────────────────────── */}
+      <motion.div {...stagger(11)} className="bg-white border-[1.5px] border-[#e2e8f0] rounded-[14px] overflow-hidden">
         <div className="flex items-center justify-between px-5 pt-[18px] pb-3.5 border-b border-[#f8fafc]">
           <h3 className="text-[15px] font-extrabold text-[#14532d]">Lançamentos Recentes</h3>
           <Link to="/app/transactions" className="text-[12px] font-bold text-[#16a34a] hover:underline flex items-center gap-1">
@@ -334,24 +350,26 @@ export default function OverviewPage() {
         </div>
 
         {recent.length === 0 ? (
-          <div className="py-12 flex flex-col items-center justify-center">
-            <ReceiptText className="w-10 h-10 text-[#e2e8f0] mb-3" />
+          <div className="py-12 flex flex-col items-center justify-center gap-3">
+            <div className="w-[72px] h-[72px] rounded-full bg-[#f0fdf4] flex items-center justify-center">
+              <ReceiptText className="w-8 h-8 text-[#86efac]" />
+            </div>
             <p className="text-[15px] font-bold text-[#374151]">Nenhum lançamento ainda</p>
-            <p className="text-[13px] text-[#94a3b8] mt-1">Adicione seu primeiro lançamento para começar.</p>
-            <Link to="/app/transactions"
-              className="mt-4 inline-flex items-center gap-1.5 px-[18px] py-2 border-[1.5px] border-[#16a34a] text-[#16a34a] bg-white rounded-lg text-[13px] font-bold hover:bg-[#f0fdf4] transition-colors">
-              <PlusCircle className="w-4 h-4" /> Adicionar lançamento
-            </Link>
+            <p className="text-[13px] text-[#94a3b8] max-w-[260px] text-center leading-relaxed">Comece adicionando sua primeira receita ou despesa.</p>
+            <button onClick={() => navigate('/app/transactions')}
+              className="mt-1 inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#16a34a] text-white rounded-[9px] text-[13px] font-bold hover:bg-[#14532d] transition-colors">
+              <PlusCircle className="w-4 h-4" /> Adicionar primeiro lançamento
+            </button>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-[#fafcfa]">
-                  <th className="text-left px-5 py-2.5 text-[10px] uppercase tracking-wide font-bold text-[#94a3b8]">Data</th>
-                  <th className="text-left px-5 py-2.5 text-[10px] uppercase tracking-wide font-bold text-[#94a3b8]">Descrição</th>
-                  <th className="text-left px-5 py-2.5 text-[10px] uppercase tracking-wide font-bold text-[#94a3b8]">Categoria</th>
-                  <th className="text-right px-5 py-2.5 text-[10px] uppercase tracking-wide font-bold text-[#94a3b8]">Valor</th>
+                  <th className="text-left px-5 py-2.5 text-[10px] uppercase tracking-[0.7px] font-bold text-[#94a3b8]">Data</th>
+                  <th className="text-left px-5 py-2.5 text-[10px] uppercase tracking-[0.7px] font-bold text-[#94a3b8]">Descrição</th>
+                  <th className="text-left px-5 py-2.5 text-[10px] uppercase tracking-[0.7px] font-bold text-[#94a3b8]">Categoria</th>
+                  <th className="text-right px-5 py-2.5 text-[10px] uppercase tracking-[0.7px] font-bold text-[#94a3b8]">Valor</th>
                 </tr>
               </thead>
               <tbody>
@@ -366,12 +384,8 @@ export default function OverviewPage() {
                       <td className="px-5 py-3 text-[13px] font-bold text-[#1a2e1a]">{tx.description}</td>
                       <td className="px-5 py-3">
                         <span className={`inline-block px-2.5 py-[3px] rounded-full text-[11px] font-bold border ${
-                          isIncome
-                            ? 'bg-[#f0fdf4] text-[#166534] border-[#d4edda]'
-                            : 'bg-[#fef2f2] text-[#991b1b] border-[#fecaca]'
-                        }`}>
-                          {tx.category}
-                        </span>
+                          isIncome ? 'bg-[#f0fdf4] text-[#166534] border-[#d4edda]' : 'bg-[#fef2f2] text-[#991b1b] border-[#fecaca]'
+                        }`}>{tx.category}</span>
                       </td>
                       <td className={`px-5 py-3 text-right text-[14px] font-black ${isIncome ? 'text-[#16a34a]' : 'text-[#dc2626]'}`}>
                         {isIncome ? '+' : '−'}{formatCurrency(Number(tx.amount), currency)}
@@ -383,10 +397,62 @@ export default function OverviewPage() {
             </table>
           </div>
         )}
+      </motion.div>
+    </div>
+  );
+}
+
+/* ── Hero Card Component ───────────────────────────── */
+
+function HeroCard({ type, balance, income, expense, currency, delay, single, stats: customStats }: {
+  type: 'business' | 'personal';
+  balance: number; income: number; expense: number; currency: string;
+  delay: number; single?: boolean;
+  stats?: { label: string; val: number; color: string }[];
+}) {
+  const isBiz = type === 'business';
+  const circleColor1 = isBiz ? 'bg-[#dcfce7]' : 'bg-[#dbeafe]';
+  const circleColor2 = isBiz ? 'bg-[#bbf7d0]' : 'bg-[#bfdbfe]';
+  const labelColor = isBiz ? 'text-[#16a34a]' : 'text-[#2563eb]';
+  const label = isBiz ? '💼 NEGÓCIO' : '🏠 PESSOAL';
+  const heroLabel = single ? (isBiz ? 'RESULTADO DO NEGÓCIO' : 'SALDO DO MÊS') : undefined;
+
+  const statItems = customStats || [
+    { label: 'Receita', val: income, color: 'text-[#16a34a]' },
+    { label: 'Despesas', val: expense, color: 'text-[#dc2626]' },
+  ];
+
+  return (
+    <motion.div {...stagger(delay)}
+      className="bg-white border-[1.5px] border-[#e2e8f0] rounded-2xl p-6 relative overflow-hidden">
+      {/* decorative circles */}
+      <div className={`absolute -top-[50px] -right-[50px] w-[160px] h-[160px] rounded-full ${circleColor1} opacity-50 pointer-events-none`} />
+      <div className={`absolute -bottom-[30px] -left-[20px] w-[100px] h-[100px] rounded-full ${circleColor2} opacity-30 pointer-events-none`} />
+      <div className="relative z-[1]">
+        <p className={`text-[10px] font-extrabold tracking-widest ${labelColor} flex items-center gap-1.5`}>
+          {heroLabel || label}
+        </p>
+        <p className={`text-4xl font-black tracking-tighter mt-2 ${balance >= 0 ? 'text-[#14532d]' : 'text-[#dc2626]'}`}>
+          <AnimatedCurrency value={balance} currency={currency} />
+        </p>
+        <div className="flex items-center gap-1 mt-1.5">
+          <ArrowUpRight className="w-3.5 h-3.5 text-[#16a34a]" />
+          <span className="text-[12px] font-semibold text-[#16a34a]">vs mês anterior</span>
+        </div>
+        <div className={`grid ${single ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'} gap-3 mt-4`}>
+          {statItems.map(s => (
+            <div key={s.label} className="bg-white/70 backdrop-blur-sm border border-black/[0.06] rounded-[10px] px-3.5 py-2.5">
+              <p className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wide">{s.label}</p>
+              <p className={`text-base font-black ${s.color}`}>{formatCurrency(s.val, currency)}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </motion.div>
   );
 }
+
+/* ── Skeleton ──────────────────────────────────────── */
 
 function Skeleton() {
   return (
@@ -397,6 +463,7 @@ function Skeleton() {
           <div key={i} className="bg-white border-[1.5px] border-[#e2e8f0] rounded-[14px] p-[18px] h-24 animate-pulse" />
         ))}
       </div>
+      <div className="bg-white border-[1.5px] border-[#e2e8f0] rounded-[14px] p-5 h-[240px] animate-pulse" />
       <div className="bg-white border-[1.5px] border-[#e2e8f0] rounded-[14px] p-5 h-64 animate-pulse" />
     </div>
   );

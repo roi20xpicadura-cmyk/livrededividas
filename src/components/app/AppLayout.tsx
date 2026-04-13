@@ -89,14 +89,12 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-[#f8faf8] flex">
-      {/* Mobile overlay */}
       {sidebarOpen && <div className="fixed inset-0 bg-black/20 z-40 lg:hidden backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />}
 
-      {/* ========== SIDEBAR ========== */}
+      {/* ═══ SIDEBAR ═══ */}
       <aside className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-white border-r border-[#f1f5f9] flex flex-col transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-        {/* Top section */}
+        {/* Top */}
         <div className="px-4 pt-5 pb-3">
-          {/* Logo row */}
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-[10px] bg-[#16a34a] flex items-center justify-center flex-shrink-0">
               <BarChart3 className="w-[18px] h-[18px] text-white" />
@@ -110,7 +108,7 @@ export default function AppLayout() {
             </span>
           </div>
 
-          {/* Profile toggle for 'both' */}
+          {/* Profile toggle */}
           {profileType === 'both' && (
             <div className="mt-3 bg-[#f8faf8] border border-[#e2e8f0] rounded-[10px] p-[3px] flex">
               {[
@@ -132,8 +130,12 @@ export default function AppLayout() {
 
           {/* User info */}
           <div className="mt-4 flex items-center gap-2.5 bg-[#f8faf8] rounded-[10px] px-3 py-2.5">
-            <div className="w-[34px] h-[34px] rounded-full bg-gradient-to-br from-[#16a34a] to-[#14532d] flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-[13px] font-extrabold">{initial}</span>
+            <div className="relative flex-shrink-0">
+              <div className="w-[34px] h-[34px] rounded-full bg-gradient-to-br from-[#16a34a] to-[#14532d] flex items-center justify-center">
+                <span className="text-white text-[13px] font-extrabold">{initial}</span>
+              </div>
+              {/* online dot */}
+              <div className="absolute bottom-[2px] right-[2px] w-[6px] h-[6px] rounded-full bg-[#22c55e] border-2 border-white" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[13px] font-bold text-[#1a2e1a] truncate">{profile?.full_name || 'Usuário'}</p>
@@ -150,20 +152,12 @@ export default function AppLayout() {
             return (
               <Link key={item.path} to={item.path} onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-2.5 h-10 px-3 rounded-[9px] mb-[2px] transition-all duration-150 group ${
-                  active
-                    ? 'bg-[#f0fdf4]'
-                    : 'hover:bg-[#f8faf8]'
+                  active ? 'bg-[#f0fdf4]' : 'hover:bg-[#f8faf8]'
                 }`}>
-                <div className={`w-[22px] h-[22px] rounded-md flex items-center justify-center flex-shrink-0 ${
-                  active ? 'bg-[#dcfce7]' : ''
-                }`}>
-                  <item.icon className={`w-[15px] h-[15px] ${
-                    active ? 'text-[#16a34a]' : 'text-[#94a3b8] group-hover:text-[#16a34a]'
-                  }`} />
+                <div className={`w-[22px] h-[22px] rounded-md flex items-center justify-center flex-shrink-0 ${active ? 'bg-[#dcfce7]' : ''}`}>
+                  <item.icon className={`w-[15px] h-[15px] ${active ? 'text-[#16a34a]' : 'text-[#94a3b8] group-hover:text-[#16a34a]'}`} />
                 </div>
-                <span className={`text-[13px] ${
-                  active ? 'font-bold text-[#16a34a]' : 'font-medium text-[#64748b] group-hover:text-[#14532d]'
-                }`}>
+                <span className={`text-[13px] ${active ? 'font-bold text-[#16a34a]' : 'font-medium text-[#64748b] group-hover:text-[#14532d]'}`}>
                   {item.label}
                 </span>
               </Link>
@@ -171,9 +165,8 @@ export default function AppLayout() {
           })}
         </nav>
 
-        {/* Bottom section */}
+        {/* Bottom */}
         <div className="px-2.5 pb-2.5">
-          {/* Upgrade card (FREE only) */}
           {plan === 'free' && (
             <div className="mx-1 mb-2 rounded-xl bg-gradient-to-b from-[#f0fdf4] to-[#dcfce7] border border-[#d4edda] p-3.5">
               <div className="flex items-center gap-2 mb-1">
@@ -190,38 +183,45 @@ export default function AppLayout() {
 
           <div className="border-t border-[#f1f5f9] mx-3 mb-1" />
 
+          {/* CONTA section label */}
+          <p className="text-[9px] font-extrabold text-[#cbd5e1] tracking-[1.2px] uppercase px-4 pt-3.5 pb-1">CONTA</p>
+
           {bottomItems.map(item => {
             const active = isActive(item.path);
+            const isBilling = item.path === '/app/billing';
             return (
               <Link key={item.path} to={item.path} onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-2.5 h-10 px-3 rounded-[9px] mb-[2px] transition-all duration-150 group ${
                   active ? 'bg-[#f0fdf4]' : 'hover:bg-[#f8faf8]'
                 }`}>
                 <item.icon className={`w-[15px] h-[15px] ${
-                  active ? 'text-[#16a34a]' : 'text-[#94a3b8] group-hover:text-[#16a34a]'
-                } ${item.icon === Crown && plan !== 'free' ? 'text-[#d97706]' : ''}`} />
-                <span className={`text-[13px] ${
+                  active ? 'text-[#16a34a]' : isBilling && plan !== 'free' ? 'text-[#d97706]' : 'text-[#94a3b8] group-hover:text-[#16a34a]'
+                }`} />
+                <span className={`text-[13px] flex-1 ${
                   active ? 'font-bold text-[#16a34a]' : 'font-medium text-[#64748b] group-hover:text-[#14532d]'
                 }`}>{item.label}</span>
+                {isBilling && plan === 'free' && (
+                  <span className="text-[9px] font-extrabold bg-[#fffbeb] text-[#92400e] px-[7px] py-[2px] rounded-[5px]">Upgrade</span>
+                )}
               </Link>
             );
           })}
+
           <button onClick={() => signOut()}
             className="flex items-center gap-2.5 h-10 px-3 rounded-[9px] w-full transition-all duration-150 group hover:bg-[#fef2f2]">
-            <LogOut className="w-[15px] h-[15px] text-[#94a3b8] group-hover:text-[#ef4444]" />
-            <span className="text-[13px] font-medium text-[#64748b] group-hover:text-[#ef4444]">Sair</span>
+            <LogOut className="w-[15px] h-[15px] text-[#94a3b8] group-hover:text-[#dc2626]" />
+            <span className="text-[13px] font-medium text-[#64748b] group-hover:text-[#dc2626]">Sair</span>
           </button>
         </div>
       </aside>
 
-      {/* ========== MAIN CONTENT ========== */}
+      {/* ═══ MAIN ═══ */}
       <div className="flex-1 min-w-0 pb-16 lg:pb-0">
-        {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-white border-b border-[#f1f5f9] h-[58px] flex items-center px-5 md:px-7 gap-4">
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-[#f1f5f9] h-[58px] flex items-center px-5 md:px-7 gap-4">
           <button className="lg:hidden text-[#94a3b8]" onClick={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
-          
+
           <div className="min-w-0">
             <h1 className="text-[20px] font-black text-[#14532d] tracking-tight leading-none">
               {pageTitles[location.pathname] || 'FinDash Pro'}
@@ -231,11 +231,11 @@ export default function AppLayout() {
 
           <div className="ml-auto flex items-center gap-2">
             {/* Bell */}
-            <button className="relative w-9 h-9 rounded-full bg-[#f8faf8] border border-[#e2e8f0] flex items-center justify-center hover:bg-[#f0fdf4] hover:border-[#d4edda] transition-all">
-              <Bell className="w-[18px] h-[18px] text-[#94a3b8]" />
+            <button className="relative w-9 h-9 rounded-[9px] bg-[#f8faf8] border border-[#e2e8f0] flex items-center justify-center hover:bg-[#f0fdf4] hover:border-[#d4edda] transition-all">
+              <Bell className="w-4 h-4 text-[#64748b]" />
             </button>
 
-            {/* User avatar dropdown */}
+            {/* User dropdown */}
             <div className="relative">
               <button onClick={() => setShowUserMenu(!showUserMenu)}
                 className="w-9 h-9 rounded-full bg-gradient-to-br from-[#16a34a] to-[#14532d] flex items-center justify-center hover:ring-2 hover:ring-[#d4edda] transition-all">
@@ -275,7 +275,7 @@ export default function AppLayout() {
         </main>
       </div>
 
-      {/* ========== MOBILE BOTTOM NAV ========== */}
+      {/* ═══ MOBILE BOTTOM NAV ═══ */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-[#f1f5f9] h-16 flex items-center justify-around px-2">
         {MOBILE_NAV.map(item => {
           const active = isActive(item.path);
@@ -293,7 +293,7 @@ export default function AppLayout() {
         </button>
       </nav>
 
-      {/* Mobile more drawer */}
+      {/* Mobile drawer */}
       <AnimatePresence>
         {showMoreDrawer && (
           <>
