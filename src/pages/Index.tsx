@@ -1,58 +1,58 @@
-import { useDashboardData } from "@/hooks/useDashboardData";
-import GoalTracker from "@/components/dashboard/GoalTracker";
-import KPICards from "@/components/dashboard/KPICards";
-import DailyTable from "@/components/dashboard/DailyTable";
-import AccumulationChart from "@/components/dashboard/AccumulationChart";
+import { useState } from "react";
+import { useFinDashData } from "@/hooks/useFinDashData";
+import Header from "@/components/findash/Header";
+import PeriodBar from "@/components/findash/PeriodBar";
+import TabBar from "@/components/findash/TabBar";
+import OverviewTab from "@/components/findash/tabs/OverviewTab";
+import TransactionsTab from "@/components/findash/tabs/TransactionsTab";
+import GoalsTab from "@/components/findash/tabs/GoalsTab";
+import CashFlowTab from "@/components/findash/tabs/CashFlowTab";
+import DRETab from "@/components/findash/tabs/DRETab";
+import CardsTab from "@/components/findash/tabs/CardsTab";
+import InvestmentsTab from "@/components/findash/tabs/InvestmentsTab";
+import ChartsTab from "@/components/findash/tabs/ChartsTab";
+import ExportTab from "@/components/findash/tabs/ExportTab";
 
 export default function Index() {
-  const data = useDashboardData();
-  const today = new Date().toLocaleDateString("pt-BR", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const [activeTab, setActiveTab] = useState(0);
+  const fd = useFinDashData();
+  const hasData = fd.data.transactions.length > 0 || fd.data.goals.length > 0;
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-6xl mx-auto py-6 md:py-10 space-y-6">
-        {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
-          <div>
-            <h1 className="text-2xl md:text-[32px] font-extrabold tracking-tight">
-              💸 Painel Financeiro
-            </h1>
-            <p className="text-muted-foreground text-sm capitalize">{today}</p>
-          </div>
-        </header>
+      <Header hasData={hasData} onReset={fd.resetAll} />
+      <PeriodBar cfg={fd.data.cfg} setCfg={fd.setCfg} periodLabel={fd.periodLabel} />
+      <TabBar active={activeTab} onChange={setActiveTab} />
 
-        {/* Section 1 - Goal Tracker */}
-        <GoalTracker
-          totalSaved={data.totalSaved}
-          remaining={data.remaining}
-          progress={data.progress}
-          daysElapsed={data.daysElapsed}
-          daysRemaining={data.daysRemaining}
-          isOnTrack={data.isOnTrack}
-          goalReached={data.goalReached}
-        />
-
-        {/* Section 2 - KPI Cards */}
-        <KPICards
-          totalProfit={data.totalProfit}
-          totalSaved={data.totalSaved}
-          totalRevenue={data.totalRevenue}
-          totalAdSpend={data.totalAdSpend}
-          avgSavingsPercent={data.avgSavingsPercent}
-          avgDailyProfit={data.avgDailyProfit}
-        />
-
-        {/* Section 3 - Daily Control Table */}
-        <DailyTable entries={data.entries} onAdd={data.addEntry} onRemove={data.removeEntry} />
-
-        {/* Section 4 - Accumulation Chart */}
-        <AccumulationChart entries={data.entries} />
-      </div>
+      <main className="max-w-[1400px] mx-auto px-4 md:px-6 py-5 space-y-4">
+        {activeTab === 0 && (
+          <OverviewTab filteredTx={fd.filteredTx} stats={fd.stats} currency={fd.data.cfg.currency} onGoToTransactions={() => setActiveTab(1)} />
+        )}
+        {activeTab === 1 && (
+          <TransactionsTab filteredTx={fd.filteredTx} currency={fd.data.cfg.currency} onAdd={fd.addTransaction} onRemove={fd.removeTransaction} />
+        )}
+        {activeTab === 2 && (
+          <GoalsTab goals={fd.data.goals} currency={fd.data.cfg.currency} onAdd={fd.addGoal} onUpdate={fd.updateGoal} onRemove={fd.removeGoal} />
+        )}
+        {activeTab === 3 && (
+          <CashFlowTab filteredTx={fd.filteredTx} currency={fd.data.cfg.currency} rangeStart={fd.rangeStart} rangeEnd={fd.rangeEnd} />
+        )}
+        {activeTab === 4 && (
+          <DRETab filteredTx={fd.filteredTx} currency={fd.data.cfg.currency} />
+        )}
+        {activeTab === 5 && (
+          <CardsTab cards={fd.data.cards} currency={fd.data.cfg.currency} onAdd={fd.addCard} onUpdate={fd.updateCard} onRemove={fd.removeCard} />
+        )}
+        {activeTab === 6 && (
+          <InvestmentsTab investments={fd.data.investments} currency={fd.data.cfg.currency} onAdd={fd.addInvestment} onUpdate={fd.updateInvestment} onRemove={fd.removeInvestment} />
+        )}
+        {activeTab === 7 && (
+          <ChartsTab filteredTx={fd.filteredTx} investments={fd.data.investments} currency={fd.data.cfg.currency} rangeStart={fd.rangeStart} rangeEnd={fd.rangeEnd} />
+        )}
+        {activeTab === 8 && (
+          <ExportTab data={fd.data} filteredTx={fd.filteredTx} currency={fd.data.cfg.currency} />
+        )}
+      </main>
     </div>
   );
 }
