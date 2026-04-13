@@ -3,20 +3,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { formatCurrency, PLAN_LIMITS, PlanType } from '@/lib/plans';
+import { getCategories } from '@/lib/objectives';
 import { Plus, X, Search } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
-const INCOME_CATS = ['Salário', 'Freelance', 'Vendas', 'Investimento', 'Aluguel', 'Outro'];
-const EXPENSE_CATS = ['Moradia', 'Alimentação', 'Transporte', 'Saúde', 'Educação', 'Lazer', 'Marketing', 'Fornecedor', 'Impostos', 'Salários Equipe', 'Outro'];
-
 export default function TransactionsPage() {
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile, config } = useProfile();
   const plan = (profile?.plan || 'free') as PlanType;
   const limits = PLAN_LIMITS[plan];
+  const profileType = config?.profile_type || 'personal';
 
   const [txs, setTxs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,13 +24,13 @@ export default function TransactionsPage() {
   const [desc, setDesc] = useState('');
   const [val, setVal] = useState('');
   const [type, setType] = useState<'income' | 'expense'>('income');
-  const [origin, setOrigin] = useState<'business' | 'personal'>('business');
+  const [origin, setOrigin] = useState<'business' | 'personal'>(profileType === 'personal' ? 'personal' : 'business');
   const [cat, setCat] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [filterOrigin, setFilterOrigin] = useState<'all' | 'business' | 'personal'>('all');
   const [search, setSearch] = useState('');
 
-  const cats = type === 'income' ? INCOME_CATS : EXPENSE_CATS;
+  const cats = useMemo(() => getCategories(profileType, type), [profileType, type]);
 
   const fetchTxs = async () => {
     if (!user) return;
@@ -47,13 +46,10 @@ export default function TransactionsPage() {
   const handleAdd = async () => {
     const v = parseFloat(val);
     if (!date || !desc.trim() || isNaN(v) || v <= 0 || !cat) { toast.error('Preencha todos os campos'); return; }
-
-    // Check limit
     if (limits.transactions_per_month !== Infinity && txs.length >= limits.transactions_per_month) {
       toast.error(`Limite de ${limits.transactions_per_month} lançamentos atingido. Faça upgrade!`);
       return;
     }
-
     const { error } = await supabase.from('transactions').insert({
       user_id: user!.id, date, description: desc.trim(), amount: v, type, origin, category: cat,
     });
@@ -83,6 +79,28 @@ export default function TransactionsPage() {
     return { inc, exp, net: inc - exp };
   }, [filtered]);
 
+  const renderCategorySelect = () => {
+    if (Array.isArray(cats) && typeof cats[0] === 'string') {
+      return (
+        <select value={cat} onChange={e => setCat(e.target.value)} className="px-2 py-2 text-xs rounded-lg border border-border bg-card">
+          <option value="">Categoria</option>
+          {(cats as string[]).map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+      );
+    }
+    // Grouped categories
+    return (
+      <select value={cat} onChange={e => setCat(e.target.value)} className="px-2 py-2 text-xs rounded-lg border border-border bg-card">
+        <option value="">Categoria</option>
+        {(cats as { group: string; items: string[] }[]).map(g => (
+          <optgroup key={g.group} label={g.group}>
+            {g.items.map(c => <option key={c} value={c}>{c}</option>)}
+          </optgroup>
+        ))}
+      </select>
+    );
+  };
+
   if (loading) return <div className="card-surface p-8 h-96 animate-pulse" />;
 
   return (
@@ -102,9 +120,7 @@ export default function TransactionsPage() {
           <select value={origin} onChange={e => setOrigin(e.target.value as any)} className="px-2 py-2 text-xs rounded-lg border border-border bg-card">
             <option value="business">Negócio</option><option value="personal">Pessoal</option>
           </select>
-          <select value={cat} onChange={e => setCat(e.target.value)} className="px-2 py-2 text-xs rounded-lg border border-border bg-card">
-            <option value="">Categoria</option>{cats.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+          {renderCategorySelect()}
           <button onClick={handleAdd} className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:brightness-110 transition-all">
             <Plus className="w-3.5 h-3.5" /> Adicionar
           </button>

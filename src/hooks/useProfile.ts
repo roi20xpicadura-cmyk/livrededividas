@@ -18,6 +18,9 @@ interface UserConfig {
   theme: string;
   notifications_enabled: boolean;
   onboarding_completed: boolean;
+  profile_type: string;
+  financial_objectives: string[];
+  onboarding_step: number;
 }
 
 export function useProfile() {
@@ -46,7 +49,7 @@ export function useProfile() {
 
   const updateConfig = async (updates: Partial<UserConfig>) => {
     if (!user) return;
-    await supabase.from('user_config').update(updates).eq('user_id', user.id);
+    await supabase.from('user_config').update(updates as any).eq('user_id', user.id);
     await fetchProfile();
   };
 

@@ -15,10 +15,20 @@ const wordVariants = {
 const avatarColors = ['bg-primary', 'bg-fin-blue', 'bg-fin-purple', 'bg-fin-amber', 'bg-destructive'];
 const avatarInitials = ['AS', 'CS', 'MO', 'PF', 'RL'];
 
+const objectivePills = [
+  { emoji: '🆘', label: 'Sair das dívidas' },
+  { emoji: '💳', label: 'Quitar cartão' },
+  { emoji: '🚗', label: 'Quitar carro' },
+  { emoji: '💰', label: 'Juntar dinheiro' },
+  { emoji: '📈', label: 'Investir' },
+  { emoji: '🏠', label: 'Comprar imóvel' },
+  { emoji: '💼', label: 'Abrir negócio' },
+];
+
 export default function HeroSection() {
-  const line1 = 'Controle total das suas'.split(' ');
-  const line2 = ['finanças.'];
-  const line3 = 'Pessoal e negócio.'.split(' ');
+  const line1 = 'Controle seu'.split(' ');
+  const line2 = ['dinheiro.'];
+  const line3 = 'Realize seus objetivos.'.split(' ');
 
   return (
     <section className="pt-16 pb-20 md:pt-24 md:pb-28 px-4 bg-card">
@@ -60,9 +70,9 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.5 }}
-          className="mt-5 text-lg text-muted max-w-[520px] mx-auto leading-[1.7]"
+          className="mt-5 text-lg text-muted max-w-[560px] mx-auto leading-[1.7]"
         >
-          Do lançamento diário ao DRE completo — tudo em um painel inteligente, bonito e feito para empreendedores brasileiros.
+          Para quem quer sair das dívidas, guardar dinheiro, fazer o negócio crescer ou simplesmente organizar a vida financeira.
         </motion.p>
 
         {/* CTAs */}
@@ -84,6 +94,24 @@ export default function HeroSection() {
           >
             <PlayCircle className="w-4 h-4" /> Ver demonstração
           </Link>
+        </motion.div>
+
+        {/* Objectives pills */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="mt-6"
+        >
+          <p className="text-[11px] text-muted mb-2">Feito para quem quer:</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {objectivePills.map(p => (
+              <Link key={p.label} to="/register"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-fin-green-border bg-card text-[13px] font-medium text-foreground hover:bg-fin-green-pale hover:border-primary transition-all duration-200">
+                {p.emoji} {p.label}
+              </Link>
+            ))}
+          </div>
         </motion.div>
 
         {/* Social proof */}

@@ -1,19 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
+import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 import { BarChart3, Receipt, Target, TrendingUp, FileText, CreditCard, PiggyBank, BarChart2, Download, Settings, Gem, LogOut, Menu, X, Bell } from 'lucide-react';
 
-const navItems = [
-  { label: 'Visão Geral', path: '/app', icon: BarChart3 },
-  { label: 'Lançamentos', path: '/app/transactions', icon: Receipt },
-  { label: 'Metas', path: '/app/goals', icon: Target },
-  { label: 'Fluxo de Caixa', path: '/app/cashflow', icon: TrendingUp },
-  { label: 'DRE', path: '/app/dre', icon: FileText },
-  { label: 'Cartões', path: '/app/cards', icon: CreditCard },
-  { label: 'Investimentos', path: '/app/investments', icon: PiggyBank },
-  { label: 'Gráficos', path: '/app/charts', icon: BarChart2 },
-  { label: 'Exportar', path: '/app/export', icon: Download },
+const ALL_NAV_ITEMS = [
+  { label: 'Visão Geral', path: '/app', icon: BarChart3, profiles: ['personal', 'business', 'both'] },
+  { label: 'Lançamentos', path: '/app/transactions', icon: Receipt, profiles: ['personal', 'business', 'both'] },
+  { label: 'Metas', path: '/app/goals', icon: Target, profiles: ['personal', 'business', 'both'] },
+  { label: 'Fluxo de Caixa', path: '/app/cashflow', icon: TrendingUp, profiles: ['business', 'both'] },
+  { label: 'DRE', path: '/app/dre', icon: FileText, profiles: ['business', 'both'] },
+  { label: 'Cartões', path: '/app/cards', icon: CreditCard, profiles: ['personal', 'business', 'both'] },
+  { label: 'Investimentos', path: '/app/investments', icon: PiggyBank, profiles: ['personal', 'business', 'both'] },
+  { label: 'Gráficos', path: '/app/charts', icon: BarChart2, profiles: ['business', 'both'] },
+  { label: 'Exportar', path: '/app/export', icon: Download, profiles: ['personal', 'business', 'both'] },
 ];
 
 const bottomItems = [
@@ -23,9 +24,20 @@ const bottomItems = [
 
 export default function AppLayout() {
   const { user, signOut } = useAuth();
-  const { profile } = useProfile();
+  const { profile, config, loading, refetch } = useProfile();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [viewFilter, setViewFilter] = useState<'all' | 'business' | 'personal'>('all');
+
+  const profileType = config?.profile_type || 'personal';
+  const navItems = ALL_NAV_ITEMS.filter(item => item.profiles.includes(profileType));
+
+  useEffect(() => {
+    if (!loading && config && !config.onboarding_completed) {
+      setShowOnboarding(true);
+    }
+  }, [loading, config]);
 
   const planBadge = (profile?.plan || 'free').toUpperCase();
   const planColor = profile?.plan === 'pro' ? 'bg-primary text-primary-foreground' : profile?.plan === 'business' ? 'bg-fin-purple text-white' : 'bg-secondary text-secondary-foreground';
@@ -49,12 +61,14 @@ export default function AppLayout() {
     '/app/billing': 'Planos e Assinatura',
   };
 
+  if (showOnboarding) {
+    return <OnboardingFlow onComplete={() => { setShowOnboarding(false); refetch(); }} />;
+  }
+
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Mobile overlay */}
       {sidebarOpen && <div className="fixed inset-0 bg-black/30 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      {/* Sidebar */}
       <aside className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-60 bg-card border-r border-border flex flex-col transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-2 mb-3">
@@ -64,6 +78,23 @@ export default function AppLayout() {
             <span className="font-black text-foreground text-sm">FinDash Pro</span>
             <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${planColor}`}>{planBadge}</span>
           </div>
+
+          {/* Profile type toggle for 'both' */}
+          {profileType === 'both' && (
+            <div className="flex rounded-lg bg-secondary p-0.5 mb-3">
+              {[
+                { val: 'all' as const, label: '📊 Tudo' },
+                { val: 'personal' as const, label: '🏠 Pessoal' },
+                { val: 'business' as const, label: '💼 Negócio' },
+              ].map(f => (
+                <button key={f.val} onClick={() => setViewFilter(f.val)}
+                  className={`flex-1 px-2 py-1 rounded-md text-[10px] font-bold transition-all ${viewFilter === f.val ? 'bg-card text-foreground shadow-sm' : 'text-muted'}`}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-fin-green-pale flex items-center justify-center text-fin-green font-bold text-xs">
               {(profile?.full_name || user?.email || '?')[0].toUpperCase()}
@@ -107,9 +138,7 @@ export default function AppLayout() {
         </div>
       </aside>
 
-      {/* Main content */}
       <div className="flex-1 min-w-0">
-        {/* Top bar */}
         <header className="sticky top-0 z-30 bg-card border-b border-border h-14 flex items-center px-4 md:px-6 gap-4">
           <button className="lg:hidden text-muted" onClick={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -120,7 +149,6 @@ export default function AppLayout() {
           </div>
         </header>
 
-        {/* Upgrade banner for free plan */}
         {profile?.plan === 'free' && (
           <div className="mx-4 md:mx-6 mt-4 p-3 rounded-lg bg-fin-amber-pale border border-fin-amber-border flex items-center justify-between">
             <span className="text-xs font-semibold text-foreground">Você está no plano Gratuito. Upgrade para Pro e libere recursos ilimitados.</span>
