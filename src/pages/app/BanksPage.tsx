@@ -8,16 +8,11 @@ import { formatCurrency } from '@/lib/plans';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { PluggyConnect } from 'react-pluggy-connect';
 import {
   Building2, Wallet, ArrowLeftRight, RefreshCw, Plus, CheckCircle,
   AlertCircle, XCircle, Eye, EyeOff, Trash2, Check, X, Lock, Crown,
 } from 'lucide-react';
-
-declare global {
-  interface Window {
-    PluggyConnect: any;
-  }
-}
 
 interface BankConnection {
   id: string;
@@ -87,6 +82,7 @@ export default function BanksPage() {
   const [selectedTxs, setSelectedTxs] = useState<Set<string>>(new Set());
   const [importing, setImporting] = useState(false);
   const [suggestedCategories, setSuggestedCategories] = useState<Record<string, string>>({});
+  const [connectToken, setConnectToken] = useState<string | null>(null);
   const currency = 'R$';
 
   const isPro = plan === 'pro' || plan === 'business';
@@ -142,57 +138,43 @@ export default function BanksPage() {
         body: { userId: user!.id },
       });
       if (error) throw error;
-
-      // Load Pluggy Connect SDK
-      const existing = document.querySelector('script[src*="pluggy-connect"]');
-      const loadWidget = () => {
-        const pluggyConnect = new window.PluggyConnect({
-          connectToken: data.accessToken,
-          onSuccess: async ({ item }: any) => {
-            await supabase.from('bank_connections').insert({
-              user_id: user!.id,
-              pluggy_item_id: item.id,
-              institution_name: item.connector?.name || 'Banco',
-              institution_logo: item.connector?.imageUrl || null,
-              institution_color: item.connector?.primaryColor || '#16a34a',
-              account_type: item.connector?.type || 'BANK',
-              status: 'syncing',
-            } as any);
-            toast.success('Banco conectado! Importando transações...');
-            await fetchData();
-            // Trigger first sync
-            const { data: conns } = await supabase
-              .from('bank_connections')
-              .select('id')
-              .eq('pluggy_item_id', item.id)
-              .eq('user_id', user!.id)
-              .single();
-            if (conns) {
-              await supabase.functions.invoke('pluggy-sync', {
-                body: { connectionId: conns.id },
-              });
-              await fetchData();
-            }
-          },
-          onError: (error: any) => {
-            toast.error('Erro ao conectar: ' + (error?.message || 'Tente novamente'));
-          },
-        });
-        pluggyConnect.init();
-      };
-
-      if (existing) {
-        loadWidget();
-      } else {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.pluggy.ai/pluggy-connect/v2/pluggy-connect.js';
-        script.async = true;
-        script.onload = loadWidget;
-        document.head.appendChild(script);
-      }
+      setConnectToken(data.accessToken);
     } catch (err: any) {
       toast.error('Erro: ' + (err.message || 'Tente novamente'));
     }
+  };
+
+  const handlePluggySuccess = async (itemData: any) => {
+    setConnectToken(null);
+    const item = itemData.item || itemData;
+    await supabase.from('bank_connections').insert({
+      user_id: user!.id,
+      pluggy_item_id: item.id,
+      institution_name: item.connector?.name || 'Banco',
+      institution_logo: item.connector?.imageUrl || null,
+      institution_color: item.connector?.primaryColor || '#16a34a',
+      account_type: item.connector?.type || 'BANK',
+      status: 'syncing',
+    } as any);
+    toast.success('Banco conectado! Importando transações...');
+    await fetchData();
+    const { data: conns } = await supabase
+      .from('bank_connections')
+      .select('id')
+      .eq('pluggy_item_id', item.id)
+      .eq('user_id', user!.id)
+      .single();
+    if (conns) {
+      await supabase.functions.invoke('pluggy-sync', {
+        body: { connectionId: conns.id },
+      });
+      await fetchData();
+    }
+  };
+
+  const handlePluggyError = (error: any) => {
+    setConnectToken(null);
+    toast.error('Erro ao conectar: ' + (error?.message || 'Tente novamente'));
   };
 
   const handleDisconnect = async (connectionId: string) => {
@@ -544,6 +526,15 @@ export default function BanksPage() {
             })}
           </div>
         </div>
+      )}
+
+      {connectToken && (
+        <PluggyConnect
+          connectToken={connectToken}
+          onSuccess={handlePluggySuccess}
+          onError={handlePluggyError}
+          onClose={() => setConnectToken(null)}
+        />
       )}
     </div>
   );
