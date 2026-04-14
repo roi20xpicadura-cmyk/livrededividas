@@ -580,9 +580,6 @@ function HeroCard({ type, balance, income, expense, currency, delay, single, sta
   return (
     <motion.div {...stagger(delay)}
       className="card-premium relative overflow-hidden" style={{ padding: 24, borderRadius: 'var(--radius-2xl)' }}>
-      {/* decorative circles */}
-      <div className="absolute -top-[50px] -right-[50px] w-[160px] h-[160px] rounded-full pointer-events-none" style={{ background: isBiz ? 'var(--color-green-100)' : 'var(--color-info-bg)', opacity: 0.5 }} />
-      <div className="absolute -bottom-[30px] -left-[20px] w-[100px] h-[100px] rounded-full pointer-events-none" style={{ background: isBiz ? 'var(--color-green-200)' : 'var(--color-info-border)', opacity: 0.3 }} />
       <div className="relative z-[1]">
         <p className="label-upper" style={{ color: isBiz ? 'var(--color-green-600)' : 'var(--color-info-solid)' }}>
           {heroLabel || label}
