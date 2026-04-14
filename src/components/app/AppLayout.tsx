@@ -50,7 +50,6 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [viewFilter, setViewFilter] = useState<'all' | 'business' | 'personal'>('all');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMoreDrawer, setShowMoreDrawer] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
