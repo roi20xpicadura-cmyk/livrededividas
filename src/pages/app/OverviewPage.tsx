@@ -4,10 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { formatCurrency } from '@/lib/plans';
 import { OBJECTIVES, SMART_TIPS } from '@/lib/objectives';
+import { calculateFinancialScore, getScoreColor, getScoreLevel, ScoreData } from '@/lib/financialScore';
 import {
   TrendingUp, TrendingDown, DollarSign, Percent, Hash, Zap,
   ArrowRight, ArrowUpRight, Lightbulb, X as XIcon,
-  PlusCircle, ReceiptText, BarChart2, Target, Check, Flame
+  PlusCircle, ReceiptText, BarChart2, Target, Check, Flame, Shield
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format, parseISO, startOfMonth, endOfMonth, subDays, differenceInDays, eachDayOfInterval, isSameDay } from 'date-fns';
@@ -79,6 +80,8 @@ export default function OverviewPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [investments, setInvestments] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
+  const [cards, setCards] = useState<any[]>([]);
+  const [debts, setDebts] = useState<any[]>([]);
   const [goalCheckins, setGoalCheckins] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [chartPeriod, setChartPeriod] = useState<'7d' | '30d' | '90d'>('30d');
@@ -99,10 +102,14 @@ export default function OverviewPage() {
       supabase.from('investments').select('*').eq('user_id', user.id),
       supabase.from('goals').select('*').eq('user_id', user.id),
       supabase.from('goal_checkins').select('*').eq('user_id', user.id).gte('date', weekAgo).order('date', { ascending: true }),
-    ]).then(([txRes, invRes, goalRes, ckRes]) => {
+      supabase.from('credit_cards').select('*').eq('user_id', user.id),
+      supabase.from('debts').select('*').eq('user_id', user.id).eq('status', 'active'),
+    ]).then(([txRes, invRes, goalRes, ckRes, cardRes, debtRes]) => {
       setTransactions(txRes.data || []);
       setInvestments(invRes.data || []);
       setGoals(goalRes.data || []);
+      setCards(cardRes.data || []);
+      setDebts(debtRes.data || []);
       const grouped: Record<string, any[]> = {};
       (ckRes.data || []).forEach((ck: any) => {
         if (!grouped[ck.goal_id]) grouped[ck.goal_id] = [];
@@ -133,6 +140,20 @@ export default function OverviewPage() {
     const avgPerDay = netBalance / daysInMonth;
     return { totalIncome, totalExpense, netBalance, bizIncome, bizExpense, personalExpense, personalIncome, bizProfit, personalBalance, patrimonio, savingsRate, roiBiz, avgPerDay, txCount: transactions.length };
   }, [transactions, investments]);
+
+  /* financial score */
+  const scoreResult = useMemo(() => {
+    const scoreData: ScoreData = {
+      totalIncome: stats.totalIncome,
+      totalExpense: stats.totalExpense,
+      cards: cards.map(c => ({ used_amount: Number(c.used_amount || 0), credit_limit: Number(c.credit_limit) })),
+      goals: goals.map(g => ({ current_amount: Number(g.current_amount || 0), target_amount: Number(g.target_amount) })),
+      totalDebt: debts.reduce((s, d) => s + Number(d.remaining_amount), 0),
+      investments: investments.map(i => ({ asset_type: i.asset_type })),
+      recentTransactionCount: transactions.length,
+    };
+    return calculateFinancialScore(scoreData);
+  }, [stats, cards, goals, debts, investments, transactions]);
 
   /* chart data */
   const chartData = useMemo(() => {
@@ -245,6 +266,71 @@ export default function OverviewPage() {
           </motion.div>
         ))}
       </div>
+
+      {/* ── Financial Health Score ──────────────────── */}
+      <motion.div {...stagger(8)} className="bg-white border-[1.5px] border-[#e2e8f0] rounded-[14px] p-6">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-6">
+          {/* Left — Score */}
+          <div>
+            <p className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-[1px] flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5" /> Score de Saúde Financeira
+            </p>
+            <div className="flex items-end gap-3 mt-3">
+              <span className="text-[56px] font-black tracking-tighter leading-none" style={{ color: getScoreColor(scoreResult.total) }}>
+                <AnimatedNumber value={scoreResult.total} />
+              </span>
+              <span className="text-[13px] font-bold text-[#94a3b8] mb-2">/1000</span>
+            </div>
+            <span className="inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-full text-[12px] font-bold"
+              style={{ background: getScoreColor(scoreResult.total) + '18', color: getScoreColor(scoreResult.total), border: `1px solid ${getScoreColor(scoreResult.total)}40` }}>
+              {getScoreLevel(scoreResult.total).emoji} {getScoreLevel(scoreResult.total).label}
+            </span>
+          </div>
+
+          {/* Right — Breakdown */}
+          <div className="space-y-2.5">
+            {scoreResult.criteria.map((c, i) => (
+              <div key={c.label}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] font-semibold text-[#64748b]">{c.label}</span>
+                  <span className="text-[11px] font-bold text-[#374151]">{c.points}/{c.max}</span>
+                </div>
+                <div className="h-[5px] bg-[#f1f5f9] rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: '0%' }}
+                    animate={{ width: `${(c.points / c.max) * 100}%` }}
+                    transition={{ duration: 0.8, delay: 0.3 + i * 0.08, ease: 'easeOut' }}
+                    className="h-full rounded-full"
+                    style={{ background: getScoreColor(scoreResult.total) }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom tip */}
+        {(() => {
+          const lowest = [...scoreResult.criteria].sort((a, b) => (a.points / a.max) - (b.points / b.max))[0];
+          if (!lowest || lowest.points / lowest.max > 0.7) return null;
+          const tips: Record<string, string> = {
+            'Taxa de Poupança': 'Aumente sua taxa de poupança reduzindo gastos supérfluos.',
+            'Uso do Crédito': 'Reduza o uso do cartão para menos de 30% do limite.',
+            'Progresso de Metas': 'Faça depósitos regulares nas suas metas.',
+            'Controle de Dívidas': 'Priorize quitar suas dívidas ativas.',
+            'Investimentos': 'Diversifique seus investimentos em mais categorias.',
+            'Regularidade': 'Registre todos os seus lançamentos diariamente.',
+          };
+          return (
+            <div className="mt-4 flex items-center gap-2 bg-[#fffbeb] border border-[#fde68a] rounded-lg px-3.5 py-2.5">
+              <Lightbulb className="w-3.5 h-3.5 text-[#d97706] flex-shrink-0" />
+              <p className="text-[12px] text-[#92400e] font-medium">
+                <span className="font-bold">O que melhorar:</span> {tips[lowest.label] || `Melhore sua pontuação em ${lowest.label}.`}
+              </p>
+            </div>
+          );
+        })()}
+      </motion.div>
 
       {/* ── Balance Chart ──────────────────────────── */}
       <motion.div {...stagger(9)} className="bg-white border-[1.5px] border-[#e2e8f0] rounded-[14px]">

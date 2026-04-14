@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
+import { useTheme } from '@/contexts/ThemeContext';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 import AIChatDrawer from '@/components/app/AIChatDrawer';
 import {
   LayoutDashboard, ArrowLeftRight, Target, TrendingUp, FileText,
   CreditCard, Briefcase, BarChart2, Download, Settings2, Crown,
   LogOut, Menu, X, Bell, ChevronRight, BarChart3, Home, MoreHorizontal, Sparkles,
-  AlertCircle
+  AlertCircle, CalendarDays, Trophy, Gift, Sun, Moon, Monitor
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,6 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const ALL_NAV_ITEMS = [
   { label: 'Visão Geral', path: '/app', icon: LayoutDashboard, profiles: ['personal', 'business', 'both'] },
   { label: 'Lançamentos', path: '/app/transactions', icon: ArrowLeftRight, profiles: ['personal', 'business', 'both'] },
+  { label: 'Orçamento', path: '/app/budget', icon: CalendarDays, profiles: ['personal', 'business', 'both'] },
   { label: 'Metas', path: '/app/goals', icon: Target, profiles: ['personal', 'business', 'both'] },
   { label: 'Dívidas', path: '/app/debts', icon: AlertCircle, profiles: ['personal', 'business', 'both'] },
   { label: 'Fluxo de Caixa', path: '/app/cashflow', icon: TrendingUp, profiles: ['business', 'both'] },
@@ -27,6 +29,8 @@ const ALL_NAV_ITEMS = [
 ];
 
 const bottomItems = [
+  { label: 'Conquistas', path: '/app/achievements', icon: Trophy },
+  { label: 'Indicar Amigos', path: '/app/referral', icon: Gift },
   { label: 'Configurações', path: '/app/settings', icon: Settings2 },
   { label: 'Meu Plano', path: '/app/billing', icon: Crown },
 ];
@@ -41,6 +45,7 @@ const MOBILE_NAV = [
 export default function AppLayout() {
   const { user, signOut } = useAuth();
   const { profile, config, loading, refetch } = useProfile();
+  const { theme, cycleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -75,6 +80,7 @@ export default function AppLayout() {
   const pageTitles: Record<string, string> = {
     '/app': 'Visão Geral',
     '/app/transactions': 'Lançamentos',
+    '/app/budget': 'Orçamento',
     '/app/goals': 'Metas',
     '/app/debts': 'Sair das Dívidas',
     '/app/cashflow': 'Fluxo de Caixa',
@@ -83,6 +89,8 @@ export default function AppLayout() {
     '/app/investments': 'Investimentos',
     '/app/charts': 'Gráficos',
     '/app/export': 'Exportar',
+    '/app/achievements': 'Conquistas',
+    '/app/referral': 'Indicar Amigos',
     '/app/settings': 'Configurações',
     '/app/billing': 'Planos e Assinatura',
   };
@@ -252,6 +260,13 @@ export default function AppLayout() {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
+            {/* Theme toggle */}
+            <button
+              onClick={cycleTheme}
+              title={`Tema: ${theme === 'light' ? 'Claro' : theme === 'dark' ? 'Escuro' : 'Sistema'}`}
+              className="relative w-9 h-9 rounded-[9px] bg-[#f8faf8] border border-[#e2e8f0] flex items-center justify-center hover:bg-[#f0fdf4] hover:border-[#d4edda] transition-all">
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-[#fbbf24]" /> : theme === 'system' ? <Monitor className="w-4 h-4 text-[#64748b]" /> : <Moon className="w-4 h-4 text-[#64748b]" />}
+            </button>
             {/* Bell */}
             <button className="relative w-9 h-9 rounded-[9px] bg-[#f8faf8] border border-[#e2e8f0] flex items-center justify-center hover:bg-[#f0fdf4] hover:border-[#d4edda] transition-all">
               <Bell className="w-4 h-4 text-[#64748b]" />
