@@ -496,7 +496,7 @@ export default function DebtsPage() {
               <p className="text-[13px] font-bold text-foreground mb-2">Quanto você pode pagar extra por mês?</p>
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-[13px] text-muted-foreground font-semibold">R$</span>
-                <input type="number" value={extraPayment || ''} onChange={e => setExtraPayment(Number(e.target.value))}
+                <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={extraPayment || ''} onChange={e => setExtraPayment(Number(e.target.value))}
                   placeholder="0" className="w-32 h-9 border-[1.5px] border-border rounded-lg px-3 text-[14px] font-bold focus:border-[#16a34a] outline-none" />
               </div>
               {extraPayment > 0 && orderedDebts[0] && (
@@ -514,7 +514,7 @@ export default function DebtsPage() {
               <div className="grid grid-cols-3 gap-3 mb-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted-foreground">Aporte mensal</label>
-                  <input type="number" value={compMonthly} onChange={e => setCompMonthly(Number(e.target.value))}
+                  <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={compMonthly} onChange={e => setCompMonthly(Number(e.target.value))}
                     className="w-full h-9 border-[1.5px] border-[#d4edda] rounded-lg px-3 text-[13px] font-bold focus:border-[#16a34a] outline-none" />
                 </div>
                 <div>
@@ -525,7 +525,7 @@ export default function DebtsPage() {
                 </div>
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted-foreground">Taxa %/mês</label>
-                  <input type="number" value={compRate} onChange={e => setCompRate(Number(e.target.value))} step={0.1}
+                  <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={compRate} onChange={e => setCompRate(Number(e.target.value))}
                     className="w-full h-9 border-[1.5px] border-[#d4edda] rounded-lg px-3 text-[13px] font-bold focus:border-[#16a34a] outline-none" />
                 </div>
               </div>
@@ -704,7 +704,7 @@ export default function DebtsPage() {
             <label className="text-[12px] font-bold text-muted-foreground">Pagamento extra mensal:</label>
             <div className="flex items-center gap-1">
               <span className="text-[12px] text-muted-foreground">R$</span>
-              <input type="number" value={extraPayment || ''} onChange={e => setExtraPayment(Number(e.target.value))}
+              <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={extraPayment || ''} onChange={e => setExtraPayment(Number(e.target.value))}
                 placeholder="0" className="w-28 h-8 border-[1.5px] border-border rounded-lg px-2 text-[13px] font-bold focus:border-[#16a34a] outline-none" />
             </div>
           </div>
