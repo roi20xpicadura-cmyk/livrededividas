@@ -291,7 +291,7 @@ export default function DebtsPage() {
   const totalPaid = payments.reduce((s, p) => s + Number(p.amount), 0);
 
   return (
-    <div className="flex flex-col gap-5" style={{ maxWidth: 1100, margin: '0 auto' }}>
+    <div className="flex flex-col gap-5 px-4 py-5 md:px-0 pb-28" style={{ maxWidth: 1100, margin: '0 auto' }}>
 
       {/* ═══ 1. HERO BANNER ═══ */}
       {debts.length === 0 ? (
@@ -334,22 +334,22 @@ export default function DebtsPage() {
 
       {/* ═══ 2. STATS ═══ */}
       {debts.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 md:gap-3">
           {[
-            { icon: DollarSign, bg: '#fee2e2', ic: '#dc2626', label: 'Total em Dívidas', value: fmt(totalRemaining), sub: 'Saldo devedor total', color: '#dc2626' },
-            { icon: AlertCircle, bg: '#fef2f2', ic: '#dc2626', label: 'Dívidas Ativas', value: String(activeDebts.length), sub: 'dívidas em aberto', color: '#dc2626' },
-            { icon: TrendingUp, bg: '#fffbeb', ic: '#d97706', label: 'Juros/Mês', value: fmt(monthlyInterest), sub: 'Custo mensal dos juros', color: '#d97706' },
-            { icon: Target, bg: '#f0fdf4', ic: '#16a34a', label: 'Menor Dívida', value: smallestDebt ? fmt(Number(smallestDebt.remaining_amount)) : '-', sub: smallestDebt?.name || '-', color: '#16a34a' },
-            { icon: Calendar, bg: '#eff6ff', ic: '#2563eb', label: 'Previsão Quitação', value: estimatedPayoff, sub: 'Pagando o mínimo', color: '#2563eb' },
+            { icon: DollarSign, bg: '#fee2e2', ic: '#dc2626', label: 'Total', value: fmt(totalRemaining), sub: 'Saldo devedor', color: '#dc2626' },
+            { icon: AlertCircle, bg: '#fef2f2', ic: '#dc2626', label: 'Ativas', value: String(activeDebts.length), sub: 'em aberto', color: '#dc2626' },
+            { icon: TrendingUp, bg: '#fffbeb', ic: '#d97706', label: 'Juros/Mês', value: fmt(monthlyInterest), sub: 'Custo mensal', color: '#d97706' },
+            { icon: Target, bg: '#f0fdf4', ic: '#16a34a', label: 'Menor', value: smallestDebt ? fmt(Number(smallestDebt.remaining_amount)) : '-', sub: smallestDebt?.name || '-', color: '#16a34a' },
+            { icon: Calendar, bg: '#eff6ff', ic: '#2563eb', label: 'Previsão', value: estimatedPayoff, sub: 'Pagando mínimo', color: '#2563eb' },
           ].map((c, i) => (
-            <div key={i} className="bg-card border-[1.5px] border-border rounded-xl p-4 flex items-center gap-3.5 hover:border-[#86efac] transition-colors">
-              <div className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: c.bg }}>
-                <c.icon className="w-[18px] h-[18px]" style={{ color: c.ic }} />
+            <div key={i} className="bg-card border-[1.5px] border-border rounded-xl p-3 md:p-4 flex items-center gap-2.5 md:gap-3.5 hover:border-[#86efac] transition-colors">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: c.bg }}>
+                <c.icon className="w-4 h-4 md:w-[18px] md:h-[18px]" style={{ color: c.ic }} />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">{c.label}</p>
-                <p className="text-[18px] font-black truncate" style={{ color: c.color }}>{c.value}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{c.sub}</p>
+                <p className="text-[9px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-wide">{c.label}</p>
+                <p className="text-[14px] md:text-[18px] font-black truncate" style={{ color: c.color }}>{c.value}</p>
+                <p className="text-[10px] md:text-[11px] text-muted-foreground truncate">{c.sub}</p>
               </div>
             </div>
           ))}

@@ -129,7 +129,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl px-4 py-5 md:px-0 pb-28">
       {/* Profile Type */}
       <div className="card-surface p-6">
         <h2 className="text-[13px] font-extrabold text-fin-green-dark mb-4">Tipo de perfil</h2>

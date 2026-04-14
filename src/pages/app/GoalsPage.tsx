@@ -231,24 +231,24 @@ export default function GoalsPage() {
   if (loading) return <div className="p-7 space-y-4"><div className="h-20 rounded-xl bg-muted/30 animate-pulse" /><div className="h-48 rounded-xl bg-muted/30 animate-pulse" /><div className="grid grid-cols-3 gap-4"><div className="h-64 rounded-xl bg-muted/30 animate-pulse" /><div className="h-64 rounded-xl bg-muted/30 animate-pulse" /><div className="h-64 rounded-xl bg-muted/30 animate-pulse" /></div></div>;
 
   return (
-    <div className="p-5 md:p-7 space-y-5" style={{ background: 'var(--bg-page)', minHeight: '100vh' }}>
+    <div className="px-4 py-5 md:p-7 pb-28 space-y-5" style={{ background: 'var(--bg-page)', minHeight: '100vh' }}>
       {/* STATS STRIP */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: 'METAS ATIVAS', value: String(activeGoals.length), Icon: Target, iconBg: '#f0fdf4', iconColor: '#16a34a' },
-          { label: 'CONCLUÍDAS', value: String(completedGoals.length), Icon: Trophy, iconBg: '#fefce8', iconColor: '#d97706' },
-          { label: 'TOTAL A ALCANÇAR', value: formatCurrency(totalRemaining), Icon: TrendingUp, iconBg: '#eff6ff', iconColor: '#2563eb' },
-          { label: 'MAIOR META', value: biggestGoal ? (biggestGoal.name.length > 16 ? biggestGoal.name.slice(0, 16) + '…' : biggestGoal.name) : '—', subValue: biggestGoal ? formatCurrency(Number(biggestGoal.target_amount)) : undefined, Icon: Star, iconBg: '#f5f3ff', iconColor: '#7c3aed' },
+          { label: 'Ativas', value: String(activeGoals.length), Icon: Target, iconBg: '#f0fdf4', iconColor: '#16a34a' },
+          { label: 'Concluídas', value: String(completedGoals.length), Icon: Trophy, iconBg: '#fefce8', iconColor: '#d97706' },
+          { label: 'A alcançar', value: formatCurrency(totalRemaining), Icon: TrendingUp, iconBg: '#eff6ff', iconColor: '#2563eb' },
+          { label: 'Maior meta', value: biggestGoal ? (biggestGoal.name.length > 10 ? biggestGoal.name.slice(0, 10) + '…' : biggestGoal.name) : '—', subValue: biggestGoal ? formatCurrency(Number(biggestGoal.target_amount)) : undefined, Icon: Star, iconBg: '#f5f3ff', iconColor: '#7c3aed' },
         ].map((s, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-            className="flex items-center gap-3.5 bg-card border border-border rounded-xl p-4" style={{ borderWidth: '1.5px' }}>
-            <div className="flex items-center justify-center rounded-[10px]" style={{ width: 40, height: 40, background: s.iconBg }}>
-              <s.Icon size={18} style={{ color: s.iconColor }} />
+            className="flex items-center gap-2.5 md:gap-3.5 bg-card border border-border rounded-xl p-3 md:p-4" style={{ borderWidth: '1.5px' }}>
+            <div className="flex items-center justify-center rounded-[10px] flex-shrink-0" style={{ width: 36, height: 36, background: s.iconBg }}>
+              <s.Icon size={16} style={{ color: s.iconColor }} />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-bold tracking-wider" style={{ color: 'var(--text-hint)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{s.label}</p>
-              <p className="text-lg font-black tracking-tight truncate" style={{ color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{s.value}</p>
-              {s.subValue && <p className="text-xs" style={{ color: 'var(--text-hint)' }}>{s.subValue}</p>}
+              <p className="text-[9px] md:text-[10px] font-bold tracking-wider uppercase" style={{ color: 'var(--text-hint)', letterSpacing: '0.6px' }}>{s.label}</p>
+              <p className="text-[15px] md:text-lg font-black tracking-tight truncate" style={{ color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{s.value}</p>
+              {s.subValue && <p className="text-[11px] truncate" style={{ color: 'var(--text-hint)' }}>{s.subValue}</p>}
             </div>
           </motion.div>
         ))}
@@ -257,11 +257,11 @@ export default function GoalsPage() {
       {/* NOVA META CARD */}
       <div ref={formRef} className="bg-card rounded-2xl overflow-hidden" style={{ border: '1.5px solid var(--border-default)' }}>
         <button onClick={() => setFormOpen(!formOpen)}
-          className="w-full flex items-center justify-between p-[18px_20px] cursor-pointer hover:bg-background transition-colors">
-          <div className="flex items-center gap-2">
-            <PlusCircle size={18} className="text-[#16a34a]" />
-            <span className="text-[15px] font-extrabold" style={{ color: 'var(--text-primary)' }}>Nova Meta</span>
-            {!formOpen && <span className="text-xs" style={{ color: 'var(--text-hint)', marginLeft: 4 }}>Clique para adicionar uma nova meta financeira</span>}
+          className="w-full flex items-center justify-between p-4 md:p-[18px_20px] cursor-pointer hover:bg-background transition-colors">
+          <div className="flex items-center gap-2 min-w-0">
+            <PlusCircle size={18} className="text-[#16a34a] flex-shrink-0" />
+            <span className="text-[14px] md:text-[15px] font-extrabold truncate" style={{ color: 'var(--text-primary)' }}>Nova Meta</span>
+            {!formOpen && <span className="text-xs hidden md:inline" style={{ color: 'var(--text-hint)', marginLeft: 4 }}>Clique para adicionar uma nova meta financeira</span>}
           </div>
           <motion.div animate={{ rotate: formOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
             <ChevronDown size={16} style={{ color: 'var(--text-hint)' }} />
