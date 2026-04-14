@@ -50,10 +50,10 @@ function AnimatedNumber({ value, suffix = '' }: { value: number; suffix?: string
 function ProgressBar({ pct, delay = 0 }: { pct: number; delay?: number }) {
   const [w, setW] = useState(0);
   useEffect(() => { const t = setTimeout(() => setW(Math.min(pct, 100)), delay); return () => clearTimeout(t); }, [pct, delay]);
-  const color = pct < 30 ? 'bg-[#ef4444]' : pct < 70 ? 'bg-[#f59e0b]' : 'bg-[#16a34a]';
+  const color = pct < 30 ? 'var(--color-danger-solid)' : pct < 70 ? 'var(--color-warning-solid)' : 'var(--color-green-600)';
   return (
-    <div className="h-[6px] bg-muted/30 rounded-full overflow-hidden">
-      <div className={`h-full rounded-full transition-all duration-[800ms] ease-out ${color}`} style={{ width: `${w}%` }} />
+    <div style={{ height: 6, background: 'var(--color-bg-sunken)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+      <div style={{ height: '100%', borderRadius: 'var(--radius-full)', transition: 'width 800ms ease-out', width: `${w}%`, background: color }} />
     </div>
   );
 }
@@ -183,19 +183,19 @@ export default function OverviewPage() {
   const recent = transactions.slice(0, 8);
 
   const kpis = profileType === 'personal' ? [
-    { label: 'Saldo', value: stats.netBalance, icon: TrendingUp, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
-    { label: 'Total Receitas', value: stats.totalIncome, icon: DollarSign, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
-    { label: 'Total Despesas', value: stats.totalExpense, icon: TrendingDown, iconBg: 'bg-[#fee2e2]', iconColor: 'text-[#dc2626]' },
-    { label: 'Total Guardado', value: Math.max(0, stats.netBalance), icon: DollarSign, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
-    { label: 'Metas Ativas', value: goals.filter(g => Number(g.current_amount) < Number(g.target_amount)).length, icon: Hash, iconBg: 'bg-muted/30', iconColor: 'text-muted-foreground', isCount: true },
-    { label: 'Taxa Poupança', value: stats.savingsRate, icon: Percent, iconBg: 'bg-[#ede9fe]', iconColor: 'text-[#7c3aed]', isPct: true, bar: Math.min(stats.savingsRate, 100) },
+    { label: 'Saldo', value: stats.netBalance, icon: TrendingUp, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
+    { label: 'Total Receitas', value: stats.totalIncome, icon: DollarSign, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
+    { label: 'Total Despesas', value: stats.totalExpense, icon: TrendingDown, iconBg: 'var(--color-danger-bg)', iconColor: 'var(--color-danger-solid)' },
+    { label: 'Total Guardado', value: Math.max(0, stats.netBalance), icon: DollarSign, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
+    { label: 'Metas Ativas', value: goals.filter(g => Number(g.current_amount) < Number(g.target_amount)).length, icon: Hash, iconBg: 'var(--color-bg-sunken)', iconColor: 'var(--color-text-muted)', isCount: true },
+    { label: 'Taxa Poupança', value: stats.savingsRate, icon: Percent, iconBg: '#ede9fe', iconColor: '#7c3aed', isPct: true, bar: Math.min(stats.savingsRate, 100) },
   ] : [
-    { label: 'Receita', value: stats.totalIncome, icon: TrendingUp, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
-    { label: 'Custos', value: stats.totalExpense, icon: TrendingDown, iconBg: 'bg-[#fee2e2]', iconColor: 'text-[#dc2626]' },
-    { label: 'Lucro', value: stats.bizProfit, icon: DollarSign, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
-    { label: 'ROI', value: stats.roiBiz, icon: Percent, iconBg: 'bg-[#ede9fe]', iconColor: 'text-[#7c3aed]', isPct: true },
-    { label: 'Lançamentos', value: stats.txCount, icon: Hash, iconBg: 'bg-muted/30', iconColor: 'text-muted-foreground', isCount: true },
-    { label: 'Média/Dia', value: stats.avgPerDay, icon: Zap, iconBg: 'bg-[#fef9c3]', iconColor: 'text-[#ca8a04]' },
+    { label: 'Receita', value: stats.totalIncome, icon: TrendingUp, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
+    { label: 'Custos', value: stats.totalExpense, icon: TrendingDown, iconBg: 'var(--color-danger-bg)', iconColor: 'var(--color-danger-solid)' },
+    { label: 'Lucro', value: stats.bizProfit, icon: DollarSign, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
+    { label: 'ROI', value: stats.roiBiz, icon: Percent, iconBg: '#ede9fe', iconColor: '#7c3aed', isPct: true },
+    { label: 'Lançamentos', value: stats.txCount, icon: Hash, iconBg: 'var(--color-bg-sunken)', iconColor: 'var(--color-text-muted)', isCount: true },
+    { label: 'Média/Dia', value: stats.avgPerDay, icon: Zap, iconBg: 'var(--color-warning-bg)', iconColor: 'var(--color-warning-solid)' },
   ];
 
   return (
@@ -248,14 +248,14 @@ export default function OverviewPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {kpis.map((k, i) => (
           <motion.div key={k.label} {...stagger(i + 3)}
-            className="bg-card border-[1.5px] border-border rounded-[14px] p-[18px] transition-all duration-200 hover:border-[#86efac] hover:-translate-y-[2px]">
+            className="card-premium" style={{ padding: 18 }}>
             <div className="flex items-center justify-between">
-              <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-[0.8px]">{k.label}</p>
-              <div className={`w-8 h-8 rounded-[9px] ${k.iconBg} flex items-center justify-center`}>
-                <k.icon className={`w-[15px] h-[15px] ${k.iconColor}`} />
+              <p className="label-upper">{k.label}</p>
+              <div className="flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: k.iconBg }}>
+                <k.icon style={{ width: 15, height: 15, color: k.iconColor }} />
               </div>
             </div>
-            <p className="text-[22px] font-black tracking-tight mt-2.5 leading-none text-foreground">
+            <p className="metric-value" style={{ fontSize: 22, marginTop: 10, lineHeight: 1, color: 'var(--color-text-strong)' }}>
               {k.isCount ? <AnimatedNumber value={k.value} /> : k.isPct ? <AnimatedNumber value={k.value} suffix="%" /> : <AnimatedCurrency value={k.value} currency={currency} />}
             </p>
             {k.bar !== undefined && (
