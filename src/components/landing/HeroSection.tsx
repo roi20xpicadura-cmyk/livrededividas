@@ -1,67 +1,90 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, PlayCircle } from 'lucide-react';
+import { ArrowRight, PlayCircle, TrendingUp, Target, Flame, Bot } from 'lucide-react';
 import { motion } from 'framer-motion';
 import HeroMockup from './HeroMockup';
 
-const wordVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.08, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
-  }),
-};
+const ease = [0.16, 1, 0.3, 1];
 
-const avatarColors = ['bg-primary', 'bg-fin-blue', 'bg-fin-purple', 'bg-fin-amber', 'bg-destructive'];
-const avatarInitials = ['AS', 'CS', 'MO', 'PF', 'RL'];
-
-const objectivePills = [
-  { emoji: '🆘', label: 'Sair das dívidas' },
-  { emoji: '💳', label: 'Quitar cartão' },
-  { emoji: '🚗', label: 'Quitar carro' },
-  { emoji: '💰', label: 'Juntar dinheiro' },
-  { emoji: '📈', label: 'Investir' },
-  { emoji: '🏠', label: 'Comprar imóvel' },
-  { emoji: '💼', label: 'Abrir negócio' },
-];
+function FloatingCard({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 1 + delay, duration: 0.5, ease }}
+      className={`absolute bg-white rounded-[14px] border border-[#e2e8f0] p-3.5 hidden lg:block ${className}`}
+      style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.10)' }}
+    >
+      <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay }}>
+        {children}
+      </motion.div>
+    </motion.div>
+  );
+}
 
 export default function HeroSection() {
-  const line1 = 'Controle seu'.split(' ');
-  const line2 = ['dinheiro.'];
-  const line3 = 'Realize seus objetivos.'.split(' ');
+  const lines = [
+    { words: ['Controle', 'total'], color: '#0f172a' },
+    { words: ['das', 'suas', 'finanças.'], color: '#0f172a' },
+    { words: ['Pessoal', 'e', 'negócio.'], color: '#16a34a' },
+  ];
+
+  let wordIndex = 0;
 
   return (
-    <section className="pt-16 pb-20 md:pt-24 md:pb-28 px-4 bg-card">
-      <div className="max-w-4xl mx-auto text-center">
-        {/* Announcement badge */}
+    <section className="relative pt-16 pb-20 md:pt-24 md:pb-32 px-4 overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-white" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(22,163,74,0.12) 0%, transparent 70%)',
+          }}
+        />
+        <div
+          className="absolute inset-0 opacity-50"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
+      </div>
+
+      <div className="max-w-[1200px] mx-auto text-center">
+        {/* Badge */}
         <motion.a
           href="#recursos"
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-fin-green-border bg-fin-green-pale text-fin-green-dark text-[13px] font-medium cursor-pointer hover:border-primary transition-colors duration-200 mb-8"
+          transition={{ duration: 0.5, ease }}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#bbf7d0] bg-[#f0fdf4] cursor-pointer hover:border-[#16a34a] transition-colors mb-8"
         >
-          🎉 Novo: Módulo de Investimentos lançado <ArrowRight className="w-3.5 h-3.5" />
+          <span className="text-[9px] font-[800] bg-[#16a34a] text-white px-2 py-0.5 rounded-full uppercase">Novo</span>
+          <span className="text-[13px] font-medium text-[#166534]">IA Financeira disponível para todos os planos</span>
+          <ArrowRight className="w-3 h-3 text-[#16a34a]" />
         </motion.a>
 
         {/* Headline */}
-        <h1 className="max-w-[780px] mx-auto leading-[1.05] tracking-[-2px]" style={{ fontSize: 'clamp(42px, 6vw, 72px)' }}>
-          {line1.map((word, i) => (
-            <motion.span key={`l1-${i}`} custom={i} variants={wordVariants} initial="hidden" animate="visible" className="inline-block font-black text-foreground mr-[0.3em]">
-              {word}
-            </motion.span>
-          ))}
-          <br />
-          {line2.map((word, i) => (
-            <motion.span key={`l2-${i}`} custom={line1.length + i} variants={wordVariants} initial="hidden" animate="visible" className="inline-block font-black text-foreground mr-[0.3em]">
-              {word}
-            </motion.span>
-          ))}
-          <br />
-          {line3.map((word, i) => (
-            <motion.span key={`l3-${i}`} custom={line1.length + line2.length + i} variants={wordVariants} initial="hidden" animate="visible" className="inline-block font-black text-primary mr-[0.3em]">
-              {word}
-            </motion.span>
+        <h1 className="max-w-[800px] mx-auto leading-[1.05]" style={{ fontSize: 'clamp(42px, 6vw, 72px)', letterSpacing: '-3px' }}>
+          {lines.map((line, li) => (
+            <span key={li}>
+              {line.words.map((word) => {
+                const i = wordIndex++;
+                return (
+                  <motion.span
+                    key={`w-${i}`}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + i * 0.08, duration: 0.6, ease }}
+                    className="inline-block mr-[0.28em] font-[900]"
+                    style={{ color: line.color }}
+                  >
+                    {word}
+                  </motion.span>
+                );
+              })}
+              {li < lines.length - 1 && <br />}
+            </span>
           ))}
         </h1>
 
@@ -69,82 +92,128 @@ export default function HeroSection() {
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-          className="mt-5 text-lg text-muted max-w-[560px] mx-auto leading-[1.7]"
+          transition={{ delay: 0.6, duration: 0.5, ease }}
+          className="mt-5 text-[18px] md:text-[20px] text-[#64748b] max-w-[560px] mx-auto leading-[1.7]"
         >
-          Para quem quer sair das dívidas, guardar dinheiro, fazer o negócio crescer ou simplesmente organizar a vida financeira.
+          Para quem quer sair das dívidas, guardar dinheiro, fazer seu negócio crescer — ou simplesmente organizar a vida financeira.
         </motion.p>
 
         {/* CTAs */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-          className="mt-9 flex flex-col sm:flex-row gap-3 justify-center"
+          transition={{ delay: 0.7, duration: 0.5, ease }}
+          className="mt-10 flex flex-col sm:flex-row gap-3 justify-center"
         >
           <Link
             to="/register"
-            className="px-7 py-3.5 rounded-[10px] bg-primary text-primary-foreground text-base font-extrabold hover:bg-fin-green-dark active:scale-[0.97] transition-all duration-200 inline-flex items-center justify-center gap-2"
+            className="h-[54px] px-7 rounded-[14px] bg-[#16a34a] text-white text-[16px] font-[800] hover:bg-[#14532d] active:scale-[0.97] transition-all duration-200 inline-flex items-center justify-center gap-2 hover:-translate-y-0.5"
+            style={{ boxShadow: '0 8px 30px rgba(22,163,74,0.35), 0 2px 8px rgba(22,163,74,0.2)' }}
           >
-            Começar grátis <ArrowRight className="w-4 h-4" /> <ArrowRight className="w-4 h-4" />
+            Começar grátis — é de graça <ArrowRight className="w-[18px] h-[18px]" />
           </Link>
           <Link
             to="/pricing"
-            className="px-7 py-3.5 rounded-[10px] bg-card border-[1.5px] border-border text-foreground text-base font-semibold hover:border-primary hover:text-primary transition-all duration-200 inline-flex items-center justify-center gap-2"
+            className="h-[54px] px-6 rounded-[14px] bg-transparent border-[1.5px] border-[#e2e8f0] text-[#64748b] text-[14px] font-semibold hover:bg-[#f8fafc] hover:border-[#cbd5e1] transition-all duration-200 inline-flex items-center justify-center gap-2"
           >
             <PlayCircle className="w-4 h-4" /> Ver demonstração
           </Link>
         </motion.div>
 
-        {/* Objectives pills */}
+        {/* Trust line */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="mt-6"
+          transition={{ delay: 0.85 }}
+          className="mt-5 flex flex-wrap justify-center gap-5 text-[12px] text-[#94a3b8]"
         >
-          <p className="text-[11px] text-muted mb-2">Feito para quem quer:</p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {objectivePills.map(p => (
-              <Link key={p.label} to="/register"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-fin-green-border bg-card text-[13px] font-medium text-foreground hover:bg-fin-green-pale hover:border-primary transition-all duration-200">
-                {p.emoji} {p.label}
-              </Link>
-            ))}
-          </div>
+          <span>✓ Sem cartão de crédito</span>
+          <span>✓ Plano grátis para sempre</span>
+          <span>✓ Cancele quando quiser</span>
         </motion.div>
 
         {/* Social proof */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="mt-6 flex items-center justify-center gap-3"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.95 }} className="mt-6 flex items-center justify-center gap-3">
           <div className="flex -space-x-2">
-            {avatarColors.map((c, i) => (
-              <div key={i} className={`w-8 h-8 rounded-full ${c} flex items-center justify-center text-[10px] font-bold text-white border-2 border-card`}>
-                {avatarInitials[i]}
+            {['bg-[#16a34a]', 'bg-[#2563eb]', 'bg-[#7c3aed]', 'bg-[#f59e0b]', 'bg-[#ef4444]'].map((c, i) => (
+              <div key={i} className={`w-8 h-8 rounded-full ${c} flex items-center justify-center text-[10px] font-bold text-white border-2 border-white`}>
+                {['AS', 'CS', 'MO', 'PF', 'RL'][i]}
               </div>
             ))}
           </div>
-          <span className="text-[13px] text-muted">Mais de 2.000 empreendedores já usam</span>
+          <span className="text-[12px] text-[#94a3b8]">+2.400 pessoas organizando suas finanças</span>
         </motion.div>
 
-        {/* Mockup */}
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="mt-16 max-w-4xl mx-auto"
-        >
+        {/* Screenshot */}
+        <div className="relative mt-16 md:mt-20 max-w-[1100px] mx-auto">
+          {/* Blur orbs */}
+          <div className="absolute -left-20 top-1/4 w-[400px] h-[400px] rounded-full bg-[rgba(22,163,74,0.12)] blur-[80px] -z-10" />
+          <div className="absolute -right-20 top-1/3 w-[300px] h-[300px] rounded-full bg-[rgba(37,99,235,0.08)] blur-[60px] -z-10" />
+
           <motion.div
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8, ease }}
+            className="rounded-[20px] border border-[rgba(0,0,0,0.08)] overflow-hidden"
+            style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 20px 60px rgba(0,0,0,0.12), 0 60px 120px rgba(0,0,0,0.08)' }}
           >
+            {/* Browser bar */}
+            <div className="h-8 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center px-3 gap-2">
+              <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
+              </div>
+              <div className="flex-1 flex justify-center">
+                <div className="bg-white border border-[#e2e8f0] rounded-md px-3 py-0.5 text-[11px] text-[#94a3b8]">
+                  app.findashpro.com.br
+                </div>
+              </div>
+            </div>
             <HeroMockup />
           </motion.div>
-        </motion.div>
+
+          {/* Floating cards */}
+          <FloatingCard className="-left-10 xl:-left-16 top-8" delay={0}>
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="w-4 h-4 text-[#16a34a]" />
+              <span className="text-[11px] font-medium text-[#64748b]">Score Financeiro</span>
+            </div>
+            <span className="text-[28px] font-[900] text-[#0f172a] leading-none">847</span>
+            <div className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#16a34a] bg-[#f0fdf4] px-2 py-0.5 rounded-full">
+              ↑ +23 esse mês
+            </div>
+          </FloatingCard>
+
+          <FloatingCard className="-right-10 xl:-right-16 top-4" delay={1}>
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="w-4 h-4 text-[#7c3aed]" />
+              <span className="text-[11px] font-medium text-[#64748b]">Meta: Viagem</span>
+            </div>
+            <div className="w-36 h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
+              <div className="h-full bg-[#16a34a] rounded-full" style={{ width: '67%' }} />
+            </div>
+            <span className="text-[10px] text-[#94a3b8] mt-1 block">R$ 6.700 / R$ 10.000</span>
+          </FloatingCard>
+
+          <FloatingCard className="-left-6 xl:-left-12 bottom-16" delay={2}>
+            <div className="flex items-center gap-2 mb-1">
+              <Bot className="w-4 h-4 text-[#2563eb]" />
+              <span className="text-[11px] font-semibold text-[#0f172a]">IA detectou algo</span>
+            </div>
+            <p className="text-[10px] text-[#64748b] italic max-w-[180px]">
+              Gastos em alimentação 23% acima da média
+            </p>
+          </FloatingCard>
+
+          <FloatingCard className="-right-6 xl:-right-12 bottom-20" delay={1.5}>
+            <div className="flex items-center gap-2">
+              <Flame className="w-4 h-4 text-[#f97316]" />
+              <span className="text-[11px] font-semibold text-[#0f172a]">7 dias de streak 🔥</span>
+            </div>
+            <span className="text-[10px] text-[#64748b]">+150 XP conquistados hoje</span>
+          </FloatingCard>
+        </div>
       </div>
     </section>
   );
