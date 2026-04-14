@@ -408,7 +408,8 @@ export default function GoalsPage() {
           {sortedActive.map((g, i) => (
             <GoalCard key={g.id} goal={g} index={i} openMenu={openMenu} setOpenMenu={setOpenMenu}
               onQuickAdd={handleQuickAdd} onCustomAdd={handleCustomAdd} onRemove={handleRemove}
-              onComplete={handleMarkComplete} onEdit={openEditModal} />
+              onComplete={handleMarkComplete} onEdit={openEditModal}
+              checkins={checkins[g.id] || []} onCheckinToday={() => handleCheckinToday(g.id)} />
           ))}
         </div>
       )}
