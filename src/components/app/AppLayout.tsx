@@ -12,7 +12,7 @@ import {
   LayoutDashboard, ArrowLeftRight, Target, TrendingUp, FileText,
   CreditCard, Briefcase, BarChart2, Download, Settings2, Crown,
   LogOut, Menu, X, Bell, ChevronRight, BarChart3, Home, MoreHorizontal, Sparkles,
-  AlertCircle, CalendarDays, Trophy, Gift, Sun, Moon, Monitor, Plus, Building2, Plug
+  AlertCircle, CalendarDays, Trophy, Gift, Sun, Moon, Monitor, Plus, Building2, Plug, FlaskConical
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -31,6 +31,8 @@ const ALL_NAV_ITEMS = [
   { label: 'Investimentos', path: '/app/investments', icon: Briefcase, profiles: ['personal', 'business', 'both'] },
   { label: 'Gráficos', path: '/app/charts', icon: BarChart2, profiles: ['business', 'both'] },
   { label: 'Exportar', path: '/app/export', icon: Download, profiles: ['personal', 'business', 'both'] },
+  { label: 'Simulador', path: '/app/simulator', icon: FlaskConical, profiles: ['personal', 'business', 'both'], badge: 'NOVO' },
+  { label: 'Previsões', path: '/app/predictions', icon: TrendingUp, profiles: ['personal', 'business', 'both'] },
 ];
 
 const ACCOUNT_ITEMS = [
@@ -66,6 +68,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/app/banks': 'Contas Bancárias',
   '/app/integrations': 'Integrações',
   '/app/billing': 'Planos e Assinatura',
+  '/app/simulator': 'Simulador E Se...?',
+  '/app/predictions': 'IA Preditiva',
 };
 
 export default function AppLayout() {
@@ -211,10 +215,13 @@ export default function AppLayout() {
                   }} />
                 </div>
                 <span className="flex-1" style={{
-                  fontSize: 13,
+fontSize: 13,
                   fontWeight: active ? 700 : 500,
                   color: active ? 'var(--color-green-800)' : 'var(--color-text-muted)',
                 }}>{item.label}</span>
+                {(item as any).badge && (
+                  <span style={{ fontSize: 9, fontWeight: 800, background: '#fbbf24', color: '#78350f', padding: '2px 7px', borderRadius: 99 }}>{(item as any).badge}</span>
+                )}
                 {item.path === '/app/debts' && activeDebtCount > 0 && (
                   <span className="ml-auto text-center" style={{
                     fontSize: 10, fontWeight: 800,

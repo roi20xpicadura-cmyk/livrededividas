@@ -738,6 +738,69 @@ export type Database = {
         }
         Relationships: []
       }
+      prediction_alerts: {
+        Row: {
+          action_taken: boolean | null
+          alert_type: string
+          created_at: string | null
+          description: string | null
+          dismissed: boolean | null
+          id: string
+          severity: string
+          title: string
+          triggered_date: string
+          user_id: string
+        }
+        Insert: {
+          action_taken?: boolean | null
+          alert_type: string
+          created_at?: string | null
+          description?: string | null
+          dismissed?: boolean | null
+          id?: string
+          severity?: string
+          title: string
+          triggered_date: string
+          user_id: string
+        }
+        Update: {
+          action_taken?: boolean | null
+          alert_type?: string
+          created_at?: string | null
+          description?: string | null
+          dismissed?: boolean | null
+          id?: string
+          severity?: string
+          title?: string
+          triggered_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      prediction_cache: {
+        Row: {
+          generated_at: string | null
+          horizon_days: number | null
+          id: string
+          predictions: Json
+          user_id: string
+        }
+        Insert: {
+          generated_at?: string | null
+          horizon_days?: number | null
+          id?: string
+          predictions: Json
+          user_id: string
+        }
+        Update: {
+          generated_at?: string | null
+          horizon_days?: number | null
+          id?: string
+          predictions?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
