@@ -386,7 +386,7 @@ export default function OverviewPage() {
                 {goals.filter(g => Number(g.current_amount) >= Number(g.target_amount)).length}/{goals.length} concluídas
               </span>
             </div>
-            <Link to="/app/goals" className="text-[12px] font-bold text-[#16a34a] hover:underline flex items-center gap-1">
+            <Link to="/app/goals" className="text-[12px] font-bold text-primary hover:underline flex items-center gap-1">
               Ver todas <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -409,7 +409,7 @@ export default function OverviewPage() {
               return (
                 <Link to="/app/goals" key={goal.id}>
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + i * 0.05 }}
-                    className="flex-shrink-0 w-[240px] min-w-[240px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-border transition-all duration-200 hover:-translate-y-[2px] hover:border-[#86efac] cursor-pointer"
+                    className="flex-shrink-0 w-[240px] min-w-[240px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-border transition-all duration-200 hover:-translate-y-[2px] hover:border-primary/40 cursor-pointer"
                     style={{ borderTopWidth: 4, borderTopColor: done ? '#d97706' : color }}>
                     <div className="flex items-start gap-2.5">
                       <div className="w-10 h-10 rounded-[10px] flex items-center justify-center text-xl flex-shrink-0"
@@ -455,9 +455,9 @@ export default function OverviewPage() {
             })}
             {/* CTA to create more */}
             <Link to="/app/goals">
-              <div className="flex-shrink-0 w-[180px] min-w-[180px] min-h-[170px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-dashed border-[#d4edda] hover:border-[#16a34a] transition-all flex flex-col items-center justify-center gap-2 cursor-pointer">
-                <PlusCircle className="w-8 h-8 text-[#86efac]" />
-                <p className="text-[12px] font-bold text-[#16a34a]">Nova meta</p>
+              <div className="flex-shrink-0 w-[180px] min-w-[180px] min-h-[170px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-dashed border-border hover:border-primary transition-all flex flex-col items-center justify-center gap-2 cursor-pointer">
+                <PlusCircle className="w-8 h-8 text-primary" />
+                <p className="text-[12px] font-bold text-primary">Nova meta</p>
               </div>
             </Link>
           </div>
@@ -469,7 +469,7 @@ export default function OverviewPage() {
         <motion.div {...stagger(10)}>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[15px] font-extrabold text-foreground">Seus Objetivos</h3>
-            <Link to="/app/goals" className="text-[12px] font-bold text-[#16a34a] hover:underline flex items-center gap-1">
+            <Link to="/app/goals" className="text-[12px] font-bold text-primary hover:underline flex items-center gap-1">
               Criar metas <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -480,14 +480,14 @@ export default function OverviewPage() {
               return (
                 <Link to="/app/goals" key={key}>
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + i * 0.05 }}
-                    className="flex-shrink-0 w-[200px] min-w-[200px] min-h-[120px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-dashed border-[#d4edda] hover:border-[#16a34a] transition-all cursor-pointer">
+                    className="flex-shrink-0 w-[200px] min-w-[200px] min-h-[120px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-dashed border-border hover:border-primary transition-all cursor-pointer">
                     <div className="flex items-center gap-2.5">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl bg-secondary">{obj.emoji}</div>
                       <p className="text-[13px] font-extrabold text-foreground leading-tight">{obj.label}</p>
                     </div>
                     <div className="flex flex-col items-center mt-4">
                       <PlusCircle className="w-5 h-5 text-muted-foreground/50" />
-                      <p className="text-[11px] font-bold text-[#16a34a] mt-1">Criar meta</p>
+                      <p className="text-[11px] font-bold text-primary mt-1">Criar meta</p>
                     </div>
                   </motion.div>
                 </Link>
@@ -501,7 +501,7 @@ export default function OverviewPage() {
       <motion.div {...stagger(11)} className="card-premium overflow-hidden" style={{ borderRadius: 'var(--radius-xl)' }}>
         <div className="flex items-center justify-between px-5 pt-[18px] pb-3.5 border-b border-border/30">
           <h3 className="text-[15px] font-extrabold text-foreground">Lançamentos Recentes</h3>
-          <Link to="/app/transactions" className="text-[12px] font-bold text-[#16a34a] hover:underline flex items-center gap-1">
+          <Link to="/app/transactions" className="text-[12px] font-bold text-primary hover:underline flex items-center gap-1">
             Ver todos <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
@@ -509,7 +509,7 @@ export default function OverviewPage() {
         {recent.length === 0 ? (
           <div className="py-12 flex flex-col items-center justify-center gap-3">
             <div className="w-[72px] h-[72px] rounded-full bg-secondary flex items-center justify-center">
-              <ReceiptText className="w-8 h-8 text-[#86efac]" />
+              <ReceiptText className="w-8 h-8 text-primary" />
             </div>
             <p className="text-[15px] font-bold text-foreground">Nenhum lançamento ainda</p>
             <p className="text-[13px] text-muted-foreground max-w-[260px] text-center leading-relaxed">Comece adicionando sua primeira receita ou despesa.</p>
@@ -535,17 +535,17 @@ export default function OverviewPage() {
                   const isIncome = tx.type === 'income';
                   return (
                     <tr key={tx.id}
-                      className={`border-b border-border/30 hover:bg-accent/50 transition-colors border-l-[3px] ${isIncome ? 'border-l-[#16a34a]' : 'border-l-[#ef4444]'}`}>
+                      className={`border-b border-border/30 hover:bg-accent/50 transition-colors border-l-[3px] ${isIncome ? 'border-l-primary' : 'border-l-destructive'}`}>
                       <td className="px-5 py-3 text-[12px] font-medium text-muted-foreground">
                         {format(parseISO(tx.date), 'dd/MM', { locale: ptBR })}
                       </td>
                       <td className="px-5 py-3 text-[13px] font-bold text-foreground">{tx.description}</td>
                       <td className="px-5 py-3">
                         <span className={`inline-block px-2.5 py-[3px] rounded-full text-[11px] font-bold border ${
-                          isIncome ? 'bg-secondary text-[#166534] border-[#d4edda]' : 'bg-[#fef2f2] text-[#991b1b] border-[#fecaca]'
+                          isIncome ? 'bg-secondary text-accent-foreground border-border' : 'bg-destructive/10 text-destructive border-destructive/30'
                         }`}>{tx.category}</span>
                       </td>
-                      <td className={`px-5 py-3 text-right text-[14px] font-black ${isIncome ? 'text-[#16a34a]' : 'text-[#dc2626]'}`}>
+                      <td className={`px-5 py-3 text-right text-[14px] font-black ${isIncome ? 'text-primary' : 'text-destructive'}`}>
                         {isIncome ? '+' : '−'}{formatCurrency(Number(tx.amount), currency)}
                       </td>
                     </tr>
