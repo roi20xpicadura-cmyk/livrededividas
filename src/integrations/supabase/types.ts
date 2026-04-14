@@ -14,34 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      card_bills: {
+        Row: {
+          card_id: string
+          created_at: string | null
+          id: string
+          month_year: string
+          paid: boolean | null
+          paid_at: string | null
+          total_amount: number | null
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string | null
+          id?: string
+          month_year: string
+          paid?: boolean | null
+          paid_at?: string | null
+          total_amount?: number | null
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string | null
+          id?: string
+          month_year?: string
+          paid?: boolean | null
+          paid_at?: string | null
+          total_amount?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_bills_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_cards: {
         Row: {
+          closing_day: number | null
           color: string | null
           created_at: string | null
           credit_limit: number
           due_day: number | null
           id: string
+          last_four: string | null
           name: string
+          network: string | null
+          notes: string | null
           used_amount: number | null
           user_id: string
         }
         Insert: {
+          closing_day?: number | null
           color?: string | null
           created_at?: string | null
           credit_limit: number
           due_day?: number | null
           id?: string
+          last_four?: string | null
           name: string
+          network?: string | null
+          notes?: string | null
           used_amount?: number | null
           user_id: string
         }
         Update: {
+          closing_day?: number | null
           color?: string | null
           created_at?: string | null
           credit_limit?: number
           due_day?: number | null
           id?: string
+          last_four?: string | null
           name?: string
+          network?: string | null
+          notes?: string | null
           used_amount?: number | null
           user_id?: string
         }
