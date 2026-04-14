@@ -282,7 +282,7 @@ fontSize: 13,
           <div style={{ height: 1, background: 'var(--color-border-weak)', margin: '0 10px 4px' }} />
           <p className="label-upper" style={{ padding: '8px 8px 4px' }}>CONTA</p>
 
-          {ACCOUNT_ITEMS.map(item => {
+          {accountItems.map(item => {
             const active = isActive(item.path);
             const isBilling = item.path === '/app/billing';
             return (
@@ -557,7 +557,7 @@ fontSize: 13,
 
               {/* Account section */}
               <div style={{ marginTop: 16, borderTop: '1px solid var(--color-border-weak)', paddingTop: 12 }}>
-                {ACCOUNT_ITEMS.map(item => (
+                {accountItems.map(item => (
                   <Link key={item.path} to={item.path} onClick={() => setShowMoreDrawer(false)}
                     className="flex items-center transition-colors"
                     style={{ gap: 12, padding: '12px 4px', fontSize: 14, fontWeight: 500, color: 'var(--color-text-base)', borderBottom: '1px solid var(--color-border-weak)' }}>
