@@ -415,7 +415,7 @@ export default function TransactionsPage() {
         </div>
 
         {/* ── 3. FILTER BAR ── */}
-        <div className="bg-card border-[1.5px] border-border rounded-xl p-3 flex flex-col md:flex-row md:items-center gap-2.5">
+        <div className="bg-card border border-border rounded-xl p-2.5 md:p-3 flex flex-col md:flex-row md:items-center gap-2">
           <div className="flex items-center gap-1.5 flex-wrap flex-1">
             {([['all', 'Todos'], ['income', 'Receitas'], ['expense', 'Despesas']] as const).map(([v, l]) => (
               <button key={v} onClick={() => { setFilterType(v); setPage(1); }}
