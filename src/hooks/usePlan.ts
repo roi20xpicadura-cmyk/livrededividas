@@ -38,6 +38,7 @@ const LIMITS = {
     budget: true,
     ai_chat: true,
     recurring: true,
+    bank_connection: true,
   },
 } as const;
 
