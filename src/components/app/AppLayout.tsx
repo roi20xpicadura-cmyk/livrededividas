@@ -523,8 +523,6 @@ export default function AppLayout() {
         )}
       </AnimatePresence>
 
-      {/* ═══ FAB: Quick Add Transaction ═══ */}
-      {isMobile && !chatOpen && <QuickAddFAB />}
 
       {/* ═══ AI CHAT ═══ */}
       <button onClick={() => setChatOpen(true)}
