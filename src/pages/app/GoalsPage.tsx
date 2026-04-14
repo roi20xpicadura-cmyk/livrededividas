@@ -123,7 +123,16 @@ export default function GoalsPage() {
     const goal = goals.find(g => g.id === id);
     if (!goal) return;
     const newVal = Number(goal.current_amount) + amount;
+    const today = format(new Date(), 'yyyy-MM-dd');
+    // Update goal amount
     await supabase.from('goals').update({ current_amount: newVal }).eq('id', id);
+    // Upsert daily checkin
+    const existing = (checkins[id] || []).find(c => c.date === today);
+    if (existing) {
+      await supabase.from('goal_checkins').update({ amount: Number(existing.amount) + amount }).eq('id', existing.id);
+    } else {
+      await supabase.from('goal_checkins').insert({ user_id: user!.id, goal_id: id, date: today, amount });
+    }
     toast.success(`✓ ${formatCurrency(amount)} adicionado!`);
     if (newVal >= Number(goal.target_amount) && Number(goal.current_amount) < Number(goal.target_amount)) {
       triggerConfetti();
@@ -136,6 +145,21 @@ export default function GoalsPage() {
     const amount = parseFloat(val);
     if (isNaN(amount) || amount <= 0) return;
     await handleQuickAdd(id, amount);
+  };
+
+  const handleCheckinToday = async (goalId: string) => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const existing = (checkins[goalId] || []).find(c => c.date === today);
+    if (existing) {
+      // Already checked in today — uncheckin
+      await supabase.from('goal_checkins').delete().eq('id', existing.id);
+      toast('Check-in de hoje removido');
+    } else {
+      // Check in with 0 amount (just marking the day)
+      await supabase.from('goal_checkins').insert({ user_id: user!.id, goal_id: goalId, date: today, amount: 0 });
+      toast.success('✓ Dia marcado!');
+    }
+    fetchGoals();
   };
 
   const handleRemove = async (id: string) => {
