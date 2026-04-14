@@ -332,7 +332,7 @@ export default function CardsPage() {
 
   // ─── EMPTY STATE ───
   if (!cards.length) return (
-    <div className="flex flex-col items-center gap-4 py-16 text-center">
+    <div className="flex flex-col items-center gap-4 py-16 px-4 pb-28 text-center">
       {/* CSS card stack */}
       <div className="relative w-[200px] h-[120px] mb-2">
         {[{ rot: -8, bg: '#cbd5e1', z: 1 }, { rot: -3, bg: '#94a3b8', z: 2 }, { rot: 0, bg: '#16a34a', z: 3 }].map((c, i) => (

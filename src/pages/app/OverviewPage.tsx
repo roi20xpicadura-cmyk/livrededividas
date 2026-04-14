@@ -199,7 +199,7 @@ export default function OverviewPage() {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 pb-28">
       {/* ── Tip Bar ────────────────────────────────── */}
       {activeTip && (
         <motion.div {...stagger(0)}

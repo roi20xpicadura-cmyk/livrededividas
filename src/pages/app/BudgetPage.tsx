@@ -151,7 +151,7 @@ export default function BudgetPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
-      <div className="p-7 flex flex-col gap-5 max-w-[1400px] mx-auto">
+      <div className="px-4 py-5 md:p-7 pb-28 flex flex-col gap-5 max-w-[1400px] mx-auto">
         {/* Month selector */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
