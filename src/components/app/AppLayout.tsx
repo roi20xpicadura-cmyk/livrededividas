@@ -168,11 +168,20 @@ export default function AppLayout() {
                   active ? 'bg-[#f0fdf4]' : 'hover:bg-[#f8faf8]'
                 }`}>
                 <div className={`w-[22px] h-[22px] rounded-md flex items-center justify-center flex-shrink-0 ${active ? 'bg-[#dcfce7]' : ''}`}>
-                  <item.icon className={`w-[15px] h-[15px] ${active ? 'text-[#16a34a]' : 'text-[#94a3b8] group-hover:text-[#16a34a]'}`} />
+                  <item.icon className={`w-[15px] h-[15px] ${
+                    item.path === '/app/debts' && activeDebtCount > 0
+                      ? 'text-[#dc2626]'
+                      : active ? 'text-[#16a34a]' : 'text-[#94a3b8] group-hover:text-[#16a34a]'
+                  }`} />
                 </div>
-                <span className={`text-[13px] ${active ? 'font-bold text-[#16a34a]' : 'font-medium text-[#64748b] group-hover:text-[#14532d]'}`}>
+                <span className={`text-[13px] flex-1 ${active ? 'font-bold text-[#16a34a]' : 'font-medium text-[#64748b] group-hover:text-[#14532d]'}`}>
                   {item.label}
                 </span>
+                {item.path === '/app/debts' && activeDebtCount > 0 && (
+                  <span className="text-[10px] font-extrabold bg-[#dc2626] text-white px-[6px] py-[1px] rounded-full min-w-[18px] text-center">
+                    {activeDebtCount}
+                  </span>
+                )}
               </Link>
             );
           })}
