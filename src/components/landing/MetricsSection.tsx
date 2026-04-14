@@ -1,57 +1,46 @@
-import { motion, useInView } from 'framer-motion';
-import { useRef, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { useCountUp } from '@/hooks/useCountUp';
+import { useEffect, useRef, useState } from 'react';
 
-function CountUp({ target, prefix = '', suffix = '' }: { target: number; prefix?: string; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true });
-  const [value, setValue] = useState(0);
+function StatItem({ value, suffix, label, index }: { value: number; suffix: string; label: string; index: number }) {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const count = useCountUp(visible ? value : 0, 2000, 0);
 
   useEffect(() => {
-    if (!inView) return;
-    let start = 0;
-    const duration = 1500;
-    const step = (ts: number) => {
-      if (!start) start = ts;
-      const progress = Math.min((ts - start) / duration, 1);
-      setValue(Math.floor(progress * target));
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [inView, target]);
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.3 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   return (
-    <span ref={ref} className="text-[clamp(36px,5vw,48px)] font-black text-primary tabular-nums">
-      {prefix}{value.toLocaleString('pt-BR')}{suffix}
-    </span>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1, duration: 0.5 }}
+      className={`text-center py-6 ${index < 3 ? 'md:border-r md:border-[#e2e8f0]' : ''}`}
+    >
+      <div className="text-[clamp(36px,5vw,56px)] font-[900] text-[#0f172a] tracking-[-2px] leading-none">
+        {value > 100 ? count.toLocaleString('pt-BR') : count}
+        {suffix}
+      </div>
+      <div className="text-[15px] text-[#64748b] mt-2">{label}</div>
+    </motion.div>
   );
 }
 
-const stats = [
-  { target: 2000, prefix: '+', suffix: '', label: 'Empreendedores ativos' },
-  { target: 48, prefix: 'R$ ', suffix: 'M+', label: 'Transações processadas' },
-  { target: 98, prefix: '', suffix: '%', label: 'Taxa de satisfação' },
-  { target: 4.9, prefix: '', suffix: '★', label: 'Avaliação média' },
-];
-
 export default function MetricsSection() {
   return (
-    <section className="py-16 md:py-20 px-4 bg-fin-green-pale border-t border-b border-fin-green-border">
-      <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-        {stats.map((s) => (
-          <motion.div
-            key={s.label}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            {s.target === 4.9 ? (
-              <span className="text-[clamp(36px,5vw,48px)] font-black text-primary tabular-nums">4.9★</span>
-            ) : (
-              <CountUp target={s.target} prefix={s.prefix} suffix={s.suffix} />
-            )}
-            <p className="text-sm font-semibold text-fin-green-dark/70 mt-1">{s.label}</p>
-          </motion.div>
-        ))}
+    <section className="py-20 px-4 bg-white">
+      <div className="max-w-[1000px] mx-auto grid grid-cols-2 md:grid-cols-4">
+        <StatItem value={2400} suffix="+" label="usuários ativos" index={0} />
+        <StatItem value={4} suffix="M+" label="em finanças gerenciadas" index={1} />
+        <StatItem value={8} suffix="%" label="taxa de cancelamento" index={2} />
+        <StatItem value={49} suffix="" label="avaliação média (4.9 ★)" index={3} />
       </div>
     </section>
   );

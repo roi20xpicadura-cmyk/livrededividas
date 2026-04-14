@@ -1,67 +1,74 @@
 import { Link } from 'react-router-dom';
-import { Check, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { User, Briefcase, Check, ArrowRight } from 'lucide-react';
 
-const useCases = [
-  {
-    emoji: '🏠',
-    title: 'Quero organizar minha vida pessoal',
-    accent: 'border-l-primary',
-    bg: 'bg-card',
-    bullets: ['Controle de gastos', 'Metas de poupança', 'Quitar dívidas', 'Cartões organizados'],
-    badge: null,
-  },
-  {
-    emoji: '💼',
-    title: 'Quero crescer meu negócio',
-    accent: 'border-l-blue-400',
-    bg: 'bg-card',
-    bullets: ['DRE automático', 'Fluxo de caixa', 'ROI de investimentos', 'Relatórios completos'],
-    badge: null,
-  },
-  {
-    emoji: '⚡',
-    title: 'Quero controlar tudo',
-    accent: 'border-l-primary',
-    bg: 'bg-fin-green-pale',
-    bullets: ['Pessoal + Negócio separados', 'Visão unificada', 'Todos os módulos'],
-    badge: 'Mais completo',
-  },
-];
+const ease = [0.16, 1, 0.3, 1];
 
 export default function UseCasesSection() {
   return (
-    <section className="py-20 px-4 bg-card">
-      <div className="max-w-5xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
-          <h2 className="text-4xl font-black text-fin-green-dark tracking-tight">Qual é o seu objetivo hoje?</h2>
-        </motion.div>
+    <section className="py-20 md:py-28 px-4 bg-white">
+      <div className="max-w-[1200px] mx-auto">
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-[clamp(28px,4vw,48px)] font-[900] text-[#0f172a] tracking-[-2px] text-center mb-14"
+        >
+          Feito para você.
+        </motion.h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {useCases.map((uc, i) => (
-            <motion.div key={uc.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-              className={`relative rounded-2xl border-[1.5px] border-border border-l-[3px] ${uc.accent} ${uc.bg} p-7 transition-all hover:border-fin-green-border hover:-translate-y-1 duration-200`}>
-              {uc.badge && (
-                <span className="absolute -top-3 right-4 px-3 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">{uc.badge}</span>
-              )}
-              <span className="text-3xl block mb-4">{uc.emoji}</span>
-              <h3 className="text-lg font-extrabold text-fin-green-dark mb-4">{uc.title}</h3>
-              <ul className="space-y-2 mb-6">
-                {uc.bullets.map(b => (
-                  <li key={b} className="flex items-center gap-2 text-[13px] text-foreground">
-                    <div className="w-4 h-4 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-                      <Check className="w-2.5 h-2.5 text-primary" />
-                    </div>
-                    {b}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/register" className="inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline">
-                Começar grátis <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </motion.div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, ease }}
+            className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-[24px] p-8 md:p-10"
+          >
+            <div className="w-12 h-12 rounded-full bg-[#16a34a] flex items-center justify-center mb-4">
+              <User className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-[11px] font-[700] text-[#16a34a] bg-white px-3 py-1 rounded-full border border-[#bbf7d0]">Vida Pessoal</span>
+            <h3 className="text-[24px] md:text-[32px] font-[800] text-[#0f172a] mt-4 mb-5 tracking-[-0.5px]">
+              Quer organizar sua vida financeira?
+            </h3>
+            <ul className="space-y-3 mb-8">
+              {['Controle de gastos diários', 'Metas de curto e longo prazo', 'Sair das dívidas mais rápido', 'Score de saúde financeira', 'Relatório mensal inteligente', 'Orçamento por categoria'].map(f => (
+                <li key={f} className="flex items-center gap-2.5 text-[14px] text-[#0f172a]">
+                  <Check className="w-4 h-4 text-[#16a34a] flex-shrink-0" />{f}
+                </li>
+              ))}
+            </ul>
+            <Link to="/register" className="w-full h-12 rounded-[12px] bg-[#16a34a] text-white font-bold text-[15px] flex items-center justify-center gap-2 hover:bg-[#14532d] transition-colors">
+              Começar agora <ArrowRight className="w-4 h-4" />
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1, duration: 0.5, ease }}
+            className="bg-[#0f172a] rounded-[24px] p-8 md:p-10"
+          >
+            <div className="w-12 h-12 rounded-full bg-[#1e3a1e] flex items-center justify-center mb-4">
+              <Briefcase className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-[11px] font-[700] text-[#0f172a] bg-white px-3 py-1 rounded-full">Meu Negócio</span>
+            <h3 className="text-[24px] md:text-[32px] font-[800] text-white mt-4 mb-5 tracking-[-0.5px]">
+              Quer escalar seu negócio?
+            </h3>
+            <ul className="space-y-3 mb-8">
+              {['DRE automático todo mês', 'Importar vendas de Hotmart, Shopify...', 'Separar pessoal e empresarial', 'Fluxo de caixa projetado', 'Relatório para contador em PDF', 'Multi-empresa no mesmo painel'].map(f => (
+                <li key={f} className="flex items-center gap-2.5 text-[14px] text-white/70">
+                  <Check className="w-4 h-4 text-[#4ade80] flex-shrink-0" />{f}
+                </li>
+              ))}
+            </ul>
+            <Link to="/register" className="w-full h-12 rounded-[12px] bg-white text-[#0f172a] font-bold text-[15px] flex items-center justify-center gap-2 hover:bg-[#f1f5f9] transition-colors">
+              Testar grátis <ArrowRight className="w-4 h-4" />
+            </Link>
+          </motion.div>
         </div>
       </div>
     </section>

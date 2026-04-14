@@ -1,47 +1,39 @@
 import { Link } from 'react-router-dom';
 import { BarChart3 } from 'lucide-react';
-import CookieConsentBanner from '@/components/CookieConsentBanner';
 
 const columns = [
-  { title: 'Produto', links: [{ label: 'Recursos', href: '#recursos' }, { label: 'Preços', href: '/pricing' }, { label: 'Sobre', href: '/sobre' }] },
-  { title: 'Legal', links: [{ label: 'Termos de Uso', href: '/termos-de-uso' }, { label: 'Política de Privacidade', href: '/politica-de-privacidade' }, { label: 'Política de Cookies', href: '/politica-de-cookies' }, { label: 'LGPD — Seus Direitos', href: '/lgpd' }] },
-  { title: 'Suporte', links: [{ label: 'Segurança', href: '/seguranca' }, { label: 'Contato', href: 'mailto:contato@findashpro.com.br' }, { label: 'Status', href: '#' }] },
+  { title: 'Produto', links: [{ label: 'Recursos', href: '#recursos' }, { label: 'Preços', href: '#precos' }, { label: 'Integrações', href: '#integracoes' }, { label: 'Changelog', href: '#' }, { label: 'Roadmap', href: '#' }, { label: 'App Mobile', href: '#' }] },
+  { title: 'Legal', links: [{ label: 'Termos de Uso', to: '/termos-de-uso' }, { label: 'Privacidade', to: '/politica-privacidade' }, { label: 'Cookies', to: '/politica-cookies' }, { label: 'LGPD', to: '/lgpd' }, { label: 'Segurança', to: '/seguranca' }, { label: 'Sobre', to: '/sobre' }] },
+  { title: 'Suporte', links: [{ label: 'Central de Ajuda', href: '#' }, { label: 'Contato', href: '#' }, { label: 'Status', href: '#' }, { label: 'Comunidade', href: '#' }, { label: 'Blog', href: '#' }] },
 ];
 
 export default function Footer() {
   return (
-    <footer className="bg-[#0f172a] text-white">
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
-          <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-[8px] bg-primary flex items-center justify-center">
-                <BarChart3 className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-black text-white">FinDash Pro</span>
+    <footer className="bg-[#0a0f0a] border-t border-white/[0.06] pt-16 pb-10 px-4">
+      <div className="max-w-[1200px] mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-10 md:gap-8 mb-12">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 rounded-lg bg-[#16a34a] flex items-center justify-center"><BarChart3 className="w-4 h-4 text-white" /></div>
+              <span className="text-[15px] font-[900] text-white">FinDash<span className="text-[#16a34a]">Pro</span></span>
             </div>
-            <p className="text-xs text-[#94a3b8] leading-[1.7] max-w-[220px]">
-              O painel financeiro para quem leva dinheiro a sério.
-            </p>
-            <div className="flex gap-2 mt-4">
-              {['X', 'In', 'IG', 'YT'].map((s) => (
-                <div key={s} className="w-9 h-9 rounded-lg bg-[#1e293b] flex items-center justify-center text-[11px] font-bold text-[#64748b] hover:text-primary transition-colors duration-200 cursor-pointer">
-                  {s}
-                </div>
+            <p className="text-[12px] text-white/40 leading-[1.8] max-w-[240px] mb-5">O painel financeiro mais completo do Brasil. Para quem quer organizar, crescer e realizar.</p>
+            <div className="flex gap-2">
+              {['I', 'L', 'X'].map(s => (
+                <a key={s} href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:bg-white/20 hover:text-white/80 transition-all text-[11px] font-bold">{s}</a>
               ))}
             </div>
           </div>
-
-          {columns.map((col) => (
+          {columns.map(col => (
             <div key={col.title}>
-              <p className="text-[11px] uppercase tracking-[1px] text-[#64748b] font-semibold mb-4">{col.title}</p>
+              <h4 className="text-[11px] font-bold text-white/25 uppercase tracking-[1px] mb-4">{col.title}</h4>
               <ul className="space-y-2.5">
-                {col.links.map((link) => (
+                {col.links.map((link: any) => (
                   <li key={link.label}>
-                    {link.href.startsWith('/') ? (
-                      <Link to={link.href} className="text-sm text-[#94a3b8] hover:text-white transition-colors duration-150">{link.label}</Link>
+                    {link.to ? (
+                      <Link to={link.to} className="text-[13px] text-white/45 hover:text-white/80 transition-colors duration-150">{link.label}</Link>
                     ) : (
-                      <a href={link.href} className="text-sm text-[#94a3b8] hover:text-white transition-colors duration-150">{link.label}</a>
+                      <a href={link.href} className="text-[13px] text-white/45 hover:text-white/80 transition-colors duration-150">{link.label}</a>
                     )}
                   </li>
                 ))}
@@ -49,21 +41,14 @@ export default function Footer() {
             </div>
           ))}
         </div>
-
-        <div className="mt-12 pt-6 border-t border-[#1e293b] flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-[#64748b]">
-          <div className="text-center md:text-left">
-            <span>© 2026 FinDash Pro. Todos os direitos reservados.</span>
-            <span className="block md:inline md:ml-2">Made with 💚 no Brasil</span>
+        <div className="border-t border-white/[0.06] pt-8 flex flex-col md:flex-row justify-between items-center gap-3">
+          <div className="text-[11px] text-white/25 text-center md:text-left">
+            <div>© 2026 FinDash Pro. Todos os direitos reservados.</div>
+            <div>CNPJ: XX.XXX.XXX/0001-XX</div>
           </div>
-          <div className="flex gap-4">
-            <Link to="/termos-de-uso" className="hover:text-white transition-colors">Termos</Link>
-            <Link to="/politica-de-privacidade" className="hover:text-white transition-colors">Privacidade</Link>
-            <Link to="/politica-de-cookies" className="hover:text-white transition-colors">Cookies</Link>
-            <Link to="/lgpd" className="hover:text-white transition-colors">LGPD</Link>
-          </div>
+          <div className="text-[11px] text-white/25">Feito com 💚 no Brasil</div>
         </div>
       </div>
-      <CookieConsentBanner />
     </footer>
   );
 }

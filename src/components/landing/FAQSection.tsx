@@ -1,70 +1,48 @@
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 
 const faqs = [
-  { q: 'O plano gratuito é realmente grátis para sempre?', a: 'Sim. O plano Free não tem limite de tempo e não precisa de cartão de crédito. Você pode usar indefinidamente com até 50 lançamentos/mês.' },
-  { q: 'Posso cancelar minha assinatura a qualquer momento?', a: 'Sim. Sem multa e sem burocracia. O acesso continua até o fim do período pago.' },
-  { q: 'Meus dados financeiros estão seguros?', a: 'Todos os dados são criptografados com TLS 1.3 e armazenados em servidores seguros. Nunca compartilhamos suas informações.' },
-  { q: 'Funciona bem no celular?', a: 'Sim. O FinDash Pro é 100% responsivo e funciona perfeitamente em smartphone e tablet.' },
-  { q: 'Posso separar finanças pessoais das do negócio?', a: 'Sim, essa é uma das funcionalidades principais. Cada lançamento pode ser marcado como pessoal ou do negócio.' },
-  { q: 'O que é o DRE?', a: 'O DRE (Demonstrativo de Resultado do Exercício) é um relatório que mostra todas as suas receitas, despesas e o lucro líquido do período. É gerado automaticamente a partir dos seus lançamentos.' },
-  { q: 'Vocês oferecem suporte?', a: 'Sim. Plano Free recebe suporte por e-mail. Plano Pro tem suporte prioritário. Plano Business tem suporte via WhatsApp.' },
+  { q: 'O plano gratuito tem limite de uso?', a: 'Sim. No plano Free você pode adicionar até 50 lançamentos por mês, 2 metas e 1 cartão de crédito. É suficiente para testar o app antes de fazer upgrade.' },
+  { q: 'Como funciona a IA Financeira?', a: 'A IA analisa seus dados reais e responde perguntas como "quanto gastei em delivery este mês?" ou "quando vou quitar minha dívida?". Ela usa modelos avançados — a mesma IA das empresas da Fortune 500.' },
+  { q: 'Posso cancelar quando quiser?', a: 'Sim. Sem fidelidade, sem multa. Cancele pelo painel em menos de 1 minuto. Você mantém o acesso até o fim do período pago.' },
+  { q: 'O app funciona no celular?', a: 'Sim. O FinDash Pro é um PWA — funciona no iPhone e Android igual a um app nativo, sem precisar instalar pela App Store. Basta acessar no navegador e adicionar à tela inicial.' },
+  { q: 'Meus dados financeiros ficam seguros?', a: 'Seus dados são criptografados com TLS 1.3, armazenados com Row Level Security e backups diários. Seguimos a LGPD e nunca vendemos seus dados para terceiros.' },
+  { q: 'Funciona para empresas e para uso pessoal?', a: 'Sim. Você pode usar para sua vida pessoal, para seu negócio ou para os dois juntos — com separação completa dos dados. É o único app financeiro brasileiro que resolve os dois cenários em um só lugar.' },
+  { q: 'Como importo dados do meu banco?', a: 'Você exporta o extrato do seu banco em formato OFX (todos os bancos suportam) e faz o upload no app. A IA categoriza tudo automaticamente. Em breve teremos conexão automática via Open Finance.' },
+  { q: 'Vocês têm suporte?', a: 'Sim. Chat ao vivo dentro do app, e-mail e base de conhecimento. Planos Pro e Business têm tempo de resposta prioritário.' },
 ];
 
-export default function FAQSection() {
-  const [open, setOpen] = useState<number | null>(null);
-
+function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
+  const [open, setOpen] = useState(false);
   return (
-    <section id="faq" className="py-20 md:py-24 px-4 bg-background">
-      <div className="max-w-[720px] mx-auto">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-[clamp(28px,4vw,40px)] font-black text-fin-green-dark text-center tracking-tight mb-12"
-        >
+    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.05, duration: 0.4 }} className="border-b border-[#f1f5f9]">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between py-5 text-left">
+        <span className="text-[16px] font-semibold text-[#0f172a] pr-4">{q}</span>
+        <ChevronDown className={`w-5 h-5 text-[#94a3b8] flex-shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+            <p className="pb-5 text-[15px] text-[#64748b] leading-[1.7]">{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+export default function FAQSection() {
+  const half = Math.ceil(faqs.length / 2);
+  return (
+    <section id="faq" className="py-20 md:py-28 px-4 bg-white">
+      <div className="max-w-[1000px] mx-auto">
+        <motion.h2 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-[clamp(28px,4vw,48px)] font-[900] text-[#0f172a] tracking-[-2px] text-center mb-14">
           Perguntas frequentes
         </motion.h2>
-
-        <div className="space-y-2">
-          {faqs.map((f, i) => {
-            const isOpen = open === i;
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className={`border-[1.5px] rounded-xl overflow-hidden transition-colors duration-200 ${
-                  isOpen ? 'border-fin-green-border bg-fin-green-pale' : 'border-border bg-card'
-                }`}
-              >
-                <button
-                  onClick={() => setOpen(isOpen ? null : i)}
-                  className="w-full flex items-center justify-between p-5 text-left"
-                >
-                  <span className="font-bold text-[15px] text-fin-green-dark pr-4">{f.q}</span>
-                  <motion.div animate={{ rotate: isOpen ? 45 : 0 }} transition={{ duration: 0.2 }}>
-                    {isOpen ? <X className="w-4 h-4 text-muted flex-shrink-0" /> : <Plus className="w-4 h-4 text-muted flex-shrink-0" />}
-                  </motion.div>
-                </button>
-                <AnimatePresence>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className="px-5 pb-5 text-sm text-muted leading-[1.8]">{f.a}</div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            );
-          })}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
+          <div>{faqs.slice(0, half).map((f, i) => <FAQItem key={i} q={f.q} a={f.a} index={i} />)}</div>
+          <div>{faqs.slice(half).map((f, i) => <FAQItem key={i} q={f.q} a={f.a} index={half + i} />)}</div>
         </div>
       </div>
     </section>
