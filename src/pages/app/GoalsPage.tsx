@@ -24,6 +24,7 @@ export default function GoalsPage() {
   const limits = PLAN_LIMITS[plan];
 
   const [goals, setGoals] = useState<any[]>([]);
+  const [checkins, setCheckins] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>('recent');
