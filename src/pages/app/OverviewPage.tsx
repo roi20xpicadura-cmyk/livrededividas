@@ -15,6 +15,7 @@ import { format, parseISO, startOfMonth, endOfMonth, subDays, subMonths, differe
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
 import PredictiveWidget from '@/components/dashboard/PredictiveWidget';
+import WelcomeChecklist from '@/components/app/WelcomeChecklist';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const LazyChart = lazy(() => import('recharts').then(m => ({
