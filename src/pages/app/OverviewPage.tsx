@@ -14,6 +14,7 @@ import { motion } from 'framer-motion';
 import { format, parseISO, startOfMonth, endOfMonth, subDays, differenceInDays, eachDayOfInterval, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
+import PredictiveWidget from '@/components/dashboard/PredictiveWidget';
 
 // Lazy-load recharts (222KB) — only loads when chart is visible
 const LazyChart = lazy(() => import('recharts').then(m => ({
@@ -266,6 +267,9 @@ export default function OverviewPage() {
           ]}
         />
       )}
+
+      {/* ── Predictive AI Widget ───────────────────── */}
+      <PredictiveWidget />
 
       {/* ── KPI Cards ──────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
