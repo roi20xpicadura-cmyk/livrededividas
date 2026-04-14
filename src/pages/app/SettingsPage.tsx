@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { OBJECTIVES } from '@/lib/objectives';
 import { PROFILE_TYPES } from '@/components/onboarding/OnboardingFlow';
-import { Check, Download, Trash2, FileText } from 'lucide-react';
+import { Check, Download, Trash2, FileText, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
@@ -23,6 +23,10 @@ export default function SettingsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (config) {
@@ -33,8 +37,23 @@ export default function SettingsPage() {
       setSavePct(config.default_save_pct || 25);
       setNotifications(config.notifications_enabled ?? true);
     }
-    if (profile) setFullName(profile.full_name || '');
+    if (profile) {
+      setFullName(profile.full_name || '');
+      setAvatarUrl(profile.avatar_url || '');
+    }
   }, [config, profile]);
+
+  // Fetch notification preferences
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('notification_preferences').select('*').eq('user_id', user.id).single()
+      .then(({ data }) => {
+        if (data) {
+          const { id, user_id, created_at, ...prefs } = data;
+          setNotifPrefs(prefs as Record<string, boolean>);
+        }
+      });
+  }, [user]);
 
   const handleSaveProfile = async () => {
     setSaving(true);
