@@ -29,8 +29,12 @@ const ReferralPage = lazy(() => import("./pages/app/ReferralPage"));
 const SettingsPage = lazy(() => import("./pages/app/SettingsPage"));
 const BillingPage = lazy(() => import("./pages/app/BillingPage"));
 
-// Gated pages
-const GatedPages = lazy(() => import("./pages/app/GatedPages"));
+// Gated page lazy imports
+const GatedCashFlow = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.CashFlowPage })));
+const GatedDRE = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.DREPage })));
+const GatedInvestments = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.InvestmentsPage })));
+const GatedCharts = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.ChartsPage })));
+const GatedExport = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.ExportPage })));
 
 const queryClient = new QueryClient();
 
