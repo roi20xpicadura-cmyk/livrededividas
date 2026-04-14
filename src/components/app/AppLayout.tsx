@@ -68,6 +68,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/app/banks': 'Contas Bancárias',
   '/app/integrations': 'Integrações',
   '/app/billing': 'Planos e Assinatura',
+  '/app/simulator': 'Simulador E Se...?',
+  '/app/predictions': 'IA Preditiva',
 };
 
 export default function AppLayout() {
