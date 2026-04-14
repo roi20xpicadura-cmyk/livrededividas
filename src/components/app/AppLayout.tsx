@@ -49,6 +49,13 @@ export default function AppLayout() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMoreDrawer, setShowMoreDrawer] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [activeDebtCount, setActiveDebtCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('debts').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'active')
+      .then(({ count }) => setActiveDebtCount(count || 0));
+  }, [user, location.pathname]);
 
   const profileType = config?.profile_type || 'personal';
   const navItems = ALL_NAV_ITEMS.filter(item => item.profiles.includes(profileType));
@@ -69,6 +76,7 @@ export default function AppLayout() {
     '/app': 'Visão Geral',
     '/app/transactions': 'Lançamentos',
     '/app/goals': 'Metas',
+    '/app/debts': 'Sair das Dívidas',
     '/app/cashflow': 'Fluxo de Caixa',
     '/app/dre': 'DRE',
     '/app/cards': 'Cartões de Crédito',
