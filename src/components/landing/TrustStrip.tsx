@@ -25,7 +25,10 @@ export default function TrustStrip() {
         Funciona com as plataformas que você já usa
       </p>
       <div className="relative">
-        <div className="marquee-track flex items-center gap-16 px-8" style={{ width: 'max-content' }}>
+        <div
+          className="flex items-center gap-12 md:gap-16 animate-marquee hover:[animation-play-state:paused]"
+          style={{ width: 'max-content' }}
+        >
           {doubled.map((b, i) => (
             <div key={i} className="flex items-center gap-2 flex-shrink-0 opacity-45 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-300 cursor-default">
               <img
