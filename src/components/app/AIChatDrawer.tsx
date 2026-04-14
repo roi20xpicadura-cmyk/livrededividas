@@ -40,11 +40,14 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
     const allMsgs = [...messages, userMsg].map(m => ({ role: m.role, content: m.content }));
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
       const resp = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ messages: allMsgs }),
       });
