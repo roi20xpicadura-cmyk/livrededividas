@@ -128,25 +128,6 @@ export default function AppLayout() {
             </span>
           </div>
 
-          {/* Profile toggle */}
-          {profileType === 'both' && (
-            <div className="mt-3 bg-[#f8faf8] border border-[#e2e8f0] rounded-[10px] p-[3px] flex">
-              {[
-                { val: 'all' as const, label: '📊 Tudo' },
-                { val: 'personal' as const, label: '🏠 Pessoal' },
-                { val: 'business' as const, label: '💼 Negócio' },
-              ].map(f => (
-                <button key={f.val} onClick={() => setViewFilter(f.val)}
-                  className={`flex-1 px-2 py-[6px] rounded-lg text-[12px] font-medium transition-all duration-200 ${
-                    viewFilter === f.val
-                      ? 'bg-white text-[#14532d] font-bold shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
-                      : 'text-[#94a3b8]'
-                  }`}>
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          )}
 
           {/* User info */}
           <div className="mt-4 flex items-center gap-2.5 bg-[#f8faf8] rounded-[10px] px-3 py-2.5">
