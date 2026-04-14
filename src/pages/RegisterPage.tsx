@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3, Eye, EyeOff, Check } from 'lucide-react';
+import { BarChart3, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function RegisterPage() {
@@ -10,7 +10,8 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
-  const [agreed, setAgreed] = useState(false);
+  const [agreedTerms, setAgreedTerms] = useState(false);
+  const [marketingEmails, setMarketingEmails] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const strength = password.length >= 12 ? 100 : password.length >= 8 ? 66 : password.length >= 4 ? 33 : 0;
@@ -19,10 +20,10 @@ export default function RegisterPage() {
     e.preventDefault();
     if (password !== confirmPw) { toast.error('As senhas não coincidem'); return; }
     if (password.length < 8) { toast.error('A senha deve ter pelo menos 8 caracteres'); return; }
-    if (!agreed) { toast.error('Aceite os termos de uso'); return; }
+    if (!agreedTerms) { toast.error('Você precisa aceitar os termos para continuar'); return; }
 
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -30,8 +31,19 @@ export default function RegisterPage() {
         emailRedirectTo: window.location.origin,
       },
     });
+    
+    if (error) { setLoading(false); toast.error(error.message); return; }
+
+    // Update profiles with terms consent
+    if (data.user) {
+      await supabase.from('profiles').update({
+        terms_accepted_at: new Date().toISOString(),
+        terms_version: '1.0',
+        marketing_emails: marketingEmails,
+      } as any).eq('id', data.user.id);
+    }
+
     setLoading(false);
-    if (error) { toast.error(error.message); return; }
     toast.success('Conta criada! Verifique seu e-mail para confirmar.');
     navigate('/app');
   };
@@ -53,7 +65,7 @@ export default function RegisterPage() {
             ))}
           </ul>
         </div>
-        <p className="text-xs text-primary-foreground/60">© 2025 FinDash Pro</p>
+        <p className="text-xs text-primary-foreground/60">© 2026 FinDash Pro</p>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-6">
@@ -80,10 +92,8 @@ export default function RegisterPage() {
             </div>
             <div>
               <label className="label-upper text-muted block mb-1.5">Senha</label>
-              <div className="relative">
-                <input type={false ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required minLength={8}
-                  className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-fin-green-border bg-card text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all" />
-              </div>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8}
+                className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-fin-green-border bg-card text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all" />
               {password && (
                 <div className="mt-1.5 h-1.5 bg-border rounded-full overflow-hidden">
                   <div className={`h-full rounded-full transition-all duration-300 ${strength >= 66 ? 'bg-fin-green' : strength >= 33 ? 'bg-fin-amber' : 'bg-fin-red'}`} style={{ width: `${strength}%` }} />
@@ -95,11 +105,27 @@ export default function RegisterPage() {
               <input type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} required
                 className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-fin-green-border bg-card text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all" />
             </div>
-            <label className="flex items-start gap-2 text-xs text-muted cursor-pointer">
-              <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="mt-0.5 rounded border-border" />
-              Concordo com os Termos de Uso e Política de Privacidade
-            </label>
-            <button type="submit" disabled={loading}
+
+            {/* LGPD Consent Checkboxes */}
+            <div className="space-y-3 pt-1">
+              <label className="flex items-start gap-2.5 text-[13px] cursor-pointer" style={{ color: 'var(--color-text-muted)' }}>
+                <input type="checkbox" checked={agreedTerms} onChange={e => setAgreedTerms(e.target.checked)}
+                  className="mt-0.5 rounded border-border accent-primary" />
+                <span>
+                  Li e concordo com os{' '}
+                  <a href="/termos-de-uso" target="_blank" className="underline font-semibold" style={{ color: 'var(--color-green-600)' }}>Termos de Uso</a>
+                  {' '}e a{' '}
+                  <a href="/politica-de-privacidade" target="_blank" className="underline font-semibold" style={{ color: 'var(--color-green-600)' }}>Política de Privacidade</a>
+                </span>
+              </label>
+              <label className="flex items-start gap-2.5 text-[13px] cursor-pointer" style={{ color: 'var(--color-text-muted)' }}>
+                <input type="checkbox" checked={marketingEmails} onChange={e => setMarketingEmails(e.target.checked)}
+                  className="mt-0.5 rounded border-border accent-primary" />
+                <span>Aceito receber comunicações sobre o FinDash Pro por e-mail (novidades, dicas e relatórios)</span>
+              </label>
+            </div>
+
+            <button type="submit" disabled={loading || !agreedTerms}
               className="w-full py-2.5 rounded-[9px] bg-primary text-primary-foreground text-sm font-extrabold hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
               {loading && <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />}
               Criar conta grátis

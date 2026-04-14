@@ -4,7 +4,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { OBJECTIVES } from '@/lib/objectives';
 import { PROFILE_TYPES } from '@/components/onboarding/OnboardingFlow';
-import { Check } from 'lucide-react';
+import { Check, Download, Trash2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
@@ -20,6 +20,9 @@ export default function SettingsPage() {
   const [newPw, setNewPw] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     if (config) {
@@ -43,7 +46,7 @@ export default function SettingsPage() {
   const handleSaveProfileType = async (val: string) => {
     setProfileType(val);
     await updateConfig({ profile_type: val } as any);
-    toast.success('Perfil atualizado! Recarregando painel...');
+    toast.success('Perfil atualizado!');
   };
 
   const toggleObjective = (key: string) => {
@@ -73,6 +76,37 @@ export default function SettingsPage() {
     if (error) { toast.error(error.message); return; }
     toast.success('Senha alterada!');
     setNewPw(''); setConfirmPw('');
+  };
+
+  const handleExportData = async () => {
+    if (!user) return;
+    setExporting(true);
+    try {
+      const tables = ['transactions', 'goals', 'goal_checkins', 'debts', 'debt_payments', 'credit_cards', 'card_bills', 'investments', 'budgets', 'achievements', 'recurring_transactions'] as const;
+      const allData: Record<string, any> = { profile, config };
+      for (const table of tables) {
+        const { data } = await supabase.from(table).select('*');
+        allData[table] = data || [];
+      }
+      const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `findash_meus_dados_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Seus dados foram exportados com sucesso');
+    } catch {
+      toast.error('Erro ao exportar dados');
+    }
+    setExporting(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== 'EXCLUIR') { toast.error('Digite EXCLUIR para confirmar'); return; }
+    toast.info('Recebemos sua solicitação. Seus dados serão excluídos em até 30 dias.');
+    await supabase.auth.signOut();
+    window.location.href = '/';
   };
 
   return (
@@ -125,7 +159,6 @@ export default function SettingsPage() {
           className="px-4 py-2 rounded-[9px] bg-primary text-primary-foreground text-xs font-bold hover:brightness-110 transition-all disabled:opacity-50">
           Salvar objetivos
         </button>
-        <p className="text-[10px] text-muted mt-2">Suas metas serão atualizadas automaticamente</p>
       </div>
 
       {/* Profile */}
@@ -201,13 +234,74 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* LGPD Data Section */}
+      <div className="card-surface p-6">
+        <h2 className="text-[13px] font-extrabold text-fin-green-dark mb-4">Meus Dados (LGPD)</h2>
+        <div className="space-y-4">
+          {/* Terms acceptance info */}
+          <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'var(--color-bg-sunken)' }}>
+            <FileText size={18} style={{ color: 'var(--color-green-600)' }} className="mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-[13px] font-semibold" style={{ color: 'var(--color-text-base)' }}>Aceitação dos Termos</p>
+              <p className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
+                Termos aceitos em {profile?.terms_accepted_at ? new Date((profile as any).terms_accepted_at).toLocaleDateString('pt-BR') : '—'}, versão {(profile as any)?.terms_version || '1.0'}
+              </p>
+            </div>
+          </div>
+
+          <button onClick={handleExportData} disabled={exporting}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-[9px] border-[1.5px] text-sm font-bold transition-all hover:brightness-95 disabled:opacity-50"
+            style={{ borderColor: 'var(--color-border-base)', color: 'var(--color-text-base)', background: 'var(--color-bg-surface)' }}>
+            <Download size={16} />
+            {exporting ? 'Exportando...' : 'Exportar todos os meus dados'}
+          </button>
+
+          <p className="text-[11px]" style={{ color: 'var(--color-text-subtle)' }}>
+            Conforme a LGPD (Art. 18), você tem direito a acessar, corrigir e exportar seus dados.{' '}
+            <a href="/lgpd" className="underline" style={{ color: 'var(--color-green-600)' }}>Saiba mais sobre seus direitos</a>
+          </p>
+        </div>
+      </div>
+
       {/* Danger Zone */}
       <div className="card-surface p-6 border-destructive">
         <h2 className="text-[13px] font-extrabold text-destructive mb-4">Zona de Perigo</h2>
-        <button className="px-4 py-2 rounded-[9px] border-[1.5px] border-destructive text-destructive text-xs font-bold hover:bg-fin-red-pale transition-all">
-          Excluir minha conta
+        <p className="text-[13px] mb-4" style={{ color: 'var(--color-text-muted)' }}>
+          A exclusão da conta é irreversível. Todos os seus dados serão excluídos em até 30 dias.
+        </p>
+        <button onClick={() => setShowDeleteModal(true)}
+          className="px-4 py-2 rounded-[9px] border-[1.5px] border-destructive text-destructive text-xs font-bold hover:bg-fin-red-pale transition-all flex items-center gap-2">
+          <Trash2 size={14} />
+          Solicitar exclusão da conta
         </button>
       </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4" style={{ background: 'var(--color-bg-overlay, rgba(0,0,0,0.5))' }}>
+          <div className="w-full max-w-md p-6 rounded-2xl" style={{ background: 'var(--color-bg-surface)' }}>
+            <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--color-text-strong)' }}>Tem certeza?</h3>
+            <p className="text-[14px] mb-1" style={{ color: 'var(--color-text-muted)' }}>Esta ação é irreversível.</p>
+            <p className="text-[14px] mb-1" style={{ color: 'var(--color-text-muted)' }}>Todos os seus dados serão excluídos em até 30 dias.</p>
+            <p className="text-[14px] mb-4" style={{ color: 'var(--color-text-muted)' }}>Você perderá acesso imediatamente.</p>
+            <label className="text-[12px] font-bold block mb-2" style={{ color: 'var(--color-text-base)' }}>
+              Digite <span className="text-destructive">EXCLUIR</span> para confirmar:
+            </label>
+            <input value={deleteConfirm} onChange={e => setDeleteConfirm(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-destructive bg-card text-sm mb-4 outline-none" placeholder="EXCLUIR" />
+            <div className="flex gap-3">
+              <button onClick={() => { setShowDeleteModal(false); setDeleteConfirm(''); }}
+                className="flex-1 px-4 py-2 rounded-lg text-[13px] font-semibold border" style={{ borderColor: 'var(--color-border-base)', color: 'var(--color-text-base)' }}>
+                Cancelar
+              </button>
+              <button onClick={handleDeleteAccount} disabled={deleteConfirm !== 'EXCLUIR'}
+                className="flex-1 px-4 py-2 rounded-lg text-[13px] font-bold text-white bg-destructive disabled:opacity-50">
+                Excluir minha conta
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -16,6 +16,12 @@ const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const TermosDeUsoPage = lazy(() => import("./pages/TermosDeUsoPage"));
+const PoliticaPrivacidadePage = lazy(() => import("./pages/PoliticaPrivacidadePage"));
+const PoliticaCookiesPage = lazy(() => import("./pages/PoliticaCookiesPage"));
+const LGPDPage = lazy(() => import("./pages/LGPDPage"));
+const SegurancaPage = lazy(() => import("./pages/SegurancaPage"));
+const SobrePage = lazy(() => import("./pages/SobrePage"));
 
 const AppLayout = lazy(() => import("./components/app/AppLayout"));
 const OverviewPage = lazy(() => import("./pages/app/OverviewPage"));
@@ -66,6 +72,12 @@ const App = () => (
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/termos-de-uso" element={<TermosDeUsoPage />} />
+                <Route path="/politica-de-privacidade" element={<PoliticaPrivacidadePage />} />
+                <Route path="/politica-de-cookies" element={<PoliticaCookiesPage />} />
+                <Route path="/lgpd" element={<LGPDPage />} />
+                <Route path="/seguranca" element={<SegurancaPage />} />
+                <Route path="/sobre" element={<SobrePage />} />
 
                 {/* Protected app routes */}
                 <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
