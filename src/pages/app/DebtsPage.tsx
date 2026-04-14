@@ -313,8 +313,8 @@ export default function DebtsPage() {
           <div className="text-5xl mb-3">🎉</div>
           <h2 className="text-2xl font-black text-foreground">Você está livre das dívidas!</h2>
           <p className="text-[14px] text-muted-foreground mt-2">Parabéns! Agora é hora de investir e construir riqueza.</p>
-          <a href="/app/investments" className="inline-block mt-4 bg-[#16a34a] text-white font-bold text-[13px] px-5 py-2.5 rounded-[9px] hover:bg-[#14532d] transition-colors">
-            Começar a investir →
+          <a href="/app/goals" className="inline-block mt-4 bg-[#16a34a] text-white font-bold text-[13px] px-5 py-2.5 rounded-[9px] hover:bg-[#14532d] transition-colors">
+            Criar uma meta →
           </a>
         </div>
       ) : (

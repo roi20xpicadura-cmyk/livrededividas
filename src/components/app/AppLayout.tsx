@@ -24,12 +24,7 @@ const ALL_NAV_ITEMS = [
   { label: 'Metas', path: '/app/goals', icon: Target, profiles: ['personal', 'both'] },
   { label: 'Dívidas', path: '/app/debts', icon: AlertCircle, profiles: ['personal', 'both'] },
   { label: 'Cartões', path: '/app/cards', icon: CreditCard, profiles: ['personal', 'business', 'both'] },
-  { label: 'Investimentos', path: '/app/investments', icon: Briefcase, profiles: ['personal', 'business', 'both'] },
-  { label: 'Fluxo de Caixa', path: '/app/cashflow', icon: TrendingUp, profiles: ['personal', 'business', 'both'] },
-  { label: 'DRE', path: '/app/dre', icon: FileText, profiles: ['business', 'both'] },
-  { label: 'Gráficos', path: '/app/charts', icon: BarChart2, profiles: ['personal', 'business', 'both'] },
-  { label: 'Contas Bancárias', path: '/app/banks', icon: Building2, profiles: ['personal', 'business', 'both'] },
-  { label: 'Integrações', path: '/app/integrations', icon: Plug, profiles: ['personal', 'business', 'both'] },
+  { label: 'Conexões', path: '/app/integrations', icon: Plug, profiles: ['personal', 'business', 'both'] },
   { label: 'Simulador', path: '/app/simulator', icon: FlaskConical, profiles: ['personal', 'business', 'both'], badge: 'NOVO' },
   { label: 'Previsões', path: '/app/predictions', icon: TrendingUp, profiles: ['personal', 'business', 'both'] },
   { label: 'Exportar', path: '/app/export', icon: Download, profiles: ['personal', 'business', 'both'] },
@@ -54,7 +49,7 @@ const MOBILE_NAV_BUSINESS = [
   { label: 'Início', path: '/app', icon: Home, activeColor: '#16a34a' },
   { label: 'Lançar', path: '/app/transactions', icon: ArrowLeftRight, activeColor: '#2563eb' },
   { label: '', path: 'fab', icon: Plus, activeColor: '#16a34a' },
-  { label: 'DRE', path: '/app/dre', icon: FileText, activeColor: '#7c3aed' },
+  { label: 'Cartões', path: '/app/cards', icon: CreditCard, activeColor: '#7c3aed' },
   { label: 'Mais', path: 'more', icon: MoreHorizontal, activeColor: '#64748b' },
 ];
 
@@ -64,17 +59,12 @@ const PAGE_TITLES: Record<string, string> = {
   '/app/budget': 'Orçamento',
   '/app/goals': 'Metas',
   '/app/debts': 'Sair das Dívidas',
-  '/app/cashflow': 'Fluxo de Caixa',
-  '/app/dre': 'DRE',
   '/app/cards': 'Cartões de Crédito',
-  '/app/investments': 'Investimentos',
-  '/app/charts': 'Gráficos',
   '/app/export': 'Exportar',
   '/app/achievements': 'Conquistas',
   '/app/referral': 'Indicar Amigos',
   '/app/settings': 'Configurações',
-  '/app/banks': 'Contas Bancárias',
-  '/app/integrations': 'Integrações',
+  '/app/integrations': 'Conexões e Integrações',
   '/app/billing': 'Planos e Assinatura',
   '/app/simulator': 'Simulador E Se...?',
   '/app/predictions': 'IA Preditiva',
@@ -529,11 +519,11 @@ fontSize: 13,
               {/* Grid of remaining nav items */}
               <div className="grid grid-cols-3" style={{ gap: 12 }}>
                 {navItems.filter(i => !['fab','more'].includes(i.path) && !MOBILE_NAV.find(m => m.path === i.path)).map(item => {
-                  const tileColors: Record<string, string> = {
-                    '/app/cashflow': '#d97706', '/app/dre': '#7c3aed', '/app/cards': '#2563eb',
-                    '/app/investments': '#16a34a', '/app/charts': '#0891b2', '/app/debts': '#dc2626',
-                    '/app/budget': '#d97706', '/app/export': '#64748b', '/app/banks': '#0891b2',
-                  };
+                    const tileColors: Record<string, string> = {
+                      '/app/cards': '#2563eb',
+                      '/app/debts': '#dc2626',
+                      '/app/budget': '#d97706', '/app/export': '#64748b',
+                    };
                   const color = tileColors[item.path] || 'var(--color-text-muted)';
                   return (
                     <Link key={item.path} to={item.path} onClick={() => setShowMoreDrawer(false)}
