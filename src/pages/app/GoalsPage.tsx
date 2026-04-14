@@ -56,6 +56,15 @@ export default function GoalsPage() {
     if (!user) return;
     const { data } = await supabase.from('goals').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
     setGoals(data || []);
+    // Fetch checkins for last 7 days
+    const weekAgo = format(subDays(new Date(), 6), 'yyyy-MM-dd');
+    const { data: cks } = await supabase.from('goal_checkins').select('*').eq('user_id', user.id).gte('date', weekAgo).order('date', { ascending: true });
+    const grouped: Record<string, any[]> = {};
+    (cks || []).forEach(ck => {
+      if (!grouped[ck.goal_id]) grouped[ck.goal_id] = [];
+      grouped[ck.goal_id].push(ck);
+    });
+    setCheckins(grouped);
     setLoading(false);
   };
 
