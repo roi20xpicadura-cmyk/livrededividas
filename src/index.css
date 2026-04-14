@@ -312,6 +312,27 @@
     display: none;
   }
 
+  .scroll-container {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .full-height {
+    height: 100dvh;
+  }
+
   /* Focus ring utility */
   .focus-ring {
     @apply focus-visible:outline-none;
