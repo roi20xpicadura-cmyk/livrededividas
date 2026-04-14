@@ -356,14 +356,14 @@ export default function OverviewPage() {
               <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -10 }}>
                 <defs>
                   <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#16a34a" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--text-hint)' }} interval="preserveStartEnd" />
                 <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--text-hint)' }} tickFormatter={(v: number) => v >= 1000 ? `R$${(v / 1000).toFixed(0)}k` : `R$${v}`} />
                 <Tooltip content={<ChartTooltip />} />
-                <Area type="monotone" dataKey="saldo" stroke="#16a34a" strokeWidth={2.5} fill="url(#greenGradient)" />
+                <Area type="monotone" dataKey="saldo" stroke="#22c55e" strokeWidth={2.5} fill="url(#greenGradient)" />
               </AreaChart>
             </ResponsiveContainer>
           )}
