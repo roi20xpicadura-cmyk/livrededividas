@@ -8,51 +8,82 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Upload, Copy, Check, CheckCircle2, Clock, Plug, Plus,
-  ChevronRight, RefreshCw, ArrowLeft, FileUp, AlertCircle, Bell, Zap,
-  ExternalLink, MessageSquarePlus,
+  ChevronRight, RefreshCw, ArrowLeft, Bell, Zap, MessageSquarePlus, Settings2,
 } from 'lucide-react';
-import { INTEGRATIONS, CATEGORY_LABELS, type IntegrationDef, type IntegrationCategory } from '@/lib/integrations-data';
+import {
+  INTEGRATIONS, CATEGORY_LABELS, CATEGORY_EMOJI, CATEGORY_COLORS, CATEGORY_COUNTS,
+  getLogoUrl, type IntegrationDef, type IntegrationCategory,
+} from '@/lib/integrations-data';
 import { parseOFX, parseCSV, type ParsedTransaction } from '@/lib/ofxParser';
 import { haptic } from '@/lib/haptics';
 
-// ─── Logo with fallback ───
-function IntegrationLogo({ name, logoUrl, color, size = 36 }: { name: string; logoUrl: string; color: string; size?: number }) {
-  const [err, setErr] = useState(false);
-  if (err || !logoUrl) {
-    return (
-      <div className="flex items-center justify-center" style={{
-        width: size, height: size, borderRadius: 8,
-        background: color + '20', border: `1px solid ${color}40`,
-        fontSize: size * 0.45, fontWeight: 900, color,
-      }}>
-        {name[0]}
-      </div>
-    );
-  }
-  return <img src={logoUrl} alt={name} width={size} height={size} style={{ objectFit: 'contain', borderRadius: 6 }} onError={() => setErr(true)} />;
+/* ─── Logo ─── */
+function IntegrationLogo({ name, domain, color, size = 36 }: { name: string; domain: string; color: string; size?: number }) {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+  const contrastColor = getContrastColor(color);
+
+  return (
+    <div style={{ width: size, height: size, position: 'relative' }}>
+      {!error && (
+        <img
+          src={getLogoUrl(domain)}
+          alt={name}
+          width={size}
+          height={size}
+          style={{ objectFit: 'contain', borderRadius: 6, position: 'absolute', inset: 0, opacity: loaded ? 1 : 0, transition: 'opacity 200ms' }}
+          onLoad={() => setLoaded(true)}
+          onError={() => setError(true)}
+        />
+      )}
+      {(!loaded || error) && (
+        <div style={{
+          width: size, height: size, borderRadius: 8, background: color,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: size * 0.42, fontWeight: 900, color: contrastColor, letterSpacing: '-0.5px',
+        }}>
+          {name[0].toUpperCase()}
+        </div>
+      )}
+    </div>
+  );
 }
 
-// ─── Status badge ───
+function getContrastColor(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5 ? '#000000' : '#ffffff';
+}
+
+/* ─── Status Badge ─── */
 function StatusBadge({ status, plan, userPlan }: { status: string; plan?: string; userPlan: string }) {
-  if (plan === 'pro' && userPlan === 'free') {
-    return <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 99, background: '#f3e8ff', color: '#7c3aed' }}>PRO</span>;
-  }
-  if (status === 'coming_soon') {
-    return <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: '#fef3c7', color: '#92400e' }}>Em breve</span>;
-  }
-  return <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: 'var(--color-bg-sunken)', color: 'var(--color-text-muted)' }}>Disponível</span>;
+  const isPro = plan === 'pro' && userPlan === 'free';
+  const cfg = isPro
+    ? { bg: '#f5f3ff', color: '#6d28d9', label: 'PRO' }
+    : status === 'coming_soon'
+    ? { bg: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', label: 'Em breve' }
+    : { bg: 'var(--color-bg-sunken)', color: 'var(--color-text-muted)', label: 'Disponível' };
+
+  return (
+    <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 99, background: cfg.bg, color: cfg.color, whiteSpace: 'nowrap' }}>
+      {cfg.label}
+    </span>
+  );
 }
 
+/* ─── Category filter ─── */
 const CATEGORIES: { key: 'all' | IntegrationCategory; label: string }[] = [
   { key: 'all', label: 'Todos' },
-  { key: 'bancos', label: 'Bancos' },
-  { key: 'ecommerce', label: 'E-commerce' },
-  { key: 'pagamentos', label: 'Pagamentos' },
-  { key: 'infoprodutos', label: 'Infoprodutos' },
-  { key: 'contabilidade', label: 'Contabilidade' },
-  { key: 'outros', label: 'Outros' },
+  { key: 'bancos', label: `${CATEGORY_EMOJI.bancos} Bancos` },
+  { key: 'ecommerce', label: `${CATEGORY_EMOJI.ecommerce} E-commerce` },
+  { key: 'pagamentos', label: `${CATEGORY_EMOJI.pagamentos} Pagamentos` },
+  { key: 'infoprodutos', label: `${CATEGORY_EMOJI.infoprodutos} Infoprodutos` },
+  { key: 'contabilidade', label: `${CATEGORY_EMOJI.contabilidade} Contabilidade` },
+  { key: 'outros', label: `${CATEGORY_EMOJI.outros} Outros` },
 ];
 
+/* ─── Page ─── */
 export default function IntegrationsPage() {
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -65,7 +96,6 @@ export default function IntegrationsPage() {
   const [selectedIntegration, setSelectedIntegration] = useState<IntegrationDef | null>(null);
   const [showSuggest, setShowSuggest] = useState(false);
 
-  // Fetch user's active integrations
   const { data: userIntegrations = [] } = useQuery({
     queryKey: ['integrations', user?.id],
     queryFn: async () => {
@@ -91,31 +121,34 @@ export default function IntegrationsPage() {
   const connectedList = userIntegrations.filter((i: any) => i.status === 'active');
 
   return (
-    <div className="scroll-container hide-scrollbar" style={{ padding: isMobile ? '16px' : '28px', maxWidth: 1200 }}>
+    <div className="scroll-container hide-scrollbar" style={{ padding: isMobile ? 16 : 28, maxWidth: 1280 }}>
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: isMobile ? 22 : 26, fontWeight: 900, color: 'var(--color-text-strong)', letterSpacing: '-0.5px' }}>Integrações</h2>
+        <h2 style={{ fontSize: isMobile ? 22 : 28, fontWeight: 900, color: 'var(--color-text-strong)', letterSpacing: '-0.5px' }}>Integrações</h2>
         <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>Conecte suas plataformas e importe dados automaticamente</p>
       </div>
 
-      {/* Stats */}
+      {/* Stats strip */}
       <div className="grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: isMobile ? 8 : 12, marginBottom: 20 }}>
         {[
-          { label: 'Conectadas', value: connectedList.length, icon: CheckCircle2, color: 'var(--color-green-600)' },
-          { label: 'Disponíveis', value: INTEGRATIONS.length, icon: Plug, color: 'var(--color-text-muted)' },
-          { label: 'Última sync', value: lastSync ? timeAgo(lastSync) : '—', icon: Clock, color: 'var(--color-text-subtle)' },
+          { label: 'Conectadas', value: String(connectedList.length), icon: CheckCircle2, bg: '#f0fdf4', iconColor: '#16a34a', valueColor: '#16a34a' },
+          { label: 'Disponíveis', value: String(INTEGRATIONS.length), icon: Plug, bg: '#eff6ff', iconColor: '#2563eb', valueColor: '#2563eb' },
+          { label: 'Última sync', value: lastSync ? timeAgo(lastSync) : '—', icon: Clock, bg: '#fffbeb', iconColor: '#d97706', valueColor: '#d97706' },
         ].map(s => (
-          <div key={s.label} style={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-weak)', borderRadius: 'var(--radius-xl)', padding: isMobile ? '12px' : '16px' }}>
-            <div className="flex items-center" style={{ gap: 6, marginBottom: 4 }}>
-              <s.icon style={{ width: 14, height: 14, color: s.color }} />
+          <div key={s.label} style={{
+            background: s.bg, border: '1px solid var(--color-border-weak)',
+            borderRadius: 'var(--radius-xl)', padding: isMobile ? '12px' : '16px 20px',
+          }}>
+            <div className="flex items-center" style={{ gap: 6, marginBottom: 6 }}>
+              <s.icon style={{ width: 15, height: 15, color: s.iconColor }} />
               <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600 }}>{s.label}</span>
             </div>
-            <span style={{ fontSize: isMobile ? 18 : 22, fontWeight: 900, color: 'var(--color-text-strong)' }}>{s.value}</span>
+            <span style={{ fontSize: isMobile ? 20 : 24, fontWeight: 900, color: s.valueColor }}>{s.value}</span>
           </div>
         ))}
       </div>
 
-      {/* Connected integrations strip */}
+      {/* Connected strip */}
       {connectedList.length > 0 && (
         <div style={{ marginBottom: 20 }}>
           <div className="flex items-center" style={{ gap: 8, marginBottom: 10 }}>
@@ -128,7 +161,7 @@ export default function IntegrationsPage() {
               return (
                 <div key={conn.id} className="flex-shrink-0" style={{ width: 220, background: 'var(--color-bg-surface)', border: '1px solid var(--color-green-200)', borderRadius: 'var(--radius-xl)', padding: 14 }}>
                   <div className="flex items-center" style={{ gap: 8, marginBottom: 6 }}>
-                    <IntegrationLogo name={conn.platform_display_name} logoUrl={def?.logo || ''} color={def?.color || '#16a34a'} size={28} />
+                    <IntegrationLogo name={conn.platform_display_name} domain={def?.domain || ''} color={def?.color || '#16a34a'} size={28} />
                     <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-strong)' }}>{conn.platform_display_name}</span>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', marginLeft: 'auto' }} />
                   </div>
@@ -141,72 +174,90 @@ export default function IntegrationsPage() {
         </div>
       )}
 
-      {/* Filters */}
-      <div className="flex items-center flex-wrap" style={{ gap: 8, marginBottom: 16 }}>
-        <div className="flex-1 min-w-0" style={{ position: 'relative', maxWidth: isMobile ? '100%' : 280 }}>
-          <Search style={{ width: 16, height: 16, position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }} />
-          <input
-            value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar integração..."
-            style={{
-              width: '100%', height: 40, paddingLeft: 36, paddingRight: 12,
-              background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-weak)',
-              borderRadius: 'var(--radius-xl)', fontSize: 13, color: 'var(--color-text-base)', outline: 'none',
-            }}
-          />
-        </div>
+      {/* Search */}
+      <div style={{ position: 'relative', maxWidth: isMobile ? '100%' : 320, marginBottom: 12 }}>
+        <Search style={{ width: 16, height: 16, position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }} />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar integração..."
+          style={{
+            width: '100%', height: 40, paddingLeft: 36, paddingRight: 12,
+            background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-weak)',
+            borderRadius: 'var(--radius-xl)', fontSize: 13, color: 'var(--color-text-base)', outline: 'none',
+          }}
+        />
       </div>
 
       {/* Category pills */}
       <div className="flex hide-scrollbar" style={{ gap: 6, overflowX: 'auto', marginBottom: 20, paddingBottom: 2 }}>
-        {CATEGORIES.map(c => (
-          <button key={c.key} onClick={() => setCategory(c.key)}
-            style={{
-              flexShrink: 0, height: 32, padding: '0 14px', borderRadius: 99, fontSize: 12, fontWeight: 700,
-              border: '1px solid', cursor: 'pointer', transition: 'all 150ms',
-              ...(category === c.key
-                ? { background: 'var(--color-green-600)', color: 'white', borderColor: 'var(--color-green-600)' }
-                : { background: 'var(--color-bg-surface)', color: 'var(--color-text-muted)', borderColor: 'var(--color-border-weak)' }),
-            }}
-          >
-            {c.label}
-          </button>
-        ))}
+        {CATEGORIES.map(c => {
+          const active = category === c.key;
+          return (
+            <button key={c.key} onClick={() => setCategory(c.key)}
+              style={{
+                flexShrink: 0, height: 34, padding: '0 12px', borderRadius: 99, fontSize: 12, fontWeight: 700,
+                border: '1px solid', cursor: 'pointer', transition: 'all 150ms',
+                display: 'flex', alignItems: 'center', gap: 6,
+                ...(active
+                  ? { background: 'var(--color-green-600)', color: 'white', borderColor: 'var(--color-green-600)' }
+                  : { background: 'var(--color-bg-surface)', color: 'var(--color-text-muted)', borderColor: 'var(--color-border-weak)' }),
+              }}
+            >
+              {c.label}
+              <span style={{
+                fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 99,
+                background: active ? 'rgba(255,255,255,0.25)' : 'var(--color-bg-sunken)',
+                color: active ? 'white' : 'var(--color-text-subtle)',
+              }}>
+                {CATEGORY_COUNTS[c.key]}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Grid */}
-      <div className="grid" style={{ gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? 10 : 14 }}>
+      {/* Grid — 3 cols desktop, 4 xl, 2 mobile */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+        gap: isMobile ? 10 : 16,
+      }}
+        className="integrations-grid"
+      >
         {filtered.map((integ, idx) => {
           const isConnected = connectedPlatforms.has(integ.id);
           const needsPro = integ.plan === 'pro' && userPlan === 'free';
           const isComingSoon = integ.status === 'coming_soon';
+          const catColor = CATEGORY_COLORS[integ.category];
 
           return (
             <motion.div
               key={integ.id}
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.03 }}
-              className="group"
+              transition={{ delay: idx * 0.025, duration: 0.3 }}
               style={{
+                position: 'relative', overflow: 'hidden',
                 background: 'var(--color-bg-surface)',
                 border: isConnected ? '1.5px solid var(--color-green-300)' : '1px solid var(--color-border-weak)',
-                borderRadius: 16, padding: isMobile ? 14 : 20,
+                borderRadius: 16, padding: isMobile ? 14 : 18,
                 transition: 'all 200ms', cursor: isComingSoon ? 'default' : 'pointer',
               }}
-              onMouseEnter={e => { if (!isComingSoon) { e.currentTarget.style.borderColor = 'var(--color-green-300)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; } }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = isConnected ? 'var(--color-green-300)' : 'var(--color-border-weak)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
+              whileHover={!isComingSoon ? { y: -3, boxShadow: '0 8px 24px rgba(0,0,0,0.08)' } : {}}
             >
-              {/* Row 1: Logo + Status */}
+              {/* Connected accent */}
+              {isConnected && (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'var(--color-green-500)', borderRadius: '16px 16px 0 0' }} />
+              )}
+
+              {/* Row 1 */}
               <div className="flex items-start justify-between" style={{ marginBottom: 10 }}>
                 <div style={{
-                  width: isMobile ? 44 : 52, height: isMobile ? 44 : 52,
+                  width: isMobile ? 44 : 48, height: isMobile ? 44 : 48,
                   borderRadius: 12, background: 'white',
                   border: '1px solid var(--color-border-weak)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  padding: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', flexShrink: 0,
+                  padding: 6, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', flexShrink: 0,
                 }}>
-                  <IntegrationLogo name={integ.name} logoUrl={integ.logo} color={integ.color} size={isMobile ? 28 : 36} />
+                  <IntegrationLogo name={integ.name} domain={integ.domain} color={integ.color} size={isMobile ? 30 : 34} />
                 </div>
                 {isConnected
                   ? <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 99, background: 'var(--color-green-50)', color: 'var(--color-green-700)' }}>● Conectado</span>
@@ -214,51 +265,57 @@ export default function IntegrationsPage() {
                 }
               </div>
 
-              {/* Row 2: Name + Category */}
-              <p style={{ fontSize: isMobile ? 13 : 15, fontWeight: 800, color: 'var(--color-text-strong)', marginBottom: 2 }}>{integ.name}</p>
-              <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 99, background: 'var(--color-bg-sunken)', color: 'var(--color-text-subtle)', fontWeight: 600 }}>
+              {/* Row 2 */}
+              <p style={{ fontSize: isMobile ? 13 : 14, fontWeight: 800, color: 'var(--color-text-strong)', marginBottom: 3 }}>{integ.name}</p>
+              <span style={{
+                fontSize: 10, padding: '1px 7px', borderRadius: 99, fontWeight: 700,
+                background: catColor.bg, color: catColor.text,
+              }}>
                 {CATEGORY_LABELS[integ.category]}
               </span>
 
-              {/* Row 3: Description */}
+              {/* Row 3 */}
               {!isMobile && (
                 <p style={{ fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.6, marginTop: 8, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                   {integ.description}
                 </p>
               )}
 
-              {/* Row 4: Import tags */}
+              {/* Row 4 */}
               <div className="flex flex-wrap" style={{ gap: 4, marginTop: 8 }}>
-                {integ.imports.slice(0, isMobile ? 2 : 4).map(tag => (
+                {integ.imports.slice(0, isMobile ? 2 : 3).map(tag => (
                   <span key={tag} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 99, background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)', color: 'var(--color-text-muted)' }}>{tag}</span>
                 ))}
-                {isMobile && integ.imports.length > 2 && (
-                  <span style={{ fontSize: 10, padding: '2px 6px', color: 'var(--color-text-subtle)' }}>+{integ.imports.length - 2}</span>
+                {integ.imports.length > (isMobile ? 2 : 3) && (
+                  <span style={{ fontSize: 10, padding: '2px 6px', color: 'var(--color-text-subtle)', fontWeight: 700 }}>+{integ.imports.length - (isMobile ? 2 : 3)}</span>
                 )}
               </div>
 
-              {/* Row 5: Action */}
+              {/* Row 5 */}
               <div style={{ marginTop: 12 }}>
                 {isConnected ? (
                   <div className="flex" style={{ gap: 6 }}>
-                    <button style={{ flex: 1, height: 34, borderRadius: 'var(--radius-lg)', fontSize: 12, fontWeight: 700, background: 'var(--color-bg-sunken)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border-weak)', cursor: 'pointer' }}>
-                      <RefreshCw style={{ width: 12, height: 12, display: 'inline', marginRight: 4 }} />Sync
+                    <button style={{ flex: 1, height: 34, borderRadius: 'var(--radius-lg)', fontSize: 11, fontWeight: 700, background: 'var(--color-bg-sunken)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border-weak)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                      <RefreshCw style={{ width: 12, height: 12 }} />Sync
+                    </button>
+                    <button style={{ width: 34, height: 34, borderRadius: 'var(--radius-lg)', background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Settings2 style={{ width: 13, height: 13, color: 'var(--color-text-subtle)' }} />
                     </button>
                   </div>
                 ) : isComingSoon ? (
-                  <button style={{ width: '100%', height: 36, borderRadius: 'var(--radius-lg)', fontSize: 12, fontWeight: 700, background: 'var(--color-bg-sunken)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border-weak)', cursor: 'pointer' }}
-                    onClick={() => { haptic.light(); toast.success('Você será notificado quando estiver disponível! 🔔'); }}>
-                    <Bell style={{ width: 12, height: 12, display: 'inline', marginRight: 4 }} />Notifique-me
+                  <button onClick={() => { haptic.light(); toast.success('Você será notificado quando estiver disponível! 🔔'); }}
+                    style={{ width: '100%', height: 36, borderRadius: 'var(--radius-lg)', fontSize: 12, fontWeight: 700, background: 'var(--color-bg-sunken)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border-weak)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                    <Bell style={{ width: 12, height: 12 }} />Me avise
                   </button>
                 ) : needsPro ? (
-                  <button style={{ width: '100%', height: 36, borderRadius: 'var(--radius-lg)', fontSize: 12, fontWeight: 700, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', cursor: 'pointer' }}
-                    onClick={() => window.location.href = '/app/billing'}>
+                  <button onClick={() => { window.location.href = '/app/billing'; }}
+                    style={{ width: '100%', height: 36, borderRadius: 'var(--radius-lg)', fontSize: 12, fontWeight: 700, background: '#f5f3ff', color: '#6d28d9', border: '1px solid #ddd6fe', cursor: 'pointer' }}>
                     Upgrade para conectar
                   </button>
                 ) : (
-                  <button style={{ width: '100%', height: 36, borderRadius: 'var(--radius-lg)', fontSize: 12, fontWeight: 700, background: 'var(--color-green-600)', color: 'white', border: 'none', cursor: 'pointer' }}
-                    onClick={() => { haptic.medium(); setSelectedIntegration(integ); }}>
-                    Conectar
+                  <button onClick={() => { haptic.medium(); setSelectedIntegration(integ); }}
+                    style={{ width: '100%', height: 36, borderRadius: 'var(--radius-lg)', fontSize: 12, fontWeight: 700, background: 'var(--color-green-600)', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                    <Zap style={{ width: 13, height: 13 }} />Conectar
                   </button>
                 )}
               </div>
@@ -268,20 +325,15 @@ export default function IntegrationsPage() {
 
         {/* Suggest card */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: filtered.length * 0.03 }}
+          initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: filtered.length * 0.025 }}
           onClick={() => setShowSuggest(true)}
           style={{
-            background: 'var(--color-bg-surface)',
-            border: '2px dashed var(--color-border-base)',
-            borderRadius: 16, padding: isMobile ? 14 : 20,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', minHeight: 180, textAlign: 'center',
-            transition: 'all 200ms',
+            background: 'var(--color-bg-surface)', border: '2px dashed var(--color-border-base)',
+            borderRadius: 16, padding: isMobile ? 14 : 18, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center', cursor: 'pointer', minHeight: 180,
+            textAlign: 'center', transition: 'all 200ms',
           }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-green-400)'; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border-base)'; }}
         >
           <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--color-bg-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
             <Plus style={{ width: 24, height: 24, color: 'var(--color-text-subtle)' }} />
@@ -291,19 +343,12 @@ export default function IntegrationsPage() {
         </motion.div>
       </div>
 
-      {/* Connection flow modal */}
+      {/* Modals */}
       <AnimatePresence>
         {selectedIntegration && (
-          <ConnectionFlow
-            integration={selectedIntegration}
-            onClose={() => setSelectedIntegration(null)}
-            userId={user?.id || ''}
-            onConnected={() => queryClient.invalidateQueries({ queryKey: ['integrations'] })}
-          />
+          <ConnectionFlow integration={selectedIntegration} onClose={() => setSelectedIntegration(null)} userId={user?.id || ''} onConnected={() => queryClient.invalidateQueries({ queryKey: ['integrations'] })} />
         )}
       </AnimatePresence>
-
-      {/* Suggest modal */}
       <AnimatePresence>
         {showSuggest && <SuggestModal onClose={() => setShowSuggest(false)} userId={user?.id || ''} />}
       </AnimatePresence>
@@ -311,7 +356,7 @@ export default function IntegrationsPage() {
   );
 }
 
-// ─── Connection Flow ───
+/* ─── Connection Flow ─── */
 function ConnectionFlow({ integration, onClose, userId, onConnected }: {
   integration: IntegrationDef; onClose: () => void; userId: string; onConnected: () => void;
 }) {
@@ -345,7 +390,6 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
     if (!userId || parsed.length === 0) return;
     setImporting(true);
     try {
-      // Check for duplicates by source_id
       const sourceIds = parsed.filter(t => t.source_id).map(t => t.source_id);
       let existingIds = new Set<string>();
       if (sourceIds.length > 0) {
@@ -353,7 +397,7 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
         existingIds = new Set((existing || []).map((e: any) => e.notes?.replace('src:', '')));
       }
       const newTxs = parsed.filter(t => !t.source_id || !existingIds.has(t.source_id));
-      if (newTxs.length === 0) { toast.info('Todas as transações já foram importadas anteriormente.'); setImporting(false); return; }
+      if (newTxs.length === 0) { toast.info('Todas as transações já foram importadas.'); setImporting(false); return; }
 
       const rows = newTxs.map(t => ({
         user_id: userId, type: t.type, description: t.description,
@@ -363,25 +407,16 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
       const { error } = await supabase.from('transactions').insert(rows);
       if (error) throw error;
 
-      // Upsert integration record
-      await supabase.from('integrations').upsert({
-        user_id: userId, platform: integration.id,
-        platform_display_name: integration.name,
-        method: 'ofx_import', status: 'active' as any,
-        last_sync_at: new Date().toISOString(),
-        total_imported: newTxs.length,
-      }, { onConflict: 'user_id,platform' }).select();
-      // Fallback: insert if upsert didn't match
       await supabase.from('integrations').insert({
         user_id: userId, platform: integration.id,
         platform_display_name: integration.name,
         method: 'ofx_import', status: 'active' as any,
         last_sync_at: new Date().toISOString(),
         total_imported: newTxs.length,
-      }).select();
+      });
 
       haptic.success();
-      toast.success(`${newTxs.length} transações importadas com sucesso! 🎉`);
+      toast.success(`${newTxs.length} transações importadas! 🎉`);
       onConnected();
       setStep(4);
     } catch (err: any) {
@@ -393,30 +428,21 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
 
   const copyWebhook = () => {
     navigator.clipboard.writeText(webhookUrl);
-    setCopied(true);
-    haptic.light();
+    setCopied(true); haptic.light();
     setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-      onClick={onClose}
-    >
+      style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={onClose}>
       <motion.div
         initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }}
         transition={{ type: 'spring', damping: 32, stiffness: 320 }}
         className="w-full md:max-w-lg"
-        style={{
-          background: 'var(--color-bg-surface)',
-          borderRadius: isMobile ? '20px 20px 0 0' : 20,
-          maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Handle (mobile) */}
+        style={{ background: 'var(--color-bg-surface)', borderRadius: isMobile ? '20px 20px 0 0' : 20, maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+        onClick={e => e.stopPropagation()}>
+
         {isMobile && <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 10 }}><div style={{ width: 40, height: 4, borderRadius: 99, background: 'var(--color-border-base)' }} /></div>}
 
         {/* Header */}
@@ -426,16 +452,16 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
               <ArrowLeft style={{ width: 18, height: 18 }} />
             </button>
           )}
-          <div style={{ width: 40, height: 40, borderRadius: 10, background: 'white', border: '1px solid var(--color-border-weak)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6 }}>
-            <IntegrationLogo name={integration.name} logoUrl={integration.logo} color={integration.color} size={28} />
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: 'white', border: '1px solid var(--color-border-weak)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4 }}>
+            <IntegrationLogo name={integration.name} domain={integration.domain} color={integration.color} size={30} />
           </div>
           <div className="flex-1 min-w-0">
             <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text-strong)' }}>
-              {isOFX ? `Importar extrato do ${integration.name}` : `Conectar ${integration.name}`}
+              {isOFX ? `Importar do ${integration.name}` : `Conectar ${integration.name}`}
             </p>
-            <p style={{ fontSize: 11, color: 'var(--color-text-subtle)' }}>Passo {step} de {isOFX ? 4 : 4}</p>
+            <p style={{ fontSize: 11, color: 'var(--color-text-subtle)' }}>Passo {step} de 4</p>
           </div>
-          <button onClick={onClose} style={{ fontSize: 20, color: 'var(--color-text-subtle)', cursor: 'pointer', background: 'none', border: 'none', lineHeight: 1 }}>×</button>
+          <button onClick={onClose} style={{ fontSize: 20, color: 'var(--color-text-subtle)', cursor: 'pointer', background: 'none', border: 'none' }}>×</button>
         </div>
 
         {/* Content */}
@@ -445,14 +471,12 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
               {step === 1 && (
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-strong)', marginBottom: 16 }}>Como exportar do {integration.name}:</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {(integration.instructions || ['Acesse o app ou internet banking', 'Vá em "Extrato"', 'Exporte em formato OFX ou CSV', 'Faça upload abaixo']).map((inst, i) => (
-                      <div key={i} className="flex items-start" style={{ gap: 10 }}>
-                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--color-green-50)', color: 'var(--color-green-700)', fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</div>
-                        <p style={{ fontSize: 13, color: 'var(--color-text-base)', lineHeight: 1.6 }}>{inst}</p>
-                      </div>
-                    ))}
-                  </div>
+                  {(integration.instructions || ['Acesse o app ou internet banking', 'Vá em "Extrato"', 'Exporte em formato OFX ou CSV', 'Faça upload abaixo']).map((inst, i) => (
+                    <div key={i} className="flex items-start" style={{ gap: 10, marginBottom: 10 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--color-green-50)', color: 'var(--color-green-700)', fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</div>
+                      <p style={{ fontSize: 13, color: 'var(--color-text-base)', lineHeight: 1.6 }}>{inst}</p>
+                    </div>
+                  ))}
                   <button onClick={() => setStep(2)} style={{ width: '100%', height: 44, marginTop: 20, borderRadius: 'var(--radius-xl)', background: 'var(--color-green-600)', color: 'white', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
                     Próximo: Upload do arquivo
                   </button>
@@ -460,24 +484,13 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
               )}
               {step === 2 && (
                 <div>
-                  <div
-                    onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                    onDragLeave={() => setDragOver(false)}
-                    onDrop={handleDrop}
-                    onClick={() => fileRef.current?.click()}
-                    style={{
-                      border: `2px dashed ${dragOver ? 'var(--color-green-500)' : 'var(--color-border-base)'}`,
-                      borderRadius: 16, padding: 32, textAlign: 'center',
-                      background: dragOver ? 'var(--color-green-50)' : 'var(--color-bg-sunken)',
-                      cursor: 'pointer', transition: 'all 200ms',
-                    }}
-                  >
+                  <div onDragOver={e => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop} onClick={() => fileRef.current?.click()}
+                    style={{ border: `2px dashed ${dragOver ? 'var(--color-green-500)' : 'var(--color-border-base)'}`, borderRadius: 16, padding: 32, textAlign: 'center', background: dragOver ? 'var(--color-green-50)' : 'var(--color-bg-sunken)', cursor: 'pointer', transition: 'all 200ms' }}>
                     <Upload style={{ width: 32, height: 32, color: 'var(--color-text-subtle)', margin: '0 auto 10px' }} />
-                    <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-base)' }}>Arraste o arquivo OFX ou CSV aqui</p>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-base)' }}>Arraste o arquivo OFX ou CSV</p>
                     <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 4 }}>ou clique para selecionar</p>
-                    <p style={{ fontSize: 10, color: 'var(--color-text-subtle)', marginTop: 8 }}>Formatos: .ofx, .csv, .qif — Máximo 10MB</p>
-                    <input ref={fileRef} type="file" accept=".ofx,.csv,.qif,.xlsx" style={{ display: 'none' }}
-                      onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }} />
+                    <p style={{ fontSize: 10, color: 'var(--color-text-subtle)', marginTop: 8 }}>.ofx, .csv, .qif — Máx 10MB</p>
+                    <input ref={fileRef} type="file" accept=".ofx,.csv,.qif,.xlsx" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }} />
                   </div>
                 </div>
               )}
@@ -490,8 +503,6 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
                       <p style={{ fontSize: 11, color: 'var(--color-green-700)' }}>{parsed.length} transações encontradas</p>
                     </div>
                   </div>
-
-                  {/* Preview table */}
                   <div style={{ overflowX: 'auto', marginBottom: 16 }}>
                     <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
                       <thead>
@@ -513,44 +524,30 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
                         ))}
                       </tbody>
                     </table>
-                    {parsed.length > 5 && <p style={{ fontSize: 11, color: 'var(--color-text-subtle)', textAlign: 'center', marginTop: 6 }}>e mais {parsed.length - 5} transações...</p>}
+                    {parsed.length > 5 && <p style={{ fontSize: 11, color: 'var(--color-text-subtle)', textAlign: 'center', marginTop: 6 }}>e mais {parsed.length - 5}...</p>}
                   </div>
-
                   <button onClick={handleImport} disabled={importing}
                     style={{ width: '100%', height: 44, borderRadius: 'var(--radius-xl)', background: 'var(--color-green-600)', color: 'white', fontSize: 14, fontWeight: 700, border: 'none', cursor: importing ? 'wait' : 'pointer', opacity: importing ? 0.7 : 1 }}>
                     {importing ? 'Importando...' : `Importar ${parsed.length} transações`}
                   </button>
                 </div>
               )}
-              {step === 4 && (
-                <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                  <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--color-green-50)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <CheckCircle2 style={{ width: 32, height: 32, color: 'var(--color-green-600)' }} />
-                  </div>
-                  <p style={{ fontSize: 18, fontWeight: 900, color: 'var(--color-text-strong)', marginBottom: 6 }}>Transações importadas!</p>
-                  <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Seu painel já foi atualizado.</p>
-                  <button onClick={() => { onClose(); window.location.href = '/app'; }}
-                    style={{ marginTop: 20, height: 44, padding: '0 32px', borderRadius: 'var(--radius-xl)', background: 'var(--color-green-600)', color: 'white', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-                    Ver no painel
-                  </button>
-                </div>
-              )}
+              {step === 4 && <SuccessStep onClose={onClose} label="Ver no painel" href="/app" />}
             </>
           ) : (
-            /* Webhook flow */
             <>
               {step === 1 && (
                 <div>
                   <p style={{ fontSize: 13, color: 'var(--color-text-base)', lineHeight: 1.7, marginBottom: 16 }}>
-                    Vamos gerar uma URL de webhook. Você cola essa URL nas configurações da {integration.name} e as vendas chegam automaticamente no FinDash Pro.
+                    Vamos gerar uma URL de webhook. Você cola nas configurações da {integration.name} e as vendas chegam automaticamente.
                   </p>
                   <div className="flex items-center justify-center" style={{ gap: 12, padding: 20, background: 'var(--color-bg-sunken)', borderRadius: 'var(--radius-xl)', marginBottom: 16 }}>
-                    <IntegrationLogo name={integration.name} logoUrl={integration.logo} color={integration.color} size={32} />
+                    <IntegrationLogo name={integration.name} domain={integration.domain} color={integration.color} size={32} />
                     <ChevronRight style={{ width: 16, height: 16, color: 'var(--color-text-subtle)' }} />
                     <Zap style={{ width: 24, height: 24, color: 'var(--color-green-600)' }} />
                     <ChevronRight style={{ width: 16, height: 16, color: 'var(--color-text-subtle)' }} />
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--color-green-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ color: 'white', fontSize: 12, fontWeight: 900 }}>FD</span>
+                      <span style={{ color: 'white', fontSize: 11, fontWeight: 900 }}>FD</span>
                     </div>
                   </div>
                   <button onClick={() => setStep(2)} style={{ width: '100%', height: 44, borderRadius: 'var(--radius-xl)', background: 'var(--color-green-600)', color: 'white', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
@@ -562,21 +559,13 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
                 <div>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-strong)', marginBottom: 8 }}>Sua URL de webhook:</p>
                   <div className="flex items-center" style={{ gap: 8, marginBottom: 20 }}>
-                    <input readOnly value={webhookUrl} style={{
-                      flex: 1, height: 40, padding: '0 12px', fontSize: 11, borderRadius: 'var(--radius-lg)',
-                      background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)',
-                      color: 'var(--color-text-base)', fontFamily: 'var(--font-mono)',
-                    }} />
-                    <button onClick={copyWebhook} style={{
-                      height: 40, width: 40, borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border-weak)',
-                      background: copied ? 'var(--color-green-50)' : 'var(--color-bg-surface)',
-                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
+                    <input readOnly value={webhookUrl} style={{ flex: 1, height: 40, padding: '0 12px', fontSize: 11, borderRadius: 'var(--radius-lg)', background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)', color: 'var(--color-text-base)', fontFamily: 'var(--font-mono)' }} />
+                    <button onClick={copyWebhook} style={{ height: 40, width: 40, borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border-weak)', background: copied ? 'var(--color-green-50)' : 'var(--color-bg-surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {copied ? <Check style={{ width: 16, height: 16, color: 'var(--color-green-600)' }} /> : <Copy style={{ width: 16, height: 16, color: 'var(--color-text-muted)' }} />}
                     </button>
                   </div>
                   <button onClick={() => setStep(3)} style={{ width: '100%', height: 44, borderRadius: 'var(--radius-xl)', background: 'var(--color-green-600)', color: 'white', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-                    Próximo: Configurar na {integration.name}
+                    Próximo: Configurar
                   </button>
                 </div>
               )}
@@ -590,34 +579,20 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
                     </div>
                   ))}
                   <button onClick={async () => {
-                    // Save integration record
                     await supabase.from('integrations').insert({
                       user_id: userId, platform: integration.id,
                       platform_display_name: integration.name,
-                      method: 'webhook', status: 'pending' as any,
-                      webhook_url: webhookUrl,
+                      method: 'webhook', status: 'pending' as any, webhook_url: webhookUrl,
                     });
                     haptic.success();
-                    toast.success('Integração configurada! Aguardando primeira sincronização.');
-                    onConnected();
-                    setStep(4);
+                    toast.success('Integração configurada!');
+                    onConnected(); setStep(4);
                   }} style={{ width: '100%', height: 44, marginTop: 16, borderRadius: 'var(--radius-xl)', background: 'var(--color-green-600)', color: 'white', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
                     Marcar como configurado
                   </button>
                 </div>
               )}
-              {step === 4 && (
-                <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                  <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--color-green-50)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <CheckCircle2 style={{ width: 32, height: 32, color: 'var(--color-green-600)' }} />
-                  </div>
-                  <p style={{ fontSize: 18, fontWeight: 900, color: 'var(--color-text-strong)', marginBottom: 6 }}>Webhook configurado!</p>
-                  <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Sua primeira venda aparecerá automaticamente no painel.</p>
-                  <button onClick={onClose} style={{ marginTop: 20, height: 44, padding: '0 32px', borderRadius: 'var(--radius-xl)', background: 'var(--color-green-600)', color: 'white', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-                    Fechar
-                  </button>
-                </div>
-              )}
+              {step === 4 && <SuccessStep onClose={onClose} label="Fechar" />}
             </>
           )}
         </div>
@@ -626,7 +601,23 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
   );
 }
 
-// ─── Suggest Modal ───
+function SuccessStep({ onClose, label, href }: { onClose: () => void; label: string; href?: string }) {
+  return (
+    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+      <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--color-green-50)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <CheckCircle2 style={{ width: 32, height: 32, color: 'var(--color-green-600)' }} />
+      </div>
+      <p style={{ fontSize: 18, fontWeight: 900, color: 'var(--color-text-strong)', marginBottom: 6 }}>Tudo certo! 🎉</p>
+      <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Seu painel já foi atualizado.</p>
+      <button onClick={() => { onClose(); if (href) window.location.href = href; }}
+        style={{ marginTop: 20, height: 44, padding: '0 32px', borderRadius: 'var(--radius-xl)', background: 'var(--color-green-600)', color: 'white', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+        {label}
+      </button>
+    </div>
+  );
+}
+
+/* ─── Suggest Modal ─── */
 function SuggestModal({ onClose, userId }: { onClose: () => void; userId: string }) {
   const [name, setName] = useState('');
   const [reason, setReason] = useState('');
@@ -638,16 +629,14 @@ function SuggestModal({ onClose, userId }: { onClose: () => void; userId: string
     await supabase.from('integration_suggestions').insert({ user_id: userId, platform_name: name, reason });
     haptic.success();
     toast.success('Obrigado! Analisaremos sua sugestão. 🙏');
-    setSending(false);
-    onClose();
+    setSending(false); onClose();
   };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={onClose}>
       <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
-        style={{ width: '90%', maxWidth: 400, background: 'var(--color-bg-surface)', borderRadius: 20, padding: 24 }}
-        onClick={e => e.stopPropagation()}>
+        style={{ width: '90%', maxWidth: 400, background: 'var(--color-bg-surface)', borderRadius: 20, padding: 24 }} onClick={e => e.stopPropagation()}>
         <div className="flex items-center" style={{ gap: 8, marginBottom: 16 }}>
           <MessageSquarePlus style={{ width: 20, height: 20, color: 'var(--color-green-600)' }} />
           <p style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-text-strong)' }}>Sugerir integração</p>
@@ -659,7 +648,7 @@ function SuggestModal({ onClose, userId }: { onClose: () => void; userId: string
         </div>
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Por que seria útil? (opcional)</label>
-          <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} placeholder="Descreva como usaria..."
+          <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} placeholder="Descreva..."
             style={{ width: '100%', padding: 12, borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border-weak)', background: 'var(--color-bg-surface)', fontSize: 14, color: 'var(--color-text-base)', resize: 'none' }} />
         </div>
         <div className="flex" style={{ gap: 8 }}>
@@ -673,7 +662,7 @@ function SuggestModal({ onClose, userId }: { onClose: () => void; userId: string
   );
 }
 
-// ─── Helpers ───
+/* ─── Helpers ─── */
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -689,12 +678,12 @@ function getWebhookInstructions(platformId: string): string[] {
     hotmart: ['Acesse hotmart.com → Ferramentas → Webhooks', 'Clique em "Novo Webhook"', 'Cole a URL que você copiou', 'Marque os eventos: "Compra Aprovada", "Reembolso"', 'Clique em Salvar'],
     kiwify: ['Acesse dashboard.kiwify.com.br', 'Vá em Configurações → Integrações → Webhooks', 'Cole a URL copiada', 'Selecione eventos e salve'],
     shopify: ['Admin Shopify → Configurações → Notificações', 'Role até "Webhooks" → "Criar webhook"', 'Evento: "Criação de pedido"', 'Cole a URL e salve'],
-    eduzz: ['Acesse Eduzz → Configurações → Webhooks', 'Adicione nova URL de webhook', 'Cole a URL e selecione eventos de venda', 'Salve a configuração'],
+    eduzz: ['Acesse Eduzz → Configurações → Webhooks', 'Adicione nova URL de webhook', 'Cole a URL e selecione eventos de venda', 'Salve'],
     monetizze: ['Acesse Monetizze → Configurações → Integrações', 'Adicione URL de postback', 'Cole a URL e salve'],
-    stripe: ['Acesse Stripe Dashboard → Developers → Webhooks', 'Clique em "Add endpoint"', 'Cole a URL e selecione eventos (payment_intent.succeeded)', 'Salve'],
+    stripe: ['Acesse Stripe Dashboard → Developers → Webhooks', 'Clique em "Add endpoint"', 'Cole a URL e selecione eventos', 'Salve'],
     paypal: ['Acesse PayPal Developer → Webhooks', 'Adicione novo webhook com a URL', 'Selecione eventos de pagamento', 'Salve'],
     mercadopago: ['Acesse Mercado Pago → Configurações → IPN', 'Cole a URL no campo de notificações', 'Selecione "Pagamentos"', 'Salve'],
     pagseguro: ['Acesse PagSeguro → Configurações → Integrações', 'Cole a URL de notificação', 'Ative notificações de transação', 'Salve'],
   };
-  return map[platformId] || ['Acesse as configurações da plataforma', 'Procure a seção de Webhooks ou Integrações', 'Cole a URL que você copiou', 'Salve a configuração'];
+  return map[platformId] || ['Acesse as configurações da plataforma', 'Procure a seção de Webhooks', 'Cole a URL copiada', 'Salve'];
 }

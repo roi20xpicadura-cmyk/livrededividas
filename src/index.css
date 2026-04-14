@@ -420,3 +420,10 @@
   font-size: 14px;
   color: var(--color-green-800, #166534);
 }
+
+/* Integrations grid XL breakpoint */
+@media (min-width: 1280px) {
+  .integrations-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
