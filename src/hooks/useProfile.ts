@@ -37,12 +37,16 @@ export function useProfile() {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async () => {
-    if (!user) return;
-    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    if (data) setProfile(data as Profile);
+    if (!user) { setLoading(false); return; }
 
-    const { data: cfg } = await supabase.from('user_config').select('*').eq('user_id', user.id).single();
-    if (cfg) setConfig(cfg as unknown as UserConfig);
+    // Parallel fetch — both queries at the same time
+    const [profileRes, configRes] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', user.id).single(),
+      supabase.from('user_config').select('*').eq('user_id', user.id).single(),
+    ]);
+
+    if (profileRes.data) setProfile(profileRes.data as Profile);
+    if (configRes.data) setConfig(configRes.data as unknown as UserConfig);
     setLoading(false);
   }, [user]);
 
@@ -50,14 +54,14 @@ export function useProfile() {
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return;
-    await supabase.from('profiles').update(updates).eq('id', user.id);
-    await fetchProfile();
+    const { data } = await supabase.from('profiles').update(updates).eq('id', user.id).select().single();
+    if (data) setProfile(data as Profile);
   };
 
   const updateConfig = async (updates: Partial<UserConfig>) => {
     if (!user) return;
-    await supabase.from('user_config').update(updates as any).eq('user_id', user.id);
-    await fetchProfile();
+    const { data } = await supabase.from('user_config').update(updates as any).eq('user_id', user.id).select().single();
+    if (data) setConfig(data as unknown as UserConfig);
   };
 
   return { profile, config, loading, updateProfile, updateConfig, refetch: fetchProfile };
