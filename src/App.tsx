@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -9,7 +9,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
 import { AppErrorBoundary } from "@/components/app/ErrorBoundary";
-
+import { AnimatePresence } from "framer-motion";
+import SplashScreen from "@/components/app/SplashScreen";
 // Lazy-loaded routes
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
