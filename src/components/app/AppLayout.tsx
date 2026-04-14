@@ -20,33 +20,41 @@ import { motion, AnimatePresence } from 'framer-motion';
 const ALL_NAV_ITEMS = [
   { label: 'Visão Geral', path: '/app', icon: LayoutDashboard, profiles: ['personal', 'business', 'both'] },
   { label: 'Lançamentos', path: '/app/transactions', icon: ArrowLeftRight, profiles: ['personal', 'business', 'both'] },
-  { label: 'Contas Bancárias', path: '/app/banks', icon: Building2, profiles: ['personal', 'business', 'both'] },
-  { label: 'Integrações', path: '/app/integrations', icon: Plug, profiles: ['personal', 'business', 'both'] },
   { label: 'Orçamento', path: '/app/budget', icon: CalendarDays, profiles: ['personal', 'business', 'both'] },
-  { label: 'Metas', path: '/app/goals', icon: Target, profiles: ['personal', 'business', 'both'] },
-  { label: 'Dívidas', path: '/app/debts', icon: AlertCircle, profiles: ['personal', 'business', 'both'] },
-  { label: 'Fluxo de Caixa', path: '/app/cashflow', icon: TrendingUp, profiles: ['business', 'both'] },
-  { label: 'DRE', path: '/app/dre', icon: FileText, profiles: ['business', 'both'] },
+  { label: 'Metas', path: '/app/goals', icon: Target, profiles: ['personal', 'both'] },
+  { label: 'Dívidas', path: '/app/debts', icon: AlertCircle, profiles: ['personal', 'both'] },
   { label: 'Cartões', path: '/app/cards', icon: CreditCard, profiles: ['personal', 'business', 'both'] },
   { label: 'Investimentos', path: '/app/investments', icon: Briefcase, profiles: ['personal', 'business', 'both'] },
-  { label: 'Gráficos', path: '/app/charts', icon: BarChart2, profiles: ['business', 'both'] },
-  { label: 'Exportar', path: '/app/export', icon: Download, profiles: ['personal', 'business', 'both'] },
+  { label: 'Fluxo de Caixa', path: '/app/cashflow', icon: TrendingUp, profiles: ['personal', 'business', 'both'] },
+  { label: 'DRE', path: '/app/dre', icon: FileText, profiles: ['business', 'both'] },
+  { label: 'Gráficos', path: '/app/charts', icon: BarChart2, profiles: ['personal', 'business', 'both'] },
+  { label: 'Contas Bancárias', path: '/app/banks', icon: Building2, profiles: ['personal', 'business', 'both'] },
+  { label: 'Integrações', path: '/app/integrations', icon: Plug, profiles: ['personal', 'business', 'both'] },
   { label: 'Simulador', path: '/app/simulator', icon: FlaskConical, profiles: ['personal', 'business', 'both'], badge: 'NOVO' },
   { label: 'Previsões', path: '/app/predictions', icon: TrendingUp, profiles: ['personal', 'business', 'both'] },
+  { label: 'Exportar', path: '/app/export', icon: Download, profiles: ['personal', 'business', 'both'] },
 ];
 
 const ACCOUNT_ITEMS = [
-  { label: 'Conquistas', path: '/app/achievements', icon: Trophy },
+  { label: 'Conquistas', path: '/app/achievements', icon: Trophy, profiles: ['personal', 'both'] },
   { label: 'Indicar Amigos', path: '/app/referral', icon: Gift },
   { label: 'Configurações', path: '/app/settings', icon: Settings2 },
   { label: 'Meu Plano', path: '/app/billing', icon: Crown },
 ];
 
-const MOBILE_NAV = [
+const MOBILE_NAV_PERSONAL = [
   { label: 'Início', path: '/app', icon: Home, activeColor: '#16a34a' },
   { label: 'Lançar', path: '/app/transactions', icon: ArrowLeftRight, activeColor: '#2563eb' },
-  { label: '', path: 'fab', icon: Plus, activeColor: '#16a34a' }, // center FAB
+  { label: '', path: 'fab', icon: Plus, activeColor: '#16a34a' },
   { label: 'Metas', path: '/app/goals', icon: Target, activeColor: '#7c3aed' },
+  { label: 'Mais', path: 'more', icon: MoreHorizontal, activeColor: '#64748b' },
+];
+
+const MOBILE_NAV_BUSINESS = [
+  { label: 'Início', path: '/app', icon: Home, activeColor: '#16a34a' },
+  { label: 'Lançar', path: '/app/transactions', icon: ArrowLeftRight, activeColor: '#2563eb' },
+  { label: '', path: 'fab', icon: Plus, activeColor: '#16a34a' },
+  { label: 'DRE', path: '/app/dre', icon: FileText, activeColor: '#7c3aed' },
   { label: 'Mais', path: 'more', icon: MoreHorizontal, activeColor: '#64748b' },
 ];
 
@@ -94,6 +102,8 @@ export default function AppLayout() {
 
   const profileType = config?.profile_type || 'personal';
   const navItems = ALL_NAV_ITEMS.filter(item => item.profiles.includes(profileType));
+  const MOBILE_NAV = profileType === 'business' ? MOBILE_NAV_BUSINESS : MOBILE_NAV_PERSONAL;
+  const accountItems = ACCOUNT_ITEMS.filter(item => !(item as any).profiles || (item as any).profiles.includes(profileType));
   const plan = profile?.plan || 'free';
 
   useEffect(() => {
@@ -272,7 +282,7 @@ fontSize: 13,
           <div style={{ height: 1, background: 'var(--color-border-weak)', margin: '0 10px 4px' }} />
           <p className="label-upper" style={{ padding: '8px 8px 4px' }}>CONTA</p>
 
-          {ACCOUNT_ITEMS.map(item => {
+          {accountItems.map(item => {
             const active = isActive(item.path);
             const isBilling = item.path === '/app/billing';
             return (
@@ -429,7 +439,7 @@ fontSize: 13,
         </header>
 
         {/* Mobile: page title below header */}
-        {isMobile && (
+        {isMobile && location.pathname !== '/app' && (
           <div style={{ padding: '12px 16px 4px' }}>
             <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-text-strong)', letterSpacing: '-0.3px' }}>
               {PAGE_TITLES[location.pathname] || 'FinDash Pro'}
@@ -547,7 +557,7 @@ fontSize: 13,
 
               {/* Account section */}
               <div style={{ marginTop: 16, borderTop: '1px solid var(--color-border-weak)', paddingTop: 12 }}>
-                {ACCOUNT_ITEMS.map(item => (
+                {accountItems.map(item => (
                   <Link key={item.path} to={item.path} onClick={() => setShowMoreDrawer(false)}
                     className="flex items-center transition-colors"
                     style={{ gap: 12, padding: '12px 4px', fontSize: 14, fontWeight: 500, color: 'var(--color-text-base)', borderBottom: '1px solid var(--color-border-weak)' }}>

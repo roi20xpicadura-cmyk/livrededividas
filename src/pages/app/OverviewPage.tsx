@@ -1,43 +1,42 @@
-import { useEffect, useState, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
+import { useEffect, useState, useMemo, useRef, lazy, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { formatCurrency } from '@/lib/plans';
-import { OBJECTIVES, SMART_TIPS } from '@/lib/objectives';
+import { OBJECTIVES } from '@/lib/objectives';
 import { calculateFinancialScore, getScoreColor, getScoreLevel, ScoreData } from '@/lib/financialScore';
 import {
-  TrendingUp, TrendingDown, DollarSign, Percent, Hash, Zap,
-  ArrowRight, ArrowUpRight, Lightbulb, X as XIcon,
-  PlusCircle, ReceiptText, BarChart2, Target, Check, Flame, Shield
+  TrendingUp, TrendingDown, Eye, EyeOff, ChevronDown,
+  ArrowRight, PlusCircle, ReceiptText, Target, Shield, Flame, PiggyBank,
+  DollarSign, Percent, Hash, Zap, BarChart2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { format, parseISO, startOfMonth, endOfMonth, subDays, differenceInDays, eachDayOfInterval, isSameDay } from 'date-fns';
+import { format, parseISO, startOfMonth, endOfMonth, subDays, subMonths, differenceInDays, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
 import PredictiveWidget from '@/components/dashboard/PredictiveWidget';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-// Lazy-load recharts (222KB) — only loads when chart is visible
 const LazyChart = lazy(() => import('recharts').then(m => ({
-  default: ({ data, tooltipContent }: { data: any[]; tooltipContent: React.ReactElement }) => (
+  default: ({ data }: { data: any[] }) => (
     <m.ResponsiveContainer width="100%" height="100%">
-      <m.AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -10 }}>
+      <m.AreaChart data={data} margin={{ top: 5, right: 0, left: -30, bottom: 0 }}>
         <defs>
-          <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
-            <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+          <linearGradient id="balanceGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#16a34a" stopOpacity={0.2} />
+            <stop offset="100%" stopColor="#16a34a" stopOpacity={0} />
           </linearGradient>
         </defs>
         <m.XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--color-text-subtle)' }} interval="preserveStartEnd" />
-        <m.YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--color-text-subtle)' }} tickFormatter={(v: number) => v >= 1000 ? `R$${(v / 1000).toFixed(0)}k` : `R$${v}`} />
-        <m.Tooltip content={tooltipContent} />
-        <m.Area type="monotone" dataKey="saldo" stroke="#22c55e" strokeWidth={2.5} fill="url(#greenGradient)" />
+        <m.YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--color-text-subtle)' }} tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`} />
+        <m.Tooltip contentStyle={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-base)', borderRadius: 10, fontSize: 12, fontWeight: 700 }} formatter={(v: number) => [formatCurrency(v, 'R$'), 'Saldo']} />
+        <m.Area type="monotone" dataKey="saldo" stroke="#16a34a" strokeWidth={2.5} fill="url(#balanceGrad)" dot={false} activeDot={{ r: 5, fill: '#16a34a', stroke: 'white', strokeWidth: 2 }} />
       </m.AreaChart>
     </m.ResponsiveContainer>
   )
 })));
 
-/* ── helpers ───────────────────────────────────────────── */
-
+/* ── helpers ─────────────────────── */
 function useCountUp(target: number, duration = 800) {
   const [val, setVal] = useState(0);
   const started = useRef(false);
@@ -47,8 +46,7 @@ function useCountUp(target: number, duration = 800) {
     const t0 = performance.now();
     const tick = (now: number) => {
       const p = Math.min((now - t0) / duration, 1);
-      const ease = 1 - Math.pow(1 - p, 3);
-      setVal(target * ease);
+      setVal(target * (1 - Math.pow(1 - p, 3)));
       if (p < 1) requestAnimationFrame(tick);
       else setVal(target);
     };
@@ -62,80 +60,51 @@ function AnimatedCurrency({ value, currency }: { value: number; currency: string
   return <>{formatCurrency(v, currency)}</>;
 }
 
-function AnimatedNumber({ value, suffix = '' }: { value: number; suffix?: string }) {
-  const v = useCountUp(value);
-  return <>{suffix ? `${v.toFixed(1)}${suffix}` : Math.round(v)}</>;
-}
-
-function ProgressBar({ pct, delay = 0 }: { pct: number; delay?: number }) {
-  const [w, setW] = useState(0);
-  useEffect(() => { const t = setTimeout(() => setW(Math.min(pct, 100)), delay); return () => clearTimeout(t); }, [pct, delay]);
-  const color = pct < 30 ? 'var(--color-danger-solid)' : pct < 70 ? 'var(--color-warning-solid)' : 'var(--color-green-600)';
-  return (
-    <div style={{ height: 6, background: 'var(--color-bg-sunken)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-      <div style={{ height: '100%', borderRadius: 'var(--radius-full)', transition: 'width 800ms ease-out', width: `${w}%`, background: color }} />
-    </div>
-  );
+function getCategoryEmoji(cat: string): string {
+  const map: Record<string, string> = {
+    'Alimentação': '🍔', 'Transporte': '🚗', 'Moradia': '🏠', 'Saúde': '💊',
+    'Educação': '📚', 'Lazer': '🎮', 'Salário': '💰', 'Freelance': '💻',
+    'Investimentos': '📈', 'Outros': '📦', 'Vestuário': '👕', 'Assinaturas': '📱',
+  };
+  return map[cat] || '📦';
 }
 
 const stagger = (i: number) => ({ initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94], delay: i * 0.06 } });
 
-/* ── custom tooltip ────────────────────────────────────── */
-function ChartTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
-      <p className="text-[11px] text-muted-foreground mb-0.5">{label}</p>
-      <p className="text-[13px] font-bold text-foreground">{formatCurrency(payload[0].value, 'R$')}</p>
-    </div>
-  );
-}
-
-/* ── main ──────────────────────────────────────────────── */
-
+/* ── main ────────────────────────── */
 export default function OverviewPage() {
   const { user } = useAuth();
-  const { config } = useProfile();
+  const { profile, config } = useProfile();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [investments, setInvestments] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
   const [cards, setCards] = useState<any[]>([]);
   const [debts, setDebts] = useState<any[]>([]);
-  const [goalCheckins, setGoalCheckins] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
-  const [chartPeriod, setChartPeriod] = useState<'7d' | '30d' | '90d'>('30d');
-  const [dismissedTips, setDismissedTips] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem('dismissed_tips') || '[]'); } catch { return []; }
-  });
+  const [showValues, setShowValues] = useState(true);
   const currency = config?.currency || 'R$';
   const profileType = config?.profile_type || 'personal';
-  const objectives = config?.financial_objectives || [];
+  const showPersonal = profileType === 'personal' || profileType === 'both';
+  const showBusiness = profileType === 'business' || profileType === 'both';
 
   useEffect(() => {
     if (!user) return;
     const start = format(startOfMonth(new Date()), 'yyyy-MM-dd');
     const end = format(endOfMonth(new Date()), 'yyyy-MM-dd');
-    const weekAgo = format(subDays(new Date(), 6), 'yyyy-MM-dd');
     Promise.all([
-      supabase.from('transactions').select('*').eq('user_id', user.id).gte('date', start).lte('date', end).order('date', { ascending: false }),
+      supabase.from('transactions').select('*').eq('user_id', user.id).gte('date', start).lte('date', end).is('deleted_at', null).order('date', { ascending: false }),
       supabase.from('investments').select('*').eq('user_id', user.id),
-      supabase.from('goals').select('*').eq('user_id', user.id),
-      supabase.from('goal_checkins').select('*').eq('user_id', user.id).gte('date', weekAgo).order('date', { ascending: true }),
+      supabase.from('goals').select('*').eq('user_id', user.id).is('deleted_at', null),
       supabase.from('credit_cards').select('*').eq('user_id', user.id),
       supabase.from('debts').select('*').eq('user_id', user.id).eq('status', 'active'),
-    ]).then(([txRes, invRes, goalRes, ckRes, cardRes, debtRes]) => {
+    ]).then(([txRes, invRes, goalRes, cardRes, debtRes]) => {
       setTransactions(txRes.data || []);
       setInvestments(invRes.data || []);
       setGoals(goalRes.data || []);
       setCards(cardRes.data || []);
       setDebts(debtRes.data || []);
-      const grouped: Record<string, any[]> = {};
-      (ckRes.data || []).forEach((ck: any) => {
-        if (!grouped[ck.goal_id]) grouped[ck.goal_id] = [];
-        grouped[ck.goal_id].push(ck);
-      });
-      setGoalCheckins(grouped);
       setLoading(false);
     });
   }, [user]);
@@ -148,20 +117,15 @@ export default function OverviewPage() {
     const netBalance = totalIncome - totalExpense;
     const bizIncome = income.filter(t => t.origin === 'business').reduce((s, t) => s + Number(t.amount), 0);
     const bizExpense = expense.filter(t => t.origin === 'business').reduce((s, t) => s + Number(t.amount), 0);
+    const bizProfit = bizIncome - bizExpense;
     const personalIncome = income.filter(t => t.origin === 'personal').reduce((s, t) => s + Number(t.amount), 0);
     const personalExpense = expense.filter(t => t.origin === 'personal').reduce((s, t) => s + Number(t.amount), 0);
-    const bizProfit = bizIncome - bizExpense;
     const personalBalance = personalIncome - personalExpense;
     const investTotal = investments.reduce((s, i) => s + Number(i.current_amount), 0);
-    const patrimonio = investTotal + Math.max(0, netBalance);
-    const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0;
     const roiBiz = bizExpense > 0 ? (bizProfit / bizExpense) * 100 : 0;
-    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-    const avgPerDay = netBalance / daysInMonth;
-    return { totalIncome, totalExpense, netBalance, bizIncome, bizExpense, personalExpense, personalIncome, bizProfit, personalBalance, patrimonio, savingsRate, roiBiz, avgPerDay, txCount: transactions.length };
+    return { totalIncome, totalExpense, netBalance, bizIncome, bizExpense, bizProfit, personalIncome, personalExpense, personalBalance, investTotal, roiBiz, txCount: transactions.length };
   }, [transactions, investments]);
 
-  /* financial score */
   const scoreResult = useMemo(() => {
     const scoreData: ScoreData = {
       totalIncome: stats.totalIncome,
@@ -175,460 +139,339 @@ export default function OverviewPage() {
     return calculateFinancialScore(scoreData);
   }, [stats, cards, goals, debts, investments, transactions]);
 
-  /* chart data */
   const chartData = useMemo(() => {
-    const days = chartPeriod === '7d' ? 7 : chartPeriod === '30d' ? 30 : 90;
     const end = new Date();
-    const start = subDays(end, days - 1);
-    const interval = eachDayOfInterval({ start, end });
-    let running = 0;
-    return interval.map(day => {
-      const dateStr = format(day, 'yyyy-MM-dd');
-      const dayTxs = transactions.filter(t => t.date === dateStr);
-      dayTxs.forEach(t => { running += t.type === 'income' ? Number(t.amount) : -Number(t.amount); });
-      return { date: format(day, 'dd/MM'), saldo: running };
-    });
-  }, [transactions, chartPeriod]);
+    const start = subMonths(end, 5);
+    const months: { date: string; saldo: number }[] = [];
+    let d = startOfMonth(start);
+    while (d <= end) {
+      const mStart = format(startOfMonth(d), 'yyyy-MM-dd');
+      const mEnd = format(endOfMonth(d), 'yyyy-MM-dd');
+      const monthTxs = transactions.filter(t => t.date >= mStart && t.date <= mEnd);
+      const bal = monthTxs.reduce((s, t) => s + (t.type === 'income' ? 1 : -1) * Number(t.amount), 0);
+      months.push({ date: format(d, 'MMM', { locale: ptBR }), saldo: bal });
+      d = subMonths(d, -1);
+      d = startOfMonth(d);
+    }
+    return months;
+  }, [transactions]);
 
-  const dismissTip = useCallback((key: string) => {
-    const next = [...dismissedTips, key];
-    setDismissedTips(next);
-    localStorage.setItem('dismissed_tips', JSON.stringify(next));
-  }, [dismissedTips]);
+  if (loading) return <DashSkeleton />;
 
-  const activeTip = objectives.find(k => SMART_TIPS[k] && !dismissedTips.includes(k));
+  // Greeting
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+  const firstName = profile?.full_name?.split(' ')[0] || '';
 
-  if (loading) return <Skeleton />;
+  // Determine which balance to show
+  const heroBalance = profileType === 'personal' ? stats.netBalance
+    : profileType === 'business' ? stats.bizProfit
+    : stats.netBalance;
+  const heroIncome = profileType === 'business' ? stats.bizIncome : stats.totalIncome;
+  const heroExpense = profileType === 'business' ? stats.bizExpense : stats.totalExpense;
+  const heroLabel = profileType === 'business' ? 'Resultado do negócio' : 'Saldo do mês';
 
-  const recent = transactions.slice(0, 8);
+  const activeGoals = goals.filter(g => Number(g.current_amount || 0) < Number(g.target_amount));
+  const savedAmount = Math.max(0, stats.netBalance);
+  const streak = config?.streak_days || 0;
 
-  const kpis = profileType === 'personal' ? [
-    { label: 'Saldo', value: stats.netBalance, icon: TrendingUp, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
-    { label: 'Total Receitas', value: stats.totalIncome, icon: DollarSign, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
-    { label: 'Total Despesas', value: stats.totalExpense, icon: TrendingDown, iconBg: 'var(--color-danger-bg)', iconColor: 'var(--color-danger-solid)' },
-    { label: 'Total Guardado', value: Math.max(0, stats.netBalance), icon: DollarSign, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
-    { label: 'Metas Ativas', value: goals.filter(g => Number(g.current_amount) < Number(g.target_amount)).length, icon: Hash, iconBg: 'var(--color-bg-sunken)', iconColor: 'var(--color-text-muted)', isCount: true },
-    { label: 'Taxa Poupança', value: stats.savingsRate, icon: Percent, iconBg: '#ede9fe', iconColor: '#7c3aed', isPct: true, bar: Math.min(stats.savingsRate, 100) },
+  // Stats cards
+  const statCards = showPersonal && !showBusiness ? [
+    { label: 'Score', value: scoreResult.total, suffix: '/1000', icon: Shield, color: '#16a34a', bg: '#f0fdf4' },
+    { label: 'Metas ativas', value: activeGoals.length, suffix: '', icon: Target, color: '#7c3aed', bg: '#f5f3ff' },
+    { label: 'Streak', value: streak, suffix: ' dias', icon: Flame, color: '#ea580c', bg: '#fff7ed' },
+    { label: 'Economizado', value: savedAmount, prefix: 'R$ ', icon: PiggyBank, color: '#0891b2', bg: '#ecfeff', isCurrency: true },
+  ] : showBusiness && !showPersonal ? [
+    { label: 'Receita', value: stats.bizIncome, prefix: 'R$ ', icon: TrendingUp, color: '#16a34a', bg: '#f0fdf4', isCurrency: true },
+    { label: 'Lucro', value: stats.bizProfit, prefix: 'R$ ', icon: DollarSign, color: '#16a34a', bg: '#f0fdf4', isCurrency: true },
+    { label: 'ROI', value: stats.roiBiz, suffix: '%', icon: Percent, color: '#7c3aed', bg: '#f5f3ff' },
+    { label: 'Lançamentos', value: stats.txCount, suffix: '', icon: Hash, color: '#64748b', bg: '#f1f5f9' },
   ] : [
-    { label: 'Receita', value: stats.totalIncome, icon: TrendingUp, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
-    { label: 'Custos', value: stats.totalExpense, icon: TrendingDown, iconBg: 'var(--color-danger-bg)', iconColor: 'var(--color-danger-solid)' },
-    { label: 'Lucro', value: stats.bizProfit, icon: DollarSign, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
-    { label: 'ROI', value: stats.roiBiz, icon: Percent, iconBg: '#ede9fe', iconColor: '#7c3aed', isPct: true },
-    { label: 'Lançamentos', value: stats.txCount, icon: Hash, iconBg: 'var(--color-bg-sunken)', iconColor: 'var(--color-text-muted)', isCount: true },
-    { label: 'Média/Dia', value: stats.avgPerDay, icon: Zap, iconBg: 'var(--color-warning-bg)', iconColor: 'var(--color-warning-solid)' },
+    { label: 'Score', value: scoreResult.total, suffix: '/1000', icon: Shield, color: '#16a34a', bg: '#f0fdf4' },
+    { label: 'Lucro Neg.', value: stats.bizProfit, prefix: 'R$ ', icon: DollarSign, color: '#16a34a', bg: '#f0fdf4', isCurrency: true },
+    { label: 'Metas ativas', value: activeGoals.length, suffix: '', icon: Target, color: '#7c3aed', bg: '#f5f3ff' },
+    { label: 'Economizado', value: savedAmount, prefix: 'R$ ', icon: PiggyBank, color: '#0891b2', bg: '#ecfeff', isCurrency: true },
   ];
 
+  const recent = transactions.slice(0, 5);
+
+  // Predictive widget: only show if there's a real prediction concern
+  const showPredictive = true; // Always show, widget handles its own visibility
+
+  // Score lowest criteria for compact display
+  const sortedCriteria = [...scoreResult.criteria].sort((a, b) => (a.points / a.max) - (b.points / b.max)).slice(0, 3);
+
   return (
-    <div className="space-y-5 pb-28">
-      {/* ── Tip Bar ────────────────────────────────── */}
-      {activeTip && (
-        <motion.div {...stagger(0)}
-          className="flex items-center gap-2.5" style={{
-            background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-base)',
-            borderLeft: '3px solid var(--color-green-600)', borderRadius: '0 var(--radius-lg) var(--radius-lg) 0',
-            padding: '10px 16px',
-          }}>
-          <Lightbulb style={{ width: 14, height: 14, color: 'var(--color-green-600)', flexShrink: 0 }} />
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <span className="label-upper flex-shrink-0" style={{ color: 'var(--color-green-600)' }}>DICA</span>
-            <p className="truncate" style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-text-base)' }}>{SMART_TIPS[activeTip]?.replace(/^💡\s*/, '')}</p>
-          </div>
-          <button onClick={() => dismissTip(activeTip)} className="flex-shrink-0 transition-colors" style={{ color: 'var(--color-text-disabled)' }}>
-            <XIcon style={{ width: 12, height: 12 }} />
-          </button>
-        </motion.div>
-      )}
-
-      {/* ── Hero Cards ─────────────────────────────── */}
-      {profileType === 'both' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <HeroCard type="business" balance={stats.bizProfit} income={stats.bizIncome} expense={stats.bizExpense} currency={currency} delay={1} />
-          <HeroCard type="personal" balance={stats.personalBalance} income={stats.personalIncome} expense={stats.personalExpense} currency={currency} delay={2} />
+    <div className="space-y-4 pb-28">
+      {/* 1. GREETING */}
+      <motion.div {...stagger(0)} className="flex items-center justify-between" style={{ padding: isMobile ? '4px 0' : '0' }}>
+        <div>
+          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 2 }}>
+            {greeting}, {firstName} 👋
+          </p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>
+            {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
+          </p>
         </div>
-      ) : (
-        <HeroCard
-          type={profileType === 'personal' ? 'personal' : 'business'}
-          balance={stats.netBalance}
-          income={stats.totalIncome}
-          expense={stats.totalExpense}
-          currency={currency}
-          delay={1}
-          single
-          stats={profileType === 'business' ? [
-            { label: 'Receitas', val: stats.totalIncome, color: 'var(--color-success-solid)' },
-            { label: 'Despesas', val: stats.totalExpense, color: 'var(--color-danger-solid)' },
-            { label: 'Receita Neg.', val: stats.bizIncome, color: 'var(--color-success-solid)' },
-            { label: 'Gasto Neg.', val: stats.bizExpense, color: 'var(--color-danger-solid)' },
-          ] : [
-            { label: 'Receitas', val: stats.totalIncome, color: 'var(--color-success-solid)' },
-            { label: 'Despesas', val: stats.totalExpense, color: 'var(--color-danger-solid)' },
-            { label: 'Patrimônio', val: stats.patrimonio, color: 'var(--color-success-solid)' },
-            { label: 'Poupança', val: Math.max(0, stats.netBalance), color: 'var(--color-success-solid)' },
-          ]}
-        />
-      )}
+      </motion.div>
 
-      {/* ── Predictive AI Widget ───────────────────── */}
-      <PredictiveWidget />
+      {/* 2. HERO BALANCE CARD */}
+      <motion.div {...stagger(1)} style={{
+        background: 'linear-gradient(135deg, #16a34a 0%, #14532d 100%)',
+        borderRadius: 20, padding: 24, position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+        <div style={{ position: 'absolute', bottom: -20, left: '30%', width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
 
-      {/* ── KPI Cards ──────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {kpis.map((k, i) => (
-          <motion.div key={k.label} {...stagger(i + 3)}
-            className="card-premium" style={{ padding: 18 }}>
-            <div className="flex items-center justify-between">
-              <p className="label-upper">{k.label}</p>
-              <div className="flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: k.iconBg }}>
-                <k.icon style={{ width: 15, height: 15, color: k.iconColor }} />
+        <div className="flex items-center justify-between" style={{ marginBottom: 16, position: 'relative' }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+            {heroLabel}
+          </span>
+          <motion.button whileTap={{ scale: 0.88 }} onClick={() => setShowValues(!showValues)}
+            style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            {showValues ? <Eye size={15} color="rgba(255,255,255,0.8)" /> : <EyeOff size={15} color="rgba(255,255,255,0.8)" />}
+          </motion.button>
+        </div>
+
+        <div style={{ position: 'relative', marginBottom: 20 }}>
+          {showValues ? (
+            <div>
+              <div style={{ fontSize: 38, fontWeight: 900, color: 'white', letterSpacing: '-1.5px', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+                <AnimatedCurrency value={heroBalance} currency={currency} />
+              </div>
+              <div className="flex items-center gap-1" style={{ marginTop: 8 }}>
+                {heroBalance >= 0
+                  ? <TrendingUp size={13} color="#86efac" />
+                  : <TrendingDown size={13} color="#fca5a5" />}
+                <span style={{ fontSize: 13, color: heroBalance >= 0 ? '#86efac' : '#fca5a5', fontWeight: 600 }}>
+                  vs mês anterior
+                </span>
               </div>
             </div>
-            <p className="metric-value" style={{ fontSize: 22, marginTop: 10, lineHeight: 1, color: 'var(--color-text-strong)' }}>
-              {k.isCount ? <AnimatedNumber value={k.value} /> : k.isPct ? <AnimatedNumber value={k.value} suffix="%" /> : <AnimatedCurrency value={k.value} currency={currency} />}
-            </p>
-            {k.bar !== undefined && (
-              <div className="mt-2.5">
-                <ProgressBar pct={k.bar} delay={400 + i * 100} />
+          ) : (
+            <div style={{ fontSize: 38, fontWeight: 900, color: 'white', letterSpacing: '4px' }}>••••••</div>
+          )}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1px 1fr', background: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px 16px', position: 'relative' }}>
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Receitas</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#bbf7d0', fontVariantNumeric: 'tabular-nums' }}>
+              {showValues ? formatCurrency(heroIncome, currency) : '••••'}
+            </div>
+          </div>
+          <div style={{ width: 1, background: 'rgba(255,255,255,0.12)', margin: '0 16px' }} />
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Despesas</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#fca5a5', fontVariantNumeric: 'tabular-nums' }}>
+              {showValues ? formatCurrency(heroExpense, currency) : '••••'}
+            </div>
+          </div>
+        </div>
+
+        {/* Both: show secondary card inline */}
+        {profileType === 'both' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+            <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 14px' }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase' }}>🏠 Pessoal</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: 'white', marginTop: 2 }}>
+                {showValues ? formatCurrency(stats.personalBalance, currency) : '••••'}
               </div>
-            )}
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 14px' }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase' }}>💼 Negócio</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: 'white', marginTop: 2 }}>
+                {showValues ? formatCurrency(stats.bizProfit, currency) : '••••'}
+              </div>
+            </div>
+          </div>
+        )}
+      </motion.div>
+
+      {/* 3. QUICK STATS — 2x2 */}
+      <div className="grid grid-cols-2 gap-2.5">
+        {statCards.map((s, i) => (
+          <motion.div key={s.label} {...stagger(i + 2)}
+            style={{ background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <s.icon size={18} color={s.color} />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 3 }}>{s.label}</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--color-text-strong)', letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>
+                {showValues ? (
+                  s.isCurrency
+                    ? <AnimatedCurrency value={s.value} currency={currency} />
+                    : <>{s.prefix || ''}{Math.round(s.value)}{s.suffix || ''}</>
+                ) : '••••'}
+              </div>
+            </div>
           </motion.div>
         ))}
       </div>
 
-      {/* ── Financial Health Score ──────────────────── */}
-      <motion.div {...stagger(8)} className="card-premium" style={{ padding: 24 }}>
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-6">
-          {/* Left — Score */}
-          <div>
-            <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-[1px] flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5" /> Score de Saúde Financeira
-            </p>
-            <div className="flex items-end gap-3 mt-3">
-              <span className="text-[56px] font-black tracking-tighter leading-none" style={{ color: getScoreColor(scoreResult.total) }}>
-                <AnimatedNumber value={scoreResult.total} />
-              </span>
-              <span className="text-[13px] font-bold text-muted-foreground mb-2">/1000</span>
+      {/* 4. PREDICTIVE AI (conditional) */}
+      <PredictiveWidget />
+
+      {/* 5. SCORE CARD — personal only, compact */}
+      {showPersonal && (
+        <motion.div {...stagger(7)} style={{ background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 16, padding: '16px 20px' }}>
+          <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
+            <div className="flex items-center gap-1.5" style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <Shield size={14} color="var(--color-green-600)" /> Score Financeiro
             </div>
-            <span className="inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-full text-[12px] font-bold"
-              style={{ background: getScoreColor(scoreResult.total) + '18', color: getScoreColor(scoreResult.total), border: `1px solid ${getScoreColor(scoreResult.total)}40` }}>
-              {getScoreLevel(scoreResult.total).emoji} {getScoreLevel(scoreResult.total).label}
-            </span>
           </div>
 
-          {/* Right — Breakdown */}
-          <div className="space-y-2.5">
-            {scoreResult.criteria.map((c, i) => (
-              <div key={c.label}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] font-semibold text-muted-foreground">{c.label}</span>
-                  <span className="text-[11px] font-bold text-foreground">{c.points}/{c.max}</span>
-                </div>
-                <div className="h-[5px] bg-muted/30 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: '0%' }}
-                    animate={{ width: `${(c.points / c.max) * 100}%` }}
-                    transition={{ duration: 0.8, delay: 0.3 + i * 0.08, ease: 'easeOut' }}
-                    className="h-full rounded-full"
-                    style={{ background: getScoreColor(scoreResult.total) }}
-                  />
-                </div>
+          <div className="flex items-center gap-4" style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 48, fontWeight: 900, color: getScoreColor(scoreResult.total), letterSpacing: '-2px', lineHeight: 1 }}>
+              {showValues ? Math.round(scoreResult.total) : '•••'}
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: 'var(--color-text-muted)', fontWeight: 600, marginBottom: 4 }}>de 1000</div>
+              <div className="inline-flex items-center gap-1" style={{ padding: '4px 10px', borderRadius: 99, background: getScoreColor(scoreResult.total) + '18' }}>
+                <div style={{ width: 7, height: 7, borderRadius: '50%', background: getScoreColor(scoreResult.total) }} />
+                <span style={{ fontSize: 12, fontWeight: 800, color: getScoreColor(scoreResult.total) }}>
+                  {getScoreLevel(scoreResult.total).label}
+                </span>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Bottom tip */}
-        {(() => {
-          const lowest = [...scoreResult.criteria].sort((a, b) => (a.points / a.max) - (b.points / b.max))[0];
-          if (!lowest || lowest.points / lowest.max > 0.7) return null;
-          const tips: Record<string, string> = {
-            'Taxa de Poupança': 'Aumente sua taxa de poupança reduzindo gastos supérfluos.',
-            'Uso do Crédito': 'Reduza o uso do cartão para menos de 30% do limite.',
-            'Progresso de Metas': 'Faça depósitos regulares nas suas metas.',
-            'Controle de Dívidas': 'Priorize quitar suas dívidas ativas.',
-            'Investimentos': 'Diversifique seus investimentos em mais categorias.',
-            'Regularidade': 'Registre todos os seus lançamentos diariamente.',
-          };
-          return (
-            <div className="flex items-center gap-2" style={{ marginTop: 16, background: 'var(--color-warning-bg)', border: '1px solid var(--color-warning-border)', borderRadius: 'var(--radius-lg)', padding: '10px 14px' }}>
-              <Lightbulb style={{ width: 14, height: 14, color: 'var(--color-warning-solid)', flexShrink: 0 }} />
-              <p style={{ fontSize: 12, color: 'var(--color-warning-text)', fontWeight: 500 }}>
-                <span style={{ fontWeight: 700 }}>O que melhorar:</span> {tips[lowest.label] || `Melhore sua pontuação em ${lowest.label}.`}
-              </p>
             </div>
-          );
-        })()}
-      </motion.div>
-
-      {/* ── Balance Chart ──────────────────────────── */}
-      <motion.div {...stagger(9)} className="card-premium" style={{ borderRadius: 'var(--radius-xl)' }}>
-        <div className="flex items-center justify-between px-5 pt-[18px] pb-0">
-          <h3 className="text-[15px] font-extrabold text-foreground">Evolução do Saldo</h3>
-          <div className="flex items-center gap-1 p-[3px]" style={{ background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)', borderRadius: 'var(--radius-lg)' }}>
-            {(['7d', '30d', '90d'] as const).map(p => (
-              <button key={p} onClick={() => setChartPeriod(p)}
-                style={{
-                  padding: '4px 10px', borderRadius: 'var(--radius-md)', fontSize: 11, fontWeight: 600,
-                  transition: 'all 150ms',
-                  ...(chartPeriod === p ? { background: 'var(--color-green-50)', color: 'var(--color-green-700)', border: '1px solid var(--color-green-200)' } : { color: 'var(--color-text-muted)', border: '1px solid transparent' })
-                }}>{p}</button>
-            ))}
+            <div style={{ flex: 1 }}>
+              <div style={{ height: 8, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden' }}>
+                <motion.div initial={{ width: 0 }} animate={{ width: `${(scoreResult.total / 1000) * 100}%` }}
+                  transition={{ duration: 1.2, ease: 'easeOut' }}
+                  style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${getScoreColor(scoreResult.total)}, #22c55e)` }} />
+              </div>
+            </div>
           </div>
+
+          {sortedCriteria.map(c => (
+            <div key={c.label} className="flex items-center gap-2.5" style={{ marginBottom: 8 }}>
+              <span style={{ fontSize: 12, color: 'var(--color-text-muted)', flex: 1, fontWeight: 500 }}>{c.label}</span>
+              <div style={{ width: 80, height: 4, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{ width: `${(c.points / c.max) * 100}%`, height: '100%', borderRadius: 99, background: c.points / c.max > 0.6 ? 'var(--color-green-500)' : c.points / c.max > 0.3 ? '#f59e0b' : '#ef4444' }} />
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', minWidth: 32, textAlign: 'right' }}>{c.points}/{c.max}</span>
+            </div>
+          ))}
+        </motion.div>
+      )}
+
+      {/* 6. CHART */}
+      <motion.div {...stagger(8)} style={{ background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 16, padding: '16px 20px' }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-base)' }}>Evolução do saldo</span>
+          <span style={{ fontSize: 11, color: 'var(--color-text-subtle)' }}>Últimos 6 meses</span>
         </div>
-        <div className="px-5 pb-4 pt-2 h-[200px]">
+        <div style={{ height: 140 }}>
           {transactions.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-2">
-              <BarChart2 className="w-8 h-8 text-border" />
-              <p className="text-[12px] text-muted-foreground">Adicione lançamentos para ver o gráfico</p>
+              <BarChart2 className="w-8 h-8" style={{ color: 'var(--color-border-base)' }} />
+              <p style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>Adicione lançamentos para ver o gráfico</p>
             </div>
           ) : (
-            <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="skeleton-shimmer" style={{ width: '100%', height: '100%', borderRadius: 8 }} /></div>}>
-              <LazyChart data={chartData} tooltipContent={<ChartTooltip />} />
+            <Suspense fallback={<div className="skeleton-shimmer w-full h-full" style={{ borderRadius: 8 }} />}>
+              <LazyChart data={chartData} />
             </Suspense>
           )}
         </div>
       </motion.div>
 
-      {/* ── Goals Overview ──────────────────────────── */}
-      {goals.length > 0 && (
-        <motion.div {...stagger(10)}>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <h3 className="text-[15px] font-extrabold text-foreground">Minhas Metas</h3>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #d4edda' }}>
-                {goals.filter(g => Number(g.current_amount) >= Number(g.target_amount)).length}/{goals.length} concluídas
-              </span>
-            </div>
-            <Link to="/app/goals" className="text-[12px] font-bold text-primary hover:underline flex items-center gap-1">
-              Ver todas <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-            {goals.slice(0, 6).map((goal, i) => {
-              const obj = OBJECTIVES.find(o => o.key === goal.objective_type);
-              const pct = Math.min((Number(goal.current_amount) / Number(goal.target_amount)) * 100, 100);
-              const done = pct >= 100;
-              const daysLeft = goal.deadline ? Math.max(0, differenceInDays(parseISO(goal.deadline), new Date())) : null;
-              const color = goal.color || '#16a34a';
-              const cks = goalCheckins[goal.id] || [];
-              // Calculate streak
-              let streak = 0;
-              for (let d = 0; d < 30; d++) {
-                const day = format(subDays(new Date(), d), 'yyyy-MM-dd');
-                if (cks.some((c: any) => c.date === day)) streak++;
-                else break;
-              }
-
-              return (
-                <Link to="/app/goals" key={goal.id}>
-                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + i * 0.05 }}
-                    className="flex-shrink-0 w-[240px] min-w-[240px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-border transition-all duration-200 hover:-translate-y-[2px] hover:border-primary/40 cursor-pointer"
-                    style={{ borderTopWidth: 4, borderTopColor: done ? '#d97706' : color }}>
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-10 h-10 rounded-[10px] flex items-center justify-center text-xl flex-shrink-0"
-                        style={{ background: color + '20', border: `1.5px solid ${color}40` }}>
-                        {obj?.emoji || '🎯'}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[13px] font-extrabold text-foreground leading-[1.3] truncate">{goal.name}</p>
-                        {streak > 0 && (
-                          <span className="inline-flex items-center gap-0.5 mt-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#fefce8', color: '#d97706', border: '1px solid #fde68a' }}>
-                            <Flame className="w-2.5 h-2.5" /> {streak} dias
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-3">
-                      <ProgressBar pct={pct} delay={500 + i * 100} />
-                      <div className="flex items-center justify-between mt-1.5">
-                        <span className="text-[13px] font-extrabold" style={{ color }}>{formatCurrency(Number(goal.current_amount), currency)}</span>
-                        <span className="text-[12px] font-bold text-muted-foreground">{pct.toFixed(0)}%</span>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground mt-1">
-                        {done ? '🏆 Meta atingida!' : daysLeft !== null ? `${daysLeft} dias restantes` : `Faltam ${formatCurrency(Number(goal.target_amount) - Number(goal.current_amount), currency)}`}
-                      </p>
-                    </div>
-
-                    {/* Mini 7-day streak */}
-                    <div className="flex gap-[3px] mt-2.5">
-                      {Array.from({ length: 7 }).map((_, idx) => {
-                        const day = subDays(new Date(), 6 - idx);
-                        const dayStr = format(day, 'yyyy-MM-dd');
-                        const ck = cks.find((c: any) => c.date === dayStr);
-                        return (
-                          <div key={idx} className="flex-1 h-[6px] rounded-full transition-all"
-                            style={{ background: ck ? (Number(ck.amount) > 0 ? color : color + '60') : 'var(--bg-elevated)' }} />
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                </Link>
-              );
-            })}
-            {/* CTA to create more */}
-            <Link to="/app/goals">
-              <div className="flex-shrink-0 w-[180px] min-w-[180px] min-h-[170px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-dashed border-border hover:border-primary transition-all flex flex-col items-center justify-center gap-2 cursor-pointer">
-                <PlusCircle className="w-8 h-8 text-primary" />
-                <p className="text-[12px] font-bold text-primary">Nova meta</p>
-              </div>
-            </Link>
-          </div>
-        </motion.div>
-      )}
-
-      {/* No goals yet — show objectives from onboarding */}
-      {goals.length === 0 && objectives.length > 0 && (
-        <motion.div {...stagger(10)}>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[15px] font-extrabold text-foreground">Seus Objetivos</h3>
-            <Link to="/app/goals" className="text-[12px] font-bold text-primary hover:underline flex items-center gap-1">
-              Criar metas <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-            {objectives.map((key, i) => {
-              const obj = OBJECTIVES.find(o => o.key === key);
-              if (!obj) return null;
-              return (
-                <Link to="/app/goals" key={key}>
-                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + i * 0.05 }}
-                    className="flex-shrink-0 w-[200px] min-w-[200px] min-h-[120px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-dashed border-border hover:border-primary transition-all cursor-pointer">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl bg-secondary">{obj.emoji}</div>
-                      <p className="text-[13px] font-extrabold text-foreground leading-tight">{obj.label}</p>
-                    </div>
-                    <div className="flex flex-col items-center mt-4">
-                      <PlusCircle className="w-5 h-5 text-muted-foreground/50" />
-                      <p className="text-[11px] font-bold text-primary mt-1">Criar meta</p>
-                    </div>
-                  </motion.div>
-                </Link>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
-
-      {/* ── Recent Transactions ────────────────────── */}
-      <motion.div {...stagger(11)} className="card-premium overflow-hidden" style={{ borderRadius: 'var(--radius-xl)' }}>
-        <div className="flex items-center justify-between px-5 pt-[18px] pb-3.5 border-b border-border/30">
-          <h3 className="text-[15px] font-extrabold text-foreground">Lançamentos Recentes</h3>
-          <Link to="/app/transactions" className="text-[12px] font-bold text-primary hover:underline flex items-center gap-1">
-            Ver todos <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-
-        {recent.length === 0 ? (
-          <div className="py-12 flex flex-col items-center justify-center gap-3">
-            <div className="w-[72px] h-[72px] rounded-full bg-secondary flex items-center justify-center">
-              <ReceiptText className="w-8 h-8 text-primary" />
-            </div>
-            <p className="text-[15px] font-bold text-foreground">Nenhum lançamento ainda</p>
-            <p className="text-[13px] text-muted-foreground max-w-[260px] text-center leading-relaxed">Comece adicionando sua primeira receita ou despesa.</p>
-            <button onClick={() => navigate('/app/transactions')}
-              className="mt-1 inline-flex items-center gap-1.5 text-white transition-colors"
-              style={{ padding: '10px 20px', background: 'var(--color-green-600)', borderRadius: 'var(--radius-lg)', fontSize: 13, fontWeight: 700 }}>
-              <PlusCircle style={{ width: 16, height: 16 }} /> Adicionar primeiro lançamento
+      {/* 7. GOALS PREVIEW — personal only */}
+      {showPersonal && (
+        <motion.div {...stagger(9)}>
+          <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+            <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text-strong)' }}>Minhas Metas</span>
+            <button onClick={() => navigate('/app/goals')} style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-green-600)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              Ver todas →
             </button>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-background">
-                  <th className="text-left px-5 py-2.5 text-[10px] uppercase tracking-[0.7px] font-bold text-muted-foreground">Data</th>
-                  <th className="text-left px-5 py-2.5 text-[10px] uppercase tracking-[0.7px] font-bold text-muted-foreground">Descrição</th>
-                  <th className="text-left px-5 py-2.5 text-[10px] uppercase tracking-[0.7px] font-bold text-muted-foreground">Categoria</th>
-                  <th className="text-right px-5 py-2.5 text-[10px] uppercase tracking-[0.7px] font-bold text-muted-foreground">Valor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recent.map(tx => {
-                  const isIncome = tx.type === 'income';
-                  return (
-                    <tr key={tx.id}
-                      className={`border-b border-border/30 hover:bg-accent/50 transition-colors border-l-[3px] ${isIncome ? 'border-l-primary' : 'border-l-destructive'}`}>
-                      <td className="px-5 py-3 text-[12px] font-medium text-muted-foreground">
-                        {format(parseISO(tx.date), 'dd/MM', { locale: ptBR })}
-                      </td>
-                      <td className="px-5 py-3 text-[13px] font-bold text-foreground">{tx.description}</td>
-                      <td className="px-5 py-3">
-                        <span className={`inline-block px-2.5 py-[3px] rounded-full text-[11px] font-bold border ${
-                          isIncome ? 'bg-secondary text-accent-foreground border-border' : 'bg-destructive/10 text-destructive border-destructive/30'
-                        }`}>{tx.category}</span>
-                      </td>
-                      <td className={`px-5 py-3 text-right text-[14px] font-black ${isIncome ? 'text-primary' : 'text-destructive'}`}>
-                        {isIncome ? '+' : '−'}{formatCurrency(Number(tx.amount), currency)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+            {activeGoals.slice(0, 4).map(goal => {
+              const pct = Math.min(100, (Number(goal.current_amount || 0) / Number(goal.target_amount)) * 100);
+              const obj = OBJECTIVES.find(o => o.key === goal.objective_type);
+              return (
+                <motion.div key={goal.id} whileTap={{ scale: 0.97 }} onClick={() => navigate('/app/goals')}
+                  style={{ flexShrink: 0, width: 160, background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 14, padding: 14, cursor: 'pointer' }}>
+                  <div style={{ fontSize: 28, marginBottom: 10, lineHeight: 1 }}>{obj?.emoji || '🎯'}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-base)', marginBottom: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{goal.name}</div>
+                  <div style={{ height: 4, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden', marginBottom: 6 }}>
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1, ease: 'easeOut' }}
+                      style={{ height: '100%', borderRadius: 99, background: pct >= 50 ? '#16a34a' : '#f59e0b' }} />
+                  </div>
+                  <span style={{ fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 500 }}>{pct.toFixed(0)}% completo</span>
+                </motion.div>
+              );
+            })}
+            <motion.div whileTap={{ scale: 0.95 }} onClick={() => navigate('/app/goals')}
+              style={{ flexShrink: 0, width: 140, background: 'var(--color-bg-sunken)', border: '1.5px dashed var(--color-border-base)', borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '20px 12px', cursor: 'pointer' }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--color-green-50)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <PlusCircle size={18} color="var(--color-green-600)" />
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', textAlign: 'center' }}>Nova meta</span>
+            </motion.div>
           </div>
-        )}
+        </motion.div>
+      )}
+
+      {/* 8. RECENT TRANSACTIONS */}
+      <motion.div {...stagger(10)}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+          <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text-strong)' }}>Lançamentos recentes</span>
+          <button onClick={() => navigate('/app/transactions')} style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-green-600)', background: 'none', border: 'none', cursor: 'pointer' }}>
+            Ver todos →
+          </button>
+        </div>
+        <div style={{ background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 16, overflow: 'hidden' }}>
+          {recent.length === 0 ? (
+            <div style={{ padding: '32px 16px', textAlign: 'center', fontSize: 13, color: 'var(--color-text-subtle)' }}>
+              Nenhum lançamento ainda.
+              <br />
+              <button onClick={() => navigate('/app/transactions')} style={{ color: 'var(--color-green-600)', background: 'none', border: 'none', fontWeight: 700, cursor: 'pointer', marginTop: 8, fontSize: 13 }}>
+                + Adicionar primeiro lançamento
+              </button>
+            </div>
+          ) : (
+            recent.map((tx, i) => (
+              <div key={tx.id} className="flex items-center gap-3" style={{ padding: '14px 16px', borderBottom: i < recent.length - 1 ? '0.5px solid var(--color-border-weak)' : 'none' }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                  background: tx.type === 'income' ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+                }}>
+                  {getCategoryEmoji(tx.category)}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-base)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tx.description}</div>
+                  <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 2 }}>
+                    {format(parseISO(tx.date), 'dd/MM', { locale: ptBR })} · {tx.category}
+                  </div>
+                </div>
+                <div style={{
+                  fontSize: 15, fontWeight: 900, letterSpacing: '-0.3px', fontVariantNumeric: 'tabular-nums', flexShrink: 0,
+                  color: tx.type === 'income' ? 'var(--color-success-text)' : 'var(--color-danger-text)',
+                }}>
+                  {showValues
+                    ? `${tx.type === 'income' ? '+' : '-'}${formatCurrency(Number(tx.amount), currency)}`
+                    : '••••'}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </motion.div>
     </div>
   );
 }
 
-/* ── Hero Card Component ───────────────────────────── */
-
-function HeroCard({ type, balance, income, expense, currency, delay, single, stats: customStats }: {
-  type: 'business' | 'personal';
-  balance: number; income: number; expense: number; currency: string;
-  delay: number; single?: boolean;
-  stats?: { label: string; val: number; color: string }[];
-}) {
-  const isBiz = type === 'business';
-  const label = isBiz ? '💼 NEGÓCIO' : '🏠 PESSOAL';
-  const heroLabel = single ? (isBiz ? 'RESULTADO DO NEGÓCIO' : 'SALDO DO MÊS') : undefined;
-
-  const statItems = customStats || [
-    { label: 'Receita', val: income, color: 'var(--color-success-solid)' },
-    { label: 'Despesas', val: expense, color: 'var(--color-danger-solid)' },
-  ];
-
+function DashSkeleton() {
   return (
-    <motion.div {...stagger(delay)}
-      className="card-premium relative overflow-hidden" style={{ padding: 24, borderRadius: 'var(--radius-2xl)' }}>
-      <div className="relative z-[1]">
-        <p className="label-upper" style={{ color: isBiz ? 'var(--color-green-600)' : 'var(--color-info-solid)' }}>
-          {heroLabel || label}
-        </p>
-        <p className="metric-value" style={{ fontSize: 36, marginTop: 8, color: balance >= 0 ? 'var(--color-text-strong)' : 'var(--color-danger-solid)' }}>
-          <AnimatedCurrency value={balance} currency={currency} />
-        </p>
-        <div className="flex items-center gap-1 mt-1.5">
-          <ArrowUpRight style={{ width: 14, height: 14, color: 'var(--color-success-solid)' }} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-success-solid)' }}>vs mês anterior</span>
-        </div>
-        <div className={`grid ${single ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'} gap-3 mt-4`}>
-          {statItems.map(s => (
-            <div key={s.label} style={{ background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)', borderRadius: 'var(--radius-lg)', padding: '10px 14px' }}>
-              <p className="label-upper">{s.label}</p>
-              <p className="metric-value" style={{ fontSize: 16, marginTop: 4, color: s.color }}>{formatCurrency(s.val, currency)}</p>
-            </div>
-          ))}
-        </div>
+    <div className="space-y-4">
+      <div className="skeleton-shimmer" style={{ height: 20, width: 180, borderRadius: 8 }} />
+      <div className="skeleton-shimmer" style={{ height: 220, borderRadius: 20 }} />
+      <div className="grid grid-cols-2 gap-2.5">
+        {[1, 2, 3, 4].map(i => <div key={i} className="skeleton-shimmer" style={{ height: 100, borderRadius: 16 }} />)}
       </div>
-    </motion.div>
-  );
-}
-
-/* ── Skeleton ──────────────────────────────────────── */
-
-function Skeleton() {
-  return (
-    <div className="space-y-5">
-      <div className="skeleton-shimmer" style={{ height: 192, borderRadius: 'var(--radius-2xl)' }} />
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="skeleton-shimmer" style={{ height: 96, borderRadius: 'var(--radius-xl)' }} />
-        ))}
-      </div>
-      <div className="skeleton-shimmer" style={{ height: 240, borderRadius: 'var(--radius-xl)' }} />
-      <div className="skeleton-shimmer" style={{ height: 256, borderRadius: 'var(--radius-xl)' }} />
+      <div className="skeleton-shimmer" style={{ height: 160, borderRadius: 16 }} />
     </div>
   );
 }
