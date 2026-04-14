@@ -86,7 +86,7 @@ export default function HeroSection() {
             to="/register"
             className="px-7 py-3.5 rounded-[10px] bg-primary text-primary-foreground text-base font-extrabold hover:bg-fin-green-dark active:scale-[0.97] transition-all duration-200 inline-flex items-center justify-center gap-2"
           >
-            Começar grátis — é de graça <ArrowRight className="w-4 h-4" />
+            Começar grátis <ArrowRight className="w-4 h-4" /> <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             to="/pricing"
