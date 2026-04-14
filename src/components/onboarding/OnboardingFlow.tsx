@@ -103,7 +103,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
       <div className="flex-1 overflow-y-auto flex items-center justify-center px-4">
         <AnimatePresence mode="wait" custom={dir}>
           <motion.div key={step} custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit"
-            transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }} className="w-full max-w-xl mx-auto">
+            transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] as const }} className="w-full max-w-xl mx-auto">
 
             {step === 0 && (
               <div className="text-center">
