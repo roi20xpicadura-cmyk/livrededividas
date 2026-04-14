@@ -80,6 +80,7 @@ export default function AppLayout() {
   const pageTitles: Record<string, string> = {
     '/app': 'Visão Geral',
     '/app/transactions': 'Lançamentos',
+    '/app/budget': 'Orçamento',
     '/app/goals': 'Metas',
     '/app/debts': 'Sair das Dívidas',
     '/app/cashflow': 'Fluxo de Caixa',
@@ -88,6 +89,8 @@ export default function AppLayout() {
     '/app/investments': 'Investimentos',
     '/app/charts': 'Gráficos',
     '/app/export': 'Exportar',
+    '/app/achievements': 'Conquistas',
+    '/app/referral': 'Indicar Amigos',
     '/app/settings': 'Configurações',
     '/app/billing': 'Planos e Assinatura',
   };
