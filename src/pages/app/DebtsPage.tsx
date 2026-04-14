@@ -318,15 +318,15 @@ export default function DebtsPage() {
           </a>
         </div>
       ) : (
-        <div className="bg-card border-l-4 border-l-[#dc2626] border-[1.5px] border-[#fecaca] rounded-r-2xl px-6 py-5 flex items-center gap-4 flex-wrap">
-          <AlertCircle className="w-8 h-8 text-[#dc2626] flex-shrink-0" />
-          <div className="flex-1 min-w-[200px]">
-            <h2 className="text-[17px] font-black text-[#991b1b]">Você tem {activeDebts.length} dívida(s) ativa(s)</h2>
-            <p className="text-[13px] text-[#dc2626] font-medium">Total: {fmt(totalRemaining)} em dívidas. Juros acumulando {fmt(monthlyInterest)}/mês.</p>
-            <p className="text-[12px] text-muted-foreground mt-1">Cada pagamento extra te aproxima da liberdade financeira. Você consegue! 💪</p>
+        <div className="bg-card border-l-4 border-l-[#dc2626] border-[1.5px] border-[#fecaca] rounded-r-2xl px-4 md:px-6 py-4 md:py-5 flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
+          <AlertCircle className="w-7 h-7 md:w-8 md:h-8 text-[#dc2626] flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <h2 className="text-[15px] md:text-[17px] font-black text-[#991b1b]">Você tem {activeDebts.length} dívida(s) ativa(s)</h2>
+            <p className="text-[12px] md:text-[13px] text-[#dc2626] font-medium">Total: {fmt(totalRemaining)} em dívidas. Juros acumulando {fmt(monthlyInterest)}/mês.</p>
+            <p className="text-[11px] md:text-[12px] text-muted-foreground mt-1">Cada pagamento extra te aproxima da liberdade financeira. Você consegue! 💪</p>
           </div>
           <button onClick={() => document.getElementById('strategy-section')?.scrollIntoView({ behavior: 'smooth' })}
-            className="bg-[#dc2626] text-white font-bold text-[12px] px-4 py-2 rounded-lg hover:bg-[#b91c1c] transition-colors flex-shrink-0">
+            className="bg-[#dc2626] text-white font-bold text-[12px] px-4 py-2 rounded-lg hover:bg-[#b91c1c] transition-colors flex-shrink-0 w-full md:w-auto text-center">
             Ver meu plano ↓
           </button>
         </div>
@@ -358,7 +358,7 @@ export default function DebtsPage() {
 
       {/* ═══ 3. STRATEGY ═══ */}
       {activeDebts.length > 0 && (
-        <div id="strategy-section" className="bg-card border-[1.5px] border-border rounded-2xl p-6">
+        <div id="strategy-section" className="bg-card border-[1.5px] border-border rounded-2xl p-4 md:p-6">
           <h3 className="text-[15px] font-black text-foreground">Escolha sua estratégia de quitação</h3>
           <p className="text-[13px] text-muted-foreground mb-5">A estratégia define a ordem em que você deve priorizar o pagamento das dívidas.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -406,7 +406,7 @@ export default function DebtsPage() {
 
       {/* ═══ 4. STEP-BY-STEP GUIDE ═══ */}
       {debts.length > 0 && (
-        <div className="bg-card border-[1.5px] border-border rounded-2xl p-6">
+        <div className="bg-card border-[1.5px] border-border rounded-2xl p-4 md:p-6">
           <h3 className="text-[15px] font-black text-foreground">Seu plano passo a passo</h3>
           <p className="text-[13px] text-muted-foreground mb-5">Siga estes passos na ordem para sair das dívidas o mais rápido possível.</p>
           <div className="space-y-0">
