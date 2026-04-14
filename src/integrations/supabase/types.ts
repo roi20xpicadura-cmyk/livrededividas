@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          achievement_key: string
+          id: string
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achievement_key: string
+          id?: string
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achievement_key?: string
+          id?: string
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_insights_cache: {
+        Row: {
+          expires_at: string
+          generated_at: string | null
+          id: string
+          insights: Json
+          user_id: string
+        }
+        Insert: {
+          expires_at: string
+          generated_at?: string | null
+          id?: string
+          insights: Json
+          user_id: string
+        }
+        Update: {
+          expires_at?: string
+          generated_at?: string | null
+          id?: string
+          insights?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      budgets: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          limit_amount: number
+          month_year: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          limit_amount: number
+          month_year: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          limit_amount?: number
+          month_year?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       card_bills: {
         Row: {
           card_id: string
@@ -305,6 +377,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          budget_alerts: boolean | null
+          card_due_alerts: boolean | null
+          created_at: string | null
+          debt_reminders: boolean | null
+          goal_alerts: boolean | null
+          id: string
+          streak_alerts: boolean | null
+          user_id: string
+          weekly_summary: boolean | null
+        }
+        Insert: {
+          budget_alerts?: boolean | null
+          card_due_alerts?: boolean | null
+          created_at?: string | null
+          debt_reminders?: boolean | null
+          goal_alerts?: boolean | null
+          id?: string
+          streak_alerts?: boolean | null
+          user_id: string
+          weekly_summary?: boolean | null
+        }
+        Update: {
+          budget_alerts?: boolean | null
+          card_due_alerts?: boolean | null
+          created_at?: string | null
+          debt_reminders?: boolean | null
+          goal_alerts?: boolean | null
+          id?: string
+          streak_alerts?: boolean | null
+          user_id?: string
+          weekly_summary?: boolean | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -332,6 +440,81 @@ export type Database = {
           plan?: string | null
           plan_expires_at?: string | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      recurring_transactions: {
+        Row: {
+          active: boolean | null
+          amount: number
+          category: string
+          created_at: string | null
+          day_of_month: number | null
+          description: string
+          frequency: string
+          id: string
+          last_created: string | null
+          next_date: string
+          origin: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          amount: number
+          category: string
+          created_at?: string | null
+          day_of_month?: number | null
+          description: string
+          frequency: string
+          id?: string
+          last_created?: string | null
+          next_date: string
+          origin: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean | null
+          amount?: number
+          category?: string
+          created_at?: string | null
+          day_of_month?: number | null
+          description?: string
+          frequency?: string
+          id?: string
+          last_created?: string | null
+          next_date?: string
+          origin?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string | null
+          id: string
+          referred_email: string
+          referrer_id: string
+          reward_granted: boolean | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          referred_email: string
+          referrer_id: string
+          reward_granted?: boolean | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          referred_email?: string
+          referrer_id?: string
+          reward_granted?: boolean | null
+          status?: string | null
         }
         Relationships: []
       }
@@ -411,44 +594,68 @@ export type Database = {
         Row: {
           created_at: string | null
           currency: string | null
+          debt_strategy: string | null
           default_save_pct: number | null
           financial_objectives: string[] | null
+          financial_score: number | null
           id: string
+          last_activity_date: string | null
+          level: string | null
           notifications_enabled: boolean | null
           onboarding_completed: boolean | null
           onboarding_step: number | null
           profile_type: string | null
           project_name: string | null
+          referral_code: string | null
+          referred_by: string | null
+          streak_days: number | null
           theme: string | null
           user_id: string
+          xp_points: number | null
         }
         Insert: {
           created_at?: string | null
           currency?: string | null
+          debt_strategy?: string | null
           default_save_pct?: number | null
           financial_objectives?: string[] | null
+          financial_score?: number | null
           id?: string
+          last_activity_date?: string | null
+          level?: string | null
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
           profile_type?: string | null
           project_name?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          streak_days?: number | null
           theme?: string | null
           user_id: string
+          xp_points?: number | null
         }
         Update: {
           created_at?: string | null
           currency?: string | null
+          debt_strategy?: string | null
           default_save_pct?: number | null
           financial_objectives?: string[] | null
+          financial_score?: number | null
           id?: string
+          last_activity_date?: string | null
+          level?: string | null
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
           profile_type?: string | null
           project_name?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          streak_days?: number | null
           theme?: string | null
           user_id?: string
+          xp_points?: number | null
         }
         Relationships: []
       }
