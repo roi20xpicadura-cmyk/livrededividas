@@ -40,10 +40,11 @@ const ACCOUNT_ITEMS = [
 ];
 
 const MOBILE_NAV = [
-  { label: 'Home', path: '/app', icon: Home },
-  { label: 'Lançamentos', path: '/app/transactions', icon: ArrowLeftRight },
-  { label: 'Metas', path: '/app/goals', icon: Target },
-  { label: 'Cartões', path: '/app/cards', icon: CreditCard },
+  { label: 'Início', path: '/app', icon: Home, activeColor: '#16a34a' },
+  { label: 'Lançar', path: '/app/transactions', icon: ArrowLeftRight, activeColor: '#2563eb' },
+  { label: '', path: 'fab', icon: Plus, activeColor: '#16a34a' }, // center FAB
+  { label: 'Metas', path: '/app/goals', icon: Target, activeColor: '#7c3aed' },
+  { label: 'Mais', path: 'more', icon: MoreHorizontal, activeColor: '#64748b' },
 ];
 
 const PAGE_TITLES: Record<string, string> = {
