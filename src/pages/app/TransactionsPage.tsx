@@ -62,10 +62,8 @@ export default function TransactionsPage() {
   // Category breakdown
   const [showCatBreakdown, setShowCatBreakdown] = useState(false);
 
-  // CSV import
+  // Import modal
   const [showImport, setShowImport] = useState(false);
-  const [csvData, setCsvData] = useState<string[][] | null>(null);
-  const [csvMapping, setCsvMapping] = useState({ date: 0, desc: 1, val: 2, type: -1 });
 
   const descRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
