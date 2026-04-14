@@ -38,17 +38,10 @@ const AchievementsPage = lazy(() => import("./pages/app/AchievementsPage"));
 const ReferralPage = lazy(() => import("./pages/app/ReferralPage"));
 const SettingsPage = lazy(() => import("./pages/app/SettingsPage"));
 const BillingPage = lazy(() => import("./pages/app/BillingPage"));
-const BanksPage = lazy(() => import("./pages/app/BanksPage"));
 const IntegrationsPage = lazy(() => import("./pages/app/IntegrationsPage"));
 const SimulatorPage = lazy(() => import("./pages/app/SimulatorPage"));
 const PredictionsPage = lazy(() => import("./pages/app/PredictionsPage"));
-
-// Gated page lazy imports
-const GatedCashFlow = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.CashFlowPage })));
-const GatedDRE = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.DREPage })));
-const GatedInvestments = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.InvestmentsPage })));
-const GatedCharts = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.ChartsPage })));
-const GatedExport = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.ExportPage })));
+const ExportPage = lazy(() => import("./pages/app/ExportPage").then(m => ({ default: m.ExportPage })));
 
 // Optimized QueryClient with stale time and dedup
 const queryClient = new QueryClient({
@@ -138,15 +131,10 @@ const App = () => {
                     <Route path="goals" element={<GoalsPage />} />
                     <Route path="debts" element={<DebtsPage />} />
                     <Route path="budget" element={<BudgetPage />} />
-                    <Route path="cashflow" element={<Suspense fallback={<PageSkeleton />}><GatedCashFlow /></Suspense>} />
-                    <Route path="dre" element={<Suspense fallback={<PageSkeleton />}><GatedDRE /></Suspense>} />
                     <Route path="cards" element={<CardsPage />} />
-                    <Route path="investments" element={<Suspense fallback={<PageSkeleton />}><GatedInvestments /></Suspense>} />
-                    <Route path="charts" element={<Suspense fallback={<PageSkeleton />}><GatedCharts /></Suspense>} />
-                    <Route path="export" element={<Suspense fallback={<PageSkeleton />}><GatedExport /></Suspense>} />
+                    <Route path="export" element={<Suspense fallback={<PageSkeleton />}><ExportPage /></Suspense>} />
                     <Route path="settings" element={<SettingsPage />} />
                     <Route path="billing" element={<BillingPage />} />
-                    <Route path="banks" element={<BanksPage />} />
                     <Route path="integrations" element={<IntegrationsPage />} />
                     <Route path="achievements" element={<AchievementsPage />} />
                     <Route path="referral" element={<ReferralPage />} />
