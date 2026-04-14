@@ -6,9 +6,9 @@ import { formatCurrency, PLAN_LIMITS, PlanType } from '@/lib/plans';
 import { OBJECTIVES } from '@/lib/objectives';
 import {
   Target, Trophy, TrendingUp, Star, PlusCircle, ChevronDown, X,
-  MoreHorizontal, Pencil, DollarSign, Award, Trash2, Calendar, Clock
+  MoreHorizontal, Pencil, DollarSign, Award, Trash2, Calendar, Clock, Check, Flame
 } from 'lucide-react';
-import { format, parseISO, differenceInDays } from 'date-fns';
+import { format, parseISO, differenceInDays, subDays, isSameDay, startOfDay } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
