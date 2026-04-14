@@ -34,10 +34,4 @@ export function ChartsPage() {
   );
 }
 
-export function ExportPage() {
-  return (
-    <UpgradeGate feature="export">
-      <PlaceholderModule title="Exportar" desc="Exporte seus dados financeiros em diversos formatos." />
-    </UpgradeGate>
-  );
-}
+export { ExportPage } from './ExportPage';
