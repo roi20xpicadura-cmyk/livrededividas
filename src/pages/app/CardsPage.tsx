@@ -79,7 +79,7 @@ function VisualCard({ card, onClick, onDelete, scale = 1 }: {
   const barColor = util < 30 ? 'rgba(255,255,255,0.8)' : util < 70 ? 'rgba(251,191,36,0.9)' : 'rgba(239,68,68,0.9)';
 
   return (
-    <div className="relative flex-shrink-0" style={{ width: 300 * scale, height: 178 * scale }}
+    <div className="relative flex-shrink-0 w-full" style={{ maxWidth: 300 * scale, height: 178 * scale }}
       onMouseEnter={() => setShowDelete(true)} onMouseLeave={() => { setShowDelete(false); setConfirmDel(false); }}>
       <motion.div
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}

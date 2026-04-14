@@ -39,22 +39,22 @@ export default function ReferralPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
-      <div className="p-7 flex flex-col gap-5 max-w-[800px] mx-auto">
+      <div className="px-4 py-5 md:p-7 pb-4 flex flex-col gap-4 md:gap-5 max-w-[800px] mx-auto">
         {/* Hero */}
-        <div className="rounded-2xl p-8 text-white relative overflow-hidden" style={{ background: '#16a34a' }}>
+        <div className="rounded-2xl p-5 md:p-8 text-white relative overflow-hidden" style={{ background: '#16a34a' }}>
           <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10" style={{ background: 'white' }} />
           <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <Gift className="w-8 h-8" />
-              <h2 className="text-2xl font-black">Ganhe 1 mês grátis de Pro!</h2>
+            <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
+              <Gift className="w-6 h-6 md:w-8 md:h-8 flex-shrink-0" />
+              <h2 className="text-lg md:text-2xl font-black">Ganhe 1 mês grátis de Pro!</h2>
             </div>
-            <p className="text-sm opacity-85 max-w-md leading-relaxed">
+            <p className="text-[13px] md:text-sm opacity-85 max-w-md leading-relaxed">
               Para cada amigo que assinar o plano Pro, você ganha 1 mês grátis automaticamente.
             </p>
-            <div className="mt-5 rounded-lg p-3 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)' }}>
-              <code className="flex-1 text-sm font-mono truncate">{referralLink}</code>
-              <button onClick={handleCopy} className="px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1.5" style={{ background: 'white', color: '#16a34a' }}>
-                {copied ? <><Check className="w-3.5 h-3.5" /> Copiado!</> : <><Copy className="w-3.5 h-3.5" /> Copiar</>}
+            <div className="mt-4 md:mt-5 rounded-lg p-2.5 md:p-3 flex items-center gap-2 md:gap-3" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)' }}>
+              <code className="flex-1 text-[11px] md:text-sm font-mono truncate">{referralLink}</code>
+              <button onClick={handleCopy} className="px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-[12px] md:text-sm font-bold flex items-center gap-1 flex-shrink-0" style={{ background: 'white', color: '#16a34a' }}>
+                {copied ? <><Check className="w-3 h-3" /> Copiado!</> : <><Copy className="w-3 h-3" /> Copiar</>}
               </button>
             </div>
           </div>
@@ -89,28 +89,44 @@ export default function ReferralPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="p-4 rounded-xl text-center" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <p className="text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{referrals.length}</p>
-            <p className="text-[10px] font-bold" style={{ color: 'var(--text-hint)' }}>INDICAÇÕES</p>
+        <div className="grid grid-cols-3 gap-2 md:gap-3">
+          <div className="p-3 md:p-4 rounded-xl text-center" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
+            <p className="text-lg md:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{referrals.length}</p>
+            <p className="text-[9px] md:text-[10px] font-bold" style={{ color: 'var(--text-hint)' }}>INDICAÇÕES</p>
           </div>
-          <div className="p-4 rounded-xl text-center" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <p className="text-2xl font-black" style={{ color: '#16a34a' }}>{subscribedCount}</p>
-            <p className="text-[10px] font-bold" style={{ color: 'var(--text-hint)' }}>ASSINARAM</p>
+          <div className="p-3 md:p-4 rounded-xl text-center" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
+            <p className="text-lg md:text-2xl font-black" style={{ color: '#16a34a' }}>{subscribedCount}</p>
+            <p className="text-[9px] md:text-[10px] font-bold" style={{ color: 'var(--text-hint)' }}>ASSINARAM</p>
           </div>
-          <div className="p-4 rounded-xl text-center" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <p className="text-2xl font-black" style={{ color: '#d97706' }}>{subscribedCount}</p>
-            <p className="text-[10px] font-bold" style={{ color: 'var(--text-hint)' }}>MESES GANHOS</p>
+          <div className="p-3 md:p-4 rounded-xl text-center" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
+            <p className="text-lg md:text-2xl font-black" style={{ color: '#d97706' }}>{subscribedCount}</p>
+            <p className="text-[9px] md:text-[10px] font-bold" style={{ color: 'var(--text-hint)' }}>MESES GANHOS</p>
           </div>
         </div>
 
         {/* Referrals table */}
         {referrals.length > 0 && (
           <div className="rounded-[14px] overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <div className="px-5 py-4">
+            <div className="px-4 md:px-5 py-3 md:py-4">
               <h3 className="text-sm font-extrabold" style={{ color: 'var(--text-primary)' }}>Suas indicações</h3>
             </div>
-            <table className="w-full">
+            {/* Mobile: card list */}
+            <div className="md:hidden space-y-2 px-4 pb-4">
+              {referrals.map(r => (
+                <div key={r.id} className="p-3 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
+                  <p className="text-[13px] font-bold truncate" style={{ color: 'var(--text-primary)' }}>{r.referred_email}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{
+                      background: r.status === 'subscribed' ? '#f0fdf4' : r.status === 'registered' ? '#eff6ff' : 'var(--bg-elevated)',
+                      color: r.status === 'subscribed' ? '#16a34a' : r.status === 'registered' ? '#2563eb' : 'var(--text-hint)',
+                    }}>{r.status === 'subscribed' ? 'Assinou ✓' : r.status === 'registered' ? 'Registrado' : 'Cadastrou'}</span>
+                    <span className="text-[11px]" style={{ color: 'var(--text-hint)' }}>{format(new Date(r.created_at), 'dd/MM/yy')}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Desktop: table */}
+            <table className="w-full hidden md:table">
               <thead>
                 <tr style={{ background: 'var(--bg-elevated)' }}>
                   <th className="text-left px-5 py-2 text-[10px] uppercase font-bold" style={{ color: 'var(--text-hint)' }}>Amigo</th>

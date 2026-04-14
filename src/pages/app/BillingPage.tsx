@@ -43,9 +43,9 @@ export default function BillingPage() {
   ];
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-4 md:space-y-6 max-w-4xl px-0 pb-4">
       {/* Current Plan */}
-      <div className="card-surface p-6">
+      <div className="card-surface p-4 md:p-6">
         <div className="flex items-center gap-3 mb-4">
           <h2 className="text-[13px] font-extrabold text-fin-green-dark">Plano Atual</h2>
           <span className={`px-3 py-1 rounded-full text-xs font-bold ${plan === 'pro' ? 'bg-primary text-primary-foreground' : plan === 'business' ? 'bg-fin-purple text-white' : 'bg-secondary text-secondary-foreground'}`}>
@@ -76,7 +76,7 @@ export default function BillingPage() {
       <PricingCards currentPlan={plan} onUpgrade={handleUpgrade} />
 
       {/* Invoice History Placeholder */}
-      <div className="card-surface p-6">
+      <div className="card-surface p-4 md:p-6">
         <h2 className="text-[13px] font-extrabold text-fin-green-dark mb-4">Histórico de Faturas</h2>
         <p className="text-sm text-muted">Nenhuma fatura disponível.</p>
       </div>

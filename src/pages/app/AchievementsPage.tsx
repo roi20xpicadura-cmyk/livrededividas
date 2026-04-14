@@ -42,20 +42,20 @@ export default function AchievementsPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
-      <div className="p-7 flex flex-col gap-5 max-w-[1400px] mx-auto">
+      <div className="px-4 py-5 md:p-7 pb-4 flex flex-col gap-4 md:gap-5 max-w-[1400px] mx-auto">
         {/* Header stats */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="p-4 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <p className="text-[10px] uppercase font-bold" style={{ color: 'var(--text-hint)' }}>Conquistas</p>
-            <p className="text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{unlockedCount}/{ACHIEVEMENTS.length}</p>
+        <div className="grid grid-cols-3 gap-2 md:gap-3">
+          <div className="p-3 md:p-4 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
+            <p className="text-[9px] md:text-[10px] uppercase font-bold" style={{ color: 'var(--text-hint)' }}>Conquistas</p>
+            <p className="text-lg md:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{unlockedCount}/{ACHIEVEMENTS.length}</p>
           </div>
-          <div className="p-4 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <p className="text-[10px] uppercase font-bold" style={{ color: 'var(--text-hint)' }}>Total XP</p>
-            <p className="text-2xl font-black" style={{ color: '#16a34a' }}>{xp}</p>
+          <div className="p-3 md:p-4 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
+            <p className="text-[9px] md:text-[10px] uppercase font-bold" style={{ color: 'var(--text-hint)' }}>Total XP</p>
+            <p className="text-lg md:text-2xl font-black" style={{ color: '#16a34a' }}>{xp}</p>
           </div>
-          <div className="p-4 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <p className="text-[10px] uppercase font-bold" style={{ color: 'var(--text-hint)' }}>Nível</p>
-            <p className="text-2xl font-black" style={{ color: level.color }}>{level.name}</p>
+          <div className="p-3 md:p-4 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
+            <p className="text-[9px] md:text-[10px] uppercase font-bold" style={{ color: 'var(--text-hint)' }}>Nível</p>
+            <p className="text-lg md:text-2xl font-black truncate" style={{ color: level.color }}>{level.name}</p>
           </div>
         </div>
 

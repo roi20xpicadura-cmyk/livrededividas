@@ -220,9 +220,9 @@ export default function OverviewPage() {
       <WelcomeChecklist />
 
       {/* 2. HERO BALANCE CARD */}
-      <motion.div {...stagger(1)} style={{
+      <motion.div {...stagger(1)} className="p-5 md:p-6" style={{
         background: 'linear-gradient(135deg, #16a34a 0%, #14532d 100%)',
-        borderRadius: 20, padding: 24, position: 'relative', overflow: 'hidden',
+        borderRadius: 20, position: 'relative', overflow: 'hidden',
       }}>
         <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
         <div style={{ position: 'absolute', bottom: -20, left: '30%', width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
@@ -240,7 +240,7 @@ export default function OverviewPage() {
         <div style={{ position: 'relative', marginBottom: 20 }}>
           {showValues ? (
             <div>
-              <div style={{ fontSize: 38, fontWeight: 900, color: 'white', letterSpacing: '-1.5px', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+              <div className="text-[28px] md:text-[38px]" style={{ fontWeight: 900, color: 'white', letterSpacing: '-1.5px', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
                 <AnimatedCurrency value={heroBalance} currency={currency} />
               </div>
               <div className="flex items-center gap-1" style={{ marginTop: 8 }}>

@@ -318,15 +318,15 @@ export default function DebtsPage() {
           </a>
         </div>
       ) : (
-        <div className="bg-card border-l-4 border-l-[#dc2626] border-[1.5px] border-[#fecaca] rounded-r-2xl px-6 py-5 flex items-center gap-4 flex-wrap">
-          <AlertCircle className="w-8 h-8 text-[#dc2626] flex-shrink-0" />
-          <div className="flex-1 min-w-[200px]">
-            <h2 className="text-[17px] font-black text-[#991b1b]">Você tem {activeDebts.length} dívida(s) ativa(s)</h2>
-            <p className="text-[13px] text-[#dc2626] font-medium">Total: {fmt(totalRemaining)} em dívidas. Juros acumulando {fmt(monthlyInterest)}/mês.</p>
-            <p className="text-[12px] text-muted-foreground mt-1">Cada pagamento extra te aproxima da liberdade financeira. Você consegue! 💪</p>
+        <div className="bg-card border-l-4 border-l-[#dc2626] border-[1.5px] border-[#fecaca] rounded-r-2xl px-4 md:px-6 py-4 md:py-5 flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
+          <AlertCircle className="w-7 h-7 md:w-8 md:h-8 text-[#dc2626] flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <h2 className="text-[15px] md:text-[17px] font-black text-[#991b1b]">Você tem {activeDebts.length} dívida(s) ativa(s)</h2>
+            <p className="text-[12px] md:text-[13px] text-[#dc2626] font-medium">Total: {fmt(totalRemaining)} em dívidas. Juros acumulando {fmt(monthlyInterest)}/mês.</p>
+            <p className="text-[11px] md:text-[12px] text-muted-foreground mt-1">Cada pagamento extra te aproxima da liberdade financeira. Você consegue! 💪</p>
           </div>
           <button onClick={() => document.getElementById('strategy-section')?.scrollIntoView({ behavior: 'smooth' })}
-            className="bg-[#dc2626] text-white font-bold text-[12px] px-4 py-2 rounded-lg hover:bg-[#b91c1c] transition-colors flex-shrink-0">
+            className="bg-[#dc2626] text-white font-bold text-[12px] px-4 py-2 rounded-lg hover:bg-[#b91c1c] transition-colors flex-shrink-0 w-full md:w-auto text-center">
             Ver meu plano ↓
           </button>
         </div>
@@ -358,7 +358,7 @@ export default function DebtsPage() {
 
       {/* ═══ 3. STRATEGY ═══ */}
       {activeDebts.length > 0 && (
-        <div id="strategy-section" className="bg-card border-[1.5px] border-border rounded-2xl p-6">
+        <div id="strategy-section" className="bg-card border-[1.5px] border-border rounded-2xl p-4 md:p-6">
           <h3 className="text-[15px] font-black text-foreground">Escolha sua estratégia de quitação</h3>
           <p className="text-[13px] text-muted-foreground mb-5">A estratégia define a ordem em que você deve priorizar o pagamento das dívidas.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -406,7 +406,7 @@ export default function DebtsPage() {
 
       {/* ═══ 4. STEP-BY-STEP GUIDE ═══ */}
       {debts.length > 0 && (
-        <div className="bg-card border-[1.5px] border-border rounded-2xl p-6">
+        <div className="bg-card border-[1.5px] border-border rounded-2xl p-4 md:p-6">
           <h3 className="text-[15px] font-black text-foreground">Seu plano passo a passo</h3>
           <p className="text-[13px] text-muted-foreground mb-5">Siga estes passos na ordem para sair das dívidas o mais rápido possível.</p>
           <div className="space-y-0">
@@ -838,15 +838,15 @@ function DebtRow({ debt, isFocus, onPay, onDelete, onStatusChange }: {
 
   return (
     <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-      className="px-5 py-4 border-b border-border/30 hover:bg-[#fafafa] transition-colors group"
+      className="px-3 md:px-5 py-3 md:py-4 border-b border-border/30 hover:bg-[#fafafa] transition-colors group"
       style={{ borderLeft: `4px solid ${debt.color}` }}>
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2 md:gap-3">
         {/* Priority */}
         <div className="flex-shrink-0 mt-0.5">
           {isFocus ? (
-            <span className="text-[10px] font-extrabold bg-[#dc2626] text-white px-2 py-[3px] rounded-[5px] animate-pulse">FOCO</span>
+            <span className="text-[9px] md:text-[10px] font-extrabold bg-[#dc2626] text-white px-1.5 md:px-2 py-[2px] md:py-[3px] rounded-[5px] animate-pulse">FOCO</span>
           ) : (
-            <div className="w-7 h-7 rounded-full bg-muted/30 flex items-center justify-center text-[13px] font-extrabold text-muted-foreground">
+            <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-muted/30 flex items-center justify-center text-[12px] md:text-[13px] font-extrabold text-muted-foreground">
               {debt.priority + 1}
             </div>
           )}
@@ -854,31 +854,63 @@ function DebtRow({ debt, isFocus, onPay, onDelete, onStatusChange }: {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[14px] font-extrabold text-foreground">{debt.name}</span>
-            <span className="text-[10px] font-bold text-muted-foreground bg-background px-1.5 py-[1px] rounded">{debt.creditor}</span>
-            {typeInfo && <span className="text-[10px] font-bold text-muted-foreground bg-muted/30 px-1.5 py-[1px] rounded">{typeInfo.emoji} {typeInfo.label}</span>}
+          <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+            <span className="text-[13px] md:text-[14px] font-extrabold text-foreground truncate">{debt.name}</span>
+            <span className="text-[9px] md:text-[10px] font-bold text-muted-foreground bg-background px-1.5 py-[1px] rounded">{debt.creditor}</span>
           </div>
-          <div className="flex items-center gap-3 mt-1.5 text-[12px]">
-            {Number(debt.interest_rate) > 0 && <span className="text-[#d97706] font-bold">💰 {debt.interest_rate}% a.m.</span>}
-            {Number(debt.min_payment) > 0 && <span className="text-muted-foreground">Min: {fmt(Number(debt.min_payment))}/mês</span>}
-            {debt.due_day && <span className="text-muted-foreground">Vence dia {debt.due_day}</span>}
+          <div className="flex items-center gap-2 md:gap-3 mt-1 text-[11px] md:text-[12px] flex-wrap">
+            {Number(debt.interest_rate) > 0 && <span className="text-[#d97706] font-bold">💰 {debt.interest_rate}%</span>}
+            {Number(debt.min_payment) > 0 && <span className="text-muted-foreground">Min: {fmt(Number(debt.min_payment))}</span>}
+            {debt.due_day && <span className="text-muted-foreground">Dia {debt.due_day}</span>}
           </div>
           {/* Progress */}
-          <div className="mt-2.5">
+          <div className="mt-2">
             <div className="w-full h-2 bg-muted/30 rounded-full overflow-hidden">
               <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }}
                 className="h-full rounded-full" style={{ background: debt.color }} />
             </div>
             <div className="flex justify-between mt-1">
-              <span className="text-[11px] text-[#16a34a] font-semibold">{fmt(paid)} pago</span>
-              <span className="text-[11px] text-[#dc2626] font-semibold">{fmt(Number(debt.remaining_amount))} restante</span>
+              <span className="text-[10px] md:text-[11px] text-[#16a34a] font-semibold">{fmt(paid)} pago</span>
+              <span className="text-[10px] md:text-[11px] text-[#dc2626] font-semibold">{fmt(Number(debt.remaining_amount))} restante</span>
+            </div>
+          </div>
+
+          {/* Mobile: amount + actions inline below progress */}
+          <div className="flex items-center justify-between mt-2 md:hidden">
+            <div>
+              <p className="text-[15px] font-black text-[#dc2626]">{fmt(Number(debt.remaining_amount))}</p>
+              <p className="text-[10px] text-muted-foreground">{pct.toFixed(0)}% pago</p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button onClick={onPay}
+                className="text-[11px] font-bold text-[#166534] bg-secondary border-[1.5px] border-[#d4edda] px-2.5 py-1.5 rounded-lg">
+                Pagar
+              </button>
+              <div className="relative">
+                <button onClick={() => setShowMenu(!showMenu)} className="p-1 rounded-lg hover:bg-muted/30">
+                  <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                </button>
+                {showMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+                    <div className="absolute right-0 top-8 z-50 w-44 bg-card border border-border rounded-xl shadow-lg py-1">
+                      {debt.status === 'active' ? (
+                        <button onClick={() => { onStatusChange('paused'); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-muted-foreground hover:bg-background"><Pause className="w-3.5 h-3.5" /> Pausar</button>
+                      ) : (
+                        <button onClick={() => { onStatusChange('active'); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-muted-foreground hover:bg-background"><Play className="w-3.5 h-3.5" /> Reativar</button>
+                      )}
+                      <button onClick={() => { onStatusChange('paid'); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-[#16a34a] hover:bg-secondary"><Check className="w-3.5 h-3.5" /> Quitada</button>
+                      <button onClick={() => { setConfirmDelete(true); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-[#dc2626] hover:bg-[#fef2f2]"><Trash2 className="w-3.5 h-3.5" /> Excluir</button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Right */}
-        <div className="flex flex-col items-end gap-2 flex-shrink-0">
+        {/* Right — desktop only */}
+        <div className="hidden md:flex flex-col items-end gap-2 flex-shrink-0">
           <p className="text-[18px] font-black text-[#dc2626]">{fmt(Number(debt.remaining_amount))}</p>
           <p className="text-[12px] text-muted-foreground">de {fmt(Number(debt.total_amount))}</p>
           <p className={`text-[13px] font-bold ${pct > 50 ? 'text-[#16a34a]' : pct > 25 ? 'text-[#d97706]' : 'text-[#dc2626]'}`}>
@@ -899,24 +931,12 @@ function DebtRow({ debt, isFocus, onPay, onDelete, onStatusChange }: {
                   <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
                   <div className="absolute right-0 top-8 z-50 w-48 bg-card border border-border rounded-xl shadow-lg py-1 overflow-hidden">
                     {debt.status === 'active' ? (
-                      <button onClick={() => { onStatusChange('paused'); setShowMenu(false); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-muted-foreground hover:bg-background">
-                        <Pause className="w-3.5 h-3.5" /> Pausar
-                      </button>
+                      <button onClick={() => { onStatusChange('paused'); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-muted-foreground hover:bg-background"><Pause className="w-3.5 h-3.5" /> Pausar</button>
                     ) : (
-                      <button onClick={() => { onStatusChange('active'); setShowMenu(false); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-muted-foreground hover:bg-background">
-                        <Play className="w-3.5 h-3.5" /> Reativar
-                      </button>
+                      <button onClick={() => { onStatusChange('active'); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-muted-foreground hover:bg-background"><Play className="w-3.5 h-3.5" /> Reativar</button>
                     )}
-                    <button onClick={() => { onStatusChange('paid'); setShowMenu(false); }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-[#16a34a] hover:bg-secondary">
-                      <Check className="w-3.5 h-3.5" /> Marcar como quitada
-                    </button>
-                    <button onClick={() => { setConfirmDelete(true); setShowMenu(false); }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-[#dc2626] hover:bg-[#fef2f2]">
-                      <Trash2 className="w-3.5 h-3.5" /> Excluir
-                    </button>
+                    <button onClick={() => { onStatusChange('paid'); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-[#16a34a] hover:bg-secondary"><Check className="w-3.5 h-3.5" /> Marcar como quitada</button>
+                    <button onClick={() => { setConfirmDelete(true); setShowMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-[#dc2626] hover:bg-[#fef2f2]"><Trash2 className="w-3.5 h-3.5" /> Excluir</button>
                   </div>
                 </>
               )}
@@ -932,6 +952,15 @@ function DebtRow({ debt, isFocus, onPay, onDelete, onStatusChange }: {
           )}
         </div>
       </div>
+
+      {/* Mobile confirm delete */}
+      {confirmDelete && (
+        <div className="flex items-center gap-2 mt-2 md:hidden">
+          <span className="text-[11px] text-[#dc2626] font-bold">Excluir esta dívida?</span>
+          <button onClick={() => { onDelete(); setConfirmDelete(false); }} className="text-[11px] font-bold text-white bg-[#dc2626] px-2 py-0.5 rounded">Sim</button>
+          <button onClick={() => setConfirmDelete(false)} className="text-[11px] font-bold text-muted-foreground bg-muted/30 px-2 py-0.5 rounded">Não</button>
+        </div>
+      )}
     </motion.div>
   );
 }
