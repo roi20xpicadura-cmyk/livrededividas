@@ -508,6 +508,75 @@ export type Database = {
         }
         Relationships: []
       }
+      integration_suggestions: {
+        Row: {
+          created_at: string | null
+          id: string
+          platform_name: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          platform_name: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          platform_name?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      integrations: {
+        Row: {
+          api_key_encrypted: string | null
+          config: Json | null
+          created_at: string | null
+          id: string
+          last_sync_at: string | null
+          method: string | null
+          platform: string
+          platform_display_name: string
+          status: string | null
+          total_imported: number | null
+          user_id: string
+          webhook_url: string | null
+        }
+        Insert: {
+          api_key_encrypted?: string | null
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          last_sync_at?: string | null
+          method?: string | null
+          platform: string
+          platform_display_name: string
+          status?: string | null
+          total_imported?: number | null
+          user_id: string
+          webhook_url?: string | null
+        }
+        Update: {
+          api_key_encrypted?: string | null
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          last_sync_at?: string | null
+          method?: string | null
+          platform?: string
+          platform_display_name?: string
+          status?: string | null
+          total_imported?: number | null
+          user_id?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
       investment_history: {
         Row: {
           amount: number
