@@ -194,37 +194,8 @@ export default function TransactionsPage() {
     setTimeout(() => descRef.current?.focus(), 300);
   };
 
-  // CSV import handlers
-  const handleCsvFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const rows = text.split('\n').map(r => r.split(/[,;]/).map(c => c.trim().replace(/^"|"$/g, '')));
-      setCsvData(rows);
-    };
-    reader.readAsText(file);
-  };
 
-  const handleCsvImport = async () => {
-    if (!csvData || !user) return;
-    const rows = csvData.slice(1).filter(r => r.length > Math.max(csvMapping.date, csvMapping.desc, csvMapping.val));
-    let count = 0;
-    for (const row of rows) {
-      const d = row[csvMapping.date];
-      const de = row[csvMapping.desc];
-      const v = parseFloat(row[csvMapping.val].replace(/[^\d.,\-]/g, '').replace(',', '.'));
-      if (!d || !de || isNaN(v)) continue;
-      const tp = csvMapping.type >= 0 && row[csvMapping.type]?.toLowerCase().includes('desp') ? 'expense' : (v < 0 ? 'expense' : 'income');
-      await supabase.from('transactions').insert({
-        user_id: user.id, date: d, description: de, amount: Math.abs(v),
-        type: tp, origin: 'personal', category: 'Outro',
-      });
-      count++;
-    }
-    toast.success(`${count} lançamentos importados!`);
-    setShowImport(false); setCsvData(null);
-    fetchTxs();
-  };
+
 
   const renderCategorySelect = () => {
     if (Array.isArray(cats) && typeof cats[0] === 'string') {
