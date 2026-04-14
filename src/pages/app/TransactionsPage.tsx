@@ -203,18 +203,18 @@ export default function TransactionsPage() {
       return (
         <div className="relative">
           <select value={cat} onChange={e => setCat(e.target.value)}
-            className="w-full h-[42px] px-3 pr-8 text-[13px] font-semibold rounded-[9px] border-[1.5px] border-border bg-card appearance-none focus:border-[#16a34a] focus:outline-none transition-colors">
+            className="w-full h-[38px] md:h-[42px] px-2.5 pr-7 text-[12px] md:text-[13px] font-semibold rounded-lg border border-border bg-card appearance-none focus:border-[#16a34a] focus:outline-none transition-colors">
             <option value="">Selecione...</option>
             {(cats as string[]).map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
         </div>
       );
     }
     return (
       <div className="relative">
         <select value={cat} onChange={e => setCat(e.target.value)}
-          className="w-full h-[42px] px-3 pr-8 text-[13px] font-semibold rounded-[9px] border-[1.5px] border-border bg-card appearance-none focus:border-[#16a34a] focus:outline-none transition-colors">
+          className="w-full h-[38px] md:h-[42px] px-2.5 pr-7 text-[12px] md:text-[13px] font-semibold rounded-lg border border-border bg-card appearance-none focus:border-[#16a34a] focus:outline-none transition-colors">
           <option value="">Selecione...</option>
           {(cats as { group: string; items: string[] }[]).map(g => (
             <optgroup key={g.group} label={g.group}>
@@ -222,7 +222,7 @@ export default function TransactionsPage() {
             </optgroup>
           ))}
         </select>
-        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
       </div>
     );
   };
@@ -237,38 +237,39 @@ export default function TransactionsPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
-      <div className="px-4 py-5 md:p-7 flex flex-col gap-4 md:gap-5 max-w-[1400px] mx-auto">
+      <div className="px-3 py-3 md:px-7 md:py-5 flex flex-col gap-3 md:gap-5 max-w-[1400px] mx-auto">
 
         {/* ── 1. STATS STRIP ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-3">
+        {/* Mobile: compact 2x2 grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
           {[
             { label: 'Receitas', value: totals.inc, color: '#16a34a', bg: '#dcfce7', icon: TrendingUp, sub: `${totals.incCount} receitas`, valColor: '#16a34a' },
             { label: 'Despesas', value: totals.exp, color: '#dc2626', bg: '#fee2e2', icon: TrendingDown, sub: `${totals.expCount} despesas`, valColor: '#dc2626' },
             { label: 'Saldo', value: totals.net, color: '#2563eb', bg: '#eff6ff', icon: Scale, sub: 'Resultado líquido', valColor: totals.net >= 0 ? '#16a34a' : '#dc2626' },
           ].map((s, i) => (
-            <div key={i} className="flex items-center gap-2.5 md:gap-3.5 bg-card border-[1.5px] border-border rounded-xl p-3 md:p-4 hover:border-[#86efac] transition-colors duration-200">
-              <div className="w-9 h-9 md:w-10 md:h-10 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: s.bg }}>
-                <s.icon className="w-4 h-4 md:w-[18px] md:h-[18px]" style={{ color: s.color }} />
+            <div key={i} className="flex items-center gap-2 md:gap-3.5 bg-card border border-border rounded-xl p-2.5 md:p-4 hover:border-[#86efac] transition-colors duration-200">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: s.bg }}>
+                <s.icon className="w-3.5 h-3.5 md:w-[18px] md:h-[18px]" style={{ color: s.color }} />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wide truncate">{s.label}</p>
-                <p className="text-sm md:text-[20px] font-black truncate" style={{ color: s.valColor }}>{formatCurrency(s.value)}</p>
+                <p className="text-[13px] md:text-[20px] font-black truncate leading-tight" style={{ color: s.valColor }}>{formatCurrency(s.value)}</p>
                 <p className="text-[10px] md:text-[11px] text-muted-foreground hidden md:block">{s.sub}</p>
               </div>
             </div>
           ))}
           {/* Card 4: count */}
-          <div className="flex items-center gap-2.5 md:gap-3.5 bg-card border-[1.5px] border-border rounded-xl p-3 md:p-4 hover:border-[#86efac] transition-colors duration-200">
-            <div className="w-9 h-9 md:w-10 md:h-10 rounded-[10px] flex items-center justify-center shrink-0 bg-muted/30">
-              <Receipt className="w-4 h-4 md:w-[18px] md:h-[18px] text-muted-foreground" />
+          <div className="flex items-center gap-2 md:gap-3.5 bg-card border border-border rounded-xl p-2.5 md:p-4 hover:border-[#86efac] transition-colors duration-200">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0 bg-muted/30">
+              <Receipt className="w-3.5 h-3.5 md:w-[18px] md:h-[18px] text-muted-foreground" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wide">Lançamentos</p>
-              <p className="text-sm md:text-[20px] font-black text-foreground">{txs.length}</p>
+              <p className="text-[13px] md:text-[20px] font-black text-foreground leading-tight">{txs.length}</p>
               {limits.transactions_per_month !== Infinity ? (
                 <div>
                   <p className="text-[10px] md:text-[11px] text-muted-foreground">{txs.length}/{limits.transactions_per_month}</p>
-                  <div className="mt-1 h-[3px] rounded-full bg-muted/30 overflow-hidden">
+                  <div className="mt-0.5 h-[3px] rounded-full bg-muted/30 overflow-hidden">
                     <div className="h-full rounded-full transition-all duration-500" style={{
                       width: `${Math.min(limitPct, 100)}%`,
                       background: limitPct > 90 ? '#dc2626' : limitPct > 80 ? '#f59e0b' : '#16a34a'
@@ -283,63 +284,71 @@ export default function TransactionsPage() {
         </div>
 
         {/* ── 2. ADD TRANSACTION CARD ── */}
-        <div ref={formRef} className="bg-card border-[1.5px] border-border rounded-2xl overflow-hidden">
+        <div ref={formRef} className="bg-card border border-border rounded-xl md:rounded-2xl overflow-hidden">
           {/* Header */}
-          <div className={`flex flex-col md:flex-row md:items-center justify-between px-4 md:px-5 py-3 md:py-4 border-b border-border/50 transition-colors duration-200 gap-2.5 ${type === 'income' ? 'bg-secondary' : 'bg-[#fef2f2]'}`}>
-            <div className="flex items-center gap-2.5">
+          <div className={`flex items-center justify-between px-3 md:px-5 py-2.5 md:py-4 border-b border-border/50 transition-colors duration-200 ${type === 'income' ? 'bg-secondary' : 'bg-[#fef2f2]'}`}>
+            <div className="flex items-center gap-2">
               <PlusCircle className="w-4 h-4 text-[#16a34a]" />
-              <span className="text-sm font-extrabold text-foreground">Novo Lançamento</span>
-              <button onClick={() => setShowImport(true)} className="ml-auto md:ml-2 flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-muted-foreground border-[1.5px] border-border rounded-[7px] hover:border-[#16a34a] hover:text-[#16a34a] transition-colors">
+              <span className="text-[13px] md:text-sm font-extrabold text-foreground">Novo Lançamento</span>
+              <button onClick={() => setShowImport(true)} className="flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground border border-border rounded-md hover:border-[#16a34a] hover:text-[#16a34a] transition-colors">
                 <Upload className="w-3 h-3" /> Importar
               </button>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               {(['income', 'expense'] as const).map(t => (
                 <button key={t} onClick={() => { setType(t); setCat(''); }}
-                  className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 md:px-4 py-2 md:py-[7px] rounded-lg text-[13px] font-extrabold border-2 transition-all duration-200 cursor-pointer ${
+                  className={`flex items-center gap-1 px-2.5 md:px-4 py-1.5 md:py-[7px] rounded-lg text-[12px] md:text-[13px] font-extrabold border-2 transition-all duration-200 cursor-pointer ${
                     type === t
                       ? t === 'income' ? 'bg-[#dcfce7] text-[#166534] border-[#16a34a]' : 'bg-[#fee2e2] text-[#991b1b] border-[#dc2626]'
                       : 'bg-background text-muted-foreground border-border'
                   }`}>
-                  {t === 'income' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
-                  {t === 'income' ? 'Receita' : 'Despesa'}
+                  {t === 'income' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                  <span className="hidden md:inline">{t === 'income' ? 'Receita' : 'Despesa'}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Form body */}
-          <div className="p-4 md:p-5" onKeyDown={e => { if (e.key === 'Enter' && !submitting) handleAdd(); }}>
+          <div className="p-3 md:p-5" onKeyDown={e => { if (e.key === 'Enter' && !submitting) handleAdd(); }}>
             {/* Row 1: Date + Description */}
-            <div className="grid grid-cols-5 md:grid-cols-3 gap-2.5 md:gap-3 mb-3">
-              <div className="col-span-2 md:col-span-1">
-                <label className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1.5">Data</label>
+            <div className="grid grid-cols-5 gap-2 md:gap-3 mb-2.5 md:mb-3">
+              <div className="col-span-2">
+                <label className="block text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Data</label>
                 <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                  className="w-full h-[42px] px-2 md:px-3 text-[13px] font-semibold rounded-[9px] border-[1.5px] border-border focus:border-[#16a34a] focus:outline-none transition-colors" />
+                  className="w-full h-[38px] md:h-[42px] px-2 text-[12px] md:text-[13px] font-semibold rounded-lg border border-border focus:border-[#16a34a] focus:outline-none transition-colors" />
               </div>
-              <div className="col-span-3 md:col-span-2">
-                <label className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1.5">Descrição</label>
-                <input ref={descRef} value={desc} onChange={e => setDesc(e.target.value)} placeholder="Ex: Supermercado Extra"
-                  className="w-full h-[42px] px-3 text-[13px] font-semibold rounded-[9px] border-[1.5px] border-border focus:border-[#16a34a] focus:outline-none transition-colors" />
+              <div className="col-span-3">
+                <label className="block text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Descrição</label>
+                <input ref={descRef} value={desc} onChange={e => setDesc(e.target.value)} placeholder="Ex: Supermercado"
+                  className="w-full h-[38px] md:h-[42px] px-2.5 text-[12px] md:text-[13px] font-semibold rounded-lg border border-border focus:border-[#16a34a] focus:outline-none transition-colors" />
               </div>
             </div>
 
-            {/* Row 2: Value + Origin (mobile: 2 cols) */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-3 mb-3">
+            {/* Row 2: Value + Category */}
+            <div className="grid grid-cols-2 gap-2 md:gap-3 mb-2.5 md:mb-3">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1.5">Valor</label>
+                <label className="block text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Valor</label>
                 <div className="relative">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-muted-foreground">R$</span>
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-muted-foreground">R$</span>
                   <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={val} onChange={e => setVal(e.target.value)} placeholder="0,00"
-                    className="w-full h-[42px] pl-[28px] pr-2 text-[13px] font-semibold rounded-[9px] border-[1.5px] border-border focus:border-[#16a34a] focus:outline-none transition-colors" />
+                    className="w-full h-[38px] md:h-[42px] pl-[26px] pr-2 text-[12px] md:text-[13px] font-semibold rounded-lg border border-border focus:border-[#16a34a] focus:outline-none transition-colors" />
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1.5">Origem</label>
+                <label className="block text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Categoria</label>
+                {renderCategorySelect()}
+              </div>
+            </div>
+
+            {/* Row 3: Origin + Recurring */}
+            <div className="grid grid-cols-2 gap-2 md:gap-3 mb-2.5 md:mb-3">
+              <div>
+                <label className="block text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Origem</label>
                 <div className="flex gap-1">
                   {(['personal', 'business'] as const).map(o => (
                     <button key={o} onClick={() => setOrigin(o)}
-                      className={`flex-1 px-1.5 py-2 rounded-lg text-[11px] md:text-[12px] font-bold border-[1.5px] transition-all duration-200 ${
+                      className={`flex-1 px-1 py-[7px] rounded-lg text-[11px] font-bold border transition-all duration-200 ${
                         origin === o
                           ? o === 'personal' ? 'bg-[#eff6ff] text-[#1d4ed8] border-[#bfdbfe]' : 'bg-secondary text-[#166534] border-[#d4edda]'
                           : 'bg-card text-muted-foreground border-border'
@@ -350,12 +359,8 @@ export default function TransactionsPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1.5">Categoria</label>
-                {renderCategorySelect()}
-              </div>
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1.5">Recorrente?</label>
-                <div className="flex items-center gap-2 h-[42px]">
+                <label className="block text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Recorrente?</label>
+                <div className="flex items-center gap-2 h-[38px] md:h-[42px]">
                   <button onClick={() => setIsRecurring(!isRecurring)}
                     className={`relative w-9 h-5 rounded-full transition-colors duration-200 shrink-0 ${isRecurring ? 'bg-[#16a34a]' : 'bg-[#e2e8f0]'}`}>
                     <span className={`absolute top-0.5 w-4 h-4 bg-card rounded-full shadow transition-transform duration-200 ${isRecurring ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
@@ -364,7 +369,7 @@ export default function TransactionsPage() {
                     {isRecurring && (
                       <motion.select initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
                         value={recurFreq} onChange={e => setRecurFreq(e.target.value)}
-                        className="h-8 px-2 text-[12px] font-semibold rounded-lg border-[1.5px] border-border focus:outline-none">
+                        className="h-7 px-1.5 text-[11px] font-semibold rounded-md border border-border focus:outline-none">
                         <option value="week">Semana</option>
                         <option value="month">Mês</option>
                         <option value="year">Ano</option>
@@ -378,42 +383,39 @@ export default function TransactionsPage() {
             {/* Notes */}
             <AnimatePresence>
               {!showNotes ? (
-                <button onClick={() => setShowNotes(true)} className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-[#16a34a] transition-colors mb-3">
+                <button onClick={() => setShowNotes(true)} className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-[#16a34a] transition-colors mb-2">
                   <Plus className="w-3 h-3" /> Adicionar nota
                 </button>
               ) : (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="mb-3">
-                  <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Observações opcionais..."
-                    className="w-full px-3 py-2 text-[13px] rounded-[9px] border-[1.5px] border-border focus:border-[#16a34a] focus:outline-none resize-none transition-colors" />
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="mb-2">
+                  <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Observações..."
+                    className="w-full px-2.5 py-2 text-[12px] rounded-lg border border-border focus:border-[#16a34a] focus:outline-none resize-none transition-colors" />
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Bottom row */}
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-[11px] text-muted-foreground hidden md:block">Pressione Enter ↵ para adicionar</span>
-              <div className="flex items-center gap-3 w-full md:w-auto">
-                <button onClick={() => { setDesc(''); setVal(''); setCat(''); setNotes(''); setShowNotes(false); }}
-                  className="text-[12px] text-muted-foreground hover:text-[#dc2626] transition-colors">Limpar</button>
-                <button onClick={handleAdd} disabled={submitting}
-                  className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-[9px] text-[13px] font-extrabold text-white transition-all duration-200 active:scale-[0.97] ${
-                    successFlash ? 'bg-[#16a34a]' : 'bg-[#16a34a] hover:bg-[#14532d]'
-                  } disabled:opacity-50`}>
-                  {submitting ? (
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : successFlash ? (
-                    <><Check className="w-4 h-4" /> Adicionado!</>
-                  ) : (
-                    <><Plus className="w-3.5 h-3.5" /> Adicionar</>
-                  )}
-                </button>
-              </div>
+            {/* Submit */}
+            <div className="flex items-center justify-between">
+              <button onClick={() => { setDesc(''); setVal(''); setCat(''); setNotes(''); setShowNotes(false); }}
+                className="text-[11px] text-muted-foreground hover:text-[#dc2626] transition-colors">Limpar</button>
+              <button onClick={handleAdd} disabled={submitting}
+                className={`flex items-center justify-center gap-1.5 px-4 md:px-5 py-2 md:py-2.5 rounded-lg text-[12px] md:text-[13px] font-extrabold text-white transition-all duration-200 active:scale-[0.97] ${
+                  successFlash ? 'bg-[#16a34a]' : 'bg-[#16a34a] hover:bg-[#14532d]'
+                } disabled:opacity-50`}>
+                {submitting ? (
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : successFlash ? (
+                  <><Check className="w-3.5 h-3.5" /> Adicionado!</>
+                ) : (
+                  <><Plus className="w-3 h-3" /> Adicionar</>
+                )}
+              </button>
             </div>
           </div>
         </div>
 
         {/* ── 3. FILTER BAR ── */}
-        <div className="bg-card border-[1.5px] border-border rounded-xl p-3 flex flex-col md:flex-row md:items-center gap-2.5">
+        <div className="bg-card border border-border rounded-xl p-2.5 md:p-3 flex flex-col md:flex-row md:items-center gap-2">
           <div className="flex items-center gap-1.5 flex-wrap flex-1">
             {([['all', 'Todos'], ['income', 'Receitas'], ['expense', 'Despesas']] as const).map(([v, l]) => (
               <button key={v} onClick={() => { setFilterType(v); setPage(1); }}
