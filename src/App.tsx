@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect } from "react";
+import { lazy, Suspense, useState, useEffect, memo } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -11,6 +11,7 @@ import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
 import { AppErrorBoundary } from "@/components/app/ErrorBoundary";
 import { AnimatePresence } from "framer-motion";
 import SplashScreen from "@/components/app/SplashScreen";
+
 // Lazy-loaded routes
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -49,26 +50,50 @@ const GatedInvestments = lazy(() => import("./pages/app/GatedPages").then(m => (
 const GatedCharts = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.ChartsPage })));
 const GatedExport = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.ExportPage })));
 
-const queryClient = new QueryClient();
+// Optimized QueryClient with stale time and dedup
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 2, // 2 min — avoid refetching on every mount
+      gcTime: 1000 * 60 * 10,   // 10 min garbage collection
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-function PageSkeleton() {
+const PageSkeleton = memo(function PageSkeleton() {
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg-base)' }}>
+    <div className="min-h-[60vh] flex items-center justify-center" style={{ background: 'var(--color-bg-base)' }}>
       <div className="flex flex-col items-center" style={{ gap: 12 }}>
         <div className="skeleton-shimmer" style={{ width: 40, height: 40, borderRadius: 'var(--radius-lg)' }} />
         <div className="skeleton-shimmer" style={{ width: 120, height: 12, borderRadius: 6 }} />
       </div>
     </div>
   );
+});
+
+// Prefetch common app routes after initial load
+function usePrefetchAppRoutes() {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Prefetch the most visited pages after 2s idle
+      import("./pages/app/OverviewPage");
+      import("./pages/app/TransactionsPage");
+      import("./pages/app/GoalsPage");
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 }
 
 const App = () => {
   const [showSplash, setShowSplash] = useState(() => {
-    // Only show splash on PWA standalone or first visit
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches
       || (navigator as any).standalone === true;
     return isStandalone;
   });
+
+  usePrefetchAppRoutes();
 
   useEffect(() => {
     if (showSplash) {
@@ -143,4 +168,3 @@ const App = () => {
 };
 
 export default App;
-
