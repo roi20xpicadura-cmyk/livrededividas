@@ -657,7 +657,66 @@ function GoalCard({ goal: g, index: i, openMenu, setOpenMenu, onQuickAdd, onCust
         </span>
       </div>
 
-      {/* Quick update */}
+      {/* Daily Check-in Tracker */}
+      <div className="mt-3 pt-3" style={{ borderTop: '1px solid #f8fafc' }}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <Flame size={13} style={{ color: '#d97706' }} />
+            <span className="text-[11px] font-bold" style={{ color: '#14532d' }}>Streak diário</span>
+            {(() => {
+              let streak = 0;
+              for (let d = 0; d < 30; d++) {
+                const day = format(subDays(new Date(), d), 'yyyy-MM-dd');
+                if (checkins.some(c => c.date === day)) streak++;
+                else break;
+              }
+              return streak > 0 ? (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#fefce8', color: '#d97706', border: '1px solid #fde68a' }}>
+                  🔥 {streak} {streak === 1 ? 'dia' : 'dias'}
+                </span>
+              ) : null;
+            })()}
+          </div>
+          <button onClick={onCheckinToday}
+            className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer transition-all active:scale-95"
+            style={{
+              background: checkins.some(c => c.date === format(new Date(), 'yyyy-MM-dd')) ? '#16a34a' : '#f0fdf4',
+              color: checkins.some(c => c.date === format(new Date(), 'yyyy-MM-dd')) ? 'white' : '#166534',
+              border: `1px solid ${checkins.some(c => c.date === format(new Date(), 'yyyy-MM-dd')) ? '#16a34a' : '#d4edda'}`,
+            }}>
+            <Check size={11} />
+            {checkins.some(c => c.date === format(new Date(), 'yyyy-MM-dd')) ? 'Feito hoje ✓' : 'Marcar hoje'}
+          </button>
+        </div>
+        <div className="flex gap-1">
+          {Array.from({ length: 7 }).map((_, idx) => {
+            const day = subDays(new Date(), 6 - idx);
+            const dayStr = format(day, 'yyyy-MM-dd');
+            const ck = checkins.find(c => c.date === dayStr);
+            const isToday = isSameDay(day, new Date());
+            const dayLabel = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][day.getDay()];
+            return (
+              <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                <span className="text-[9px] font-medium" style={{ color: '#94a3b8' }}>{dayLabel}</span>
+                <div className="w-full aspect-square rounded-lg flex items-center justify-center transition-all"
+                  style={{
+                    background: ck ? (Number(ck.amount) > 0 ? '#16a34a' : '#86efac') : (isToday ? '#f8faf8' : '#f1f5f9'),
+                    border: isToday ? '1.5px solid #16a34a' : '1px solid transparent',
+                  }}>
+                  {ck ? (
+                    <Check size={12} style={{ color: Number(ck.amount) > 0 ? 'white' : '#166534' }} />
+                  ) : (
+                    <span className="text-[9px]" style={{ color: '#cbd5e1' }}>{format(day, 'd')}</span>
+                  )}
+                </div>
+                {ck && Number(ck.amount) > 0 && (
+                  <span className="text-[8px] font-bold" style={{ color: '#16a34a' }}>+{Number(ck.amount).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
       <div className="mt-3.5 pt-3.5 flex flex-wrap items-center gap-2" style={{ borderTop: '1px solid #f8fafc' }}>
         <span className="text-[11px]" style={{ color: '#94a3b8' }}>Adicionar:</span>
         {presets.map(p => (
