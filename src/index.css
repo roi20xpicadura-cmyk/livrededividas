@@ -123,3 +123,8 @@
 .duration-800 {
   transition-duration: 800ms;
 }
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
