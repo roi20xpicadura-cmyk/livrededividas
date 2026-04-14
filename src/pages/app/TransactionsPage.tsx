@@ -413,7 +413,6 @@ export default function TransactionsPage() {
             </div>
           </div>
         </div>
-        </div>
 
         {/* ── 3. FILTER BAR ── */}
         <div className="bg-card border-[1.5px] border-border rounded-xl p-3 flex flex-col md:flex-row md:items-center gap-2.5">
