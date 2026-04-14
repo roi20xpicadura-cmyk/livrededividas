@@ -47,6 +47,101 @@ export type Database = {
         }
         Relationships: []
       }
+      debt_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          debt_id: string
+          id: string
+          notes: string | null
+          payment_date: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          debt_id: string
+          id?: string
+          notes?: string | null
+          payment_date: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          debt_id?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debt_payments_debt_id_fkey"
+            columns: ["debt_id"]
+            isOneToOne: false
+            referencedRelation: "debts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      debts: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          creditor: string
+          debt_type: string
+          due_day: number | null
+          id: string
+          interest_rate: number | null
+          min_payment: number | null
+          name: string
+          notes: string | null
+          priority: number | null
+          remaining_amount: number
+          status: string | null
+          strategy: string | null
+          total_amount: number
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          creditor: string
+          debt_type: string
+          due_day?: number | null
+          id?: string
+          interest_rate?: number | null
+          min_payment?: number | null
+          name: string
+          notes?: string | null
+          priority?: number | null
+          remaining_amount: number
+          status?: string | null
+          strategy?: string | null
+          total_amount: number
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          creditor?: string
+          debt_type?: string
+          due_day?: number | null
+          id?: string
+          interest_rate?: number | null
+          min_payment?: number | null
+          name?: string
+          notes?: string | null
+          priority?: number | null
+          remaining_amount?: number
+          status?: string | null
+          strategy?: string | null
+          total_amount?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       goal_checkins: {
         Row: {
           amount: number
