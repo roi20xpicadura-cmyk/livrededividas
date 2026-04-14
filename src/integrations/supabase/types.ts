@@ -216,6 +216,7 @@ export type Database = {
           created_at: string | null
           creditor: string
           debt_type: string
+          deleted_at: string | null
           due_day: number | null
           id: string
           interest_rate: number | null
@@ -234,6 +235,7 @@ export type Database = {
           created_at?: string | null
           creditor: string
           debt_type: string
+          deleted_at?: string | null
           due_day?: number | null
           id?: string
           interest_rate?: number | null
@@ -252,6 +254,7 @@ export type Database = {
           created_at?: string | null
           creditor?: string
           debt_type?: string
+          deleted_at?: string | null
           due_day?: number | null
           id?: string
           interest_rate?: number | null
@@ -302,12 +305,51 @@ export type Database = {
           },
         ]
       }
+      goal_deposits: {
+        Row: {
+          amount: number
+          created_at: string | null
+          deposit_date: string
+          goal_id: string | null
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          deposit_date?: string
+          goal_id?: string | null
+          id?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          deposit_date?: string
+          goal_id?: string | null
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_deposits_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goals: {
         Row: {
           color: string | null
           created_at: string | null
           current_amount: number | null
           deadline: string | null
+          deleted_at: string | null
           id: string
           is_highlighted: boolean | null
           name: string
@@ -321,6 +363,7 @@ export type Database = {
           created_at?: string | null
           current_amount?: number | null
           deadline?: string | null
+          deleted_at?: string | null
           id?: string
           is_highlighted?: boolean | null
           name: string
@@ -334,6 +377,7 @@ export type Database = {
           created_at?: string | null
           current_amount?: number | null
           deadline?: string | null
+          deleted_at?: string | null
           id?: string
           is_highlighted?: boolean | null
           name?: string
@@ -343,6 +387,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      investment_history: {
+        Row: {
+          amount: number
+          created_at: string | null
+          event_date: string
+          event_type: string
+          id: string
+          investment_id: string | null
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          event_date?: string
+          event_type: string
+          id?: string
+          investment_id?: string | null
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          investment_id?: string | null
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_history_investment_id_fkey"
+            columns: ["investment_id"]
+            isOneToOne: false
+            referencedRelation: "investments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       investments: {
         Row: {
@@ -373,6 +458,30 @@ export type Database = {
           id?: string
           invested_amount?: number
           name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      monthly_reports: {
+        Row: {
+          data: Json | null
+          id: string
+          month_year: string
+          sent_at: string | null
+          user_id: string
+        }
+        Insert: {
+          data?: Json | null
+          id?: string
+          month_year: string
+          sent_at?: string | null
+          user_id: string
+        }
+        Update: {
+          data?: Json | null
+          id?: string
+          month_year?: string
+          sent_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -527,6 +636,65 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_bills: {
+        Row: {
+          amount: number
+          card_id: string | null
+          category: string
+          created_at: string | null
+          description: string
+          due_date: string
+          frequency: string | null
+          id: string
+          notes: string | null
+          origin: string | null
+          paid_at: string | null
+          recurrent: boolean | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          card_id?: string | null
+          category: string
+          created_at?: string | null
+          description: string
+          due_date: string
+          frequency?: string | null
+          id?: string
+          notes?: string | null
+          origin?: string | null
+          paid_at?: string | null
+          recurrent?: boolean | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          card_id?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string
+          due_date?: string
+          frequency?: string | null
+          id?: string
+          notes?: string | null
+          origin?: string | null
+          paid_at?: string | null
+          recurrent?: boolean | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_bills_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           created_at: string | null
@@ -563,9 +731,11 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
+          card_id: string | null
           category: string
           created_at: string | null
           date: string
+          deleted_at: string | null
           description: string
           id: string
           notes: string | null
@@ -575,9 +745,11 @@ export type Database = {
         }
         Insert: {
           amount: number
+          card_id?: string | null
           category: string
           created_at?: string | null
           date: string
+          deleted_at?: string | null
           description: string
           id?: string
           notes?: string | null
@@ -587,9 +759,11 @@ export type Database = {
         }
         Update: {
           amount?: number
+          card_id?: string | null
           category?: string
           created_at?: string | null
           date?: string
+          deleted_at?: string | null
           description?: string
           id?: string
           notes?: string | null
@@ -597,7 +771,15 @@ export type Database = {
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_config: {
         Row: {
@@ -609,7 +791,9 @@ export type Database = {
           financial_score: number | null
           id: string
           last_activity_date: string | null
+          last_period: string | null
           level: string | null
+          notification_push_token: string | null
           notifications_enabled: boolean | null
           onboarding_completed: boolean | null
           onboarding_step: number | null
@@ -631,7 +815,9 @@ export type Database = {
           financial_score?: number | null
           id?: string
           last_activity_date?: string | null
+          last_period?: string | null
           level?: string | null
+          notification_push_token?: string | null
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
@@ -653,7 +839,9 @@ export type Database = {
           financial_score?: number | null
           id?: string
           last_activity_date?: string | null
+          last_period?: string | null
           level?: string | null
+          notification_push_token?: string | null
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
