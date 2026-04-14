@@ -1,0 +1,104 @@
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+
+type Theme = 'light' | 'dark' | 'system';
+
+interface ThemeContextType {
+  theme: Theme;
+  resolvedTheme: 'light' | 'dark';
+  setTheme: (theme: Theme) => void;
+  cycleTheme: () => void;
+}
+
+const ThemeContext = createContext<ThemeContextType>({
+  theme: 'light',
+  resolvedTheme: 'light',
+  setTheme: () => {},
+  cycleTheme: () => {},
+});
+
+export const useTheme = () => useContext(ThemeContext);
+
+function getSystemTheme(): 'light' | 'dark' {
+  if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+  return 'light';
+}
+
+function resolveTheme(theme: Theme): 'light' | 'dark' {
+  if (theme === 'system') return getSystemTheme();
+  return theme;
+}
+
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const [theme, setThemeState] = useState<Theme>(() => {
+    const stored = localStorage.getItem('findash-theme');
+    return (stored as Theme) || 'light';
+  });
+
+  const resolved = resolveTheme(theme);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute('data-theme', resolved);
+    root.classList.toggle('dark', resolved === 'dark');
+  }, [resolved]);
+
+  // Sync from Supabase on load
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('user_config').select('theme').eq('user_id', user.id).single()
+      .then(({ data }) => {
+        if (data?.theme && ['light', 'dark', 'system'].includes(data.theme)) {
+          setThemeState(data.theme as Theme);
+          localStorage.setItem('findash-theme', data.theme);
+        }
+      });
+  }, [user]);
+
+  // Listen for system preference changes
+  useEffect(() => {
+    if (theme !== 'system') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => {
+      const root = document.documentElement;
+      const r = getSystemTheme();
+      root.setAttribute('data-theme', r);
+      root.classList.toggle('dark', r === 'dark');
+    };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [theme]);
+
+  // Cross-tab sync
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === 'findash-theme' && e.newValue) {
+        setThemeState(e.newValue as Theme);
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
+
+  const setTheme = useCallback((t: Theme) => {
+    setThemeState(t);
+    localStorage.setItem('findash-theme', t);
+    if (user) {
+      supabase.from('user_config').update({ theme: t } as any).eq('user_id', user.id);
+    }
+  }, [user]);
+
+  const cycleTheme = useCallback(() => {
+    const order: Theme[] = ['light', 'dark', 'system'];
+    const idx = order.indexOf(theme);
+    setTheme(order[(idx + 1) % order.length]);
+  }, [theme, setTheme]);
+
+  return (
+    <ThemeContext.Provider value={{ theme, resolvedTheme: resolved, setTheme, cycleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
