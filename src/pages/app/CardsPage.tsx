@@ -144,13 +144,21 @@ function FormField({ label, value, onChange, placeholder, type = 'text', prefix,
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; type?: string; prefix?: string; helper?: string;
 }) {
+  const isNumeric = type === 'number';
   return (
     <div>
       <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide mb-1">{label}</p>
       <div className="relative">
         {prefix && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-muted-foreground font-semibold">{prefix}</span>}
-        <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-          className={`w-full h-[42px] border-[1.5px] border-border rounded-[9px] text-[13px] font-semibold focus:border-[#16a34a] outline-none ${prefix ? 'pl-8 pr-3' : 'px-3'}`} />
+        <input
+          type={isNumeric ? 'text' : type}
+          inputMode={isNumeric ? 'decimal' : undefined}
+          pattern={isNumeric ? '[0-9.,]*' : undefined}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`w-full h-[42px] border-[1.5px] border-border rounded-[9px] text-[13px] font-semibold focus:border-[#16a34a] outline-none ${prefix ? 'pl-8 pr-3' : 'px-3'}`}
+        />
       </div>
       {helper && <p className="text-[10px] text-muted-foreground mt-0.5">{helper}</p>}
     </div>
@@ -519,7 +527,7 @@ export default function CardsPage() {
               {/* Used - inline editable */}
               <div className="flex items-center gap-1 group">
                 {editingUsed === c.id ? (
-                  <input type="number" value={editUsedVal} onChange={e => setEditUsedVal(e.target.value)}
+                  <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={editUsedVal} onChange={e => setEditUsedVal(e.target.value)}
                     onBlur={() => handleInlineUsedSave(c.id)} onKeyDown={e => e.key === 'Enter' && handleInlineUsedSave(c.id)}
                     className="w-24 h-7 border border-[#16a34a] rounded px-2 text-[13px] font-bold outline-none" autoFocus />
                 ) : (

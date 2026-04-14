@@ -315,12 +315,12 @@ export default function GoalsPage() {
                     </div>
                     <div>
                       <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Valor alvo (R$)</label>
-                      <input type="number" value={target} onChange={e => setTarget(e.target.value)} placeholder="10.000,00"
+                      <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={target} onChange={e => setTarget(e.target.value)} placeholder="10.000,00"
                         className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-card focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a] outline-none transition-colors" />
                     </div>
                     <div>
                       <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Já tenho (R$)</label>
-                      <input type="number" value={current} onChange={e => setCurrent(e.target.value)} placeholder="0,00"
+                      <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={current} onChange={e => setCurrent(e.target.value)} placeholder="0,00"
                         className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-card focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a] outline-none transition-colors" />
                       <p className="text-[11px] mt-1" style={{ color: 'var(--text-hint)' }}>Quanto você já tem guardado</p>
                     </div>
@@ -495,11 +495,11 @@ export default function GoalsPage() {
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Valor alvo</label>
-                  <input type="number" value={editTarget} onChange={e => setEditTarget(e.target.value)} className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-card focus:border-[#16a34a] outline-none" />
+                  <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={editTarget} onChange={e => setEditTarget(e.target.value)} className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-card focus:border-[#16a34a] outline-none" />
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Valor atual</label>
-                  <input type="number" value={editCurrent} onChange={e => setEditCurrent(e.target.value)} className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-card focus:border-[#16a34a] outline-none" />
+                  <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={editCurrent} onChange={e => setEditCurrent(e.target.value)} className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-card focus:border-[#16a34a] outline-none" />
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Prazo</label>
@@ -731,7 +731,7 @@ function GoalCard({ goal: g, index: i, openMenu, setOpenMenu, onQuickAdd, onCust
           </button>
         ))}
         <div className="flex items-center gap-1 flex-1 min-w-[100px]">
-          <input ref={customInputRef} type="number" placeholder="R$ ___" className="flex-1 h-8 text-xs px-2 rounded-lg border border-border outline-none focus:border-[#16a34a]"
+          <input ref={customInputRef} type="text" inputMode="decimal" pattern="[0-9.,]*" placeholder="R$ ___" className="flex-1 h-8 text-xs px-2 rounded-lg border border-border outline-none focus:border-[#16a34a]"
             onKeyDown={e => { if (e.key === 'Enter') { onCustomAdd(g.id, (e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value = ''; } }} />
           <button onClick={() => { if (customInputRef.current) { onCustomAdd(g.id, customInputRef.current.value); customInputRef.current.value = ''; } }}
             className="w-7 h-7 rounded-md flex items-center justify-center text-white text-sm font-bold" style={{ background: '#16a34a' }}>+</button>

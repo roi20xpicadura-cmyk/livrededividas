@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import BottomSheet from '@/components/app/BottomSheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -496,7 +497,7 @@ export default function DebtsPage() {
               <p className="text-[13px] font-bold text-foreground mb-2">Quanto você pode pagar extra por mês?</p>
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-[13px] text-muted-foreground font-semibold">R$</span>
-                <input type="number" value={extraPayment || ''} onChange={e => setExtraPayment(Number(e.target.value))}
+                <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={extraPayment || ''} onChange={e => setExtraPayment(Number(e.target.value))}
                   placeholder="0" className="w-32 h-9 border-[1.5px] border-border rounded-lg px-3 text-[14px] font-bold focus:border-[#16a34a] outline-none" />
               </div>
               {extraPayment > 0 && orderedDebts[0] && (
@@ -514,7 +515,7 @@ export default function DebtsPage() {
               <div className="grid grid-cols-3 gap-3 mb-3">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted-foreground">Aporte mensal</label>
-                  <input type="number" value={compMonthly} onChange={e => setCompMonthly(Number(e.target.value))}
+                  <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={compMonthly} onChange={e => setCompMonthly(Number(e.target.value))}
                     className="w-full h-9 border-[1.5px] border-[#d4edda] rounded-lg px-3 text-[13px] font-bold focus:border-[#16a34a] outline-none" />
                 </div>
                 <div>
@@ -525,7 +526,7 @@ export default function DebtsPage() {
                 </div>
                 <div>
                   <label className="text-[10px] uppercase font-bold text-muted-foreground">Taxa %/mês</label>
-                  <input type="number" value={compRate} onChange={e => setCompRate(Number(e.target.value))} step={0.1}
+                  <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={compRate} onChange={e => setCompRate(Number(e.target.value))}
                     className="w-full h-9 border-[1.5px] border-[#d4edda] rounded-lg px-3 text-[13px] font-bold focus:border-[#16a34a] outline-none" />
                 </div>
               </div>
@@ -704,7 +705,7 @@ export default function DebtsPage() {
             <label className="text-[12px] font-bold text-muted-foreground">Pagamento extra mensal:</label>
             <div className="flex items-center gap-1">
               <span className="text-[12px] text-muted-foreground">R$</span>
-              <input type="number" value={extraPayment || ''} onChange={e => setExtraPayment(Number(e.target.value))}
+              <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={extraPayment || ''} onChange={e => setExtraPayment(Number(e.target.value))}
                 placeholder="0" className="w-28 h-8 border-[1.5px] border-border rounded-lg px-2 text-[13px] font-bold focus:border-[#16a34a] outline-none" />
             </div>
           </div>
@@ -753,80 +754,71 @@ export default function DebtsPage() {
         </div>
       </div>
 
-      {/* ═══ PAYMENT MODAL ═══ */}
-      <AnimatePresence>
+      {/* ═══ PAYMENT MODAL (BottomSheet on mobile) ═══ */}
+      <BottomSheet open={!!paymentModal} onClose={() => setPaymentModal(null)} title="Registrar Pagamento">
         {paymentModal && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/30 z-50 backdrop-blur-sm" onClick={() => setPaymentModal(null)} />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={e => e.target === e.currentTarget && setPaymentModal(null)}>
-              <div className="bg-card rounded-[20px] p-7 w-full max-w-[440px] shadow-2xl" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-[17px] font-black text-foreground">Registrar Pagamento</h3>
-                  <button onClick={() => setPaymentModal(null)} className="text-muted-foreground hover:text-[#dc2626]"><X className="w-5 h-5" /></button>
-                </div>
-                <p className="text-[14px] text-foreground font-bold mb-3">{paymentModal.name}</p>
+          <div>
+            <p className="text-[14px] text-foreground font-bold mb-3">{paymentModal.name}</p>
 
-                <div className="bg-[#fef2f2] rounded-[10px] p-3 mb-4">
-                  <p className="text-[13px] font-bold text-[#dc2626]">Saldo atual: {fmt(Number(paymentModal.remaining_amount))}</p>
-                  <p className="text-[11px] text-muted-foreground">Juros estimados este mês: {fmt(Number(paymentModal.remaining_amount) * Number(paymentModal.interest_rate) / 100)}</p>
-                </div>
+            <div className="bg-[#fef2f2] rounded-[10px] p-3 mb-4">
+              <p className="text-[13px] font-bold text-[#dc2626]">Saldo atual: {fmt(Number(paymentModal.remaining_amount))}</p>
+              <p className="text-[11px] text-muted-foreground">Juros estimados este mês: {fmt(Number(paymentModal.remaining_amount) * Number(paymentModal.interest_rate) / 100)}</p>
+            </div>
 
-                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide mb-1">Valor pago</p>
-                <div className="flex items-center border-b-2 border-border pb-2 mb-2">
-                  <span className="text-[16px] text-muted-foreground mr-2">R$</span>
-                  <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)}
-                    placeholder="0,00" className="flex-1 text-[20px] font-black text-foreground outline-none bg-transparent" autoFocus />
-                </div>
-                <div className="flex gap-2 mb-4 flex-wrap">
-                  {[
-                    { label: `Mínimo ${fmt(Number(paymentModal.min_payment))}`, val: Number(paymentModal.min_payment) },
-                    { label: 'R$ 100 extra', val: Number(paymentModal.min_payment) + 100 },
-                    { label: 'R$ 200 extra', val: Number(paymentModal.min_payment) + 200 },
-                    { label: 'Valor total', val: Number(paymentModal.remaining_amount) },
-                  ].map((p, i) => (
-                    <button key={i} onClick={() => setPayAmount(String(p.val))}
-                      className="text-[11px] font-bold text-[#166534] bg-[#dcfce7] px-2.5 py-1 rounded-md hover:bg-[#bbf7d0] transition-colors">
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide mb-1">Data</p>
-                    <input type="date" value={payDate} onChange={e => setPayDate(e.target.value)}
-                      className="w-full h-9 border-[1.5px] border-border rounded-lg px-3 text-[13px] font-semibold focus:border-[#16a34a] outline-none" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide mb-1">Observação</p>
-                    <input type="text" value={payNotes} onChange={e => setPayNotes(e.target.value)} placeholder="Opcional"
-                      className="w-full h-9 border-[1.5px] border-border rounded-lg px-3 text-[13px] focus:border-[#16a34a] outline-none" />
-                  </div>
-                </div>
-
-                {payAmount && (
-                  <div className="bg-secondary rounded-[10px] p-3 mb-4">
-                    <p className="text-[12px] font-bold text-foreground mb-1">Após este pagamento:</p>
-                    <p className="text-[13px] text-[#16a34a] font-black">
-                      Novo saldo: {fmt(Math.max(0, Number(paymentModal.remaining_amount) - Number(payAmount)))}
-                    </p>
-                    {Number(payAmount) >= Number(paymentModal.remaining_amount) && (
-                      <p className="text-[13px] font-black text-[#16a34a] mt-1">🎉 Esta dívida será QUITADA!</p>
-                    )}
-                  </div>
-                )}
-
-                <button onClick={handlePayment} disabled={paySubmitting || !payAmount}
-                  className="w-full bg-[#16a34a] text-white font-extrabold text-[14px] py-3 rounded-xl hover:bg-[#14532d] disabled:opacity-50 transition-all">
-                  {paySubmitting ? 'Registrando...' : 'Confirmar Pagamento'}
+            <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide mb-1">Valor pago</p>
+            <div className="flex items-center border-b-2 border-border pb-2 mb-2">
+              <span className="text-[16px] text-muted-foreground mr-2">R$</span>
+              <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={payAmount} onChange={e => setPayAmount(e.target.value)}
+                placeholder="0,00" className="flex-1 text-[20px] font-black text-foreground outline-none bg-transparent" autoFocus
+                style={{ fontSize: 20 }} />
+            </div>
+            <div className="flex gap-2 mb-4 flex-wrap">
+              {[
+                { label: `Mínimo ${fmt(Number(paymentModal.min_payment))}`, val: Number(paymentModal.min_payment) },
+                { label: 'R$ 100 extra', val: Number(paymentModal.min_payment) + 100 },
+                { label: 'R$ 200 extra', val: Number(paymentModal.min_payment) + 200 },
+                { label: 'Valor total', val: Number(paymentModal.remaining_amount) },
+              ].map((p, i) => (
+                <button key={i} onClick={() => setPayAmount(String(p.val))}
+                  className="text-[11px] font-bold text-[#166534] bg-[#dcfce7] px-2.5 py-1 rounded-md hover:bg-[#bbf7d0] transition-colors">
+                  {p.label}
                 </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide mb-1">Data</p>
+                <input type="date" value={payDate} onChange={e => setPayDate(e.target.value)}
+                  className="w-full h-9 border-[1.5px] border-border rounded-lg px-3 text-[13px] font-semibold focus:border-[#16a34a] outline-none" />
               </div>
-            </motion.div>
-          </>
+              <div>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide mb-1">Observação</p>
+                <input type="text" value={payNotes} onChange={e => setPayNotes(e.target.value)} placeholder="Opcional"
+                  className="w-full h-9 border-[1.5px] border-border rounded-lg px-3 text-[13px] focus:border-[#16a34a] outline-none" />
+              </div>
+            </div>
+
+            {payAmount && (
+              <div className="bg-secondary rounded-[10px] p-3 mb-4">
+                <p className="text-[12px] font-bold text-foreground mb-1">Após este pagamento:</p>
+                <p className="text-[13px] text-[#16a34a] font-black">
+                  Novo saldo: {fmt(Math.max(0, Number(paymentModal.remaining_amount) - Number(payAmount)))}
+                </p>
+                {Number(payAmount) >= Number(paymentModal.remaining_amount) && (
+                  <p className="text-[13px] font-black text-[#16a34a] mt-1">🎉 Esta dívida será QUITADA!</p>
+                )}
+              </div>
+            )}
+
+            <button onClick={handlePayment} disabled={paySubmitting || !payAmount}
+              className="w-full bg-[#16a34a] text-white font-extrabold text-[14px] py-3 rounded-xl hover:bg-[#14532d] disabled:opacity-50 transition-all"
+              style={{ minHeight: 48 }}>
+              {paySubmitting ? 'Registrando...' : 'Confirmar Pagamento'}
+            </button>
+          </div>
         )}
-      </AnimatePresence>
+      </BottomSheet>
     </div>
   );
 }
@@ -948,6 +940,7 @@ function FormField({ label, value, onChange, placeholder, type = 'text', prefix,
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; type?: string; prefix?: string; textarea?: boolean;
 }) {
+  const isNumeric = type === 'number';
   return (
     <div>
       <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide mb-1">{label}</p>
@@ -957,8 +950,15 @@ function FormField({ label, value, onChange, placeholder, type = 'text', prefix,
       ) : (
         <div className="relative">
           {prefix && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-muted-foreground font-semibold">{prefix}</span>}
-          <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-            className={`w-full h-[42px] border-[1.5px] border-border rounded-[9px] text-[13px] font-semibold focus:border-[#16a34a] outline-none ${prefix ? 'pl-8 pr-3' : 'px-3'}`} />
+          <input
+            type={isNumeric ? 'text' : type}
+            inputMode={isNumeric ? 'decimal' : undefined}
+            pattern={isNumeric ? '[0-9.,]*' : undefined}
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            placeholder={placeholder}
+            className={`w-full h-[42px] border-[1.5px] border-border rounded-[9px] text-[13px] font-semibold focus:border-[#16a34a] outline-none ${prefix ? 'pl-8 pr-3' : 'px-3'}`}
+          />
         </div>
       )}
     </div>

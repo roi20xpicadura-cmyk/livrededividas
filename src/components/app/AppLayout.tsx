@@ -7,6 +7,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 import AIChatDrawer from '@/components/app/AIChatDrawer';
 import OfflineBanner from '@/components/app/OfflineBanner';
+import QuickAddFAB from '@/components/app/QuickAddFAB';
 import {
   LayoutDashboard, ArrowLeftRight, Target, TrendingUp, FileText,
   CreditCard, Briefcase, BarChart2, Download, Settings2, Crown,
@@ -523,21 +524,7 @@ export default function AppLayout() {
       </AnimatePresence>
 
       {/* ═══ FAB: Quick Add Transaction ═══ */}
-      {isMobile && !chatOpen && (
-        <motion.button
-          onClick={() => navigate('/app/transactions')}
-          className="fixed z-[45] flex items-center justify-center"
-          style={{
-            bottom: 84, right: 16, width: 56, height: 56,
-            borderRadius: '50%', background: 'var(--color-green-600)',
-            boxShadow: 'var(--shadow-xl)', color: 'white',
-          }}
-          whileTap={{ scale: 0.88 }}
-          aria-label="Adicionar lançamento"
-        >
-          <Plus style={{ width: 24, height: 24 }} />
-        </motion.button>
-      )}
+      {isMobile && !chatOpen && <QuickAddFAB />}
 
       {/* ═══ AI CHAT ═══ */}
       <button onClick={() => setChatOpen(true)}

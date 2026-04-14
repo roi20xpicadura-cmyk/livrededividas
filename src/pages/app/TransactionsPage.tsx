@@ -360,7 +360,7 @@ export default function TransactionsPage() {
                 <label className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1.5">Valor</label>
                 <div className="relative">
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-muted-foreground">R$</span>
-                  <input type="number" value={val} onChange={e => setVal(e.target.value)} placeholder="0,00"
+                  <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={val} onChange={e => setVal(e.target.value)} placeholder="0,00"
                     className="w-full h-[42px] pl-[30px] pr-3 text-[13px] font-semibold rounded-[9px] border-[1.5px] border-border focus:border-[#16a34a] focus:outline-none transition-colors" />
                 </div>
               </div>

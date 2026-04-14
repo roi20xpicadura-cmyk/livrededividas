@@ -307,7 +307,7 @@ export default function BudgetPage() {
                       <span className="text-sm font-semibold flex-1" style={{ color: 'var(--text-primary)' }}>{cat}</span>
                       <div className="relative w-32">
                         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold" style={{ color: 'var(--text-hint)' }}>R$</span>
-                        <input type="number" placeholder="0,00"
+                        <input type="text" inputMode="decimal" pattern="[0-9.,]*" placeholder="0,00"
                           value={budgetInputs[cat] || ''}
                           onChange={e => setBudgetInputs(prev => ({ ...prev, [cat]: e.target.value }))}
                           className="w-full h-9 pl-8 pr-2 text-sm font-semibold rounded-lg outline-none"
