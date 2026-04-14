@@ -528,7 +528,7 @@ export default function AppLayout() {
       <button onClick={() => setChatOpen(true)}
         className={`fixed z-[499] flex items-center justify-center transition-all ${chatOpen ? 'hidden' : ''}`}
         style={{
-          bottom: isMobile ? 148 : 24, right: isMobile ? 16 : 20,
+          bottom: isMobile ? 80 : 24, right: isMobile ? 16 : 20,
           width: 52, height: 52, borderRadius: '50%',
           background: 'var(--color-green-600)',
           boxShadow: 'var(--shadow-lg)', color: 'white',
