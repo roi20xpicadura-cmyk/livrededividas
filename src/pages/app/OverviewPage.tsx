@@ -80,6 +80,8 @@ export default function OverviewPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [investments, setInvestments] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
+  const [cards, setCards] = useState<any[]>([]);
+  const [debts, setDebts] = useState<any[]>([]);
   const [goalCheckins, setGoalCheckins] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [chartPeriod, setChartPeriod] = useState<'7d' | '30d' | '90d'>('30d');
@@ -100,10 +102,14 @@ export default function OverviewPage() {
       supabase.from('investments').select('*').eq('user_id', user.id),
       supabase.from('goals').select('*').eq('user_id', user.id),
       supabase.from('goal_checkins').select('*').eq('user_id', user.id).gte('date', weekAgo).order('date', { ascending: true }),
-    ]).then(([txRes, invRes, goalRes, ckRes]) => {
+      supabase.from('credit_cards').select('*').eq('user_id', user.id),
+      supabase.from('debts').select('*').eq('user_id', user.id).eq('status', 'active'),
+    ]).then(([txRes, invRes, goalRes, ckRes, cardRes, debtRes]) => {
       setTransactions(txRes.data || []);
       setInvestments(invRes.data || []);
       setGoals(goalRes.data || []);
+      setCards(cardRes.data || []);
+      setDebts(debtRes.data || []);
       const grouped: Record<string, any[]> = {};
       (ckRes.data || []).forEach((ck: any) => {
         if (!grouped[ck.goal_id]) grouped[ck.goal_id] = [];
