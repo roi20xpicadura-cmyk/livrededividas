@@ -435,34 +435,54 @@ export default function AppLayout() {
 
       {/* ═══ MOBILE BOTTOM NAV ═══ */}
       {isMobile && (
-        <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-start pb-safe" style={{
+        <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center pb-safe" style={{
           height: 64,
           background: 'var(--color-bg-surface)',
           borderTop: '1px solid var(--color-border-weak)',
           boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
-          paddingTop: 8,
         }}>
-          {MOBILE_NAV.map(item => {
-            const active = isActive(item.path);
+          {MOBILE_NAV.map((item, i) => {
+            if (item.path === 'fab') {
+              return (
+                <div key="fab" className="flex-1 flex items-center justify-center" style={{ marginTop: -24 }}>
+                  <QuickAddFAB embedded />
+                </div>
+              );
+            }
+            const active = item.path !== 'more' && isActive(item.path);
             return (
-              <Link key={item.path} to={item.path}
-                className="flex-1 flex flex-col items-center"
-                style={{ gap: 3, padding: '6px 4px', WebkitTapHighlightColor: 'transparent' }}>
-                <item.icon style={{ width: 22, height: 22, color: active ? 'var(--color-green-600)' : 'var(--color-text-subtle)' }} />
-                {active ? (
-                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--color-green-600)' }} />
-                ) : (
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-text-subtle)', letterSpacing: '0.2px' }}>{item.label}</span>
+              <button
+                key={item.path}
+                onClick={() => {
+                  if (item.path === 'more') setShowMoreDrawer(true);
+                  else navigate(item.path);
+                }}
+                className="flex-1 flex flex-col items-center tap-target relative"
+                style={{ gap: 2, WebkitTapHighlightColor: 'transparent' }}
+              >
+                <motion.div
+                  animate={{ scale: active ? 1.15 : 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                >
+                  <item.icon style={{
+                    width: 22, height: 22,
+                    color: active ? item.activeColor : 'var(--color-text-subtle)',
+                    strokeWidth: active ? 2.5 : 2,
+                  }} />
+                </motion.div>
+                <span style={{
+                  fontSize: 10, fontWeight: active ? 700 : 500,
+                  color: active ? item.activeColor : 'var(--color-text-subtle)',
+                  letterSpacing: '0.2px',
+                }}>{item.label}</span>
+                {active && (
+                  <motion.div layoutId="bottomNavDot"
+                    style={{ width: 5, height: 5, borderRadius: '50%', background: item.activeColor, position: 'absolute', bottom: 2 }}
+                  />
                 )}
-              </Link>
+              </button>
             );
           })}
-          <button onClick={() => setShowMoreDrawer(true)}
-            className="flex-1 flex flex-col items-center"
-            style={{ gap: 3, padding: '6px 4px', WebkitTapHighlightColor: 'transparent' }}>
-            <MoreHorizontal style={{ width: 22, height: 22, color: showMoreDrawer ? 'var(--color-green-600)' : 'var(--color-text-subtle)' }} />
-            <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-text-subtle)', letterSpacing: '0.2px' }}>Mais</span>
-          </button>
         </nav>
       )}
 
