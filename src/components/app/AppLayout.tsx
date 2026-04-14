@@ -509,18 +509,31 @@ export default function AppLayout() {
 
               {/* Grid of remaining nav items */}
               <div className="grid grid-cols-3" style={{ gap: 12 }}>
-                {navItems.filter(i => !MOBILE_NAV.find(m => m.path === i.path)).map(item => (
-                  <Link key={item.path} to={item.path} onClick={() => setShowMoreDrawer(false)}
-                    className="flex flex-col items-center transition-colors"
-                    style={{
-                      gap: 6, padding: '14px 8px', borderRadius: 'var(--radius-xl)',
-                      background: 'var(--color-bg-sunken)',
-                      border: '1px solid var(--color-border-weak)',
-                    }}>
-                    <item.icon style={{ width: 24, height: 24, color: 'var(--color-text-muted)' }} />
-                    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', textAlign: 'center', lineHeight: 1.3 }}>{item.label}</span>
-                  </Link>
-                ))}
+                {navItems.filter(i => !['fab','more'].includes(i.path) && !MOBILE_NAV.find(m => m.path === i.path)).map(item => {
+                  const tileColors: Record<string, string> = {
+                    '/app/cashflow': '#d97706', '/app/dre': '#7c3aed', '/app/cards': '#2563eb',
+                    '/app/investments': '#16a34a', '/app/charts': '#0891b2', '/app/debts': '#dc2626',
+                    '/app/budget': '#d97706', '/app/export': '#64748b', '/app/banks': '#0891b2',
+                  };
+                  const color = tileColors[item.path] || 'var(--color-text-muted)';
+                  return (
+                    <Link key={item.path} to={item.path} onClick={() => setShowMoreDrawer(false)}
+                      className="flex flex-col items-center transition-colors tap-target"
+                      style={{
+                        gap: 6, padding: '14px 8px', borderRadius: 'var(--radius-xl)',
+                        background: 'var(--color-bg-sunken)',
+                        border: '1px solid var(--color-border-weak)',
+                      }}>
+                      <div className="flex items-center justify-center" style={{
+                        width: 40, height: 40, borderRadius: 'var(--radius-lg)',
+                        background: color + '18',
+                      }}>
+                        <item.icon style={{ width: 20, height: 20, color }} />
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', textAlign: 'center', lineHeight: 1.3 }}>{item.label}</span>
+                    </Link>
+                  );
+                })}
               </div>
 
               {/* Account section */}
