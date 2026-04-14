@@ -721,20 +721,30 @@ function GoalCard({ goal: g, index: i, openMenu, setOpenMenu, onQuickAdd, onCust
           })}
         </div>
       </div>
-      <div className="mt-3.5 pt-3.5 flex flex-wrap items-center gap-2" style={{ borderTop: '1px solid #f8fafc' }}>
-        <span className="text-[11px]" style={{ color: 'var(--text-hint)' }}>Adicionar:</span>
-        {presets.map(p => (
-          <button key={p} onClick={() => onQuickAdd(g.id, p)}
-            className="text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer transition-colors active:scale-95 hover:bg-[#dcfce7]"
-            style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #d4edda' }}>
-            {formatCurrency(p)}
-          </button>
-        ))}
-        <div className="flex items-center gap-1 flex-1 min-w-[100px]">
-          <input ref={customInputRef} type="text" inputMode="decimal" pattern="[0-9.,]*" placeholder="R$ ___" className="flex-1 h-8 text-xs px-2 rounded-lg border border-border outline-none focus:border-[#16a34a]"
-            onKeyDown={e => { if (e.key === 'Enter') { onCustomAdd(g.id, (e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value = ''; } }} />
+      <div className="mt-3.5 pt-3.5" style={{ borderTop: '1px solid var(--color-border-weak)' }}>
+        <span className="text-[11px] font-semibold block mb-2" style={{ color: 'var(--color-text-subtle)' }}>Adicionar valor:</span>
+        <div className="flex items-center gap-1.5">
+          {presets.map(p => (
+            <button key={p} onClick={() => onQuickAdd(g.id, p)}
+              className="text-[11px] font-bold py-1.5 rounded-lg cursor-pointer transition-colors active:scale-95 flex-1 text-center"
+              style={{ background: 'var(--color-green-50)', color: 'var(--color-green-800)', border: '1px solid var(--color-green-200)' }}>
+              {formatCurrency(p)}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5 mt-2">
+          <div className="relative flex-1">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold" style={{ color: 'var(--color-text-subtle)' }}>R$</span>
+            <input ref={customInputRef} type="text" inputMode="decimal" pattern="[0-9.,]*" placeholder="Outro valor"
+              className="w-full h-9 text-[13px] pl-8 pr-3 rounded-lg outline-none transition-colors"
+              style={{ border: '1.5px solid var(--color-border-base)', background: 'var(--color-bg-surface)' }}
+              onFocus={e => e.target.style.borderColor = 'var(--color-green-500)'}
+              onBlur={e => e.target.style.borderColor = 'var(--color-border-base)'}
+              onKeyDown={e => { if (e.key === 'Enter') { onCustomAdd(g.id, (e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value = ''; } }} />
+          </div>
           <button onClick={() => { if (customInputRef.current) { onCustomAdd(g.id, customInputRef.current.value); customInputRef.current.value = ''; } }}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-white text-sm font-bold" style={{ background: '#16a34a' }}>+</button>
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm font-bold flex-shrink-0 active:scale-95 transition-transform"
+            style={{ background: 'var(--color-green-600)' }}>+</button>
         </div>
       </div>
     </motion.div>
