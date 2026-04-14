@@ -203,14 +203,18 @@ export default function OverviewPage() {
       {/* ── Tip Bar ────────────────────────────────── */}
       {activeTip && (
         <motion.div {...stagger(0)}
-          className="bg-card border border-border border-l-[3px] border-l-[#16a34a] rounded-r-[10px] rounded-l-none flex items-center gap-2.5 px-4 py-2.5">
-          <Lightbulb className="w-3.5 h-3.5 text-[#16a34a] flex-shrink-0" />
+          className="flex items-center gap-2.5" style={{
+            background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-base)',
+            borderLeft: '3px solid var(--color-green-600)', borderRadius: '0 var(--radius-lg) var(--radius-lg) 0',
+            padding: '10px 16px',
+          }}>
+          <Lightbulb style={{ width: 14, height: 14, color: 'var(--color-green-600)', flexShrink: 0 }} />
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <span className="text-[9px] uppercase font-extrabold text-[#16a34a] tracking-[1px] flex-shrink-0">DICA</span>
-            <p className="text-[12px] text-foreground font-medium truncate">{SMART_TIPS[activeTip]?.replace(/^💡\s*/, '')}</p>
+            <span className="label-upper flex-shrink-0" style={{ color: 'var(--color-green-600)' }}>DICA</span>
+            <p className="truncate" style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-text-base)' }}>{SMART_TIPS[activeTip]?.replace(/^💡\s*/, '')}</p>
           </div>
-          <button onClick={() => dismissTip(activeTip)} className="text-muted-foreground/50 hover:text-muted-foreground transition-colors flex-shrink-0">
-            <XIcon className="w-3 h-3" />
+          <button onClick={() => dismissTip(activeTip)} className="flex-shrink-0 transition-colors" style={{ color: 'var(--color-text-disabled)' }}>
+            <XIcon style={{ width: 12, height: 12 }} />
           </button>
         </motion.div>
       )}
@@ -268,7 +272,7 @@ export default function OverviewPage() {
       </div>
 
       {/* ── Financial Health Score ──────────────────── */}
-      <motion.div {...stagger(8)} className="bg-card border-[1.5px] border-border rounded-[14px] p-6">
+      <motion.div {...stagger(8)} className="card-premium" style={{ padding: 24 }}>
         <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-6">
           {/* Left — Score */}
           <div>
@@ -322,10 +326,10 @@ export default function OverviewPage() {
             'Regularidade': 'Registre todos os seus lançamentos diariamente.',
           };
           return (
-            <div className="mt-4 flex items-center gap-2 bg-[#fffbeb] border border-[#fde68a] rounded-lg px-3.5 py-2.5">
-              <Lightbulb className="w-3.5 h-3.5 text-[#d97706] flex-shrink-0" />
-              <p className="text-[12px] text-[#92400e] font-medium">
-                <span className="font-bold">O que melhorar:</span> {tips[lowest.label] || `Melhore sua pontuação em ${lowest.label}.`}
+            <div className="flex items-center gap-2" style={{ marginTop: 16, background: 'var(--color-warning-bg)', border: '1px solid var(--color-warning-border)', borderRadius: 'var(--radius-lg)', padding: '10px 14px' }}>
+              <Lightbulb style={{ width: 14, height: 14, color: 'var(--color-warning-solid)', flexShrink: 0 }} />
+              <p style={{ fontSize: 12, color: 'var(--color-warning-text)', fontWeight: 500 }}>
+                <span style={{ fontWeight: 700 }}>O que melhorar:</span> {tips[lowest.label] || `Melhore sua pontuação em ${lowest.label}.`}
               </p>
             </div>
           );
