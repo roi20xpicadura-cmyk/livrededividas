@@ -25,7 +25,11 @@ function SectionFallback() {
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
-      <SEO title="Controle total das suas finanças — pessoal e negócio" />
+      <SEO
+        title="Controle total das suas finanças — pessoal e negócio"
+        description="O painel financeiro mais completo do Brasil. Controle pessoal e empresarial, DRE automático, IA financeira e conexão bancária via Open Finance. Grátis para começar."
+        url="https://findashpro.com.br"
+      />
       <Navbar />
       <HeroSection />
       <TrustStrip />
