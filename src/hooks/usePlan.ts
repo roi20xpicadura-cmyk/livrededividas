@@ -12,6 +12,7 @@ const LIMITS = {
     budget: false,
     ai_chat: false,
     recurring: false,
+    bank_connection: false,
   },
   pro: {
     transactions_per_month: Infinity,
@@ -24,6 +25,7 @@ const LIMITS = {
     budget: true,
     ai_chat: true,
     recurring: true,
+    bank_connection: true,
   },
   business: {
     transactions_per_month: Infinity,
@@ -36,6 +38,7 @@ const LIMITS = {
     budget: true,
     ai_chat: true,
     recurring: true,
+    bank_connection: true,
   },
 } as const;
 

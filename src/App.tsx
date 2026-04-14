@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -35,6 +36,7 @@ const AchievementsPage = lazy(() => import("./pages/app/AchievementsPage"));
 const ReferralPage = lazy(() => import("./pages/app/ReferralPage"));
 const SettingsPage = lazy(() => import("./pages/app/SettingsPage"));
 const BillingPage = lazy(() => import("./pages/app/BillingPage"));
+const BanksPage = lazy(() => import("./pages/app/BanksPage"));
 
 // Gated page lazy imports
 const GatedCashFlow = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.CashFlowPage })));
@@ -58,6 +60,7 @@ function PageSkeleton() {
 
 const App = () => (
   <AppErrorBoundary>
+  <HelmetProvider>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -96,6 +99,7 @@ const App = () => (
                   <Route path="export" element={<Suspense fallback={<PageSkeleton />}><GatedExport /></Suspense>} />
                   <Route path="settings" element={<SettingsPage />} />
                   <Route path="billing" element={<BillingPage />} />
+                  <Route path="banks" element={<BanksPage />} />
                   <Route path="achievements" element={<AchievementsPage />} />
                   <Route path="referral" element={<ReferralPage />} />
                 </Route>
@@ -108,6 +112,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </HelmetProvider>
   </AppErrorBoundary>
 );
 

@@ -10,6 +10,7 @@ import TestimonialsSection from '@/components/landing/TestimonialsSection';
 import FAQSection from '@/components/landing/FAQSection';
 import CTASection from '@/components/landing/CTASection';
 import Footer from '@/components/landing/Footer';
+import SEO from '@/components/SEO';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check } from 'lucide-react';
@@ -17,6 +18,7 @@ import { Check } from 'lucide-react';
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-card">
+      <SEO title="Controle total das suas finanças — pessoal e negócio" />
       <Navbar />
       <HeroSection />
       <TrustStrip />
