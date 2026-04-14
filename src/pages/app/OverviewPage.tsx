@@ -202,7 +202,7 @@ export default function OverviewPage() {
   const sortedCriteria = [...scoreResult.criteria].sort((a, b) => (a.points / a.max) - (b.points / b.max)).slice(0, 3);
 
   return (
-    <div className="space-y-4 pb-28">
+    <div className="space-y-4 pb-4">
       {/* 1. GREETING */}
       <motion.div {...stagger(0)} className="flex items-center justify-between" style={{ padding: isMobile ? '4px 0' : '0' }}>
         <div>
