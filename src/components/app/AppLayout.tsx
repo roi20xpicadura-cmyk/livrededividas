@@ -260,6 +260,13 @@ export default function AppLayout() {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
+            {/* Theme toggle */}
+            <button
+              onClick={cycleTheme}
+              title={`Tema: ${theme === 'light' ? 'Claro' : theme === 'dark' ? 'Escuro' : 'Sistema'}`}
+              className="relative w-9 h-9 rounded-[9px] bg-[#f8faf8] border border-[#e2e8f0] flex items-center justify-center hover:bg-[#f0fdf4] hover:border-[#d4edda] transition-all">
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-[#fbbf24]" /> : theme === 'system' ? <Monitor className="w-4 h-4 text-[#64748b]" /> : <Moon className="w-4 h-4 text-[#64748b]" />}
+            </button>
             {/* Bell */}
             <button className="relative w-9 h-9 rounded-[9px] bg-[#f8faf8] border border-[#e2e8f0] flex items-center justify-center hover:bg-[#f0fdf4] hover:border-[#d4edda] transition-all">
               <Bell className="w-4 h-4 text-[#64748b]" />
