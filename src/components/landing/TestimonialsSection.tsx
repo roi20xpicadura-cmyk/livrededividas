@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
 
-const ease = [0.16, 1, 0.3, 1];
+const ease = [0.16, 1, 0.3, 1] as const;
 
 const testimonials = [
   { quote: 'Finalmente encontrei algo que junta minha loja Hotmart com minhas finanças pessoais. Importei R$ 23.000 em vendas e já apareceu tudo organizado. Nunca mais vou usar planilha.', highlight: 'R$ 23.000 em vendas', name: 'Ana Beatriz M.', role: 'Produtora de Conteúdo, SP', gradient: 'from-[#16a34a] to-[#22c55e]' },

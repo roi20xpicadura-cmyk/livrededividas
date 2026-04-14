@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -9,7 +9,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
 import { AppErrorBoundary } from "@/components/app/ErrorBoundary";
-
+import { AnimatePresence } from "framer-motion";
+import SplashScreen from "@/components/app/SplashScreen";
 // Lazy-loaded routes
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -61,66 +62,85 @@ function PageSkeleton() {
   );
 }
 
-const App = () => (
-  <AppErrorBoundary>
-  <HelmetProvider>
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <ThemeProvider>
-            <Suspense fallback={<PageSkeleton />}>
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
-                <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-                <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/pricing" element={<PricingPage />} />
-                <Route path="/termos-de-uso" element={<TermosDeUsoPage />} />
-                <Route path="/politica-de-privacidade" element={<PoliticaPrivacidadePage />} />
-                <Route path="/politica-de-cookies" element={<PoliticaCookiesPage />} />
-                <Route path="/lgpd" element={<LGPDPage />} />
-                <Route path="/seguranca" element={<SegurancaPage />} />
-                <Route path="/sobre" element={<SobrePage />} />
+const App = () => {
+  const [showSplash, setShowSplash] = useState(() => {
+    // Only show splash on PWA standalone or first visit
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      || (navigator as any).standalone === true;
+    return isStandalone;
+  });
 
-                {/* Protected app routes */}
-                <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-                  <Route index element={<OverviewPage />} />
-                  <Route path="transactions" element={<TransactionsPage />} />
-                  <Route path="goals" element={<GoalsPage />} />
-                  <Route path="debts" element={<DebtsPage />} />
-                  <Route path="budget" element={<BudgetPage />} />
-                  <Route path="cashflow" element={<Suspense fallback={<PageSkeleton />}><GatedCashFlow /></Suspense>} />
-                  <Route path="dre" element={<Suspense fallback={<PageSkeleton />}><GatedDRE /></Suspense>} />
-                  <Route path="cards" element={<CardsPage />} />
-                  <Route path="investments" element={<Suspense fallback={<PageSkeleton />}><GatedInvestments /></Suspense>} />
-                  <Route path="charts" element={<Suspense fallback={<PageSkeleton />}><GatedCharts /></Suspense>} />
-                  <Route path="export" element={<Suspense fallback={<PageSkeleton />}><GatedExport /></Suspense>} />
-                  <Route path="settings" element={<SettingsPage />} />
-                  <Route path="billing" element={<BillingPage />} />
-                  <Route path="banks" element={<BanksPage />} />
-                  <Route path="integrations" element={<IntegrationsPage />} />
-                  <Route path="achievements" element={<AchievementsPage />} />
-                  <Route path="referral" element={<ReferralPage />} />
-                  <Route path="simulator" element={<SimulatorPage />} />
-                  <Route path="predictions" element={<PredictionsPage />} />
-                </Route>
+  useEffect(() => {
+    if (showSplash) {
+      const timer = setTimeout(() => setShowSplash(false), 1800);
+      return () => clearTimeout(timer);
+    }
+  }, [showSplash]);
 
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </ThemeProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-  </HelmetProvider>
-  </AppErrorBoundary>
-);
+  return (
+    <AppErrorBoundary>
+    <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AnimatePresence>
+          {showSplash && <SplashScreen key="splash" />}
+        </AnimatePresence>
+        <BrowserRouter>
+          <AuthProvider>
+            <ThemeProvider>
+              <Suspense fallback={<PageSkeleton />}>
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+                  <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+                  <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
+                  <Route path="/pricing" element={<PricingPage />} />
+                  <Route path="/termos-de-uso" element={<TermosDeUsoPage />} />
+                  <Route path="/politica-de-privacidade" element={<PoliticaPrivacidadePage />} />
+                  <Route path="/politica-de-cookies" element={<PoliticaCookiesPage />} />
+                  <Route path="/lgpd" element={<LGPDPage />} />
+                  <Route path="/seguranca" element={<SegurancaPage />} />
+                  <Route path="/sobre" element={<SobrePage />} />
+
+                  {/* Protected app routes */}
+                  <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                    <Route index element={<OverviewPage />} />
+                    <Route path="transactions" element={<TransactionsPage />} />
+                    <Route path="goals" element={<GoalsPage />} />
+                    <Route path="debts" element={<DebtsPage />} />
+                    <Route path="budget" element={<BudgetPage />} />
+                    <Route path="cashflow" element={<Suspense fallback={<PageSkeleton />}><GatedCashFlow /></Suspense>} />
+                    <Route path="dre" element={<Suspense fallback={<PageSkeleton />}><GatedDRE /></Suspense>} />
+                    <Route path="cards" element={<CardsPage />} />
+                    <Route path="investments" element={<Suspense fallback={<PageSkeleton />}><GatedInvestments /></Suspense>} />
+                    <Route path="charts" element={<Suspense fallback={<PageSkeleton />}><GatedCharts /></Suspense>} />
+                    <Route path="export" element={<Suspense fallback={<PageSkeleton />}><GatedExport /></Suspense>} />
+                    <Route path="settings" element={<SettingsPage />} />
+                    <Route path="billing" element={<BillingPage />} />
+                    <Route path="banks" element={<BanksPage />} />
+                    <Route path="integrations" element={<IntegrationsPage />} />
+                    <Route path="achievements" element={<AchievementsPage />} />
+                    <Route path="referral" element={<ReferralPage />} />
+                    <Route path="simulator" element={<SimulatorPage />} />
+                    <Route path="predictions" element={<PredictionsPage />} />
+                  </Route>
+
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </ThemeProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+    </HelmetProvider>
+    </AppErrorBoundary>
+  );
+};
 
 export default App;
 
