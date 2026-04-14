@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { useCountUp } from '@/hooks/useCountUp';
 import { useEffect, useRef, useState } from 'react';
 
-function StatItem({ value, suffix, label, index }: { value: number; suffix: string; label: string; index: number }) {
+function StatItem({ value, displayValue, suffix, label, index }: { value: number; displayValue?: string; suffix: string; label: string; index: number }) {
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const count = useCountUp(visible ? value : 0, 2000, 0);
@@ -15,6 +15,10 @@ function StatItem({ value, suffix, label, index }: { value: number; suffix: stri
     return () => obs.disconnect();
   }, []);
 
+  const formatted = displayValue
+    ? (visible && count >= value ? displayValue : String(count > 100 ? count.toLocaleString('pt-BR') : count))
+    : (value > 100 ? count.toLocaleString('pt-BR') : String(count));
+
   return (
     <motion.div
       ref={ref}
@@ -25,7 +29,7 @@ function StatItem({ value, suffix, label, index }: { value: number; suffix: stri
       className={`text-center py-4 md:py-6 ${index < 3 ? 'md:border-r md:border-[#e2e8f0]' : ''}`}
     >
       <div className="text-[32px] md:text-[56px] font-[900] text-[#0f172a] tracking-[-1px] md:tracking-[-2px] leading-none">
-        {value > 100 ? count.toLocaleString('pt-BR') : count}{suffix}
+        {formatted}{suffix}
       </div>
       <div className="text-[12px] md:text-[15px] text-[#64748b] mt-1 md:mt-2">{label}</div>
     </motion.div>
@@ -39,7 +43,7 @@ export default function MetricsSection() {
         <StatItem value={2400} suffix="+" label="usuários ativos" index={0} />
         <StatItem value={4} suffix="M+" label="em finanças gerenciadas" index={1} />
         <StatItem value={8} suffix="%" label="taxa de cancelamento" index={2} />
-        <StatItem value={49} suffix="" label="avaliação 4.9 ★" index={3} />
+        <StatItem value={49} displayValue="4.9" suffix=" ★" label="avaliação média" index={3} />
       </div>
     </section>
   );
