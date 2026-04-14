@@ -108,14 +108,8 @@ export default function PredictionsPage() {
 
   return (
     <div className="space-y-4 pb-28">
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-2">
-          <Sparkles size={20} style={{ color: 'var(--color-green-600)' }} />
-          <h2 style={{ fontSize: 20, fontWeight: 900, color: 'var(--color-text-strong)' }}>IA Preditiva</h2>
-        </div>
-        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>Seu futuro financeiro baseado em dados reais</p>
-      </div>
+      {/* Subtitle only — title comes from AppLayout */}
+      <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Seu futuro financeiro baseado em dados reais</p>
 
       {/* Period tabs */}
       <div className="flex gap-2">
