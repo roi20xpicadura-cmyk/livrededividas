@@ -525,10 +525,11 @@ export default function GoalsPage() {
 }
 
 /* ─── GOAL CARD COMPONENT ─── */
-function GoalCard({ goal: g, index: i, openMenu, setOpenMenu, onQuickAdd, onCustomAdd, onRemove, onComplete, onEdit }: {
+function GoalCard({ goal: g, index: i, openMenu, setOpenMenu, onQuickAdd, onCustomAdd, onRemove, onComplete, onEdit, checkins, onCheckinToday }: {
   goal: any; index: number; openMenu: string | null; setOpenMenu: (id: string | null) => void;
   onQuickAdd: (id: string, amount: number) => void; onCustomAdd: (id: string, val: string) => void;
   onRemove: (id: string) => void; onComplete: (id: string) => void; onEdit: (g: any) => void;
+  checkins: any[]; onCheckinToday: () => void;
 }) {
   const pct = Math.min((Number(g.current_amount) / Number(g.target_amount)) * 100, 100);
   const obj = OBJECTIVES.find(o => o.key === g.objective_type);
