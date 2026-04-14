@@ -33,7 +33,16 @@ export default function RegisterPage() {
       },
     });
     
-    if (error) { setLoading(false); toast.error(error.message); return; }
+    if (error) {
+      setLoading(false);
+      const msg = error.message.includes('weak_password') || error.message.includes('weak')
+        ? 'Essa senha é muito comum. Tente uma senha mais única.'
+        : error.message.includes('already registered')
+        ? 'Este e-mail já está cadastrado. Tente fazer login.'
+        : error.message;
+      toast.error(msg);
+      return;
+    }
 
     // Update profiles with terms consent
     if (data.user) {
