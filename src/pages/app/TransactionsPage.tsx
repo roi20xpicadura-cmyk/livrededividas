@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import ImportModal from '@/components/app/ImportModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -62,10 +63,8 @@ export default function TransactionsPage() {
   // Category breakdown
   const [showCatBreakdown, setShowCatBreakdown] = useState(false);
 
-  // CSV import
+  // Import modal
   const [showImport, setShowImport] = useState(false);
-  const [csvData, setCsvData] = useState<string[][] | null>(null);
-  const [csvMapping, setCsvMapping] = useState({ date: 0, desc: 1, val: 2, type: -1 });
 
   const descRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
@@ -196,37 +195,8 @@ export default function TransactionsPage() {
     setTimeout(() => descRef.current?.focus(), 300);
   };
 
-  // CSV import handlers
-  const handleCsvFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const rows = text.split('\n').map(r => r.split(/[,;]/).map(c => c.trim().replace(/^"|"$/g, '')));
-      setCsvData(rows);
-    };
-    reader.readAsText(file);
-  };
 
-  const handleCsvImport = async () => {
-    if (!csvData || !user) return;
-    const rows = csvData.slice(1).filter(r => r.length > Math.max(csvMapping.date, csvMapping.desc, csvMapping.val));
-    let count = 0;
-    for (const row of rows) {
-      const d = row[csvMapping.date];
-      const de = row[csvMapping.desc];
-      const v = parseFloat(row[csvMapping.val].replace(/[^\d.,\-]/g, '').replace(',', '.'));
-      if (!d || !de || isNaN(v)) continue;
-      const tp = csvMapping.type >= 0 && row[csvMapping.type]?.toLowerCase().includes('desp') ? 'expense' : (v < 0 ? 'expense' : 'income');
-      await supabase.from('transactions').insert({
-        user_id: user.id, date: d, description: de, amount: Math.abs(v),
-        type: tp, origin: 'personal', category: 'Outro',
-      });
-      count++;
-    }
-    toast.success(`${count} lançamentos importados!`);
-    setShowImport(false); setCsvData(null);
-    fetchTxs();
-  };
+
 
   const renderCategorySelect = () => {
     if (Array.isArray(cats) && typeof cats[0] === 'string') {
@@ -745,65 +715,13 @@ export default function TransactionsPage() {
           </div>
         )}
 
-        {/* ── CSV IMPORT MODAL ── */}
-        <AnimatePresence>
-          {showImport && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/40 z-50 flex items-end md:items-center justify-center md:p-4" onClick={() => { setShowImport(false); setCsvData(null); }}>
-              <motion.div
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                onClick={e => e.stopPropagation()}
-                className="bg-card rounded-t-2xl md:rounded-2xl w-full md:max-w-[600px] max-h-[85vh] overflow-y-auto shadow-xl">
-                <div className="flex items-center justify-between px-4 md:px-5 py-4 border-b border-border/50">
-                  <h3 className="text-sm font-extrabold text-foreground">Importar Lançamentos</h3>
-                  <button onClick={() => { setShowImport(false); setCsvData(null); }} className="text-muted-foreground hover:text-[#dc2626]"><X className="w-4 h-4" /></button>
-                </div>
-                <div className="p-4 md:p-5">
-                  {!csvData ? (
-                    <div
-                      className="border-2 border-dashed border-[#d4edda] rounded-xl p-8 md:p-10 text-center bg-background cursor-pointer hover:border-[#16a34a] transition-colors"
-                      onDragOver={e => e.preventDefault()}
-                      onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleCsvFile(f); }}
-                      onClick={() => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.csv,.ofx'; inp.onchange = (e: any) => { if (e.target.files[0]) handleCsvFile(e.target.files[0]); }; inp.click(); }}>
-                      <Upload className="w-10 h-10 text-[#16a34a] mx-auto mb-2" />
-                      <p className="text-sm font-bold text-foreground">Arraste o CSV aqui</p>
-                      <p className="text-[12px] text-muted-foreground">ou clique para selecionar</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="overflow-x-auto rounded-lg border border-border">
-                        <table className="w-full text-[11px]">
-                          <thead><tr className="bg-background">{csvData[0]?.map((h, i) => <th key={i} className="px-3 py-2 text-left font-bold text-muted-foreground">{h}</th>)}</tr></thead>
-                          <tbody>{csvData.slice(1, 6).map((r, i) => <tr key={i} className="border-t border-border/50">{r.map((c, j) => <td key={j} className="px-3 py-1.5 text-foreground">{c}</td>)}</tr>)}</tbody>
-                        </table>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        {[['Data', 'date'], ['Descrição', 'desc'], ['Valor', 'val'], ['Tipo (opcional)', 'type']].map(([label, key]) => (
-                          <div key={key}>
-                            <label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">{label}</label>
-                            <select value={(csvMapping as any)[key]} onChange={e => setCsvMapping(prev => ({ ...prev, [key]: Number(e.target.value) }))}
-                              className="w-full h-9 px-2 text-[12px] rounded-lg border border-border focus:outline-none">
-                              {key === 'type' && <option value={-1}>Auto-detectar</option>}
-                              {csvData[0]?.map((h, i) => <option key={i} value={i}>{h}</option>)}
-                            </select>
-                          </div>
-                        ))}
-                      </div>
-                      <p className="text-[12px] text-muted-foreground">{csvData.length - 1} lançamentos serão importados</p>
-                      <button onClick={handleCsvImport}
-                        className="w-full py-2.5 rounded-lg bg-[#16a34a] text-white font-extrabold text-[13px] hover:bg-[#14532d] transition-colors">
-                        Confirmar importação
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* ── IMPORT MODAL ── */}
+        <ImportModal
+          open={showImport}
+          onClose={() => setShowImport(false)}
+          onSuccess={fetchTxs}
+          profileType={profileType}
+        />
       </div>
     </div>
   );
