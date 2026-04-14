@@ -569,39 +569,36 @@ function HeroCard({ type, balance, income, expense, currency, delay, single, sta
   stats?: { label: string; val: number; color: string }[];
 }) {
   const isBiz = type === 'business';
-  const circleColor1 = isBiz ? 'bg-[#dcfce7]' : 'bg-[#dbeafe]';
-  const circleColor2 = isBiz ? 'bg-[#bbf7d0]' : 'bg-[#bfdbfe]';
-  const labelColor = isBiz ? 'text-[#16a34a]' : 'text-[#2563eb]';
   const label = isBiz ? '💼 NEGÓCIO' : '🏠 PESSOAL';
   const heroLabel = single ? (isBiz ? 'RESULTADO DO NEGÓCIO' : 'SALDO DO MÊS') : undefined;
 
   const statItems = customStats || [
-    { label: 'Receita', val: income, color: 'text-[#16a34a]' },
-    { label: 'Despesas', val: expense, color: 'text-[#dc2626]' },
+    { label: 'Receita', val: income, color: 'var(--color-success-solid)' },
+    { label: 'Despesas', val: expense, color: 'var(--color-danger-solid)' },
   ];
 
   return (
     <motion.div {...stagger(delay)}
-      className="bg-card border-[1.5px] border-border rounded-2xl p-6 relative overflow-hidden">
+      className="card-premium relative overflow-hidden" style={{ padding: 24, borderRadius: 'var(--radius-2xl)' }}>
       {/* decorative circles */}
-      <div className={`absolute -top-[50px] -right-[50px] w-[160px] h-[160px] rounded-full ${circleColor1} opacity-50 pointer-events-none`} />
-      <div className={`absolute -bottom-[30px] -left-[20px] w-[100px] h-[100px] rounded-full ${circleColor2} opacity-30 pointer-events-none`} />
+      <div className="absolute -top-[50px] -right-[50px] w-[160px] h-[160px] rounded-full pointer-events-none" style={{ background: isBiz ? 'var(--color-green-100)' : 'var(--color-info-bg)', opacity: 0.5 }} />
+      <div className="absolute -bottom-[30px] -left-[20px] w-[100px] h-[100px] rounded-full pointer-events-none" style={{ background: isBiz ? 'var(--color-green-200)' : 'var(--color-info-border)', opacity: 0.3 }} />
       <div className="relative z-[1]">
-        <p className={`text-[10px] font-extrabold tracking-widest ${labelColor} flex items-center gap-1.5`}>
+        <p className="label-upper" style={{ color: isBiz ? 'var(--color-green-600)' : 'var(--color-info-solid)' }}>
           {heroLabel || label}
         </p>
-        <p className={`text-4xl font-black tracking-tighter mt-2 ${balance >= 0 ? 'text-foreground' : 'text-[#dc2626]'}`}>
+        <p className="metric-value" style={{ fontSize: 36, marginTop: 8, color: balance >= 0 ? 'var(--color-text-strong)' : 'var(--color-danger-solid)' }}>
           <AnimatedCurrency value={balance} currency={currency} />
         </p>
         <div className="flex items-center gap-1 mt-1.5">
-          <ArrowUpRight className="w-3.5 h-3.5 text-[#16a34a]" />
-          <span className="text-[12px] font-semibold text-[#16a34a]">vs mês anterior</span>
+          <ArrowUpRight style={{ width: 14, height: 14, color: 'var(--color-success-solid)' }} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-success-solid)' }}>vs mês anterior</span>
         </div>
         <div className={`grid ${single ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'} gap-3 mt-4`}>
           {statItems.map(s => (
-            <div key={s.label} className="bg-card/70 backdrop-blur-sm border border-black/[0.06] rounded-[10px] px-3.5 py-2.5">
-              <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide">{s.label}</p>
-              <p className={`text-base font-black ${s.color}`}>{formatCurrency(s.val, currency)}</p>
+            <div key={s.label} style={{ background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)', borderRadius: 'var(--radius-lg)', padding: '10px 14px' }}>
+              <p className="label-upper">{s.label}</p>
+              <p className="metric-value" style={{ fontSize: 16, marginTop: 4, color: s.color }}>{formatCurrency(s.val, currency)}</p>
             </div>
           ))}
         </div>
