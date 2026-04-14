@@ -3,10 +3,11 @@ import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
+import AIChatDrawer from '@/components/app/AIChatDrawer';
 import {
   LayoutDashboard, ArrowLeftRight, Target, TrendingUp, FileText,
   CreditCard, Briefcase, BarChart2, Download, Settings2, Crown,
-  LogOut, Menu, X, Bell, ChevronRight, BarChart3, Home, MoreHorizontal
+  LogOut, Menu, X, Bell, ChevronRight, BarChart3, Home, MoreHorizontal, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
