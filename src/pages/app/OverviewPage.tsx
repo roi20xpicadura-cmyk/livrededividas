@@ -10,7 +10,7 @@ import {
   PlusCircle, ReceiptText, BarChart2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { format, parseISO, startOfMonth, endOfMonth, subDays, differenceInDays, eachDayOfInterval } from 'date-fns';
+import { format, parseISO, startOfMonth, endOfMonth, subDays, differenceInDays, eachDayOfInterval, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
