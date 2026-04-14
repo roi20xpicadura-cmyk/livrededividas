@@ -18,10 +18,11 @@ import AppLayout from "./components/app/AppLayout";
 import OverviewPage from "./pages/app/OverviewPage";
 import TransactionsPage from "./pages/app/TransactionsPage";
 import GoalsPage from "./pages/app/GoalsPage";
-import { CashFlowPage, DREPage, CardsPage, InvestmentsPage, ChartsPage, ExportPage } from "./pages/app/GatedPages";
+import { CashFlowPage, DREPage, InvestmentsPage, ChartsPage, ExportPage } from "./pages/app/GatedPages";
 import SettingsPage from "./pages/app/SettingsPage";
 import BillingPage from "./pages/app/BillingPage";
 import DebtsPage from "./pages/app/DebtsPage";
+import CardsPage from "./pages/app/CardsPage";
 
 const queryClient = new QueryClient();
 
