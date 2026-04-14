@@ -527,6 +527,15 @@ export default function BanksPage() {
           </div>
         </div>
       )}
+
+      {connectToken && (
+        <PluggyConnect
+          connectToken={connectToken}
+          onSuccess={handlePluggySuccess}
+          onError={handlePluggyError}
+          onClose={() => setConnectToken(null)}
+        />
+      )}
     </div>
   );
 }
