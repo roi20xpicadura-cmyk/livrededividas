@@ -7,6 +7,9 @@ export const PLAN_LIMITS = {
     dre: false,
     export: false,
     advanced_charts: false,
+    budget: false,
+    ai_chat: false,
+    recurring: false,
   },
   pro: {
     transactions_per_month: Infinity,
@@ -16,6 +19,9 @@ export const PLAN_LIMITS = {
     dre: true,
     export: true,
     advanced_charts: true,
+    budget: true,
+    ai_chat: true,
+    recurring: true,
   },
   business: {
     transactions_per_month: Infinity,
@@ -25,6 +31,9 @@ export const PLAN_LIMITS = {
     dre: true,
     export: true,
     advanced_charts: true,
+    budget: true,
+    ai_chat: true,
+    recurring: true,
     multi_company: true,
   },
 } as const;

@@ -6,6 +6,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 import AIChatDrawer from '@/components/app/AIChatDrawer';
+import OfflineBanner from '@/components/app/OfflineBanner';
 import {
   LayoutDashboard, ArrowLeftRight, Target, TrendingUp, FileText,
   CreditCard, Briefcase, BarChart2, Download, Settings2, Crown,
@@ -111,6 +112,7 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--color-bg-base)' }}>
+      <OfflineBanner />
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 md:hidden" style={{ background: 'var(--color-bg-overlay)', backdropFilter: 'blur(4px)' }} onClick={() => setSidebarOpen(false)} />

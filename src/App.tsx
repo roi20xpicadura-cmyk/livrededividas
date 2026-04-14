@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
+import { AppErrorBoundary } from "@/components/app/ErrorBoundary";
 
 // Lazy-loaded routes
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -56,6 +57,7 @@ function PageSkeleton() {
 }
 
 const App = () => (
+  <AppErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -106,6 +108,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </AppErrorBoundary>
 );
 
 export default App;
