@@ -96,11 +96,5 @@ const App = () => (
   </QueryClientProvider>
 );
 
-// Gated page wrappers (lazy import the named exports)
-const GatedCashFlow = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.CashFlowPage })));
-const GatedDRE = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.DREPage })));
-const GatedInvestments = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.InvestmentsPage })));
-const GatedCharts = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.ChartsPage })));
-const GatedExport = lazy(() => import("./pages/app/GatedPages").then(m => ({ default: m.ExportPage })));
-
 export default App;
+
