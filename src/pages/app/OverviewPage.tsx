@@ -498,7 +498,7 @@ export default function OverviewPage() {
       )}
 
       {/* ── Recent Transactions ────────────────────── */}
-      <motion.div {...stagger(11)} className="bg-card border-[1.5px] border-border rounded-[14px] overflow-hidden">
+      <motion.div {...stagger(11)} className="card-premium overflow-hidden" style={{ borderRadius: 'var(--radius-xl)' }}>
         <div className="flex items-center justify-between px-5 pt-[18px] pb-3.5 border-b border-border/30">
           <h3 className="text-[15px] font-extrabold text-foreground">Lançamentos Recentes</h3>
           <Link to="/app/transactions" className="text-[12px] font-bold text-[#16a34a] hover:underline flex items-center gap-1">
@@ -514,8 +514,9 @@ export default function OverviewPage() {
             <p className="text-[15px] font-bold text-foreground">Nenhum lançamento ainda</p>
             <p className="text-[13px] text-muted-foreground max-w-[260px] text-center leading-relaxed">Comece adicionando sua primeira receita ou despesa.</p>
             <button onClick={() => navigate('/app/transactions')}
-              className="mt-1 inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#16a34a] text-white rounded-[9px] text-[13px] font-bold hover:bg-[#14532d] transition-colors">
-              <PlusCircle className="w-4 h-4" /> Adicionar primeiro lançamento
+              className="mt-1 inline-flex items-center gap-1.5 text-white transition-colors"
+              style={{ padding: '10px 20px', background: 'var(--color-green-600)', borderRadius: 'var(--radius-lg)', fontSize: 13, fontWeight: 700 }}>
+              <PlusCircle style={{ width: 16, height: 16 }} /> Adicionar primeiro lançamento
             </button>
           </div>
         ) : (
