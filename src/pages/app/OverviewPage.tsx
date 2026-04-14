@@ -50,10 +50,10 @@ function AnimatedNumber({ value, suffix = '' }: { value: number; suffix?: string
 function ProgressBar({ pct, delay = 0 }: { pct: number; delay?: number }) {
   const [w, setW] = useState(0);
   useEffect(() => { const t = setTimeout(() => setW(Math.min(pct, 100)), delay); return () => clearTimeout(t); }, [pct, delay]);
-  const color = pct < 30 ? 'bg-[#ef4444]' : pct < 70 ? 'bg-[#f59e0b]' : 'bg-[#16a34a]';
+  const color = pct < 30 ? 'var(--color-danger-solid)' : pct < 70 ? 'var(--color-warning-solid)' : 'var(--color-green-600)';
   return (
-    <div className="h-[6px] bg-muted/30 rounded-full overflow-hidden">
-      <div className={`h-full rounded-full transition-all duration-[800ms] ease-out ${color}`} style={{ width: `${w}%` }} />
+    <div style={{ height: 6, background: 'var(--color-bg-sunken)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+      <div style={{ height: '100%', borderRadius: 'var(--radius-full)', transition: 'width 800ms ease-out', width: `${w}%`, background: color }} />
     </div>
   );
 }
@@ -183,19 +183,19 @@ export default function OverviewPage() {
   const recent = transactions.slice(0, 8);
 
   const kpis = profileType === 'personal' ? [
-    { label: 'Saldo', value: stats.netBalance, icon: TrendingUp, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
-    { label: 'Total Receitas', value: stats.totalIncome, icon: DollarSign, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
-    { label: 'Total Despesas', value: stats.totalExpense, icon: TrendingDown, iconBg: 'bg-[#fee2e2]', iconColor: 'text-[#dc2626]' },
-    { label: 'Total Guardado', value: Math.max(0, stats.netBalance), icon: DollarSign, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
-    { label: 'Metas Ativas', value: goals.filter(g => Number(g.current_amount) < Number(g.target_amount)).length, icon: Hash, iconBg: 'bg-muted/30', iconColor: 'text-muted-foreground', isCount: true },
-    { label: 'Taxa Poupança', value: stats.savingsRate, icon: Percent, iconBg: 'bg-[#ede9fe]', iconColor: 'text-[#7c3aed]', isPct: true, bar: Math.min(stats.savingsRate, 100) },
+    { label: 'Saldo', value: stats.netBalance, icon: TrendingUp, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
+    { label: 'Total Receitas', value: stats.totalIncome, icon: DollarSign, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
+    { label: 'Total Despesas', value: stats.totalExpense, icon: TrendingDown, iconBg: 'var(--color-danger-bg)', iconColor: 'var(--color-danger-solid)' },
+    { label: 'Total Guardado', value: Math.max(0, stats.netBalance), icon: DollarSign, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
+    { label: 'Metas Ativas', value: goals.filter(g => Number(g.current_amount) < Number(g.target_amount)).length, icon: Hash, iconBg: 'var(--color-bg-sunken)', iconColor: 'var(--color-text-muted)', isCount: true },
+    { label: 'Taxa Poupança', value: stats.savingsRate, icon: Percent, iconBg: '#ede9fe', iconColor: '#7c3aed', isPct: true, bar: Math.min(stats.savingsRate, 100) },
   ] : [
-    { label: 'Receita', value: stats.totalIncome, icon: TrendingUp, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
-    { label: 'Custos', value: stats.totalExpense, icon: TrendingDown, iconBg: 'bg-[#fee2e2]', iconColor: 'text-[#dc2626]' },
-    { label: 'Lucro', value: stats.bizProfit, icon: DollarSign, iconBg: 'bg-[#dcfce7]', iconColor: 'text-[#16a34a]' },
-    { label: 'ROI', value: stats.roiBiz, icon: Percent, iconBg: 'bg-[#ede9fe]', iconColor: 'text-[#7c3aed]', isPct: true },
-    { label: 'Lançamentos', value: stats.txCount, icon: Hash, iconBg: 'bg-muted/30', iconColor: 'text-muted-foreground', isCount: true },
-    { label: 'Média/Dia', value: stats.avgPerDay, icon: Zap, iconBg: 'bg-[#fef9c3]', iconColor: 'text-[#ca8a04]' },
+    { label: 'Receita', value: stats.totalIncome, icon: TrendingUp, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
+    { label: 'Custos', value: stats.totalExpense, icon: TrendingDown, iconBg: 'var(--color-danger-bg)', iconColor: 'var(--color-danger-solid)' },
+    { label: 'Lucro', value: stats.bizProfit, icon: DollarSign, iconBg: 'var(--color-success-bg)', iconColor: 'var(--color-success-solid)' },
+    { label: 'ROI', value: stats.roiBiz, icon: Percent, iconBg: '#ede9fe', iconColor: '#7c3aed', isPct: true },
+    { label: 'Lançamentos', value: stats.txCount, icon: Hash, iconBg: 'var(--color-bg-sunken)', iconColor: 'var(--color-text-muted)', isCount: true },
+    { label: 'Média/Dia', value: stats.avgPerDay, icon: Zap, iconBg: 'var(--color-warning-bg)', iconColor: 'var(--color-warning-solid)' },
   ];
 
   return (
@@ -203,14 +203,18 @@ export default function OverviewPage() {
       {/* ── Tip Bar ────────────────────────────────── */}
       {activeTip && (
         <motion.div {...stagger(0)}
-          className="bg-card border border-border border-l-[3px] border-l-[#16a34a] rounded-r-[10px] rounded-l-none flex items-center gap-2.5 px-4 py-2.5">
-          <Lightbulb className="w-3.5 h-3.5 text-[#16a34a] flex-shrink-0" />
+          className="flex items-center gap-2.5" style={{
+            background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-base)',
+            borderLeft: '3px solid var(--color-green-600)', borderRadius: '0 var(--radius-lg) var(--radius-lg) 0',
+            padding: '10px 16px',
+          }}>
+          <Lightbulb style={{ width: 14, height: 14, color: 'var(--color-green-600)', flexShrink: 0 }} />
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <span className="text-[9px] uppercase font-extrabold text-[#16a34a] tracking-[1px] flex-shrink-0">DICA</span>
-            <p className="text-[12px] text-foreground font-medium truncate">{SMART_TIPS[activeTip]?.replace(/^💡\s*/, '')}</p>
+            <span className="label-upper flex-shrink-0" style={{ color: 'var(--color-green-600)' }}>DICA</span>
+            <p className="truncate" style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-text-base)' }}>{SMART_TIPS[activeTip]?.replace(/^💡\s*/, '')}</p>
           </div>
-          <button onClick={() => dismissTip(activeTip)} className="text-muted-foreground/50 hover:text-muted-foreground transition-colors flex-shrink-0">
-            <XIcon className="w-3 h-3" />
+          <button onClick={() => dismissTip(activeTip)} className="flex-shrink-0 transition-colors" style={{ color: 'var(--color-text-disabled)' }}>
+            <XIcon style={{ width: 12, height: 12 }} />
           </button>
         </motion.div>
       )}
@@ -231,15 +235,15 @@ export default function OverviewPage() {
           delay={1}
           single
           stats={profileType === 'business' ? [
-            { label: 'Receitas', val: stats.totalIncome, color: 'text-[#16a34a]' },
-            { label: 'Despesas', val: stats.totalExpense, color: 'text-[#dc2626]' },
-            { label: 'Receita Neg.', val: stats.bizIncome, color: 'text-[#16a34a]' },
-            { label: 'Gasto Neg.', val: stats.bizExpense, color: 'text-[#dc2626]' },
+            { label: 'Receitas', val: stats.totalIncome, color: 'var(--color-success-solid)' },
+            { label: 'Despesas', val: stats.totalExpense, color: 'var(--color-danger-solid)' },
+            { label: 'Receita Neg.', val: stats.bizIncome, color: 'var(--color-success-solid)' },
+            { label: 'Gasto Neg.', val: stats.bizExpense, color: 'var(--color-danger-solid)' },
           ] : [
-            { label: 'Receitas', val: stats.totalIncome, color: 'text-[#16a34a]' },
-            { label: 'Despesas', val: stats.totalExpense, color: 'text-[#dc2626]' },
-            { label: 'Patrimônio', val: stats.patrimonio, color: 'text-[#16a34a]' },
-            { label: 'Poupança', val: Math.max(0, stats.netBalance), color: 'text-[#16a34a]' },
+            { label: 'Receitas', val: stats.totalIncome, color: 'var(--color-success-solid)' },
+            { label: 'Despesas', val: stats.totalExpense, color: 'var(--color-danger-solid)' },
+            { label: 'Patrimônio', val: stats.patrimonio, color: 'var(--color-success-solid)' },
+            { label: 'Poupança', val: Math.max(0, stats.netBalance), color: 'var(--color-success-solid)' },
           ]}
         />
       )}
@@ -248,14 +252,14 @@ export default function OverviewPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {kpis.map((k, i) => (
           <motion.div key={k.label} {...stagger(i + 3)}
-            className="bg-card border-[1.5px] border-border rounded-[14px] p-[18px] transition-all duration-200 hover:border-[#86efac] hover:-translate-y-[2px]">
+            className="card-premium" style={{ padding: 18 }}>
             <div className="flex items-center justify-between">
-              <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-[0.8px]">{k.label}</p>
-              <div className={`w-8 h-8 rounded-[9px] ${k.iconBg} flex items-center justify-center`}>
-                <k.icon className={`w-[15px] h-[15px] ${k.iconColor}`} />
+              <p className="label-upper">{k.label}</p>
+              <div className="flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: k.iconBg }}>
+                <k.icon style={{ width: 15, height: 15, color: k.iconColor }} />
               </div>
             </div>
-            <p className="text-[22px] font-black tracking-tight mt-2.5 leading-none text-foreground">
+            <p className="metric-value" style={{ fontSize: 22, marginTop: 10, lineHeight: 1, color: 'var(--color-text-strong)' }}>
               {k.isCount ? <AnimatedNumber value={k.value} /> : k.isPct ? <AnimatedNumber value={k.value} suffix="%" /> : <AnimatedCurrency value={k.value} currency={currency} />}
             </p>
             {k.bar !== undefined && (
@@ -268,7 +272,7 @@ export default function OverviewPage() {
       </div>
 
       {/* ── Financial Health Score ──────────────────── */}
-      <motion.div {...stagger(8)} className="bg-card border-[1.5px] border-border rounded-[14px] p-6">
+      <motion.div {...stagger(8)} className="card-premium" style={{ padding: 24 }}>
         <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-6">
           {/* Left — Score */}
           <div>
@@ -322,10 +326,10 @@ export default function OverviewPage() {
             'Regularidade': 'Registre todos os seus lançamentos diariamente.',
           };
           return (
-            <div className="mt-4 flex items-center gap-2 bg-[#fffbeb] border border-[#fde68a] rounded-lg px-3.5 py-2.5">
-              <Lightbulb className="w-3.5 h-3.5 text-[#d97706] flex-shrink-0" />
-              <p className="text-[12px] text-[#92400e] font-medium">
-                <span className="font-bold">O que melhorar:</span> {tips[lowest.label] || `Melhore sua pontuação em ${lowest.label}.`}
+            <div className="flex items-center gap-2" style={{ marginTop: 16, background: 'var(--color-warning-bg)', border: '1px solid var(--color-warning-border)', borderRadius: 'var(--radius-lg)', padding: '10px 14px' }}>
+              <Lightbulb style={{ width: 14, height: 14, color: 'var(--color-warning-solid)', flexShrink: 0 }} />
+              <p style={{ fontSize: 12, color: 'var(--color-warning-text)', fontWeight: 500 }}>
+                <span style={{ fontWeight: 700 }}>O que melhorar:</span> {tips[lowest.label] || `Melhore sua pontuação em ${lowest.label}.`}
               </p>
             </div>
           );
@@ -333,15 +337,17 @@ export default function OverviewPage() {
       </motion.div>
 
       {/* ── Balance Chart ──────────────────────────── */}
-      <motion.div {...stagger(9)} className="bg-card border-[1.5px] border-border rounded-[14px]">
+      <motion.div {...stagger(9)} className="card-premium" style={{ borderRadius: 'var(--radius-xl)' }}>
         <div className="flex items-center justify-between px-5 pt-[18px] pb-0">
           <h3 className="text-[15px] font-extrabold text-foreground">Evolução do Saldo</h3>
-          <div className="flex items-center gap-1 bg-background border border-border rounded-lg p-[3px]">
+          <div className="flex items-center gap-1 p-[3px]" style={{ background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)', borderRadius: 'var(--radius-lg)' }}>
             {(['7d', '30d', '90d'] as const).map(p => (
               <button key={p} onClick={() => setChartPeriod(p)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
-                  chartPeriod === p ? 'bg-secondary text-[#16a34a] border border-[#d4edda]' : 'text-muted-foreground border border-transparent'
-                }`}>{p}</button>
+                style={{
+                  padding: '4px 10px', borderRadius: 'var(--radius-md)', fontSize: 11, fontWeight: 600,
+                  transition: 'all 150ms',
+                  ...(chartPeriod === p ? { background: 'var(--color-green-50)', color: 'var(--color-green-700)', border: '1px solid var(--color-green-200)' } : { color: 'var(--color-text-muted)', border: '1px solid transparent' })
+                }}>{p}</button>
             ))}
           </div>
         </div>
@@ -360,8 +366,8 @@ export default function OverviewPage() {
                     <stop offset="95%" stopColor="#22c55e" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--text-hint)' }} interval="preserveStartEnd" />
-                <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--text-hint)' }} tickFormatter={(v: number) => v >= 1000 ? `R$${(v / 1000).toFixed(0)}k` : `R$${v}`} />
+                <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--color-text-subtle)' }} interval="preserveStartEnd" />
+                <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--color-text-subtle)' }} tickFormatter={(v: number) => v >= 1000 ? `R$${(v / 1000).toFixed(0)}k` : `R$${v}`} />
                 <Tooltip content={<ChartTooltip />} />
                 <Area type="monotone" dataKey="saldo" stroke="#22c55e" strokeWidth={2.5} fill="url(#greenGradient)" />
               </AreaChart>
@@ -380,7 +386,7 @@ export default function OverviewPage() {
                 {goals.filter(g => Number(g.current_amount) >= Number(g.target_amount)).length}/{goals.length} concluídas
               </span>
             </div>
-            <Link to="/app/goals" className="text-[12px] font-bold text-[#16a34a] hover:underline flex items-center gap-1">
+            <Link to="/app/goals" className="text-[12px] font-bold text-primary hover:underline flex items-center gap-1">
               Ver todas <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -403,7 +409,7 @@ export default function OverviewPage() {
               return (
                 <Link to="/app/goals" key={goal.id}>
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + i * 0.05 }}
-                    className="flex-shrink-0 w-[240px] min-w-[240px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-border transition-all duration-200 hover:-translate-y-[2px] hover:border-[#86efac] cursor-pointer"
+                    className="flex-shrink-0 w-[240px] min-w-[240px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-border transition-all duration-200 hover:-translate-y-[2px] hover:border-primary/40 cursor-pointer"
                     style={{ borderTopWidth: 4, borderTopColor: done ? '#d97706' : color }}>
                     <div className="flex items-start gap-2.5">
                       <div className="w-10 h-10 rounded-[10px] flex items-center justify-center text-xl flex-shrink-0"
@@ -449,9 +455,9 @@ export default function OverviewPage() {
             })}
             {/* CTA to create more */}
             <Link to="/app/goals">
-              <div className="flex-shrink-0 w-[180px] min-w-[180px] min-h-[170px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-dashed border-[#d4edda] hover:border-[#16a34a] transition-all flex flex-col items-center justify-center gap-2 cursor-pointer">
-                <PlusCircle className="w-8 h-8 text-[#86efac]" />
-                <p className="text-[12px] font-bold text-[#16a34a]">Nova meta</p>
+              <div className="flex-shrink-0 w-[180px] min-w-[180px] min-h-[170px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-dashed border-border hover:border-primary transition-all flex flex-col items-center justify-center gap-2 cursor-pointer">
+                <PlusCircle className="w-8 h-8 text-primary" />
+                <p className="text-[12px] font-bold text-primary">Nova meta</p>
               </div>
             </Link>
           </div>
@@ -463,7 +469,7 @@ export default function OverviewPage() {
         <motion.div {...stagger(10)}>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[15px] font-extrabold text-foreground">Seus Objetivos</h3>
-            <Link to="/app/goals" className="text-[12px] font-bold text-[#16a34a] hover:underline flex items-center gap-1">
+            <Link to="/app/goals" className="text-[12px] font-bold text-primary hover:underline flex items-center gap-1">
               Criar metas <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -474,14 +480,14 @@ export default function OverviewPage() {
               return (
                 <Link to="/app/goals" key={key}>
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + i * 0.05 }}
-                    className="flex-shrink-0 w-[200px] min-w-[200px] min-h-[120px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-dashed border-[#d4edda] hover:border-[#16a34a] transition-all cursor-pointer">
+                    className="flex-shrink-0 w-[200px] min-w-[200px] min-h-[120px] rounded-[14px] p-[18px] bg-card border-[1.5px] border-dashed border-border hover:border-primary transition-all cursor-pointer">
                     <div className="flex items-center gap-2.5">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl bg-secondary">{obj.emoji}</div>
                       <p className="text-[13px] font-extrabold text-foreground leading-tight">{obj.label}</p>
                     </div>
                     <div className="flex flex-col items-center mt-4">
                       <PlusCircle className="w-5 h-5 text-muted-foreground/50" />
-                      <p className="text-[11px] font-bold text-[#16a34a] mt-1">Criar meta</p>
+                      <p className="text-[11px] font-bold text-primary mt-1">Criar meta</p>
                     </div>
                   </motion.div>
                 </Link>
@@ -492,10 +498,10 @@ export default function OverviewPage() {
       )}
 
       {/* ── Recent Transactions ────────────────────── */}
-      <motion.div {...stagger(11)} className="bg-card border-[1.5px] border-border rounded-[14px] overflow-hidden">
+      <motion.div {...stagger(11)} className="card-premium overflow-hidden" style={{ borderRadius: 'var(--radius-xl)' }}>
         <div className="flex items-center justify-between px-5 pt-[18px] pb-3.5 border-b border-border/30">
           <h3 className="text-[15px] font-extrabold text-foreground">Lançamentos Recentes</h3>
-          <Link to="/app/transactions" className="text-[12px] font-bold text-[#16a34a] hover:underline flex items-center gap-1">
+          <Link to="/app/transactions" className="text-[12px] font-bold text-primary hover:underline flex items-center gap-1">
             Ver todos <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
@@ -503,13 +509,14 @@ export default function OverviewPage() {
         {recent.length === 0 ? (
           <div className="py-12 flex flex-col items-center justify-center gap-3">
             <div className="w-[72px] h-[72px] rounded-full bg-secondary flex items-center justify-center">
-              <ReceiptText className="w-8 h-8 text-[#86efac]" />
+              <ReceiptText className="w-8 h-8 text-primary" />
             </div>
             <p className="text-[15px] font-bold text-foreground">Nenhum lançamento ainda</p>
             <p className="text-[13px] text-muted-foreground max-w-[260px] text-center leading-relaxed">Comece adicionando sua primeira receita ou despesa.</p>
             <button onClick={() => navigate('/app/transactions')}
-              className="mt-1 inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#16a34a] text-white rounded-[9px] text-[13px] font-bold hover:bg-[#14532d] transition-colors">
-              <PlusCircle className="w-4 h-4" /> Adicionar primeiro lançamento
+              className="mt-1 inline-flex items-center gap-1.5 text-white transition-colors"
+              style={{ padding: '10px 20px', background: 'var(--color-green-600)', borderRadius: 'var(--radius-lg)', fontSize: 13, fontWeight: 700 }}>
+              <PlusCircle style={{ width: 16, height: 16 }} /> Adicionar primeiro lançamento
             </button>
           </div>
         ) : (
@@ -528,17 +535,17 @@ export default function OverviewPage() {
                   const isIncome = tx.type === 'income';
                   return (
                     <tr key={tx.id}
-                      className={`border-b border-border/30 hover:bg-accent/50 transition-colors border-l-[3px] ${isIncome ? 'border-l-[#16a34a]' : 'border-l-[#ef4444]'}`}>
+                      className={`border-b border-border/30 hover:bg-accent/50 transition-colors border-l-[3px] ${isIncome ? 'border-l-primary' : 'border-l-destructive'}`}>
                       <td className="px-5 py-3 text-[12px] font-medium text-muted-foreground">
                         {format(parseISO(tx.date), 'dd/MM', { locale: ptBR })}
                       </td>
                       <td className="px-5 py-3 text-[13px] font-bold text-foreground">{tx.description}</td>
                       <td className="px-5 py-3">
                         <span className={`inline-block px-2.5 py-[3px] rounded-full text-[11px] font-bold border ${
-                          isIncome ? 'bg-secondary text-[#166534] border-[#d4edda]' : 'bg-[#fef2f2] text-[#991b1b] border-[#fecaca]'
+                          isIncome ? 'bg-secondary text-accent-foreground border-border' : 'bg-destructive/10 text-destructive border-destructive/30'
                         }`}>{tx.category}</span>
                       </td>
-                      <td className={`px-5 py-3 text-right text-[14px] font-black ${isIncome ? 'text-[#16a34a]' : 'text-[#dc2626]'}`}>
+                      <td className={`px-5 py-3 text-right text-[14px] font-black ${isIncome ? 'text-primary' : 'text-destructive'}`}>
                         {isIncome ? '+' : '−'}{formatCurrency(Number(tx.amount), currency)}
                       </td>
                     </tr>
@@ -562,39 +569,36 @@ function HeroCard({ type, balance, income, expense, currency, delay, single, sta
   stats?: { label: string; val: number; color: string }[];
 }) {
   const isBiz = type === 'business';
-  const circleColor1 = isBiz ? 'bg-[#dcfce7]' : 'bg-[#dbeafe]';
-  const circleColor2 = isBiz ? 'bg-[#bbf7d0]' : 'bg-[#bfdbfe]';
-  const labelColor = isBiz ? 'text-[#16a34a]' : 'text-[#2563eb]';
   const label = isBiz ? '💼 NEGÓCIO' : '🏠 PESSOAL';
   const heroLabel = single ? (isBiz ? 'RESULTADO DO NEGÓCIO' : 'SALDO DO MÊS') : undefined;
 
   const statItems = customStats || [
-    { label: 'Receita', val: income, color: 'text-[#16a34a]' },
-    { label: 'Despesas', val: expense, color: 'text-[#dc2626]' },
+    { label: 'Receita', val: income, color: 'var(--color-success-solid)' },
+    { label: 'Despesas', val: expense, color: 'var(--color-danger-solid)' },
   ];
 
   return (
     <motion.div {...stagger(delay)}
-      className="bg-card border-[1.5px] border-border rounded-2xl p-6 relative overflow-hidden">
+      className="card-premium relative overflow-hidden" style={{ padding: 24, borderRadius: 'var(--radius-2xl)' }}>
       {/* decorative circles */}
-      <div className={`absolute -top-[50px] -right-[50px] w-[160px] h-[160px] rounded-full ${circleColor1} opacity-50 pointer-events-none`} />
-      <div className={`absolute -bottom-[30px] -left-[20px] w-[100px] h-[100px] rounded-full ${circleColor2} opacity-30 pointer-events-none`} />
+      <div className="absolute -top-[50px] -right-[50px] w-[160px] h-[160px] rounded-full pointer-events-none" style={{ background: isBiz ? 'var(--color-green-100)' : 'var(--color-info-bg)', opacity: 0.5 }} />
+      <div className="absolute -bottom-[30px] -left-[20px] w-[100px] h-[100px] rounded-full pointer-events-none" style={{ background: isBiz ? 'var(--color-green-200)' : 'var(--color-info-border)', opacity: 0.3 }} />
       <div className="relative z-[1]">
-        <p className={`text-[10px] font-extrabold tracking-widest ${labelColor} flex items-center gap-1.5`}>
+        <p className="label-upper" style={{ color: isBiz ? 'var(--color-green-600)' : 'var(--color-info-solid)' }}>
           {heroLabel || label}
         </p>
-        <p className={`text-4xl font-black tracking-tighter mt-2 ${balance >= 0 ? 'text-foreground' : 'text-[#dc2626]'}`}>
+        <p className="metric-value" style={{ fontSize: 36, marginTop: 8, color: balance >= 0 ? 'var(--color-text-strong)' : 'var(--color-danger-solid)' }}>
           <AnimatedCurrency value={balance} currency={currency} />
         </p>
         <div className="flex items-center gap-1 mt-1.5">
-          <ArrowUpRight className="w-3.5 h-3.5 text-[#16a34a]" />
-          <span className="text-[12px] font-semibold text-[#16a34a]">vs mês anterior</span>
+          <ArrowUpRight style={{ width: 14, height: 14, color: 'var(--color-success-solid)' }} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-success-solid)' }}>vs mês anterior</span>
         </div>
         <div className={`grid ${single ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'} gap-3 mt-4`}>
           {statItems.map(s => (
-            <div key={s.label} className="bg-card/70 backdrop-blur-sm border border-black/[0.06] rounded-[10px] px-3.5 py-2.5">
-              <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide">{s.label}</p>
-              <p className={`text-base font-black ${s.color}`}>{formatCurrency(s.val, currency)}</p>
+            <div key={s.label} style={{ background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)', borderRadius: 'var(--radius-lg)', padding: '10px 14px' }}>
+              <p className="label-upper">{s.label}</p>
+              <p className="metric-value" style={{ fontSize: 16, marginTop: 4, color: s.color }}>{formatCurrency(s.val, currency)}</p>
             </div>
           ))}
         </div>
@@ -608,14 +612,14 @@ function HeroCard({ type, balance, income, expense, currency, delay, single, sta
 function Skeleton() {
   return (
     <div className="space-y-5">
-      <div className="bg-card border-[1.5px] border-border rounded-2xl p-6 h-48 animate-pulse" />
+      <div className="skeleton-shimmer" style={{ height: 192, borderRadius: 'var(--radius-2xl)' }} />
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-card border-[1.5px] border-border rounded-[14px] p-[18px] h-24 animate-pulse" />
+          <div key={i} className="skeleton-shimmer" style={{ height: 96, borderRadius: 'var(--radius-xl)' }} />
         ))}
       </div>
-      <div className="bg-card border-[1.5px] border-border rounded-[14px] p-5 h-[240px] animate-pulse" />
-      <div className="bg-card border-[1.5px] border-border rounded-[14px] p-5 h-64 animate-pulse" />
+      <div className="skeleton-shimmer" style={{ height: 240, borderRadius: 'var(--radius-xl)' }} />
+      <div className="skeleton-shimmer" style={{ height: 256, borderRadius: 'var(--radius-xl)' }} />
     </div>
   );
 }

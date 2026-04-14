@@ -21,6 +21,10 @@ interface UserConfig {
   profile_type: string;
   financial_objectives: string[];
   onboarding_step: number;
+  streak_days: number;
+  xp_points: number;
+  level: string;
+  financial_score: number | null;
 }
 
 export function useProfile() {
