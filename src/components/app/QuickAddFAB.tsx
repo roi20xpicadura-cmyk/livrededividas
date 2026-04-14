@@ -71,19 +71,19 @@ export default function QuickAddFAB({ embedded }: QuickAddFABProps = {}) {
     <>
       {/* FAB Button */}
       <motion.button
-        onClick={() => setOpen(true)}
-        className="fixed z-[45] flex items-center justify-center"
-        style={{
-          bottom: 84,
-          right: 16,
-          width: 56,
-          height: 56,
-          borderRadius: '50%',
+        onClick={() => { setOpen(true); if ('vibrate' in navigator) navigator.vibrate(20); }}
+        className={embedded ? 'flex items-center justify-center' : 'fixed z-[45] flex items-center justify-center'}
+        style={embedded ? {
+          width: 52, height: 52, borderRadius: '50%',
           background: 'var(--color-green-600)',
-          boxShadow: 'var(--shadow-xl)',
-          color: 'white',
+          boxShadow: 'var(--shadow-lg)', color: 'white',
+        } : {
+          bottom: 84, right: 16,
+          width: 56, height: 56, borderRadius: '50%',
+          background: 'var(--color-green-600)',
+          boxShadow: 'var(--shadow-xl)', color: 'white',
         }}
-        whileTap={{ scale: 0.88 }}
+        whileTap={{ scale: 0.88, rotate: 45 }}
         aria-label="Adicionar lançamento rápido"
       >
         <Plus style={{ width: 24, height: 24 }} />
