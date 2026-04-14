@@ -22,16 +22,8 @@ function FloatingCard({ children, className, delay = 0 }: { children: React.Reac
 }
 
 export default function HeroSection() {
-  const lines = [
-    { words: ['Controle', 'total'], color: '#0f172a' },
-    { words: ['das', 'suas', 'finanças.'], color: '#0f172a' },
-    { words: ['Pessoal', 'e', 'negócio.'], color: '#16a34a' },
-  ];
-
-  let wordIndex = 0;
-
   return (
-    <section className="relative pt-16 pb-20 md:pt-24 md:pb-32 px-4 overflow-hidden">
+    <section className="relative pt-12 pb-16 md:pt-24 md:pb-32 px-4 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-white" />
@@ -57,43 +49,34 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease }}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#bbf7d0] bg-[#f0fdf4] cursor-pointer hover:border-[#16a34a] transition-colors mb-8"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#bbf7d0] bg-[#f0fdf4] cursor-pointer hover:border-[#16a34a] transition-colors mb-6 md:mb-8"
         >
           <span className="text-[9px] font-[800] bg-[#16a34a] text-white px-2 py-0.5 rounded-full uppercase">Novo</span>
-          <span className="text-[13px] font-medium text-[#166534]">IA Financeira disponível para todos os planos</span>
+          <span className="text-[12px] md:text-[13px] font-medium text-[#166534]">IA Financeira disponível para todos</span>
           <ArrowRight className="w-3 h-3 text-[#16a34a]" />
         </motion.a>
 
         {/* Headline */}
-        <h1 className="max-w-[800px] mx-auto leading-[1.05]" style={{ fontSize: 'clamp(42px, 6vw, 72px)', letterSpacing: '-3px' }}>
-          {lines.map((line, li) => (
-            <span key={li}>
-              {line.words.map((word) => {
-                const i = wordIndex++;
-                return (
-                  <motion.span
-                    key={`w-${i}`}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 + i * 0.08, duration: 0.6, ease }}
-                    className="inline-block mr-[0.28em] font-[900]"
-                    style={{ color: line.color }}
-                  >
-                    {word}
-                  </motion.span>
-                );
-              })}
-              {li < lines.length - 1 && <br />}
-            </span>
-          ))}
-        </h1>
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.6, ease }}
+          className="max-w-[800px] mx-auto leading-[1.05] font-[900] text-[#0f172a]"
+          style={{ fontSize: 'clamp(36px, 8vw, 72px)', letterSpacing: 'clamp(-1.5px, -0.4vw, -3px)' }}
+        >
+          Controle total
+          <br />
+          das suas finanças.
+          <br />
+          <span className="text-[#16a34a]">Pessoal e negócio.</span>
+        </motion.h1>
 
         {/* Subtitle */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.5, ease }}
-          className="mt-5 text-[18px] md:text-[20px] text-[#64748b] max-w-[560px] mx-auto leading-[1.7]"
+          transition={{ delay: 0.4, duration: 0.5, ease }}
+          className="mt-4 md:mt-5 text-[16px] md:text-[20px] text-[#64748b] max-w-[560px] mx-auto leading-[1.7] px-2"
         >
           Para quem quer sair das dívidas, guardar dinheiro, fazer seu negócio crescer — ou simplesmente organizar a vida financeira.
         </motion.p>
@@ -102,19 +85,19 @@ export default function HeroSection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.5, ease }}
-          className="mt-10 flex flex-col sm:flex-row gap-3 justify-center"
+          transition={{ delay: 0.5, duration: 0.5, ease }}
+          className="mt-8 md:mt-10 flex flex-col sm:flex-row gap-3 justify-center px-2"
         >
           <Link
             to="/register"
-            className="h-[54px] px-7 rounded-[14px] bg-[#16a34a] text-white text-[16px] font-[800] hover:bg-[#14532d] active:scale-[0.97] transition-all duration-200 inline-flex items-center justify-center gap-2 hover:-translate-y-0.5"
+            className="h-[52px] md:h-[54px] px-6 md:px-7 rounded-[14px] bg-[#16a34a] text-white text-[15px] md:text-[16px] font-[800] hover:bg-[#14532d] active:scale-[0.97] transition-all duration-200 inline-flex items-center justify-center gap-2 hover:-translate-y-0.5"
             style={{ boxShadow: '0 8px 30px rgba(22,163,74,0.35), 0 2px 8px rgba(22,163,74,0.2)' }}
           >
-            Começar grátis — é de graça <ArrowRight className="w-[18px] h-[18px]" />
+            Começar grátis <ArrowRight className="w-[18px] h-[18px]" />
           </Link>
           <Link
             to="/pricing"
-            className="h-[54px] px-6 rounded-[14px] bg-transparent border-[1.5px] border-[#e2e8f0] text-[#64748b] text-[14px] font-semibold hover:bg-[#f8fafc] hover:border-[#cbd5e1] transition-all duration-200 inline-flex items-center justify-center gap-2"
+            className="h-[52px] md:h-[54px] px-6 rounded-[14px] bg-transparent border-[1.5px] border-[#e2e8f0] text-[#64748b] text-[14px] font-semibold hover:bg-[#f8fafc] hover:border-[#cbd5e1] transition-all duration-200 inline-flex items-center justify-center gap-2"
           >
             <PlayCircle className="w-4 h-4" /> Ver demonstração
           </Link>
@@ -124,8 +107,8 @@ export default function HeroSection() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.85 }}
-          className="mt-5 flex flex-wrap justify-center gap-5 text-[12px] text-[#94a3b8]"
+          transition={{ delay: 0.65 }}
+          className="mt-4 md:mt-5 flex flex-wrap justify-center gap-4 md:gap-5 text-[11px] md:text-[12px] text-[#94a3b8]"
         >
           <span>✓ Sem cartão de crédito</span>
           <span>✓ Plano grátis para sempre</span>
@@ -133,32 +116,32 @@ export default function HeroSection() {
         </motion.div>
 
         {/* Social proof */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.95 }} className="mt-6 flex items-center justify-center gap-3">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.75 }} className="mt-5 md:mt-6 flex items-center justify-center gap-3">
           <div className="flex -space-x-2">
             {['bg-[#16a34a]', 'bg-[#2563eb]', 'bg-[#7c3aed]', 'bg-[#f59e0b]', 'bg-[#ef4444]'].map((c, i) => (
-              <div key={i} className={`w-8 h-8 rounded-full ${c} flex items-center justify-center text-[10px] font-bold text-white border-2 border-white`}>
+              <div key={i} className={`w-7 h-7 md:w-8 md:h-8 rounded-full ${c} flex items-center justify-center text-[9px] md:text-[10px] font-bold text-white border-2 border-white`}>
                 {['AS', 'CS', 'MO', 'PF', 'RL'][i]}
               </div>
             ))}
           </div>
-          <span className="text-[12px] text-[#94a3b8]">+2.400 pessoas organizando suas finanças</span>
+          <span className="text-[11px] md:text-[12px] text-[#94a3b8]">+2.400 organizando suas finanças</span>
         </motion.div>
 
         {/* Screenshot */}
-        <div className="relative mt-16 md:mt-20 max-w-[1100px] mx-auto">
-          {/* Blur orbs */}
-          <div className="absolute -left-20 top-1/4 w-[400px] h-[400px] rounded-full bg-[rgba(22,163,74,0.12)] blur-[80px] -z-10" />
-          <div className="absolute -right-20 top-1/3 w-[300px] h-[300px] rounded-full bg-[rgba(37,99,235,0.08)] blur-[60px] -z-10" />
+        <div className="relative mt-12 md:mt-20 max-w-[1100px] mx-auto">
+          {/* Blur orbs - hidden on mobile for performance */}
+          <div className="hidden md:block absolute -left-20 top-1/4 w-[400px] h-[400px] rounded-full bg-[rgba(22,163,74,0.12)] blur-[80px] -z-10" />
+          <div className="hidden md:block absolute -right-20 top-1/3 w-[300px] h-[300px] rounded-full bg-[rgba(37,99,235,0.08)] blur-[60px] -z-10" />
 
           <motion.div
-            initial={{ opacity: 0, y: 60 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8, ease }}
-            className="rounded-[20px] border border-[rgba(0,0,0,0.08)] overflow-hidden"
-            style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 20px 60px rgba(0,0,0,0.12), 0 60px 120px rgba(0,0,0,0.08)' }}
+            className="rounded-2xl md:rounded-[20px] border border-[rgba(0,0,0,0.08)] overflow-hidden"
+            style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 10px 40px rgba(0,0,0,0.10), 0 30px 80px rgba(0,0,0,0.06)' }}
           >
-            {/* Browser bar */}
-            <div className="h-8 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center px-3 gap-2">
+            {/* Browser bar - hidden on mobile */}
+            <div className="hidden md:flex h-8 bg-[#f8fafc] border-b border-[#e2e8f0] items-center px-3 gap-2">
               <div className="flex gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
                 <div className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
@@ -173,7 +156,7 @@ export default function HeroSection() {
             <HeroMockup />
           </motion.div>
 
-          {/* Floating cards */}
+          {/* Floating cards - desktop only */}
           <FloatingCard className="-left-10 xl:-left-16 top-8" delay={0}>
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp className="w-4 h-4 text-[#16a34a]" />
