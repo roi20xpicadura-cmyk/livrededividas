@@ -8,16 +8,11 @@ import { formatCurrency } from '@/lib/plans';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { PluggyConnect } from 'react-pluggy-connect';
 import {
   Building2, Wallet, ArrowLeftRight, RefreshCw, Plus, CheckCircle,
   AlertCircle, XCircle, Eye, EyeOff, Trash2, Check, X, Lock, Crown,
 } from 'lucide-react';
-
-declare global {
-  interface Window {
-    PluggyConnect: any;
-  }
-}
 
 interface BankConnection {
   id: string;
