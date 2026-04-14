@@ -612,14 +612,14 @@ function HeroCard({ type, balance, income, expense, currency, delay, single, sta
 function Skeleton() {
   return (
     <div className="space-y-5">
-      <div className="bg-card border-[1.5px] border-border rounded-2xl p-6 h-48 animate-pulse" />
+      <div className="skeleton-shimmer" style={{ height: 192, borderRadius: 'var(--radius-2xl)' }} />
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-card border-[1.5px] border-border rounded-[14px] p-[18px] h-24 animate-pulse" />
+          <div key={i} className="skeleton-shimmer" style={{ height: 96, borderRadius: 'var(--radius-xl)' }} />
         ))}
       </div>
-      <div className="bg-card border-[1.5px] border-border rounded-[14px] p-5 h-[240px] animate-pulse" />
-      <div className="bg-card border-[1.5px] border-border rounded-[14px] p-5 h-64 animate-pulse" />
+      <div className="skeleton-shimmer" style={{ height: 240, borderRadius: 'var(--radius-xl)' }} />
+      <div className="skeleton-shimmer" style={{ height: 256, borderRadius: 'var(--radius-xl)' }} />
     </div>
   );
 }
