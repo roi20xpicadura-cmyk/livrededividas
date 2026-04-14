@@ -9,9 +9,8 @@ export async function requestPushPermission(): Promise<boolean> {
   try {
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.subscribe({
-      userOnly: true,
-      applicationServerKey: undefined, // VAPID key would go here for real push
-    }).catch(() => null);
+      userVisibleOnly: true,
+    } as PushSubscriptionOptionsInit).catch(() => null);
 
     if (subscription) {
       // Store push token in user_config
