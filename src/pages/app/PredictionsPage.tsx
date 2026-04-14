@@ -107,7 +107,7 @@ export default function PredictionsPage() {
   }
 
   return (
-    <div className="space-y-4 pb-28">
+    <div className="space-y-4 pb-4">
       {/* Subtitle only — title comes from AppLayout */}
       <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Seu futuro financeiro baseado em dados reais</p>
 
