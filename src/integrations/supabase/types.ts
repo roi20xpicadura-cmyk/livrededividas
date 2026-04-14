@@ -59,6 +59,126 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_connections: {
+        Row: {
+          account_name: string | null
+          account_number: string | null
+          account_type: string | null
+          auto_import: boolean | null
+          available_balance: number | null
+          balance: number | null
+          created_at: string | null
+          id: string
+          institution_color: string | null
+          institution_logo: string | null
+          institution_name: string
+          last_sync_at: string | null
+          pluggy_item_id: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number?: string | null
+          account_type?: string | null
+          auto_import?: boolean | null
+          available_balance?: number | null
+          balance?: number | null
+          created_at?: string | null
+          id?: string
+          institution_color?: string | null
+          institution_logo?: string | null
+          institution_name: string
+          last_sync_at?: string | null
+          pluggy_item_id: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string | null
+          account_type?: string | null
+          auto_import?: boolean | null
+          available_balance?: number | null
+          balance?: number | null
+          created_at?: string | null
+          id?: string
+          institution_color?: string | null
+          institution_logo?: string | null
+          institution_name?: string
+          last_sync_at?: string | null
+          pluggy_item_id?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bank_transactions_raw: {
+        Row: {
+          amount: number
+          category: string | null
+          connection_id: string
+          created_at: string | null
+          date: string
+          description: string
+          id: string
+          ignored: boolean | null
+          imported: boolean | null
+          matched_transaction_id: string | null
+          merchant_name: string | null
+          pluggy_transaction_id: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          connection_id: string
+          created_at?: string | null
+          date: string
+          description: string
+          id?: string
+          ignored?: boolean | null
+          imported?: boolean | null
+          matched_transaction_id?: string | null
+          merchant_name?: string | null
+          pluggy_transaction_id: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          connection_id?: string
+          created_at?: string | null
+          date?: string
+          description?: string
+          id?: string
+          ignored?: boolean | null
+          imported?: boolean | null
+          matched_transaction_id?: string | null
+          merchant_name?: string | null
+          pluggy_transaction_id?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transactions_raw_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_raw_matched_transaction_id_fkey"
+            columns: ["matched_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       budgets: {
         Row: {
           category: string
@@ -522,6 +642,33 @@ export type Database = {
         }
         Relationships: []
       }
+      pluggy_webhooks: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          item_id: string | null
+          payload: Json | null
+          processed: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          item_id?: string | null
+          payload?: Json | null
+          processed?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          item_id?: string | null
+          payload?: Json | null
+          processed?: boolean | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -783,6 +930,7 @@ export type Database = {
       }
       user_config: {
         Row: {
+          bank_sync_enabled: boolean | null
           created_at: string | null
           currency: string | null
           debt_strategy: string | null
@@ -797,6 +945,7 @@ export type Database = {
           notifications_enabled: boolean | null
           onboarding_completed: boolean | null
           onboarding_step: number | null
+          pluggy_connect_token: string | null
           profile_type: string | null
           project_name: string | null
           referral_code: string | null
@@ -807,6 +956,7 @@ export type Database = {
           xp_points: number | null
         }
         Insert: {
+          bank_sync_enabled?: boolean | null
           created_at?: string | null
           currency?: string | null
           debt_strategy?: string | null
@@ -821,6 +971,7 @@ export type Database = {
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
+          pluggy_connect_token?: string | null
           profile_type?: string | null
           project_name?: string | null
           referral_code?: string | null
@@ -831,6 +982,7 @@ export type Database = {
           xp_points?: number | null
         }
         Update: {
+          bank_sync_enabled?: boolean | null
           created_at?: string | null
           currency?: string | null
           debt_strategy?: string | null
@@ -845,6 +997,7 @@ export type Database = {
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
+          pluggy_connect_token?: string | null
           profile_type?: string | null
           project_name?: string | null
           referral_code?: string | null
@@ -853,6 +1006,33 @@ export type Database = {
           theme?: string | null
           user_id?: string
           xp_points?: number | null
+        }
+        Relationships: []
+      }
+      waitlist: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          notified: boolean | null
+          position: number | null
+          referrer: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          notified?: boolean | null
+          position?: number | null
+          referrer?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          notified?: boolean | null
+          position?: number | null
+          referrer?: string | null
         }
         Relationships: []
       }
