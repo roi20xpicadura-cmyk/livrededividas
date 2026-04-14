@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
 
 import LandingPage from "./pages/LandingPage";
@@ -23,6 +24,9 @@ import SettingsPage from "./pages/app/SettingsPage";
 import BillingPage from "./pages/app/BillingPage";
 import DebtsPage from "./pages/app/DebtsPage";
 import CardsPage from "./pages/app/CardsPage";
+import BudgetPage from "./pages/app/BudgetPage";
+import AchievementsPage from "./pages/app/AchievementsPage";
+import ReferralPage from "./pages/app/ReferralPage";
 
 const queryClient = new QueryClient();
 
@@ -33,33 +37,38 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
-            <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-            <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/pricing" element={<PricingPage />} />
+          <ThemeProvider>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+              <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+              <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/pricing" element={<PricingPage />} />
 
-            {/* Protected app routes */}
-            <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route index element={<OverviewPage />} />
-              <Route path="transactions" element={<TransactionsPage />} />
-              <Route path="goals" element={<GoalsPage />} />
-              <Route path="debts" element={<DebtsPage />} />
-              <Route path="cashflow" element={<CashFlowPage />} />
-              <Route path="dre" element={<DREPage />} />
-              <Route path="cards" element={<CardsPage />} />
-              <Route path="investments" element={<InvestmentsPage />} />
-              <Route path="charts" element={<ChartsPage />} />
-              <Route path="export" element={<ExportPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-              <Route path="billing" element={<BillingPage />} />
-            </Route>
+              {/* Protected app routes */}
+              <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                <Route index element={<OverviewPage />} />
+                <Route path="transactions" element={<TransactionsPage />} />
+                <Route path="goals" element={<GoalsPage />} />
+                <Route path="debts" element={<DebtsPage />} />
+                <Route path="budget" element={<BudgetPage />} />
+                <Route path="cashflow" element={<CashFlowPage />} />
+                <Route path="dre" element={<DREPage />} />
+                <Route path="cards" element={<CardsPage />} />
+                <Route path="investments" element={<InvestmentsPage />} />
+                <Route path="charts" element={<ChartsPage />} />
+                <Route path="export" element={<ExportPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="billing" element={<BillingPage />} />
+                <Route path="achievements" element={<AchievementsPage />} />
+                <Route path="referral" element={<ReferralPage />} />
+              </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

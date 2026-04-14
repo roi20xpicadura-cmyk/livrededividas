@@ -72,6 +72,79 @@
     --sidebar-accent-foreground: 142 72% 16%;
     --sidebar-border: 215 25% 89%;
     --sidebar-ring: 142 71% 45%;
+
+    /* Semantic dark mode tokens */
+    --bg-page: #f8faf8;
+    --bg-surface: #ffffff;
+    --bg-elevated: #f1f5f9;
+    --bg-input: #ffffff;
+    --bg-hover: #f8faf8;
+    --border-default: #e2e8f0;
+    --border-subtle: #f1f5f9;
+    --border-focus: #16a34a;
+    --text-primary: #1a2e1a;
+    --text-secondary: #64748b;
+    --text-hint: #94a3b8;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
+  }
+
+  [data-theme="dark"] {
+    --background: 140 20% 4%;
+    --foreground: 130 30% 90%;
+
+    --card: 140 12% 7%;
+    --card-foreground: 130 30% 90%;
+
+    --popover: 140 12% 7%;
+    --popover-foreground: 130 30% 90%;
+
+    --primary: 142 71% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 142 30% 12%;
+    --secondary-foreground: 142 50% 70%;
+
+    --muted: 140 10% 45%;
+    --muted-foreground: 140 10% 45%;
+
+    --accent: 142 30% 12%;
+    --accent-foreground: 142 50% 70%;
+
+    --destructive: 0 72% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --warning: 38 92% 60%;
+    --warning-foreground: 0 0% 0%;
+
+    --border: 140 10% 18%;
+    --input: 140 10% 18%;
+    --ring: 142 71% 55%;
+
+    --sidebar-background: 140 12% 7%;
+    --sidebar-foreground: 140 10% 45%;
+    --sidebar-primary: 142 71% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 142 30% 12%;
+    --sidebar-accent-foreground: 142 50% 70%;
+    --sidebar-border: 140 10% 18%;
+    --sidebar-ring: 142 71% 55%;
+
+    --bg-page: #0a0d0a;
+    --bg-surface: #111411;
+    --bg-elevated: #181c18;
+    --bg-input: #181c18;
+    --bg-hover: #1e221e;
+    --border-default: #2a2e2a;
+    --border-subtle: #1e221e;
+    --border-focus: #22c55e;
+    --text-primary: #e8f5e8;
+    --text-secondary: #7a9a7a;
+    --text-hint: #4a644a;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.6);
   }
 }
 
@@ -88,7 +161,10 @@
 
 @layer utilities {
   .card-surface {
-    @apply bg-white border-[1.5px] border-[#e2e8f0] rounded-[14px] transition-all duration-200;
+    background: var(--bg-surface);
+    border: 1.5px solid var(--border-default);
+    border-radius: 14px;
+    transition: all 200ms;
   }
   .card-surface:hover {
     border-color: #86efac;
@@ -101,7 +177,6 @@
     @apply uppercase tracking-wider text-[10px] font-bold;
   }
 
-  /* Hide scrollbar for objectives row */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -119,12 +194,17 @@
   animation: marquee 30s linear infinite;
 }
 
-/* Duration utility for progress bars */
 .duration-800 {
   transition-duration: 800ms;
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-hover) 50%, var(--bg-elevated) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
 }

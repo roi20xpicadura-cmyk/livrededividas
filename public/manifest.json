@@ -1,0 +1,19 @@
+{
+  "name": "FinDash Pro",
+  "short_name": "FinDash",
+  "description": "Controle total das suas finanças",
+  "start_url": "/app",
+  "display": "standalone",
+  "background_color": "#f8faf8",
+  "theme_color": "#16a34a",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Novo Lançamento", "url": "/app/transactions?action=new" },
+    { "name": "Ver Dashboard", "url": "/app" }
+  ],
+  "categories": ["finance", "productivity"]
+}
