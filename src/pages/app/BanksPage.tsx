@@ -82,6 +82,7 @@ export default function BanksPage() {
   const [selectedTxs, setSelectedTxs] = useState<Set<string>>(new Set());
   const [importing, setImporting] = useState(false);
   const [suggestedCategories, setSuggestedCategories] = useState<Record<string, string>>({});
+  const [connectToken, setConnectToken] = useState<string | null>(null);
   const currency = 'R$';
 
   const isPro = plan === 'pro' || plan === 'business';
