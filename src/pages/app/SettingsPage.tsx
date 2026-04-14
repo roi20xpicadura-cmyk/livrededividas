@@ -4,8 +4,9 @@ import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { OBJECTIVES } from '@/lib/objectives';
 import { PROFILE_TYPES } from '@/components/onboarding/OnboardingFlow';
-import { Check, Download, Trash2, FileText, Camera } from 'lucide-react';
+import { Check, Download, Trash2, FileText, Camera, Bell, BellOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { requestPushPermission, checkNotificationSupport, sendLocalNotification } from '@/lib/pushNotifications';
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -27,6 +28,8 @@ export default function SettingsPage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({});
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const notifSupport = checkNotificationSupport();
 
   useEffect(() => {
     if (config) {
