@@ -3,7 +3,7 @@ import { ArrowRight, PlayCircle, TrendingUp, Target, Flame, Bot } from 'lucide-r
 import { motion } from 'framer-motion';
 import HeroMockup from './HeroMockup';
 
-const ease = [0.16, 1, 0.3, 1];
+const ease = [0.16, 1, 0.3, 1] as const;
 
 function FloatingCard({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   return (

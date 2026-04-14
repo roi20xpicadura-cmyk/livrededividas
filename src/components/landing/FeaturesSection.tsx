@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Sparkles, Shield, Smartphone, Zap } from 'lucide-react';
 
-const ease = [0.16, 1, 0.3, 1];
+const ease = [0.16, 1, 0.3, 1] as const;
 const cardBase = "rounded-[16px] md:rounded-[20px] border border-[#e2e8f0] p-5 md:p-8 overflow-hidden relative transition-all duration-300 hover:border-[#86efac] hover:-translate-y-[3px]";
 
 function BentoCard({ children, className, index = 0 }: { children: React.ReactNode; className?: string; index?: number }) {

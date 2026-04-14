@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, Shield } from 'lucide-react';
 import { useState } from 'react';
 
-const ease = [0.16, 1, 0.3, 1];
+const ease = [0.16, 1, 0.3, 1] as const;
 
 export default function PricingSection() {
   const [annual, setAnnual] = useState(false);

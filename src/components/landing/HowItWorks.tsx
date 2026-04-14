@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { UserPlus, Settings, BarChart3 } from 'lucide-react';
 
-const ease = [0.16, 1, 0.3, 1];
+const ease = [0.16, 1, 0.3, 1] as const;
 
 const steps = [
   { num: '1', icon: UserPlus, title: 'Crie sua conta', desc: 'Em 30 segundos, sem cartão de crédito.', preview: 'Formulário de cadastro simples e rápido' },
