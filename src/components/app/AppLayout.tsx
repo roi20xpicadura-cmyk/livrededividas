@@ -496,7 +496,7 @@ fontSize: 13,
                 }}>{item.label}</span>
                 {active && (
                   <motion.div layoutId="bottomNavDot"
-                    style={{ width: 5, height: 5, borderRadius: '50%', background: item.activeColor, position: 'absolute', bottom: 2 }}
+                    style={{ width: 5, height: 5, borderRadius: '50%', background: item.activeColor, marginTop: 1 }}
                   />
                 )}
               </button>
