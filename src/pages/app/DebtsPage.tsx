@@ -776,7 +776,7 @@ export default function DebtsPage() {
                 <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide mb-1">Valor pago</p>
                 <div className="flex items-center border-b-2 border-border pb-2 mb-2">
                   <span className="text-[16px] text-muted-foreground mr-2">R$</span>
-                  <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)}
+                   <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={payAmount} onChange={e => setPayAmount(e.target.value)}
                     placeholder="0,00" className="flex-1 text-[20px] font-black text-foreground outline-none bg-transparent" autoFocus />
                 </div>
                 <div className="flex gap-2 mb-4 flex-wrap">
@@ -948,6 +948,7 @@ function FormField({ label, value, onChange, placeholder, type = 'text', prefix,
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; type?: string; prefix?: string; textarea?: boolean;
 }) {
+  const isNumeric = type === 'number';
   return (
     <div>
       <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide mb-1">{label}</p>
@@ -957,8 +958,15 @@ function FormField({ label, value, onChange, placeholder, type = 'text', prefix,
       ) : (
         <div className="relative">
           {prefix && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-muted-foreground font-semibold">{prefix}</span>}
-          <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-            className={`w-full h-[42px] border-[1.5px] border-border rounded-[9px] text-[13px] font-semibold focus:border-[#16a34a] outline-none ${prefix ? 'pl-8 pr-3' : 'px-3'}`} />
+          <input
+            type={isNumeric ? 'text' : type}
+            inputMode={isNumeric ? 'decimal' : undefined}
+            pattern={isNumeric ? '[0-9.,]*' : undefined}
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            placeholder={placeholder}
+            className={`w-full h-[42px] border-[1.5px] border-border rounded-[9px] text-[13px] font-semibold focus:border-[#16a34a] outline-none ${prefix ? 'pl-8 pr-3' : 'px-3'}`}
+          />
         </div>
       )}
     </div>
