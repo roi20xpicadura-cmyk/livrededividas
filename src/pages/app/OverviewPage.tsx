@@ -7,10 +7,10 @@ import { OBJECTIVES, SMART_TIPS } from '@/lib/objectives';
 import {
   TrendingUp, TrendingDown, DollarSign, Percent, Hash, Zap,
   ArrowRight, ArrowUpRight, Lightbulb, X as XIcon,
-  PlusCircle, ReceiptText, BarChart2
+  PlusCircle, ReceiptText, BarChart2, Target, Check, Flame
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { format, parseISO, startOfMonth, endOfMonth, subDays, differenceInDays, eachDayOfInterval } from 'date-fns';
+import { format, parseISO, startOfMonth, endOfMonth, subDays, differenceInDays, eachDayOfInterval, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -79,6 +79,7 @@ export default function OverviewPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [investments, setInvestments] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
+  const [goalCheckins, setGoalCheckins] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [chartPeriod, setChartPeriod] = useState<'7d' | '30d' | '90d'>('30d');
   const [dismissedTips, setDismissedTips] = useState<string[]>(() => {
@@ -92,14 +93,22 @@ export default function OverviewPage() {
     if (!user) return;
     const start = format(startOfMonth(new Date()), 'yyyy-MM-dd');
     const end = format(endOfMonth(new Date()), 'yyyy-MM-dd');
+    const weekAgo = format(subDays(new Date(), 6), 'yyyy-MM-dd');
     Promise.all([
       supabase.from('transactions').select('*').eq('user_id', user.id).gte('date', start).lte('date', end).order('date', { ascending: false }),
       supabase.from('investments').select('*').eq('user_id', user.id),
       supabase.from('goals').select('*').eq('user_id', user.id),
-    ]).then(([txRes, invRes, goalRes]) => {
+      supabase.from('goal_checkins').select('*').eq('user_id', user.id).gte('date', weekAgo).order('date', { ascending: true }),
+    ]).then(([txRes, invRes, goalRes, ckRes]) => {
       setTransactions(txRes.data || []);
       setInvestments(invRes.data || []);
       setGoals(goalRes.data || []);
+      const grouped: Record<string, any[]> = {};
+      (ckRes.data || []).forEach((ck: any) => {
+        if (!grouped[ck.goal_id]) grouped[ck.goal_id] = [];
+        grouped[ck.goal_id].push(ck);
+      });
+      setGoalCheckins(grouped);
       setLoading(false);
     });
   }, [user]);
@@ -275,65 +284,121 @@ export default function OverviewPage() {
         </div>
       </motion.div>
 
-      {/* ── Objectives ─────────────────────────────── */}
-      {objectives.length > 0 && (
+      {/* ── Goals Overview ──────────────────────────── */}
+      {goals.length > 0 && (
+        <motion.div {...stagger(10)}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <h3 className="text-[15px] font-extrabold text-[#14532d]">Minhas Metas</h3>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #d4edda' }}>
+                {goals.filter(g => Number(g.current_amount) >= Number(g.target_amount)).length}/{goals.length} concluídas
+              </span>
+            </div>
+            <Link to="/app/goals" className="text-[12px] font-bold text-[#16a34a] hover:underline flex items-center gap-1">
+              Ver todas <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+            {goals.slice(0, 6).map((goal, i) => {
+              const obj = OBJECTIVES.find(o => o.key === goal.objective_type);
+              const pct = Math.min((Number(goal.current_amount) / Number(goal.target_amount)) * 100, 100);
+              const done = pct >= 100;
+              const daysLeft = goal.deadline ? Math.max(0, differenceInDays(parseISO(goal.deadline), new Date())) : null;
+              const color = goal.color || '#16a34a';
+              const cks = goalCheckins[goal.id] || [];
+              // Calculate streak
+              let streak = 0;
+              for (let d = 0; d < 30; d++) {
+                const day = format(subDays(new Date(), d), 'yyyy-MM-dd');
+                if (cks.some((c: any) => c.date === day)) streak++;
+                else break;
+              }
+
+              return (
+                <Link to="/app/goals" key={goal.id}>
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + i * 0.05 }}
+                    className="flex-shrink-0 w-[240px] min-w-[240px] rounded-[14px] p-[18px] bg-white border-[1.5px] border-[#e2e8f0] transition-all duration-200 hover:-translate-y-[2px] hover:border-[#86efac] cursor-pointer"
+                    style={{ borderTopWidth: 4, borderTopColor: done ? '#d97706' : color }}>
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-10 h-10 rounded-[10px] flex items-center justify-center text-xl flex-shrink-0"
+                        style={{ background: color + '20', border: `1.5px solid ${color}40` }}>
+                        {obj?.emoji || '🎯'}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] font-extrabold text-[#14532d] leading-[1.3] truncate">{goal.name}</p>
+                        {streak > 0 && (
+                          <span className="inline-flex items-center gap-0.5 mt-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#fefce8', color: '#d97706', border: '1px solid #fde68a' }}>
+                            <Flame className="w-2.5 h-2.5" /> {streak} dias
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-3">
+                      <ProgressBar pct={pct} delay={500 + i * 100} />
+                      <div className="flex items-center justify-between mt-1.5">
+                        <span className="text-[13px] font-extrabold" style={{ color }}>{formatCurrency(Number(goal.current_amount), currency)}</span>
+                        <span className="text-[12px] font-bold text-[#94a3b8]">{pct.toFixed(0)}%</span>
+                      </div>
+                      <p className="text-[11px] text-[#94a3b8] mt-1">
+                        {done ? '🏆 Meta atingida!' : daysLeft !== null ? `${daysLeft} dias restantes` : `Faltam ${formatCurrency(Number(goal.target_amount) - Number(goal.current_amount), currency)}`}
+                      </p>
+                    </div>
+
+                    {/* Mini 7-day streak */}
+                    <div className="flex gap-[3px] mt-2.5">
+                      {Array.from({ length: 7 }).map((_, idx) => {
+                        const day = subDays(new Date(), 6 - idx);
+                        const dayStr = format(day, 'yyyy-MM-dd');
+                        const ck = cks.find((c: any) => c.date === dayStr);
+                        return (
+                          <div key={idx} className="flex-1 h-[6px] rounded-full transition-all"
+                            style={{ background: ck ? (Number(ck.amount) > 0 ? color : color + '60') : '#f1f5f9' }} />
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                </Link>
+              );
+            })}
+            {/* CTA to create more */}
+            <Link to="/app/goals">
+              <div className="flex-shrink-0 w-[180px] min-w-[180px] min-h-[170px] rounded-[14px] p-[18px] bg-white border-[1.5px] border-dashed border-[#d4edda] hover:border-[#16a34a] transition-all flex flex-col items-center justify-center gap-2 cursor-pointer">
+                <PlusCircle className="w-8 h-8 text-[#86efac]" />
+                <p className="text-[12px] font-bold text-[#16a34a]">Nova meta</p>
+              </div>
+            </Link>
+          </div>
+        </motion.div>
+      )}
+
+      {/* No goals yet — show objectives from onboarding */}
+      {goals.length === 0 && objectives.length > 0 && (
         <motion.div {...stagger(10)}>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[15px] font-extrabold text-[#14532d]">Seus Objetivos</h3>
             <Link to="/app/goals" className="text-[12px] font-bold text-[#16a34a] hover:underline flex items-center gap-1">
-              Gerenciar <ArrowRight className="w-3 h-3" />
+              Criar metas <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
             {objectives.map((key, i) => {
               const obj = OBJECTIVES.find(o => o.key === key);
               if (!obj) return null;
-              const goal = goals.find(g => g.objective_type === key);
-              const pct = goal ? Math.min((Number(goal.current_amount) / Number(goal.target_amount)) * 100, 100) : 0;
-              const daysLeft = goal?.deadline ? Math.max(0, differenceInDays(parseISO(goal.deadline), new Date())) : null;
-              const isUrgent = obj.urgent;
-
               return (
-                <motion.div key={key} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + i * 0.05 }}
-                  className={`flex-shrink-0 w-[220px] min-w-[220px] min-h-[140px] rounded-[14px] p-[18px] transition-all duration-200 hover:-translate-y-[2px] cursor-pointer ${
-                    goal
-                      ? `bg-white border-[1.5px] ${isUrgent ? 'border-[#fecaca]' : 'border-[#e2e8f0]'} hover:border-[#86efac]`
-                      : 'bg-white border-[1.5px] border-dashed border-[#d4edda] hover:border-[#16a34a]'
-                  }`}>
-                  <div className="flex items-start gap-2.5">
-                    <div className={`w-11 h-11 rounded-full flex items-center justify-center text-[22px] flex-shrink-0 ${isUrgent ? 'bg-[#fee2e2]' : 'bg-[#f0fdf4]'}`}>
-                      {obj.emoji}
+                <Link to="/app/goals" key={key}>
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + i * 0.05 }}
+                    className="flex-shrink-0 w-[200px] min-w-[200px] min-h-[120px] rounded-[14px] p-[18px] bg-white border-[1.5px] border-dashed border-[#d4edda] hover:border-[#16a34a] transition-all cursor-pointer">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl bg-[#f0fdf4]">{obj.emoji}</div>
+                      <p className="text-[13px] font-extrabold text-[#14532d] leading-tight">{obj.label}</p>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-extrabold text-[#14532d] leading-[1.4] whitespace-normal">{obj.label}</p>
-                      {isUrgent && (
-                        <span className="inline-block mt-0.5 text-[9px] font-extrabold bg-[#fef2f2] text-[#dc2626] border border-[#fecaca] px-[7px] py-[2px] rounded-[5px]">
-                          Urgente
-                        </span>
-                      )}
+                    <div className="flex flex-col items-center mt-4">
+                      <PlusCircle className="w-5 h-5 text-[#cbd5e1]" />
+                      <p className="text-[11px] font-bold text-[#16a34a] mt-1">Criar meta</p>
                     </div>
-                  </div>
-
-                  {goal ? (
-                    <div className="mt-3">
-                      <ProgressBar pct={pct} delay={500 + i * 100} />
-                      <div className="flex items-center justify-between mt-1.5">
-                        <span className="text-[13px] font-extrabold text-[#16a34a]">{formatCurrency(Number(goal.current_amount), currency)}</span>
-                        <span className="text-[12px] font-bold text-[#94a3b8]">{pct.toFixed(0)}%</span>
-                      </div>
-                      <p className="text-[11px] text-[#94a3b8] mt-1">
-                        {pct >= 100 ? '✓ Meta atingida!' : daysLeft !== null ? `${daysLeft} dias restantes` : ''}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center mt-4">
-                      <PlusCircle className="w-6 h-6 text-[#cbd5e1]" />
-                      <Link to="/app/goals" className="text-[12px] font-bold text-[#16a34a] mt-2 hover:underline">
-                        Criar meta
-                      </Link>
-                    </div>
-                  )}
-                </motion.div>
+                  </motion.div>
+                </Link>
               );
             })}
           </div>
