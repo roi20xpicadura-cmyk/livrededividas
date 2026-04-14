@@ -37,9 +37,7 @@ export function DREPage() {
   return <PlaceholderModule title="DRE" desc="Demonstrativo de Resultado do Exercício gerado automaticamente." />;
 }
 
-export function CardsPage() {
-  return <PlaceholderModule title="Cartões de Crédito" desc="Gerencie seus cartões, limites e vencimentos." />;
-}
+// CardsPage moved to src/pages/app/CardsPage.tsx
 
 export function InvestmentsPage() {
   return <PlaceholderModule title="Investimentos" desc="Acompanhe sua carteira de investimentos e rentabilidade." />;
