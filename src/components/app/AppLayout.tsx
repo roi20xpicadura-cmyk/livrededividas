@@ -325,6 +325,15 @@ export default function AppLayout() {
           </>
         )}
       </AnimatePresence>
+
+      {/* ═══ AI CHAT ═══ */}
+      <button onClick={() => setChatOpen(true)}
+        className={`fixed bottom-20 lg:bottom-6 right-5 z-[499] w-[52px] h-[52px] rounded-full bg-[#16a34a] shadow-lg flex items-center justify-center hover:bg-[#14532d] transition-all group ${chatOpen ? 'hidden' : ''}`}
+        title="Assistente IA — pergunte qualquer coisa">
+        <Sparkles className="w-[22px] h-[22px] text-white" />
+        <span className="absolute inset-0 rounded-full border-2 border-[#16a34a] animate-ping opacity-20 pointer-events-none" />
+      </button>
+      <AIChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} />
     </div>
   );
 }
