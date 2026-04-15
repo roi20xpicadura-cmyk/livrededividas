@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronDown, ChevronUp, ArrowRight, X, Sparkles, ReceiptText, Target, CreditCard, Landmark, Settings } from 'lucide-react';
+import { Check, ChevronDown, ArrowRight, Sparkles, ReceiptText, Target, CreditCard, Landmark, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,11 +15,11 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-  { key: 'transaction', icon: ReceiptText, title: 'Adicione seu primeiro lançamento', desc: 'Registre uma receita ou despesa para começar a acompanhar suas finanças.', route: '/app/transactions', color: '#16a34a' },
-  { key: 'goal', icon: Target, title: 'Crie uma meta financeira', desc: 'Defina quanto quer economizar e acompanhe seu progresso dia a dia.', route: '/app/goals', color: '#7c3aed' },
-  { key: 'card', icon: CreditCard, title: 'Cadastre um cartão de crédito', desc: 'Controle seus limites, faturas e gastos no cartão.', route: '/app/cards', color: '#0891b2' },
-  { key: 'budget', icon: Landmark, title: 'Defina um orçamento mensal', desc: 'Limite seus gastos por categoria e evite surpresas no fim do mês.', route: '/app/budget', color: '#ea580c' },
-  { key: 'settings', icon: Settings, title: 'Personalize seu perfil', desc: 'Adicione sua foto, ajuste moeda e preferências do app.', route: '/app/settings', color: '#6366f1' },
+  { key: 'transaction', icon: ReceiptText, title: 'Adicione seu primeiro lançamento', desc: 'Registre uma receita ou despesa.', route: '/app/transactions', color: '#16a34a' },
+  { key: 'goal', icon: Target, title: 'Crie uma meta financeira', desc: 'Defina quanto quer economizar.', route: '/app/goals', color: '#7c3aed' },
+  { key: 'card', icon: CreditCard, title: 'Cadastre um cartão de crédito', desc: 'Controle limites e faturas.', route: '/app/cards', color: '#0891b2' },
+  { key: 'budget', icon: Landmark, title: 'Defina um orçamento mensal', desc: 'Limite gastos por categoria.', route: '/app/budget', color: '#ea580c' },
+  { key: 'settings', icon: Settings, title: 'Personalize seu perfil', desc: 'Foto, moeda e preferências.', route: '/app/settings', color: '#6366f1' },
 ];
 
 export default function WelcomeChecklist() {
@@ -28,7 +28,6 @@ export default function WelcomeChecklist() {
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(false);
-  const [expanded, setExpanded] = useState(true);
 
   useEffect(() => {
     if (!user) return;
@@ -56,24 +55,27 @@ export default function WelcomeChecklist() {
   const completedCount = useMemo(() => Object.values(completed).filter(Boolean).length, [completed]);
   const allDone = completedCount === STEPS.length;
   const progress = (completedCount / STEPS.length) * 100;
+  const remaining = STEPS.length - completedCount;
+
+  // Auto-collapse after 2+ items done
+  const [expanded, setExpanded] = useState(false);
+  useEffect(() => {
+    if (!loading) setExpanded(completedCount < 2);
+  }, [loading, completedCount]);
 
   const handleDismiss = () => {
     if (user) localStorage.setItem(`checklist_dismissed_${user.id}`, 'true');
     setDismissed(true);
   };
 
-  if (loading || dismissed) return null;
-  if (allDone) {
-    // Auto-dismiss after all steps completed
-    setTimeout(handleDismiss, 3000);
-  }
+  if (loading || dismissed || allDone) return null;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.3 }}
       style={{
         background: 'var(--color-bg-surface)',
         border: '1px solid var(--color-border-weak)',
@@ -81,139 +83,128 @@ export default function WelcomeChecklist() {
         overflow: 'hidden',
       }}
     >
-      {/* Header */}
+      {/* Header — always visible, compact */}
       <div
         onClick={() => setExpanded(!expanded)}
         style={{
-          padding: '16px 20px',
+          padding: '14px 16px',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
           gap: 12,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: allDone ? 'var(--color-success-bg)' : 'linear-gradient(135deg, #16a34a, #0891b2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            {allDone
-              ? <Check size={18} color="#16a34a" />
-              : <Sparkles size={18} color="white" />
-            }
-          </div>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-text-strong)', margin: 0 }}>
-              {allDone ? 'Tudo pronto! 🎉' : 'Primeiros passos'}
-            </p>
-            <p style={{ fontSize: 12, color: 'var(--color-text-subtle)', margin: 0 }}>
-              {allDone ? 'Você completou todas as etapas' : `${completedCount} de ${STEPS.length} concluídos`}
-            </p>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Progress circle */}
-          <svg width="32" height="32" viewBox="0 0 32 32">
-            <circle cx="16" cy="16" r="13" fill="none" stroke="var(--color-border-base)" strokeWidth="3" />
-            <circle cx="16" cy="16" r="13" fill="none" stroke="#16a34a" strokeWidth="3"
-              strokeDasharray={`${progress * 0.817} ${81.7 - progress * 0.817}`}
-              strokeDashoffset="20.4" strokeLinecap="round"
+        {/* Progress circle */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <svg width="36" height="36" viewBox="0 0 36 36">
+            <circle cx="18" cy="18" r="15" fill="none" stroke="var(--color-border-base)" strokeWidth="3" />
+            <circle cx="18" cy="18" r="15" fill="none" stroke="#16a34a" strokeWidth="3"
+              strokeDasharray={`${progress * 0.94} 94`}
+              strokeLinecap="round"
+              transform="rotate(-90 18 18)"
               style={{ transition: 'stroke-dasharray 0.5s ease' }}
             />
-            <text x="16" y="16" textAnchor="middle" dominantBaseline="central"
-              style={{ fontSize: 10, fontWeight: 800, fill: 'var(--color-text-strong)' }}>
-              {completedCount}
-            </text>
           </svg>
-
-          {expanded ? <ChevronUp size={16} color="var(--color-text-subtle)" /> : <ChevronDown size={16} color="var(--color-text-subtle)" />}
+          <span style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 10, fontWeight: 800, color: '#16a34a',
+          }}>
+            {completedCount}/{STEPS.length}
+          </span>
         </div>
+
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-text-strong)' }}>
+            Primeiros passos
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 1 }}>
+            {remaining} passo{remaining !== 1 ? 's' : ''} restante{remaining !== 1 ? 's' : ''}
+          </div>
+        </div>
+
+        <motion.div
+          animate={{ rotate: expanded ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown size={18} color="var(--color-text-muted)" />
+        </motion.div>
       </div>
 
-      {/* Steps list */}
+      {/* Expandable steps */}
       <AnimatePresence>
         {expanded && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
+            initial={{ height: 0 }}
+            animate={{ height: 'auto' }}
+            exit={{ height: 0 }}
             style={{ overflow: 'hidden' }}
           >
-            <div style={{ padding: '0 16px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{
+              borderTop: '1px solid var(--color-border-weak)',
+              padding: '8px 16px 12px',
+            }}>
               {STEPS.map((step, i) => {
                 const done = completed[step.key];
                 return (
-                  <motion.button
+                  <div
                     key={step.key}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
                     onClick={() => !done && navigate(step.route)}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: 12,
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: 12,
-                      border: 'none',
-                      background: done ? 'var(--color-bg-sunken)' : 'var(--color-bg-surface)',
+                      padding: '10px 0',
+                      borderBottom: i < STEPS.length - 1 ? '1px solid var(--color-border-weak)' : 'none',
+                      opacity: done ? 0.5 : 1,
                       cursor: done ? 'default' : 'pointer',
-                      textAlign: 'left',
-                      transition: 'background 0.15s',
-                      opacity: done ? 0.6 : 1,
                     }}
-                    whileHover={!done ? { scale: 1.01, background: 'var(--color-bg-sunken)' } : {}}
-                    whileTap={!done ? { scale: 0.98 } : {}}
                   >
-                    {/* Step icon or check */}
+                    {/* Check circle */}
                     <div style={{
-                      width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                      background: done ? 'var(--color-success-bg)' : `${step.color}14`,
+                      width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+                      background: done ? '#16a34a' : 'transparent',
+                      border: done ? 'none' : '2px solid var(--color-border-base)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      {done
-                        ? <Check size={16} color="#16a34a" strokeWidth={3} />
-                        : <step.icon size={16} color={step.color} />
-                      }
+                      {done && <Check size={13} color="white" strokeWidth={3} />}
                     </div>
 
-                    {/* Text */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{
-                        fontSize: 13, fontWeight: 700, margin: 0,
-                        color: done ? 'var(--color-text-subtle)' : 'var(--color-text-strong)',
-                        textDecoration: done ? 'line-through' : 'none',
+                    {/* Icon */}
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+                      background: done ? 'var(--color-bg-sunken)' : `${step.color}18`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <step.icon size={16} color={done ? 'var(--color-text-subtle)' : step.color} />
+                    </div>
+
+                    {/* Text — NO strikethrough */}
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontSize: 13, fontWeight: 700,
+                        color: done ? 'var(--color-text-subtle)' : 'var(--color-text-base)',
                       }}>
                         {step.title}
-                      </p>
+                      </div>
                       {!done && (
-                        <p style={{ fontSize: 11, color: 'var(--color-text-subtle)', margin: '2px 0 0', lineHeight: 1.4 }}>
+                        <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 1 }}>
                           {step.desc}
-                        </p>
+                        </div>
                       )}
                     </div>
 
-                    {/* Arrow */}
-                    {!done && (
-                      <ArrowRight size={14} color="var(--color-text-subtle)" style={{ flexShrink: 0 }} />
-                    )}
-                  </motion.button>
+                    {!done && <ArrowRight size={14} color="var(--color-text-subtle)" />}
+                  </div>
                 );
               })}
-            </div>
 
-            {/* Dismiss */}
-            <div style={{ padding: '0 16px 14px', textAlign: 'center' }}>
               <button
                 onClick={handleDismiss}
                 style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: 12, color: 'var(--color-text-subtle)', fontWeight: 600,
+                  width: '100%', background: 'none', border: 'none',
+                  fontSize: 12, color: 'var(--color-text-subtle)',
+                  padding: '8px 0 0', cursor: 'pointer',
                 }}
               >
                 Não mostrar mais
