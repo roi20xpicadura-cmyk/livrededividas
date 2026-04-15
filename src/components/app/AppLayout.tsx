@@ -24,9 +24,12 @@ const ALL_NAV_ITEMS = [
   { label: 'Metas', path: '/app/goals', icon: Target, profiles: ['personal', 'both'] },
   { label: 'Dívidas', path: '/app/debts', icon: AlertCircle, profiles: ['personal', 'both'] },
   { label: 'Cartões', path: '/app/cards', icon: CreditCard, profiles: ['personal', 'business', 'both'] },
-  { label: 'Conexões', path: '/app/integrations', icon: Plug, profiles: ['personal', 'business', 'both'] },
+  { label: 'Investimentos', path: '/app/investments', icon: TrendingUp, profiles: ['personal', 'business', 'both'] },
+  { label: 'Gráficos', path: '/app/charts', icon: BarChart2, profiles: ['personal', 'business', 'both'] },
+  { label: 'DRE', path: '/app/dre', icon: FileText, profiles: ['business', 'both'] },
+  { label: 'Integrações', path: '/app/integrations', icon: Plug, profiles: ['personal', 'business', 'both'] },
   { label: 'Simulador', path: '/app/simulator', icon: FlaskConical, profiles: ['personal', 'business', 'both'], badge: 'NOVO' },
-  { label: 'Previsões', path: '/app/predictions', icon: TrendingUp, profiles: ['personal', 'business', 'both'] },
+  { label: 'Previsões', path: '/app/predictions', icon: Building2, profiles: ['personal', 'business', 'both'] },
   { label: 'Exportar', path: '/app/export', icon: Download, profiles: ['personal', 'business', 'both'] },
 ];
 
@@ -60,11 +63,14 @@ const PAGE_TITLES: Record<string, string> = {
   '/app/goals': 'Metas',
   '/app/debts': 'Sair das Dívidas',
   '/app/cards': 'Cartões de Crédito',
+  '/app/investments': 'Investimentos',
+  '/app/charts': 'Gráficos',
+  '/app/dre': 'DRE',
   '/app/export': 'Exportar',
   '/app/achievements': 'Conquistas',
   '/app/referral': 'Indicar Amigos',
   '/app/settings': 'Configurações',
-  '/app/integrations': 'Conexões e Integrações',
+  '/app/integrations': 'Integrações',
   '/app/billing': 'Planos e Assinatura',
   '/app/simulator': 'Simulador E Se...?',
   '/app/predictions': 'IA Preditiva',
@@ -211,13 +217,13 @@ export default function AppLayout() {
                     width: 16, height: 16,
                     color: item.path === '/app/debts' && activeDebtCount > 0
                       ? 'var(--color-danger-solid)'
-                      : active ? 'var(--color-green-700)' : 'var(--color-text-subtle)',
+                      : active ? 'var(--color-green-700)' : 'var(--color-text-muted)',
                   }} />
                 </div>
                 <span className="flex-1" style={{
-fontSize: 13,
-                  fontWeight: active ? 700 : 500,
-                  color: active ? 'var(--color-green-800)' : 'var(--color-text-muted)',
+                  fontSize: 13,
+                  fontWeight: active ? 700 : 600,
+                  color: active ? 'var(--color-green-800)' : 'var(--color-text-base)',
                 }}>{item.label}</span>
                 {(item as any).badge && (
                   <span style={{ fontSize: 9, fontWeight: 800, background: '#fbbf24', color: '#78350f', padding: '2px 7px', borderRadius: 99 }}>{(item as any).badge}</span>
@@ -238,7 +244,7 @@ fontSize: 13,
         <div style={{ padding: '0 10px 10px' }}>
           {/* Gamification strip */}
           <div className="flex items-center" style={{ height: 44, padding: '0 14px', gap: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-base)' }}>🔥 {config?.streak_days || 0} dias</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-base)' }}>🔥 {(config?.streak_days || 0) === 0 ? 'Comece hoje!' : `${config?.streak_days} dias seguidos`}</span>
             <div className="flex-1" style={{ height: 3, background: 'var(--color-border-weak)', borderRadius: 99, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${Math.min(((config?.xp_points || 0) % 100), 100)}%`, background: 'var(--color-green-500)', borderRadius: 99 }} />
             </div>

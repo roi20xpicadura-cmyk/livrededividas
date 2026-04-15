@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, MessageCircle, ArrowRight, AlertTriangle, CheckCircle2, Info, TrendingDown } from 'lucide-react';
+import { Sparkles, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -13,11 +13,12 @@ type Insight = {
   action_path?: string;
 };
 
-const typeStyles: Record<string, { bg: string; border: string; text: string; iconColor: string }> = {
-  danger: { bg: 'bg-red-50/80 dark:bg-red-900/10', border: 'border-red-200/60 dark:border-red-800/30', text: 'text-red-800 dark:text-red-300', iconColor: 'text-red-500' },
-  warning: { bg: 'bg-amber-50/80 dark:bg-amber-900/10', border: 'border-amber-200/60 dark:border-amber-800/30', text: 'text-amber-800 dark:text-amber-300', iconColor: 'text-amber-500' },
-  success: { bg: 'bg-emerald-50/80 dark:bg-emerald-900/10', border: 'border-emerald-200/60 dark:border-emerald-800/30', text: 'text-emerald-800 dark:text-emerald-300', iconColor: 'text-emerald-500' },
-  info: { bg: 'bg-blue-50/80 dark:bg-blue-900/10', border: 'border-blue-200/60 dark:border-blue-800/30', text: 'text-blue-800 dark:text-blue-300', iconColor: 'text-blue-500' },
+// Fixed colors — NO blue, using green design system
+const typeStyles: Record<string, { bg: string; border: string; text: string }> = {
+  danger: { bg: '#fef2f2', border: '#fecaca', text: '#991b1b' },
+  warning: { bg: '#fffbeb', border: '#fde68a', text: '#92400e' },
+  success: { bg: '#f0fdf4', border: '#bbf7d0', text: '#166534' },
+  info: { bg: '#f8fafc', border: '#e2e8f0', text: '#0f172a' },
 };
 
 export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => void }) {
@@ -51,25 +52,34 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-      style={{ background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 16, padding: '16px 20px' }}
+      transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+      style={{ background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 16, padding: '14px 16px' }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
+      <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#16a34a] to-[#15803d] flex items-center justify-center shadow-sm">
+          <div style={{
+            width: 28, height: 28, borderRadius: 8,
+            background: 'linear-gradient(135deg, #16a34a, #15803d)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(22,163,74,0.25)',
+          }}>
             <Sparkles className="w-3.5 h-3.5 text-white" />
           </div>
           <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-base)' }}>IA Financeira</span>
-          <span className="text-[10px] font-medium text-muted-foreground bg-[#16a34a]/8 text-[#16a34a] px-1.5 py-0.5 rounded-md">PRO</span>
+          <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 99, background: 'rgba(22,163,74,0.08)', color: '#16a34a' }}>PRO</span>
         </div>
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={onOpenChat}
-          className="flex items-center gap-1.5 h-7 px-3 rounded-full text-white text-[11px] font-bold"
-          style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)' }}
+          className="flex items-center gap-1.5"
+          style={{
+            height: 28, padding: '0 12px', borderRadius: 99, border: 'none',
+            background: 'linear-gradient(135deg, #16a34a, #15803d)',
+            color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+          }}
         >
           <MessageCircle className="w-3 h-3" />
           Conversar
@@ -80,29 +90,37 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3].map(i => (
-            <div key={i} className="skeleton-shimmer" style={{ height: 56, borderRadius: 12 }} />
+            <div key={i} className="skeleton-shimmer" style={{ height: 48, borderRadius: 10 }} />
           ))}
         </div>
       ) : (
-        <div className="space-y-2">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {insights.map((insight, i) => {
             const style = typeStyles[insight.type] || typeStyles.info;
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-                className={`flex items-start gap-2.5 p-3 rounded-xl border backdrop-blur-sm ${style.bg} ${style.border}`}
+                transition={{ delay: i * 0.06 }}
+                className="flex items-start gap-2.5"
+                style={{
+                  padding: '10px 12px', borderRadius: 10, border: `1px solid ${style.border}`,
+                  background: style.bg,
+                }}
               >
-                <span className="text-lg flex-shrink-0 leading-none mt-0.5">{insight.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-[12px] font-bold ${style.text} leading-tight`}>{insight.title}</p>
-                  <p className={`text-[11px] ${style.text} opacity-80 leading-relaxed mt-0.5`}>{insight.message}</p>
+                <span style={{ fontSize: 15, flexShrink: 0, lineHeight: 1, marginTop: 1 }}>{insight.icon}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: style.text, lineHeight: 1.3 }}>{insight.title}</p>
+                  <p style={{ fontSize: 11, color: style.text, opacity: 0.75, lineHeight: 1.4, marginTop: 2 }}>{insight.message}</p>
                 </div>
                 {insight.action_label && insight.action_path && (
                   <a href={insight.action_path}
-                    className={`flex-shrink-0 text-[10px] font-bold ${style.text} border ${style.border} rounded-lg px-2 py-1 hover:opacity-80 transition-opacity`}>
+                    style={{
+                      flexShrink: 0, fontSize: 10, fontWeight: 700, color: style.text,
+                      border: `1px solid ${style.border}`, borderRadius: 8, padding: '4px 8px',
+                      textDecoration: 'none',
+                    }}>
                     {insight.action_label}
                   </a>
                 )}
