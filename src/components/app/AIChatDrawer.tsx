@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X, ArrowUp, Loader2, CheckCircle2, Zap, MessageSquare, Plus, Trash2 } from 'lucide-react';
+import { Sparkles, X, ArrowUp, Loader2, CheckCircle2, Zap, MessageSquare, Plus, Trash2, Mic, MicOff } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/integrations/supabase/client';
 
