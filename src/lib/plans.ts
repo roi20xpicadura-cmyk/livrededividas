@@ -41,7 +41,9 @@ export const PLAN_LIMITS = {
 export type PlanType = keyof typeof PLAN_LIMITS;
 
 export function formatCurrency(val: number, currency = 'R$') {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: currency === 'R$' ? 'BRL' : currency === '$' ? 'USD' : 'EUR' }).format(val);
+  const trimmed = currency.trim();
+  const code = trimmed === '$' ? 'USD' : 'BRL';
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: code }).format(val);
 }
 
 export function formatPercent(val: number) {
