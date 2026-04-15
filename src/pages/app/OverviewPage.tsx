@@ -31,7 +31,7 @@ const LazyChart = lazy(() => import('recharts').then(m => ({
           </linearGradient>
         </defs>
         <m.XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--color-text-subtle)' }} interval="preserveStartEnd" />
-        <m.YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--color-text-subtle)' }} tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`} />
+        <m.YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickCount={4} tickFormatter={(v: number) => v >= 1000000 ? `R$${(v/1000000).toFixed(1)}M` : v >= 1000 ? `R$${(v/1000).toFixed(0)}k` : v > 0 ? `R$${v}` : 'R$0'} />
         <m.Tooltip contentStyle={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-base)', borderRadius: 10, fontSize: 12, fontWeight: 700 }} formatter={(v: number) => [formatCurrency(v, 'R$'), 'Saldo']} />
         <m.Area type="monotone" dataKey="saldo" stroke="#16a34a" strokeWidth={2.5} fill="url(#balanceGrad)" dot={false} activeDot={{ r: 5, fill: '#16a34a', stroke: 'white', strokeWidth: 2 }} />
       </m.AreaChart>
@@ -65,11 +65,15 @@ function AnimatedCurrency({ value, currency }: { value: number; currency: string
 
 function getCategoryEmoji(cat: string): string {
   const map: Record<string, string> = {
-    'Alimentação': '🍔', 'Transporte': '🚗', 'Moradia': '🏠', 'Saúde': '💊',
-    'Educação': '📚', 'Lazer': '🎮', 'Salário': '💰', 'Freelance': '💻',
-    'Investimentos': '📈', 'Outros': '📦', 'Vestuário': '👕', 'Assinaturas': '📱',
+    'Alimentação': '🍽️', 'Transporte': '🚗', 'Moradia': '🏠', 'Saúde': '❤️',
+    'Educação': '📚', 'Lazer': '🎮', 'Salário': '💼', 'Freelance': '💻',
+    'Investimentos': '📈', 'Renda Extra': '💵', 'Vendas': '💰',
+    'Vestuário': '👕', 'Assinaturas': '📱', 'Delivery': '🛵',
+    'Supermercado': '🛒', 'Beleza': '💄', 'Pets': '🐾', 'Tecnologia': '💻',
+    'Dívidas': '💳', 'Investir': '📊', 'Poupança': '🐷', 'Seguros': '🛡️',
+    'Outros': '💸',
   };
-  return map[cat] || '📦';
+  return map[cat] || '💸';
 }
 
 const stagger = (i: number) => ({ initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] as const, delay: i * 0.06 } });
@@ -206,7 +210,7 @@ export default function OverviewPage() {
   const sortedCriteria = [...scoreResult.criteria].sort((a, b) => (a.points / a.max) - (b.points / b.max)).slice(0, 3);
 
   return (
-    <div className="space-y-4 pb-4">
+    <div className="space-y-3 pb-4">
       {/* 1. GREETING */}
       <motion.div {...stagger(0)} className="flex items-center justify-between" style={{ padding: isMobile ? '4px 0' : '0' }}>
         <div>
@@ -296,12 +300,12 @@ export default function OverviewPage() {
       </motion.div>
 
       {/* 3. QUICK STATS — 2x2 */}
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 gap-2">
         {statCards.map((s, i) => (
           <motion.div key={s.label} {...stagger(i + 2)}
-            style={{ background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <s.icon size={18} color={s.color} />
+            style={{ background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 14, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 9, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <s.icon size={16} color={s.color} />
             </div>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 3 }}>{s.label}</div>
@@ -359,8 +363,8 @@ export default function OverviewPage() {
           {sortedCriteria.map(c => (
             <div key={c.label} className="flex items-center gap-2.5" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 12, color: 'var(--color-text-muted)', flex: 1, fontWeight: 500 }}>{c.label}</span>
-              <div style={{ width: 80, height: 4, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{ width: `${(c.points / c.max) * 100}%`, height: '100%', borderRadius: 99, background: c.points / c.max > 0.6 ? 'var(--color-green-500)' : c.points / c.max > 0.3 ? '#f59e0b' : '#ef4444' }} />
+              <div style={{ width: 80, height: 6, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{ width: `${Math.max((c.points / c.max) * 100, c.points > 0 ? 5 : 0)}%`, height: '100%', borderRadius: 99, minWidth: c.points > 0 ? 4 : 0, background: c.points / c.max > 0.6 ? 'var(--color-green-500)' : c.points / c.max > 0.3 ? '#f59e0b' : '#ef4444' }} />
               </div>
               <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', minWidth: 32, textAlign: 'right' }}>{c.points}/{c.max}</span>
             </div>
@@ -397,20 +401,24 @@ export default function OverviewPage() {
               Ver todas →
             </button>
           </div>
-          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {activeGoals.slice(0, 4).map(goal => {
               const pct = Math.min(100, (Number(goal.current_amount || 0) / Number(goal.target_amount)) * 100);
               const obj = OBJECTIVES.find(o => o.key === goal.objective_type);
+              const barColor = pct >= 75 ? '#16a34a' : pct >= 40 ? '#f59e0b' : '#ef4444';
               return (
                 <motion.div key={goal.id} whileTap={{ scale: 0.97 }} onClick={() => navigate('/app/goals')}
-                  style={{ flexShrink: 0, width: 160, background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 14, padding: 14, cursor: 'pointer' }}>
-                  <div style={{ fontSize: 28, marginBottom: 10, lineHeight: 1 }}>{obj?.emoji || '🎯'}</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-base)', marginBottom: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{goal.name}</div>
+                  style={{ flexShrink: 0, width: 150, background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 14, padding: 14, cursor: 'pointer' }}>
+                  <div style={{ fontSize: 22, marginBottom: 8, lineHeight: 1 }}>{obj?.emoji || '🎯'}</div>
+                  <div style={{
+                    fontSize: 12, fontWeight: 700, color: 'var(--color-text-base)', marginBottom: 10, lineHeight: 1.4,
+                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden', minHeight: 33,
+                  }}>{goal.name}</div>
                   <div style={{ height: 4, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden', marginBottom: 6 }}>
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1, ease: 'easeOut' }}
-                      style={{ height: '100%', borderRadius: 99, background: pct >= 50 ? '#16a34a' : '#f59e0b' }} />
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, ease: 'easeOut' }}
+                      style={{ height: '100%', borderRadius: 99, background: barColor }} />
                   </div>
-                  <span style={{ fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 500 }}>{pct.toFixed(0)}% completo</span>
+                  <span style={{ fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 600 }}>{pct.toFixed(0)}%</span>
                 </motion.div>
               );
             })}
