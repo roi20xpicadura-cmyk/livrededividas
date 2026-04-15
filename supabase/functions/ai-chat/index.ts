@@ -261,21 +261,31 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    const token = authHeader.replace("Bearer ", "");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Auth client to verify user
-    const authClient = createClient(supabaseUrl, supabaseAnon, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    const authClient = createClient(supabaseUrl, supabaseAnon);
 
-    const { data: { user }, error: userError } = await authClient.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    let userId: string | undefined;
+    const getClaims = (authClient.auth as any).getClaims;
+
+    if (typeof getClaims === "function") {
+      const { data, error } = await getClaims.call(authClient.auth, token);
+      if (!error && data?.claims?.sub) {
+        userId = data.claims.sub;
+      }
     }
 
-    const userId = user.id;
+    if (!userId) {
+      const { data, error } = await authClient.auth.getUser(token);
+      if (error || !data?.user) {
+        console.error("Auth validation failed", error);
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      userId = data.user.id;
+    }
 
     // Service role client for mutations
     const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
