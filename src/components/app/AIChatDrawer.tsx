@@ -113,6 +113,61 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
     setShowHistory(false);
   };
 
+  const toggleVoice = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Seu navegador não suporta reconhecimento de voz. Tente o Chrome ou Edge.', ts: new Date() }]);
+      return;
+    }
+
+    if (isRecording && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'pt-BR';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognitionRef.current = recognition;
+
+    let finalTranscript = '';
+
+    recognition.onresult = (event: any) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interim = transcript;
+        }
+      }
+      setInput(finalTranscript || interim);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+      recognitionRef.current = null;
+      if (finalTranscript.trim()) {
+        send(finalTranscript.trim());
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      setIsRecording(false);
+      recognitionRef.current = null;
+      if (event.error === 'not-allowed') {
+        setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Permissão de microfone negada. Habilite nas configurações do navegador.', ts: new Date() }]);
+      }
+    };
+
+    recognition.start();
+    setIsRecording(true);
+  }, [isRecording, messages]);
+
   const send = async (text: string) => {
     if (!text.trim() || loading) return;
     const userMsg: Msg = { role: 'user', content: text.trim(), ts: new Date() };
