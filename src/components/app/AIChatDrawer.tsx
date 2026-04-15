@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X, ArrowUp, Loader2, CheckCircle2, Zap, MessageSquare, Plus, Trash2, Mic, MicOff } from 'lucide-react';
+import { Sparkles, X, ArrowUp, Loader2, CheckCircle2, Zap, MessageSquare, Plus, Trash2, Mic, MicOff, Bot, User, Clock, Send } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -8,15 +8,146 @@ type Msg = { role: 'user' | 'assistant'; content: string; ts: Date; actions?: st
 type Conversation = { id: string; title: string; updated_at: string };
 
 const SUGGESTIONS = [
-  '📊 Como estão minhas finanças este mês?',
-  '🎯 Estou no caminho certo para minha meta?',
-  '💡 Onde posso economizar mais?',
-  '➕ Adicione uma despesa de R$50 em Alimentação',
-  '📋 Crie um orçamento de R$800 para Alimentação',
-  '💳 Adicione meu cartão Nubank com limite de R$5000',
+  { icon: '📊', text: 'Como estão minhas finanças este mês?' },
+  { icon: '🎯', text: 'Estou no caminho certo para minha meta?' },
+  { icon: '💡', text: 'Onde posso economizar mais?' },
+  { icon: '➕', text: 'Adicione uma despesa de R$50 em Alimentação' },
+  { icon: '📋', text: 'Crie um orçamento de R$800 para Alimentação' },
+  { icon: '💳', text: 'Adicione meu cartão Nubank com limite de R$5000' },
 ];
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
+
+// Animated orb background for the header
+function HeaderOrb() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <motion.div
+        className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-[#16a34a]/10 blur-2xl"
+        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+        transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute -bottom-4 -left-4 w-24 h-24 rounded-full bg-[#22c55e]/8 blur-xl"
+        animate={{ scale: [1.1, 0.9, 1.1], opacity: [0.2, 0.4, 0.2] }}
+        transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut', delay: 1 }}
+      />
+    </div>
+  );
+}
+
+// Waveform typing indicator
+function TypingIndicator() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      className="flex justify-start"
+    >
+      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#16a34a] to-[#15803d] flex items-center justify-center flex-shrink-0 mt-1 mr-2.5 shadow-md shadow-[#16a34a]/20">
+        <motion.div
+          animate={{ rotate: [0, 360] }}
+          transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
+        >
+          <Bot className="w-4 h-4 text-white" />
+        </motion.div>
+      </div>
+      <div className="bg-card/80 backdrop-blur-sm border border-border/60 rounded-2xl rounded-tl-sm px-5 py-3.5 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="flex items-end gap-[3px] h-5">
+            {[0, 1, 2, 3, 4].map(i => (
+              <motion.div
+                key={i}
+                className="w-[3px] rounded-full bg-[#16a34a]"
+                animate={{ height: ['6px', '16px', '6px'] }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 0.8,
+                  delay: i * 0.1,
+                  ease: 'easeInOut',
+                }}
+              />
+            ))}
+          </div>
+          <motion.span
+            className="text-[11px] text-muted-foreground font-medium"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+          >
+            Analisando seus dados...
+          </motion.span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// Message bubble with stagger animation
+function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
+  const isUser = msg.role === 'user';
+  const timeStr = msg.ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.35, delay: Math.min(index * 0.05, 0.2), ease: [0.25, 0.46, 0.45, 0.94] }}
+    >
+      <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} group`}>
+        {!isUser && (
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#16a34a] to-[#15803d] flex items-center justify-center flex-shrink-0 mt-1 mr-2.5 shadow-md shadow-[#16a34a]/20">
+            <Bot className="w-4 h-4 text-white" />
+          </div>
+        )}
+        <div className="flex flex-col max-w-[82%]">
+          <div className={`px-4 py-3 text-[13px] leading-relaxed shadow-sm ${
+            isUser
+              ? 'bg-gradient-to-br from-[#16a34a] to-[#15803d] text-white rounded-2xl rounded-br-sm shadow-[#16a34a]/15'
+              : 'bg-card/80 backdrop-blur-sm border border-border/60 text-foreground rounded-2xl rounded-tl-sm'
+          }`}>
+            {!isUser ? (
+              <div className="prose prose-sm prose-green max-w-none [&_p]:m-0 [&_ul]:my-1 [&_li]:my-0 [&_strong]:text-foreground [&_code]:bg-muted/50 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[12px]">
+                <ReactMarkdown>{msg.content}</ReactMarkdown>
+              </div>
+            ) : msg.content}
+          </div>
+          <span className={`text-[10px] text-muted-foreground/60 mt-1 px-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${isUser ? 'text-right' : 'text-left'}`}>
+            {timeStr}
+          </span>
+        </div>
+        {isUser && (
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-muted to-muted/80 flex items-center justify-center flex-shrink-0 mt-1 ml-2.5 shadow-sm">
+            <User className="w-4 h-4 text-muted-foreground" />
+          </div>
+        )}
+      </div>
+
+      {msg.actions && msg.actions.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="ml-[42px] mt-2 space-y-1.5"
+        >
+          {msg.actions.map((action, ai) => (
+            <motion.div
+              key={ai}
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 + ai * 0.1 }}
+              className="flex items-start gap-2.5 bg-[#f0fdf4]/80 dark:bg-[#14532d]/15 backdrop-blur-sm border border-[#bbf7d0]/60 dark:border-[#16a34a]/20 rounded-xl px-3.5 py-2.5"
+            >
+              <div className="w-5 h-5 rounded-full bg-[#16a34a]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#16a34a]" />
+              </div>
+              <span className="text-[12px] text-[#166534] dark:text-[#4ade80] font-medium leading-snug">{action}</span>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+    </motion.div>
+  );
+}
 
 export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -185,7 +316,6 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
         return;
       }
 
-      // Create or use existing conversation
       let convoId = activeConvoId;
       if (!convoId) {
         convoId = await createConversation(text.trim());
@@ -197,7 +327,6 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
         setActiveConvoId(convoId);
       }
 
-      // Save user message
       await saveMessage(convoId, userMsg);
 
       const resp = await fetch(CHAT_URL, {
@@ -234,7 +363,6 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
       setMessages(prev => [...prev, assistantMsg]);
       await saveMessage(convoId, assistantMsg);
 
-      // Update conversation timestamp
       await supabase.from('chat_conversations').update({ updated_at: new Date().toISOString() }).eq('id', convoId);
     } catch {
       const errMsg: Msg = { role: 'assistant', content: '⚠️ Erro de conexão. Tente novamente.', ts: new Date() };
@@ -243,183 +371,304 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
     setLoading(false);
   };
 
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diff = now.getTime() - d.getTime();
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}min atrás`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h atrás`;
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  };
+
   return (
     <AnimatePresence>
       {open && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[500]" onClick={onClose} />
+          {/* Backdrop */}
           <motion.div
-            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            className="fixed top-0 right-0 z-[501] h-full w-full sm:w-[420px] bg-card border-l border-border flex flex-col shadow-2xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 bg-black/30 backdrop-blur-md z-[500]"
+            onClick={onClose}
+          />
+
+          {/* Drawer */}
+          <motion.div
+            initial={{ x: '100%', opacity: 0.5 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '100%', opacity: 0.5 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 350 }}
+            className="fixed top-0 right-0 z-[501] h-full w-full sm:w-[440px] bg-background/95 backdrop-blur-xl border-l border-border/40 flex flex-col shadow-[−20px_0_60px_-15px_rgba(0,0,0,0.15)]"
           >
             {/* Header */}
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-border/50">
-              <div className="w-9 h-9 rounded-full bg-[#16a34a] flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-[18px] h-[18px] text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[15px] font-extrabold text-foreground">FinDash IA</p>
-                <div className="flex items-center gap-1.5">
-                  <Zap className="w-3 h-3 text-[#16a34a]" />
-                  <p className="text-[11px] text-muted-foreground">Consulta, altera e analisa seus dados</p>
+            <div className="relative px-5 py-4 border-b border-border/30">
+              <HeaderOrb />
+              <div className="relative flex items-center gap-3">
+                <motion.div
+                  className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#16a34a] to-[#15803d] flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#16a34a]/25"
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Sparkles className="w-5 h-5 text-white" />
+                </motion.div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-extrabold text-foreground tracking-tight">FinDash IA</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <motion.div
+                      className="w-2 h-2 rounded-full bg-[#16a34a]"
+                      animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                    />
+                    <p className="text-[11px] text-muted-foreground">Online • Consulta, altera e analisa</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <button onClick={() => setShowHistory(!showHistory)} className="w-8 h-8 rounded-full bg-background flex items-center justify-center hover:bg-muted/30 transition-colors" title="Histórico">
-                  <MessageSquare className="w-4 h-4 text-muted-foreground" />
-                </button>
-                <button onClick={startNewChat} className="w-8 h-8 rounded-full bg-background flex items-center justify-center hover:bg-muted/30 transition-colors" title="Nova conversa">
-                  <Plus className="w-4 h-4 text-muted-foreground" />
-                </button>
-                <button onClick={onClose} className="w-8 h-8 rounded-full bg-background flex items-center justify-center hover:bg-muted/30 transition-colors">
-                  <X className="w-4 h-4 text-muted-foreground" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setShowHistory(!showHistory)}
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                      showHistory ? 'bg-[#16a34a]/10 text-[#16a34a]' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                    }`}
+                    title="Histórico"
+                  >
+                    <Clock className="w-4 h-4" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={startNewChat}
+                    className="w-8 h-8 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted transition-all duration-200"
+                    title="Nova conversa"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={onClose}
+                    className="w-8 h-8 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+                  >
+                    <X className="w-4 h-4" />
+                  </motion.button>
+                </div>
               </div>
             </div>
 
-            {/* History sidebar */}
+            {/* History panel */}
             <AnimatePresence>
               {showHistory && (
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="border-b border-border/50 overflow-hidden"
+                  transition={{ duration: 0.25, ease: 'easeInOut' }}
+                  className="border-b border-border/30 overflow-hidden"
                 >
-                  <div className="p-3 max-h-[200px] overflow-y-auto space-y-1">
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Conversas anteriores</p>
+                  <div className="p-3 max-h-[220px] overflow-y-auto space-y-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Conversas</p>
+                      <span className="text-[10px] text-muted-foreground/60 bg-muted/50 px-2 py-0.5 rounded-full">{conversations.length}</span>
+                    </div>
                     {conversations.length === 0 && (
-                      <p className="text-[12px] text-muted-foreground">Nenhuma conversa salva.</p>
+                      <div className="flex flex-col items-center py-4 gap-2">
+                        <MessageSquare className="w-6 h-6 text-muted-foreground/30" />
+                        <p className="text-[12px] text-muted-foreground/50">Nenhuma conversa ainda</p>
+                      </div>
                     )}
-                    {conversations.map(c => (
-                      <div key={c.id}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                          activeConvoId === c.id ? 'bg-[#16a34a]/10 border border-[#16a34a]/20' : 'hover:bg-muted/30'
+                    {conversations.map((c, i) => (
+                      <motion.div
+                        key={c.id}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.03 }}
+                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 group ${
+                          activeConvoId === c.id
+                            ? 'bg-[#16a34a]/8 border border-[#16a34a]/15 shadow-sm'
+                            : 'hover:bg-muted/40 border border-transparent'
                         }`}
                         onClick={() => loadMessages(c.id)}
                       >
-                        <MessageSquare className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                        <span className="text-[12px] text-foreground truncate flex-1">{c.title}</span>
-                        <button onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}
-                          className="w-5 h-5 rounded flex items-center justify-center hover:bg-destructive/10 transition-colors">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          activeConvoId === c.id ? 'bg-[#16a34a]/15' : 'bg-muted/60'
+                        }`}>
+                          <MessageSquare className={`w-3.5 h-3.5 ${activeConvoId === c.id ? 'text-[#16a34a]' : 'text-muted-foreground/60'}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[12px] text-foreground truncate block font-medium">{c.title}</span>
+                          <span className="text-[10px] text-muted-foreground/50">{formatDate(c.updated_at)}</span>
+                        </div>
+                        <motion.button
+                          whileHover={{ scale: 1.2 }}
+                          whileTap={{ scale: 0.8 }}
+                          onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}
+                          className="w-6 h-6 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-all"
+                        >
                           <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
-                        </button>
-                      </div>
+                        </motion.button>
+                      </motion.div>
                     ))}
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {/* Messages area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Empty state */}
               {messages.length === 0 && !loading && (
-                <div className="flex flex-col items-center justify-center h-full gap-4 pb-8">
-                  <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}>
-                    <Sparkles className="w-12 h-12 text-[#16a34a]" />
-                  </motion.div>
-                  <div className="text-center">
-                    <p className="text-[16px] font-extrabold text-foreground">Olá! Sou seu assistente financeiro.</p>
-                    <p className="text-[13px] text-muted-foreground max-w-[280px] mt-1 leading-relaxed">
-                      Analiso e <strong>gerencio</strong> seus dados. Posso adicionar lançamentos, criar orçamentos, gerenciar dívidas, cartões e muito mais.
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="flex flex-col items-center justify-center h-full gap-5 pb-8"
+                >
+                  {/* Animated logo */}
+                  <div className="relative">
+                    <motion.div
+                      className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#16a34a] to-[#15803d] flex items-center justify-center shadow-xl shadow-[#16a34a]/20"
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                    >
+                      <Sparkles className="w-10 h-10 text-white" />
+                    </motion.div>
+                    <motion.div
+                      className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-background border-2 border-[#16a34a] flex items-center justify-center"
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                    >
+                      <Zap className="w-3.5 h-3.5 text-[#16a34a]" />
+                    </motion.div>
+                  </div>
+
+                  <div className="text-center space-y-2">
+                    <h3 className="text-[17px] font-extrabold text-foreground tracking-tight">
+                      Olá! Sou seu assistente financeiro
+                    </h3>
+                    <p className="text-[13px] text-muted-foreground max-w-[300px] leading-relaxed">
+                      Analiso e <strong className="text-foreground">gerencio</strong> seus dados. Adiciono lançamentos, crio orçamentos, gerencio dívidas e muito mais.
                     </p>
                   </div>
-                  <div className="flex flex-wrap justify-center gap-2 mt-2">
-                    {SUGGESTIONS.map(s => (
-                      <button key={s} onClick={() => send(s)}
-                        className="border border-[#d4edda] bg-card rounded-full px-3.5 py-2 text-[12px] font-semibold text-[#166534] hover:bg-secondary transition-colors">
-                        {s}
-                      </button>
+
+                  {/* Suggestion chips */}
+                  <div className="flex flex-wrap justify-center gap-2 mt-1 max-w-[380px]">
+                    {SUGGESTIONS.map((s, i) => (
+                      <motion.button
+                        key={i}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 + i * 0.08 }}
+                        whileHover={{ scale: 1.03, y: -1 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => send(`${s.icon} ${s.text}`)}
+                        className="border border-border/60 bg-card/80 backdrop-blur-sm rounded-xl px-3.5 py-2.5 text-[12px] font-medium text-foreground hover:border-[#16a34a]/30 hover:bg-[#16a34a]/5 hover:shadow-sm transition-all duration-200"
+                      >
+                        <span className="mr-1.5">{s.icon}</span>
+                        {s.text}
+                      </motion.button>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               )}
 
+              {/* Message list */}
               {messages.map((m, i) => (
-                <div key={i}>
-                  <div className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    {m.role === 'assistant' && (
-                      <div className="w-7 h-7 rounded-full bg-[#16a34a] flex items-center justify-center flex-shrink-0 mt-1 mr-2">
-                        <Sparkles className="w-3.5 h-3.5 text-white" />
-                      </div>
-                    )}
-                    <div className={`max-w-[85%] px-3.5 py-3 text-[13px] leading-relaxed ${
-                      m.role === 'user'
-                        ? 'bg-[#16a34a] text-white rounded-[12px_0_12px_12px]'
-                        : 'bg-secondary border border-[#d4edda] text-foreground rounded-[0_12px_12px_12px]'
-                    }`}>
-                      {m.role === 'assistant' ? (
-                        <div className="prose prose-sm prose-green max-w-none [&_p]:m-0 [&_ul]:my-1 [&_li]:my-0">
-                          <ReactMarkdown>{m.content}</ReactMarkdown>
-                        </div>
-                      ) : m.content}
-                    </div>
-                  </div>
-
-                  {m.actions && m.actions.length > 0 && (
-                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="ml-9 mt-2 space-y-1.5">
-                      {m.actions.map((action, ai) => (
-                        <div key={ai} className="flex items-start gap-2 bg-[#f0fdf4] dark:bg-[#14532d]/20 border border-[#bbf7d0] dark:border-[#16a34a]/30 rounded-lg px-3 py-2">
-                          <CheckCircle2 className="w-4 h-4 text-[#16a34a] flex-shrink-0 mt-0.5" />
-                          <span className="text-[12px] text-[#166534] dark:text-[#4ade80] font-medium leading-snug">{action}</span>
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </div>
+                <MessageBubble key={i} msg={m} index={i} />
               ))}
 
-              {loading && (
-                <div className="flex justify-start">
-                  <div className="w-7 h-7 rounded-full bg-[#16a34a] flex items-center justify-center flex-shrink-0 mt-1 mr-2">
-                    <Sparkles className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <div className="bg-secondary border border-[#d4edda] rounded-[0_12px_12px_12px] px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1.5">
-                        {[0, 1, 2].map(i => (
-                          <motion.div key={i} className="w-2 h-2 rounded-full bg-[#16a34a]"
-                            animate={{ y: [0, -6, 0] }}
-                            transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.15 }} />
-                        ))}
-                      </div>
-                      <span className="text-[11px] text-muted-foreground">Analisando e processando...</span>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Loading indicator */}
+              {loading && <TypingIndicator />}
+
               <div ref={bottomRef} />
             </div>
 
-            {/* Input */}
-            <div className="border-t border-border/50 p-3">
+            {/* Input area */}
+            <div className="border-t border-border/30 p-3 bg-background/80 backdrop-blur-sm">
+              {/* Recording indicator */}
+              <AnimatePresence>
+                {isRecording && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mb-2 flex items-center gap-2.5 px-3 py-2 rounded-xl bg-red-500/5 border border-red-500/15"
+                  >
+                    <motion.div
+                      className="w-2.5 h-2.5 rounded-full bg-red-500"
+                      animate={{ scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }}
+                      transition={{ repeat: Infinity, duration: 1 }}
+                    />
+                    <span className="text-[11px] font-medium text-red-600 dark:text-red-400">Gravando áudio...</span>
+                    <div className="flex items-end gap-[2px] h-4 ml-auto">
+                      {[0, 1, 2, 3, 4, 5, 6].map(i => (
+                        <motion.div
+                          key={i}
+                          className="w-[2px] rounded-full bg-red-400"
+                          animate={{ height: ['3px', `${8 + Math.random() * 8}px`, '3px'] }}
+                          transition={{ repeat: Infinity, duration: 0.5 + Math.random() * 0.3, delay: i * 0.05 }}
+                        />
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="relative flex items-center gap-2">
-                <button onClick={toggleVoice}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={toggleVoice}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 flex-shrink-0 ${
                     isRecording
-                      ? 'bg-red-500 animate-pulse shadow-lg shadow-red-500/30'
-                      : 'bg-muted hover:bg-muted/80'
+                      ? 'bg-red-500 shadow-lg shadow-red-500/30'
+                      : 'bg-muted/60 hover:bg-muted text-muted-foreground'
                   }`}
                   title={isRecording ? 'Parar gravação' : 'Enviar áudio'}
                 >
-                  {isRecording ? <MicOff className="w-4 h-4 text-white" /> : <Mic className="w-4 h-4 text-muted-foreground" />}
-                </button>
+                  {isRecording ? (
+                    <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ repeat: Infinity, duration: 0.8 }}>
+                      <MicOff className="w-4 h-4 text-white" />
+                    </motion.div>
+                  ) : (
+                    <Mic className="w-4 h-4" />
+                  )}
+                </motion.button>
+
                 <div className="relative flex-1">
-                  <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
+                  <input
+                    ref={inputRef}
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && send(input)}
                     placeholder={isRecording ? 'Ouvindo...' : 'Pergunte ou peça uma ação...'}
-                    className={`w-full border-[1.5px] rounded-[10px] py-2.5 pl-3.5 pr-11 text-[13px] focus:outline-none transition-colors ${
-                      isRecording ? 'border-red-400 bg-red-50/50 dark:bg-red-900/10' : 'border-border focus:border-[#16a34a]'
+                    className={`w-full border-[1.5px] rounded-xl py-3 pl-4 pr-12 text-[13px] bg-card/60 backdrop-blur-sm focus:outline-none transition-all duration-200 ${
+                      isRecording
+                        ? 'border-red-300 dark:border-red-700'
+                        : 'border-border/60 focus:border-[#16a34a] focus:ring-2 focus:ring-[#16a34a]/10'
                     }`}
                   />
-                  <button onClick={() => send(input)} disabled={!input.trim() || loading}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#16a34a] flex items-center justify-center disabled:opacity-40 transition-opacity">
-                    {loading ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <ArrowUp className="w-4 h-4 text-white" />}
-                  </button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => send(input)}
+                    disabled={!input.trim() || loading}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl bg-gradient-to-br from-[#16a34a] to-[#15803d] flex items-center justify-center disabled:opacity-30 disabled:scale-95 transition-all duration-200 shadow-sm shadow-[#16a34a]/20 disabled:shadow-none"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 text-white animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4 text-white" />
+                    )}
+                  </motion.button>
                 </div>
               </div>
+
+              {/* Bottom hint */}
+              <p className="text-[10px] text-muted-foreground/40 text-center mt-2">
+                FinDash IA pode cometer erros • Verifique informações importantes
+              </p>
             </div>
           </motion.div>
         </>
