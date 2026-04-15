@@ -6,6 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ━━━ TOOLS (preserved from existing implementation) ━━━
 const TOOLS = [
   {
     type: "function",
@@ -263,6 +264,7 @@ const TOOLS = [
   },
 ];
 
+// ━━━ TOOL EXECUTOR (preserved) ━━━
 async function executeTool(
   supabase: any,
   userId: string,
@@ -442,25 +444,160 @@ async function executeTool(
   }
 }
 
+// ━━━ INTENT DETECTION ━━━
+type Intent = 'debt_help' | 'investment_advice' | 'budget_analysis' | 'goal_planning' | 'emergency_fund' | 'spending_analysis' | 'salary_question' | 'tax_question' | 'crisis_mode' | 'general';
+
+function detectIntent(message: string): Intent {
+  const msg = message.toLowerCase();
+  if (/(dívida|divida|devendo|debit|negativ|endividado|rotativo|fatura|parcela|juros|cobra|atraso|serasa|spc|nome sujo)/i.test(msg)) return 'debt_help';
+  if (/(investir|investimento|aplicar|rentabilidade|cdb|lci|lca|tesouro|ação|ações|fii|fundo|etf|renda fixa|renda variável|bolsa|b3|ibovespa|previdência|pgbl|vgbl)/i.test(msg)) return 'investment_advice';
+  if (/(orçamento|orcamento|gastar|gasto|categoria|despesa|receita|sobrar|economizar|cortar|reduzir gasto|50.30.20)/i.test(msg)) return 'budget_analysis';
+  if (/(meta|objetivo|sonho|comprar|juntar|poupar|viagem|casa própria|carro|aposentadoria|reserva|emergência|emergencia)/i.test(msg)) return 'goal_planning';
+  if (/(salário|salario|renda|aumento|CLT|MEI|autônomo|autonomo|FGTS|13|décimo|férias|pró-labore|pro-labore)/i.test(msg)) return 'salary_question';
+  if (/(imposto|IR|IRPF|declarar|restituição|tributo|nota fiscal|INSS|deducao|dedução|isento)/i.test(msg)) return 'tax_question';
+  if (/(desespero|não consigo|nao consigo|sem dinheiro|falido|quebrado|socorro|ajuda urgente|não sei o que fazer|desistir|impossível|impossivel)/i.test(msg)) return 'crisis_mode';
+  if (/(onde posso economizar|quanto gastei|análise|resumo|como estão|situação|diagnóstico)/i.test(msg)) return 'spending_analysis';
+  return 'general';
+}
+
+function getIntentInstructions(intent: Intent): string {
+  const map: Record<string, string> = {
+    debt_help: `
+🚨 MODO DÍVIDAS ATIVADO:
+- Use os dados reais de dívidas do usuário
+- Calcule o custo mensal de juros: saldo × taxa_mensal
+- Calcule taxa efetiva anual: (1 + taxa_mensal/100)^12 - 1
+- Se tem rotativo do cartão: PRIORIDADE MÁXIMA (400-500% a.a.)
+- Recomende Avalanche (maior juros primeiro) se dívidas com taxas diferentes
+- Recomende Snowball (menor saldo primeiro) se pessoa desmotivada
+- Calcule prazo de quitação: n = -ln(1 - i×PV/PMT) / ln(1+i)
+- Mencione a Lei do Superendividamento (14.181/2021) se endividamento grave
+- Mencione prescrição de 5 anos se dívida antiga
+- Tom: empático e prático, não assustador
+- Normalize: "6 em cada 10 brasileiros passam por isso"`,
+
+    investment_advice: `
+📈 MODO INVESTIMENTOS ATIVADO:
+- PRIMEIRO verifique se tem reserva de emergência (3-6 meses de despesas)
+- PRIMEIRO verifique se tem dívidas com juros altos (se sim, PAGAR ANTES)
+- Siga a pirâmide: Reserva → Renda Fixa → FIIs → Ações/ETFs
+- Tesouro Selic: liquidez diária, seguro para emergência
+- CDB: garantido pelo FGC até R$ 250k/CPF/instituição
+- LCI/LCA: ISENTOS de IR para PF
+- Compare: LCI 10% ≈ CDB 12.5% (para quem paga 20% IR)
+- FIIs: dividendos mensais isentos de IR
+- ETFs: BOVA11 (BR), IVVB11 (EUA) — diversificação barata
+- PGBL: só se declaração completa, deduz até 12% da renda
+- Nunca recomendar produto específico de banco/corretora
+- Nunca prometer rendimento garantido`,
+
+    budget_analysis: `
+💰 MODO ORÇAMENTO ATIVADO:
+- Compare gastos reais com a regra 50-30-20 adaptada
+- 50% necessidades, 30% desejos, 20% futuro
+- Se endividado: inverter para 20% desejos, 30% futuro
+- Identifique a categoria com maior desvio do ideal
+- Calcule: se reduzir X% em [categoria], economizaria R$ Y/mês
+- Alerte sobre delivery (~40% mais caro que cozinhar)
+- Custo por uso: academia R$ 200 ÷ 2 visitas = R$ 100/visita
+- Mencione custo de oportunidade: R$ investido em 10 anos = R$ X
+- Sugira automação de transferência na data do salário`,
+
+    goal_planning: `
+🎯 MODO METAS ATIVADO:
+- Calcule aporte mensal necessário: meta_restante ÷ meses_até_prazo
+- Projete data de conclusão com o ritmo atual
+- Se meta de casa: FGTS após 3 anos, MCMV até R$ 8k renda, entrada 20-30%
+- Se meta de carro: valor ≤ 6 meses de salário, depreciação 20% 1º ano
+- Se aposentadoria: regra dos 4%, R$ 5k/mês = ~R$ 1.5M investido
+- Juros compostos: R$ 500/mês × 30 anos @ 0.8%/mês = R$ 700k+
+- Framework SMART: Específica, Mensurável, Atingível, Relevante, Temporal`,
+
+    crisis_mode: `
+🆘 MODO CRISE ATIVADO — TOM MÁXIMO DE EMPATIA:
+- Comece validando a emoção: "Entendo como é difícil essa situação"
+- Normalize: "Muitos brasileiros passam por isso — não é culpa sua"
+- Foque em UMA ÚNICA ação imediata e simples
+- Não sobrecarregue com informação
+- Recursos gratuitos:
+  • Procon: cobranças abusivas
+  • Defensoria Pública: orientação jurídica gratuita
+  • Serasa Limpa Nome: negociação pelo app
+  • CAPS: apoio psicológico gratuito pelo SUS
+  • CVV 188: se estiver em crise emocional
+- Lei do Superendividamento protege o mínimo existencial
+- Ofereça um próximo passo MUITO concreto e pequeno`,
+
+    spending_analysis: `
+📊 MODO ANÁLISE ATIVADO:
+- Mostre ranking de categorias com valores reais
+- Compare este mês vs mês anterior (% mudança)
+- Identifique os 3 maiores aumentos de gasto
+- Calcule gasto médio diário
+- Identifique padrões: fins de semana, delivery, compras por impulso
+- Sugira cortes específicos com valores calculados`,
+
+    salary_question: `
+💼 MODO TRABALHO/RENDA ATIVADO:
+- CLT: provisionar 13º (1/12 mês), férias (+1/3), FGTS (8% — não é renda)
+- MEI 2025: limite R$ 81k/ano (R$ 6.750/mês), DAS ~R$ 71-75
+- Autônomo: separar 15-20% para IR, pagar INSS via carnê
+- Pró-labore: retirada com INSS para não perder benefícios
+- Portabilidade de salário: direito de trocar conta sem autorização
+- INSS 2025: 7.5% até R$ 1.518 / 9% / 12% / 14%`,
+
+    tax_question: `
+🧾 MODO IMPOSTOS ATIVADO:
+- IR 2025: isento até R$ 2.824; 7.5% / 15% / 22.5% / 27.5%
+- Obrigatório declarar: renda > R$ 33.888/ano
+- Despesas dedutíveis: saúde (sem limite), educação (até R$ 3.561)
+- Dependentes: R$ 2.275 cada
+- PGBL: deduz até 12% da renda tributável (declaração completa)
+- Ações: isento se vendas < R$ 20k/mês; day trade: 20% sempre
+- Dividendos: isentos para PF
+- FIIs: dividendos isentos, ganho de capital 20%
+- Multa por não declarar: R$ 165,74 ou 1.5% do imposto devido`,
+  };
+  return map[intent] || '';
+}
+
+// ━━━ PRE-COMPUTED FINANCIAL ANALYSIS ━━━
+function buildDebtAnalysis(debts: any[]): string {
+  const activeDebts = debts.filter((d: any) => d.status === "active");
+  if (activeDebts.length === 0) return "  Nenhuma dívida ativa ✅";
+
+  return activeDebts.sort((a: any, b: any) => (b.interest_rate || 0) - (a.interest_rate || 0)).map((d: any) => {
+    const monthlyRate = (d.interest_rate || 0) / 100;
+    const monthlyCost = d.remaining_amount * monthlyRate;
+    const annualRate = monthlyRate > 0 ? ((Math.pow(1 + monthlyRate, 12) - 1) * 100).toFixed(1) : "0";
+    const minPay = d.min_payment || 0;
+    let monthsToPayoff = "N/A";
+    if (minPay > monthlyCost && monthlyRate > 0) {
+      const n = -Math.log(1 - (monthlyRate * d.remaining_amount / minPay)) / Math.log(1 + monthlyRate);
+      monthsToPayoff = Math.ceil(n).toString();
+    } else if (monthlyRate > 0 && minPay <= monthlyCost) {
+      monthsToPayoff = "INFINITO (pagamento não cobre juros!)";
+    }
+    const priority = (d.interest_rate || 0) > 10 ? "🔴 URGENTE" : (d.interest_rate || 0) > 3 ? "🟡 ALTA" : "🟢 NORMAL";
+    return `  [${d.id}] ${d.name} (${d.creditor})
+    Saldo: R$ ${d.remaining_amount.toFixed(2)} | Taxa: ${d.interest_rate || 0}%/mês (${annualRate}%/ano)
+    Custo mensal juros: R$ ${monthlyCost.toFixed(2)} | Pagamento mínimo: R$ ${minPay.toFixed(2)}
+    Prazo p/ quitar: ${monthsToPayoff} meses | Prioridade: ${priority}`;
+  }).join("\n\n");
+}
+
 function buildFinancialContext(
-  userName: string,
-  config: any,
-  transactions: any[],
-  goals: any[],
-  investments: any[],
-  debts: any[],
-  budgets: any[],
-  bills: any[],
-  cards: any[],
-  recurring: any[]
+  userName: string, config: any, transactions: any[], goals: any[],
+  investments: any[], debts: any[], budgets: any[], bills: any[],
+  cards: any[], recurring: any[]
 ): string {
   const currentMonth = new Date().toISOString().slice(0, 7);
   const thisMonthTx = transactions.filter((t: any) => t.date?.startsWith(currentMonth));
   const totalIncome = thisMonthTx.filter((t: any) => t.type === "income").reduce((s: number, t: any) => s + t.amount, 0);
   const totalExpense = thisMonthTx.filter((t: any) => t.type === "expense").reduce((s: number, t: any) => s + t.amount, 0);
-  const totalDebt = debts.filter((d: any) => d.status === "active").reduce((s: number, d: any) => s + d.remaining_amount, 0);
   const balance = totalIncome - totalExpense;
   const savingsRate = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0;
+  const totalDebt = debts.filter((d: any) => d.status === "active").reduce((s: number, d: any) => s + d.remaining_amount, 0);
 
   const catExpenses: Record<string, number> = {};
   thisMonthTx.filter((t: any) => t.type === "expense").forEach((t: any) => {
@@ -468,20 +605,30 @@ function buildFinancialContext(
   });
 
   // Previous month comparison
-  const prevMonth = new Date();
-  prevMonth.setMonth(prevMonth.getMonth() - 1);
+  const prevMonth = new Date(); prevMonth.setMonth(prevMonth.getMonth() - 1);
   const prevMonthStr = prevMonth.toISOString().slice(0, 7);
   const prevMonthTx = transactions.filter((t: any) => t.date?.startsWith(prevMonthStr));
   const prevExpense = prevMonthTx.filter((t: any) => t.type === "expense").reduce((s: number, t: any) => s + t.amount, 0);
   const prevIncome = prevMonthTx.filter((t: any) => t.type === "income").reduce((s: number, t: any) => s + t.amount, 0);
-
   const expenseChange = prevExpense > 0 ? ((totalExpense / prevExpense - 1) * 100).toFixed(0) : "N/A";
   const totalInvested = investments.reduce((s: number, i: any) => s + i.current_amount, 0);
+
+  // Debt-to-income ratio
+  const totalMonthlyDebtPayments = debts.filter((d: any) => d.status === "active").reduce((s: number, d: any) => s + (d.min_payment || 0), 0);
+  const debtToIncomeRatio = totalIncome > 0 ? ((totalMonthlyDebtPayments / totalIncome) * 100).toFixed(1) : "0";
+  const debtStatus = parseFloat(debtToIncomeRatio) > 50 ? "🔴 CRÍTICO" : parseFloat(debtToIncomeRatio) > 30 ? "🟡 ATENÇÃO" : "🟢 SAUDÁVEL";
+
+  // Emergency fund estimate
+  const avgMonthlyExpense = totalExpense > 0 ? totalExpense : prevExpense;
+  const emergencyTarget = avgMonthlyExpense * 6;
+
+  // Has credit card revolving?
+  const hasRevolving = debts.some((d: any) => d.debt_type === "credit_card" && d.status === "active" && (d.interest_rate || 0) > 10);
 
   return `
 ━━━ DADOS FINANCEIROS REAIS DE ${userName.toUpperCase()} (${new Date().toLocaleDateString('pt-BR')}) ━━━
 
-📊 RESUMO DO MÊS ATUAL (${currentMonth}):
+📊 RESUMO MÊS ATUAL (${currentMonth}):
 - Receitas: R$ ${totalIncome.toFixed(2)}
 - Despesas: R$ ${totalExpense.toFixed(2)}
 - Saldo: R$ ${balance.toFixed(2)} ${balance >= 0 ? '✅' : '⚠️ NEGATIVO'}
@@ -489,39 +636,46 @@ function buildFinancialContext(
 - Comparação: despesas ${expenseChange}% vs mês anterior
 - Receita mês passado: R$ ${prevIncome.toFixed(2)} | Despesa: R$ ${prevExpense.toFixed(2)}
 
+📈 INDICADORES DE SAÚDE:
+- Índice dívida/renda: ${debtToIncomeRatio}% ${debtStatus}
+- Patrimônio investido: R$ ${totalInvested.toFixed(2)}
+- Reserva emergência alvo: R$ ${emergencyTarget.toFixed(2)} (6 meses)
+${hasRevolving ? '- ⚠️ ROTATIVO DO CARTÃO DETECTADO — PRIORIDADE MÁXIMA DE QUITAÇÃO' : ''}
+
 💸 GASTOS POR CATEGORIA (mês atual):
-${Object.entries(catExpenses).sort((a, b) => (b[1] as number) - (a[1] as number)).map(([cat, val]) => `  • ${cat}: R$ ${(val as number).toFixed(2)}`).join("\n") || "  Nenhum gasto registrado"}
+${Object.entries(catExpenses).sort((a, b) => (b[1] as number) - (a[1] as number)).map(([cat, val]) => `  • ${cat}: R$ ${(val as number).toFixed(2)} (${totalExpense > 0 ? ((val as number / totalExpense) * 100).toFixed(0) : 0}%)`).join("\n") || "  Nenhum gasto registrado"}
 
 📋 ORÇAMENTOS:
 ${budgets.filter((b: any) => b.month_year === currentMonth).map((b: any) => {
   const spent = catExpenses[b.category] || 0;
   const pct = Math.round((spent / b.limit_amount) * 100);
-  return `  • ${b.category}: R$ ${spent.toFixed(2)} / R$ ${b.limit_amount.toFixed(2)} (${pct}%) ${pct > 100 ? '🔴 ESTOURADO' : pct > 80 ? '⚠️ PERTO DO LIMITE' : '✅'}`;
+  return `  • ${b.category}: R$ ${spent.toFixed(2)} / R$ ${b.limit_amount.toFixed(2)} (${pct}%) ${pct > 100 ? '🔴 ESTOURADO' : pct > 80 ? '⚠️ PERTO' : '✅'}`;
 }).join("\n") || "  Nenhum orçamento definido"}
+
+💸 DÍVIDAS (Total: R$ ${totalDebt.toFixed(2)}):
+${buildDebtAnalysis(debts)}
 
 🎯 METAS:
 ${goals.map((g: any) => {
   const pct = Math.round(((g.current_amount || 0) / g.target_amount) * 100);
-  return `  [${g.id}] ${g.name}: R$ ${(g.current_amount || 0).toFixed(2)} / R$ ${g.target_amount.toFixed(2)} (${pct}%)${g.deadline ? ` prazo: ${g.deadline}` : ''}`;
+  const remaining = g.target_amount - (g.current_amount || 0);
+  return `  [${g.id}] ${g.name}: R$ ${(g.current_amount || 0).toFixed(2)} / R$ ${g.target_amount.toFixed(2)} (${pct}%) | Falta: R$ ${remaining.toFixed(2)}${g.deadline ? ` | Prazo: ${g.deadline}` : ''}`;
 }).join("\n") || "  Nenhuma meta"}
 
-💰 INVESTIMENTOS (Total: R$ ${totalInvested.toFixed(2)}):
+💼 INVESTIMENTOS (Total: R$ ${totalInvested.toFixed(2)}):
 ${investments.map((i: any) => {
   const ret = i.invested_amount > 0 ? ((i.current_amount - i.invested_amount) / i.invested_amount * 100).toFixed(1) : "0.0";
   return `  [${i.id}] ${i.name} (${i.asset_type}): R$ ${i.current_amount.toFixed(2)} (retorno: ${ret}%)`;
 }).join("\n") || "  Nenhum"}
 
-💸 DÍVIDAS (Total: R$ ${totalDebt.toFixed(2)}):
-${debts.filter((d: any) => d.status === "active").map((d: any) => `  [${d.id}] ${d.name} (${d.creditor}): R$ ${d.remaining_amount.toFixed(2)} / R$ ${d.total_amount.toFixed(2)} | juros: ${d.interest_rate || 0}%/mês`).join("\n") || "  Nenhuma"}
-
 📅 CONTAS A PAGAR:
 ${bills.filter((b: any) => b.status === "pending").slice(0, 10).map((b: any) => `  [${b.id}] ${b.due_date} | ${b.description}: R$ ${b.amount.toFixed(2)}`).join("\n") || "  Nenhuma pendente"}
 
 💳 CARTÕES:
-${cards.map((c: any) => `  [${c.id}] ${c.name}: R$ ${(c.used_amount || 0).toFixed(2)} / R$ ${c.credit_limit.toFixed(2)}${c.due_day ? ` | vence dia ${c.due_day}` : ''}`).join("\n") || "  Nenhum"}
+${cards.map((c: any) => `  [${c.id}] ${c.name}: R$ ${(c.used_amount || 0).toFixed(2)} / R$ ${c.credit_limit.toFixed(2)} (${c.credit_limit > 0 ? Math.round(((c.used_amount || 0) / c.credit_limit) * 100) : 0}%)${c.due_day ? ` | vence dia ${c.due_day}` : ''}`).join("\n") || "  Nenhum"}
 
 🔄 RECORRENTES:
-${recurring.map((r: any) => `  ${r.description}: R$ ${r.amount.toFixed(2)} (${r.type}, ${r.frequency}) próxima: ${r.next_date}`).join("\n") || "  Nenhuma"}
+${recurring.map((r: any) => `  ${r.description}: R$ ${r.amount.toFixed(2)} (${r.type}, ${r.frequency})`).join("\n") || "  Nenhuma"}
 
 📝 ÚLTIMOS 25 LANÇAMENTOS:
 ${transactions.slice(0, 25).map((t: any) => `  [${t.id}] ${t.date} | ${t.description} | R$ ${t.amount.toFixed(2)} | ${t.type} | ${t.category}`).join("\n") || "  Nenhum"}
@@ -531,6 +685,118 @@ ${transactions.slice(0, 25).map((t: any) => `  [${t.id}] ${t.date} | ${t.descrip
 `;
 }
 
+// ━━━ COMPREHENSIVE SYSTEM PROMPT ━━━
+function buildSystemPrompt(userName: string, financialContext: string, intentInstructions: string): string {
+  return `Você é a **FinDash IA** — a assistente financeira pessoal mais inteligente do Brasil. Você combina o conhecimento de um planejador financeiro certificado (CFP), contador, especialista em investimentos e coach financeiro comportamental.
+
+Você tem acesso COMPLETO e em TEMPO REAL aos dados financeiros de ${userName}. USE SEMPRE esses dados para personalizar cada resposta. NUNCA dê respostas genéricas.
+
+━━━ PERSONALIDADE E TOM ━━━
+- Amigável, direta e motivadora — como uma amiga especialista em finanças
+- Português brasileiro informal ("você", não "o senhor")
+- Concisa: máximo 4 parágrafos por resposta normal, até 6 para planos financeiros
+- Use emojis com moderação. Formate com markdown: **negrito**, listas, tabelas.
+- Quando identificar um problema, ofereça uma solução prática e calculada
+- Adapte o tom à situação emocional (empático com endividados, técnico com investidores)
+
+━━━ CONHECIMENTO FINANCEIRO BRASILEIRO PROFUNDO ━━━
+
+## DÍVIDAS — CUSTO REAL (taxas médias 2025):
+- Rotativo do cartão: 400-500% a.a. → PRIORIDADE MÁXIMA
+- Cheque especial: 130-150% a.a.
+- Empréstimo pessoal banco: 50-100% a.a.
+- Crédito consignado: 18-30% a.a.
+- Financiamento veículo: 20-35% a.a.
+- Financiamento imobiliário: 10-15% a.a. (mais barato)
+
+## ESTRATÉGIAS DE QUITAÇÃO:
+- AVALANCHE: pagar maior juros primeiro (economiza mais)
+- SNOWBALL: pagar menor saldo primeiro (mais motivador)
+- HÍBRIDA: quite rotativo primeiro, depois aplique uma das acima
+- Negociação: bancos aceitam 70-80% à vista; Serasa Limpa Nome; Lei 14.181/2021
+- Prescrição: 5 anos para bancárias (CPC Art. 394) — não elimina, impede cobrança judicial
+- Portabilidade de crédito: direito de migrar para banco com taxa menor
+
+## INVESTIMENTOS — PIRÂMIDE:
+Nível 0: Reserva emergência (3-6 meses) → Tesouro Selic ou CDB liquidez diária
+Nível 1: Renda fixa → Tesouro IPCA+, CDB, LCI/LCA (isentos IR para PF)
+Nível 2: FIIs (dividendos mensais isentos IR), ETFs (BOVA11, IVVB11)
+Nível 3: Ações, Previdência (PGBL deduz 12% se declaração completa)
+- FGC: protege até R$ 250k/CPF/instituição
+- IR regressivo: 22.5% (até 180 dias) → 15% (acima 720 dias)
+- Compare: LCI_equivalente = CDB × (1 - alíquota_IR)
+- NUNCA investir enquanto tem rotativo do cartão aberto
+
+## ORÇAMENTO:
+- Regra 50-30-20: necessidades/desejos/futuro
+- Com dívidas: 50-20-30 (inverter desejos e futuro)
+- Salário mínimo 2025: R$ 1.518
+- INSS 2025: 7.5% até R$ 1.518 / 9% / 12% / 14% (teto R$ 7.786,02)
+- IR 2025: isento até R$ 2.824; faixas 7.5% / 15% / 22.5% / 27.5%
+- 13º: provisionar 1/12 por mês; Férias: +1/3 do salário
+
+## MEI/PJ:
+- MEI 2025: R$ 81k/ano (R$ 6.750/mês), DAS R$ 71-75/mês
+- Separar conta PJ de PF: essencial
+- Pró-labore: retirada com INSS para manter benefícios
+- Distribuição de lucros: sem IR no Simples/Lucro Presumido
+
+## METAS:
+- Casa: FGTS após 3 anos, MCMV até R$ 8k renda, parcela ≤ 30% renda
+- Carro: valor ≤ 6 meses salário, depreciação 20% 1º ano
+- Aposentadoria: regra 4%, R$ 5k/mês ≈ R$ 1.5M investido
+- R$ 500/mês × 30 anos @ 0.8%/mês ≈ R$ 700k+
+
+## CÁLCULOS QUE VOCÊ FAZ:
+- Juros compostos: M = C × (1+i)^n
+- Parcela Price: PMT = PV × [i×(1+i)^n] / [(1+i)^n - 1]
+- Prazo quitação: n = -ln(1 - i×PV/PMT) / ln(1+i)
+- Taxa efetiva anual: (1 + taxa_mensal)^12 - 1
+- Custo total financiamento: total_pago - valor_financiado
+
+## ERROS COMUNS A ALERTAR:
+1. Pagar mínimo do cartão (R$ 1k → R$ 5k+ em 10 anos)
+2. Misturar PJ e PF
+3. Não ter reserva de emergência (78% dos BR não tem)
+4. Investir enquanto endividado com juros altos
+5. Carro zero financiado sem entrada
+6. Não declarar IR quando obrigatório (renda > R$ 33.888/ano)
+7. Usar FGTS para consumo
+8. Previdência cara sem comparar alternativas
+
+━━━ CAPACIDADES — USE AS FERRAMENTAS ━━━
+- ✅ Adicionar/atualizar/excluir lançamentos, metas, investimentos
+- ✅ Criar orçamentos, contas a pagar, dívidas, cartões
+- ✅ Registrar pagamentos, transações recorrentes
+- ✅ Gerar resumo financeiro com análise de tendências
+
+━━━ REGRAS ABSOLUTAS ━━━
+✗ NUNCA invente dados — use APENAS o contexto fornecido
+✗ NUNCA recomende banco/corretora específica
+✗ NUNCA prometa rendimento garantido
+✗ NUNCA ignore dívida para falar de investimento
+✗ NUNCA dê conselho genérico quando tem dados específicos
+✗ NUNCA julgue moralmente os gastos da pessoa
+✗ NUNCA diga "procure um especialista" como resposta principal
+
+✓ SEMPRE use os dados reais em TODA resposta
+✓ SEMPRE dê o próximo passo concreto e executável
+✓ SEMPRE calcule projeções com números reais
+✓ SEMPRE mencione a lei/regra quando relevante
+✓ SEMPRE explique o PORQUÊ de cada recomendação
+✓ SEMPRE adapte o tom à situação emocional detectada
+✓ SEMPRE mencione FGC para renda fixa e implicações de IR
+✓ SEMPRE que pedirem alteração, USE AS FERRAMENTAS
+✓ Para atualizar/excluir, use search_transactions se precisar do ID
+
+${intentInstructions ? `\n━━━ INSTRUÇÕES ESPECIAIS PARA ESTA PERGUNTA ━━━\n${intentInstructions}\n` : ''}
+
+${financialContext}
+
+Responda SEMPRE em português brasileiro. Seja a melhor assistente financeira que o Brasil já teve.`;
+}
+
+// ━━━ MAIN SERVER ━━━
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -584,41 +850,14 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `Você é a **FinDash IA** — assistente financeira pessoal de ${userName} no FinDash Pro.
+    // Detect intent from the latest user message
+    const lastUserMsg = [...messages].reverse().find((m: any) => m.role === "user");
+    const intent = lastUserMsg ? detectIntent(lastUserMsg.content) : "general";
+    const intentInstructions = getIntentInstructions(intent);
 
-## Personalidade
-- Amigável, direta e motivadora — como uma amiga especialista em finanças
-- Português brasileiro informal ("você", não "o senhor")
-- Use os dados reais SEMPRE — mencione valores específicos do contexto
-- Concisa: máximo 4 parágrafos por resposta
-- Use emojis com moderação. Formate com markdown: **negrito**, listas e tabelas.
-- Quando identificar um problema, ofereça uma solução prática
+    console.log(`Intent detected: ${intent} for message: "${lastUserMsg?.content?.slice(0, 50)}..."`);
 
-## Capacidades — USE AS FERRAMENTAS quando o usuário pedir:
-- ✅ Adicionar/atualizar/excluir lançamentos, metas, investimentos
-- ✅ Criar/atualizar orçamentos, contas a pagar, dívidas, cartões
-- ✅ Registrar pagamentos de dívidas, transações recorrentes
-- ✅ Gerar resumo financeiro completo com análise de tendências
-
-## Análise Inteligente
-Ao analisar finanças:
-- Compare receita vs despesa e calcule taxa de poupança
-- Identifique top 3 categorias de gasto
-- Verifique orçamentos estourados/quase estourados
-- Analise progresso das metas vs deadline
-- Avalie custo real das dívidas (juros compostos)
-- Sugira cortes específicos baseados nos dados
-- Projete tendências e faça simulações
-
-## Regras
-1. NUNCA invente dados — use APENAS o contexto fornecido
-2. Quando pedirem alteração, USE AS FERRAMENTAS
-3. Para atualizar/excluir, use search_transactions se precisar do ID
-4. Confirme ações com detalhes específicos
-5. Alerte proativamente sobre orçamentos estourados e contas próximas
-6. Para investimentos, deixe claro que não é consultoria regulada
-
-${financialContext}`;
+    const systemPrompt = buildSystemPrompt(userName, financialContext, intentInstructions);
 
     const aiMessages: any[] = [
       { role: "system", content: systemPrompt },
@@ -648,7 +887,7 @@ ${financialContext}`;
 
       if (!toolResponse.ok) {
         const status = toolResponse.status;
-        if (status === 429) return new Response(JSON.stringify({ error: "Muitas requisições. Aguarde." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (status === 429) return new Response(JSON.stringify({ error: "Muitas requisições. Aguarde um momento." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         if (status === 402) return new Response(JSON.stringify({ error: "Créditos de IA esgotados." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         return new Response(JSON.stringify({ error: "Erro no serviço de IA" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
@@ -675,9 +914,8 @@ ${financialContext}`;
         continue;
       }
 
-      // No more tool calls — check if we want streaming final response
+      // No more tool calls — stream final response
       if (wantStream) {
-        // Phase 2: Stream the final response with gemini-2.5-pro for quality
         const streamResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -698,19 +936,15 @@ ${financialContext}`;
           });
         }
 
-        // Prepend actions as a special SSE event
         const encoder = new TextEncoder();
         const reader = streamResponse.body.getReader();
 
         const readable = new ReadableStream({
           async start(controller) {
-            // Send actions first
             if (actionsSummary.length > 0) {
               const actionsEvent = JSON.stringify({ type: "actions", actions: actionsSummary });
               controller.enqueue(encoder.encode(`data: ${actionsEvent}\n\n`));
             }
-
-            // Pipe through the SSE stream
             while (true) {
               const { done, value } = await reader.read();
               if (done) break;
