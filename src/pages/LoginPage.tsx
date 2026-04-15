@@ -1,9 +1,247 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable';
-import { BarChart3, Eye, EyeOff, Check } from 'lucide-react';
+import { BarChart3, Eye, EyeOff, AlertCircle, Check, Sparkles, TrendingUp, Target, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
+import { haptic } from '@/lib/haptics';
+
+const TESTIMONIALS = [
+  { quote: '"Finalmente consigo ver para onde meu dinheiro vai."', author: 'Marina S., Designer' },
+  { quote: '"O score financeiro me motivou a economizar mais."', author: 'Carlos R., Desenvolvedor' },
+  { quote: '"Melhor app de finanças que já usei, sem dúvida."', author: 'Ana P., Empreendedora' },
+];
+
+function DarkHeroSection({ variant = 'login' }: { variant?: 'login' | 'register' }) {
+  return (
+    <div
+      className="relative overflow-hidden w-full"
+      style={{
+        minHeight: '42vh',
+        background: '#0a1a0f',
+      }}
+    >
+      {/* Radial gradient overlay */}
+      <div className="absolute inset-0" style={{
+        background: 'radial-gradient(ellipse 80% 70% at 40% 50%, rgba(22,163,74,0.30) 0%, rgba(22,163,74,0.08) 50%, transparent 80%)',
+      }} />
+      {/* Dot grid */}
+      <div className="absolute inset-0" style={{
+        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)',
+        backgroundSize: '24px 24px',
+      }} />
+      {/* Orb 1 */}
+      <div className="absolute" style={{
+        width: 180, height: 180, borderRadius: '50%',
+        background: 'rgba(22,163,74,0.18)', filter: 'blur(50px)',
+        top: -40, right: -40,
+      }} />
+      {/* Orb 2 */}
+      <div className="absolute" style={{
+        width: 120, height: 120, borderRadius: '50%',
+        background: 'rgba(16,185,129,0.12)', filter: 'blur(40px)',
+        bottom: 20, left: -20,
+      }} />
+
+      <div className="relative z-10" style={{ padding: '48px 28px 56px' }}>
+        {/* Logo */}
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center justify-center" style={{
+            width: 38, height: 38, background: '#16a34a', borderRadius: 11,
+            boxShadow: '0 4px 14px rgba(22,163,74,0.4)',
+          }}>
+            <BarChart3 className="text-white" style={{ width: 20, height: 20 }} />
+          </div>
+          <span style={{ fontSize: 18, fontWeight: 800, color: 'white' }}>FinDash</span>
+          <span style={{ fontSize: 18, fontWeight: 800, color: '#4ade80' }}>Pro</span>
+        </div>
+
+        {/* Headline */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          style={{ marginTop: 28 }}
+        >
+          {variant === 'login' ? (
+            <h1 style={{ fontSize: 36, fontWeight: 900, color: 'white', letterSpacing: '-1.2px', lineHeight: 1.1 }}>
+              Suas finanças<br />sob controle.
+            </h1>
+          ) : (
+            <h1 style={{ fontSize: 36, fontWeight: 900, color: 'white', letterSpacing: '-1.2px', lineHeight: 1.1 }}>
+              Comece hoje.<br />É grátis.
+            </h1>
+          )}
+        </motion.div>
+
+        <p style={{ marginTop: 10, fontSize: 14, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
+          Controle pessoal, negócio e investimentos
+        </p>
+
+        {/* Stats pills */}
+        <div className="flex flex-wrap gap-2" style={{ marginTop: 20 }}>
+          {['✓ 2.400 usuários', '✓ Grátis para sempre', '✓ Sem cartão'].map((pill) => (
+            <span key={pill} style={{
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 99, padding: '5px 12px',
+              fontSize: 11, fontWeight: 700,
+              color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap',
+            }}>{pill}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DesktopLeftPanel() {
+  const [testimonialIdx, setTestimonialIdx] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTestimonialIdx((i) => (i + 1) % TESTIMONIALS.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div
+      className="hidden lg:flex w-[55%] flex-col justify-between relative overflow-hidden"
+      style={{
+        background: '#0a1a0f',
+        padding: '48px 48px 40px',
+      }}
+    >
+      {/* Gradients and dots */}
+      <div className="absolute inset-0" style={{
+        background: 'radial-gradient(ellipse 80% 70% at 40% 50%, rgba(22,163,74,0.30) 0%, rgba(22,163,74,0.08) 50%, transparent 80%)',
+      }} />
+      <div className="absolute inset-0" style={{
+        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)',
+        backgroundSize: '24px 24px',
+      }} />
+      <div className="absolute" style={{ width: 250, height: 250, borderRadius: '50%', background: 'rgba(22,163,74,0.18)', filter: 'blur(60px)', top: -60, right: -60 }} />
+      <div className="absolute" style={{ width: 160, height: 160, borderRadius: '50%', background: 'rgba(16,185,129,0.12)', filter: 'blur(50px)', bottom: 40, left: -40 }} />
+
+      <div className="relative z-10 flex flex-col justify-between h-full">
+        {/* Logo */}
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center justify-center" style={{
+            width: 42, height: 42, background: '#16a34a', borderRadius: 12,
+            boxShadow: '0 4px 14px rgba(22,163,74,0.4)',
+          }}>
+            <BarChart3 className="text-white" style={{ width: 22, height: 22 }} />
+          </div>
+          <span style={{ fontSize: 20, fontWeight: 800, color: 'white' }}>FinDash</span>
+          <span style={{ fontSize: 20, fontWeight: 800, color: '#4ade80' }}>Pro</span>
+        </div>
+
+        {/* Middle content */}
+        <div>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{ fontSize: 44, fontWeight: 900, color: 'white', letterSpacing: '-1.5px', lineHeight: 1.1 }}
+          >
+            Suas finanças<br />sob controle.<br />
+            <span style={{ color: '#4ade80' }}>Finalmente.</span>
+          </motion.h1>
+          <p style={{ marginTop: 14, fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+            Controle pessoal, negócio e investimentos<br />tudo em um só lugar.
+          </p>
+
+          {/* Mini dashboard card */}
+          <div style={{
+            marginTop: 32, background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18,
+            padding: '18px 20px', backdropFilter: 'blur(10px)',
+          }}>
+            {[
+              { icon: <Wallet style={{ width: 16, height: 16 }} />, color: '#4ade80', label: 'Saldo este mês', value: 'R$ 3.200' },
+              { icon: <TrendingUp style={{ width: 16, height: 16 }} />, color: '#3b82f6', label: 'Score financeiro', value: '847/1000' },
+              { icon: <Target style={{ width: 16, height: 16 }} />, color: '#f59e0b', label: 'Meta de viagem', value: '67% ✓' },
+            ].map((row, i, arr) => (
+              <div key={row.label} className="flex items-center justify-between" style={{
+                padding: '10px 0',
+                borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+              }}>
+                <div className="flex items-center gap-2.5">
+                  <div className="flex items-center justify-center" style={{
+                    width: 28, height: 28, borderRadius: '50%',
+                    background: `${row.color}20`,
+                    color: row.color,
+                  }}>{row.icon}</div>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>{row.label}</span>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>{row.value}</span>
+              </div>
+            ))}
+            <div className="flex items-center gap-1.5" style={{ marginTop: 10 }}>
+              <Sparkles style={{ width: 12, height: 12, color: '#4ade80' }} />
+              <span style={{ fontSize: 11, color: '#4ade80', fontStyle: 'italic' }}>
+                IA analisando seus dados...
+                <motion.span
+                  animate={{ opacity: [1, 0] }}
+                  transition={{ duration: 0.8, repeat: Infinity, repeatType: 'reverse' }}
+                >|</motion.span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Testimonials */}
+        <div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={testimonialIdx}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div style={{ color: '#f59e0b', fontSize: 14, marginBottom: 6 }}>★★★★★</div>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontStyle: 'italic', lineHeight: 1.5 }}>
+                {TESTIMONIALS[testimonialIdx].quote}
+              </p>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 6 }}>
+                {TESTIMONIALS[testimonialIdx].author}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+          <div className="flex gap-1.5" style={{ marginTop: 12 }}>
+            {TESTIMONIALS.map((_, i) => (
+              <div key={i} style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: i === testimonialIdx ? '#4ade80' : 'rgba(255,255,255,0.2)',
+                transition: 'background 300ms',
+              }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const GoogleIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 48 48">
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+  </svg>
+);
+
+const inputStyle: React.CSSProperties = {
+  height: 52, padding: '0 16px', border: '1.5px solid #e2e8f0',
+  borderRadius: 14, fontSize: 16, color: '#0f172a', background: '#fafafa',
+  width: '100%', outline: 'none', transition: 'all 150ms',
+};
+
+const inputFocusClass = "focus:bg-white focus:!border-[#16a34a] focus:shadow-[0_0_0_4px_rgba(22,163,74,0.10)]";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -11,96 +249,286 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    haptic.light();
+
+    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+    if (err) {
+      setLoading(false);
+      setError('E-mail ou senha incorretos.');
+      haptic.error();
+      return;
+    }
     setLoading(false);
-    if (error) { toast.error(error.message); return; }
-    navigate('/app');
+    setSuccess(true);
+    haptic.success();
+    setTimeout(() => navigate('/app'), 800);
   };
 
   const handleGoogle = async () => {
+    haptic.light();
     await lovable.auth.signInWithOAuth('google', { redirect_uri: `${window.location.origin}/app` });
   };
 
-  return (
-    <div className="min-h-screen flex">
-      {/* Left panel */}
-      <div className="hidden lg:flex w-1/2 bg-primary p-12 flex-col justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-lg bg-card/20 flex items-center justify-center">
-            <BarChart3 className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-black text-primary-foreground">FinDash Pro</span>
-        </div>
-        <div>
-          <h2 className="text-3xl font-black text-primary-foreground leading-tight mb-6">Suas finanças sob controle, sempre.</h2>
-          <ul className="space-y-3">
-            {['Visão completa de receitas e despesas', 'Metas financeiras com acompanhamento diário', 'Relatórios profissionais automatizados'].map(b => (
-              <li key={b} className="flex items-center gap-2 text-sm text-primary-foreground/90">
-                <Check className="w-4 h-4" /> {b}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <p className="text-xs text-primary-foreground/60">© 2025 FinDash Pro</p>
+  const formContent = (
+    <>
+      {/* Handle bar - mobile only */}
+      <div className="lg:hidden mx-auto" style={{ width: 36, height: 4, background: '#e2e8f0', borderRadius: 99, marginBottom: 24 }} />
+
+      <h2 style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.6px' }}>Bem-vindo de volta</h2>
+      <p style={{ fontSize: 14, color: '#94a3b8', marginTop: 4 }}>Entre na sua conta para continuar</p>
+
+      {/* Error banner */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{
+              background: '#fef2f2', border: '1px solid #fecaca',
+              borderRadius: 10, padding: '12px 14px', marginTop: 16,
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}
+          >
+            <AlertCircle style={{ width: 14, height: 14, color: '#ef4444', flexShrink: 0 }} />
+            <span style={{ fontSize: 13, color: '#dc2626' }}>{error}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Google button */}
+      <motion.button
+        onClick={handleGoogle}
+        whileTap={{ scale: 0.97 }}
+        className="hover:bg-[#f8fafc] hover:border-[#cbd5e1] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+        style={{
+          marginTop: 20, height: 52, width: '100%', background: 'white',
+          border: '1.5px solid #e2e8f0', borderRadius: 14,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+          cursor: 'pointer', transition: 'all 150ms',
+        }}
+      >
+        <GoogleIcon />
+        <span style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>Continuar com Google</span>
+      </motion.button>
+
+      {/* Divider */}
+      <div className="flex items-center gap-3" style={{ margin: '18px 0' }}>
+        <div className="flex-1" style={{ height: 1, background: '#f1f5f9' }} />
+        <span style={{ fontSize: 12, color: '#94a3b8' }}>ou</span>
+        <div className="flex-1" style={{ height: 1, background: '#f1f5f9' }} />
       </div>
 
-      {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-sm">
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-black text-foreground">FinDash Pro</span>
-          </div>
-          <h1 className="text-2xl font-black text-foreground mb-1">Bem-vindo de volta</h1>
-          <p className="text-sm text-muted mb-6">Entre na sua conta para continuar</p>
+      {/* Form */}
+      <form onSubmit={handleLogin}>
+        {[
+          { idx: 0, label: 'E-MAIL', type: 'email', value: email, onChange: setEmail, placeholder: 'seu@email.com' },
+        ].map((f, i) => (
+          <motion.div
+            key={f.label}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 + i * 0.07 }}
+            style={{ marginBottom: 14 }}
+          >
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 6 }}>
+              {f.label}
+            </label>
+            <input
+              type={f.type}
+              value={f.value}
+              onChange={e => f.onChange(e.target.value)}
+              required
+              placeholder={f.placeholder}
+              className={inputFocusClass}
+              style={{ ...inputStyle, placeholderColor: '#cbd5e1' } as React.CSSProperties}
+            />
+          </motion.div>
+        ))}
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="label-upper text-muted block mb-1.5">E-mail</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-fin-green-border bg-card text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all" />
+        {/* Password */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.37 }}
+          style={{ marginBottom: 4 }}
+        >
+          <div className="flex justify-between items-center" style={{ marginBottom: 6 }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              SENHA
+            </label>
+            <Link to="/forgot-password" style={{ fontSize: 12, fontWeight: 600, color: '#16a34a', textDecoration: 'none' }}
+              className="hover:underline">
+              Esqueci a senha
+            </Link>
+          </div>
+          <div className="relative">
+            <input
+              type={showPw ? 'text' : 'password'}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              className={inputFocusClass}
+              style={{ ...inputStyle, paddingRight: 48 } as React.CSSProperties}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPw(!showPw)}
+              style={{
+                position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', padding: 4, cursor: 'pointer',
+              }}
+            >
+              {showPw ? <EyeOff style={{ width: 18, height: 18, color: '#94a3b8' }} /> : <Eye style={{ width: 18, height: 18, color: '#94a3b8' }} />}
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Submit */}
+        <motion.button
+          type="submit"
+          disabled={loading || success}
+          whileTap={{ scale: 0.97 }}
+          animate={error ? { x: [0, -8, 8, -8, 8, 0] } : {}}
+          transition={error ? { duration: 0.35 } : {}}
+          style={{
+            marginTop: 20, height: 54, width: '100%',
+            background: success ? '#14532d' : '#16a34a',
+            border: 'none', borderRadius: 14, color: 'white',
+            fontSize: 16, fontWeight: 800, letterSpacing: '-0.2px',
+            cursor: loading || success ? 'default' : 'pointer',
+            boxShadow: '0 4px 14px rgba(22,163,74,0.35), 0 1px 3px rgba(22,163,74,0.2)',
+            opacity: loading ? 0.85 : 1, transition: 'all 150ms',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}
+        >
+          {loading && (
+            <div style={{ width: 18, height: 18, border: '2.5px solid white', borderTopColor: 'transparent', borderRadius: '50%' }}
+              className="animate-spin" />
+          )}
+          {success ? (
+            <><Check style={{ width: 18, height: 18 }} /> Acessando...</>
+          ) : loading ? 'Entrando...' : 'Entrar'}
+        </motion.button>
+      </form>
+
+      {/* Register link */}
+      <p style={{ marginTop: 20, textAlign: 'center', fontSize: 14 }}>
+        <span style={{ color: '#94a3b8' }}>Não tem conta? </span>
+        <Link to="/register" style={{ color: '#16a34a', fontWeight: 700, textDecoration: 'none' }}
+          className="hover:underline">
+          Criar conta grátis →
+        </Link>
+      </p>
+    </>
+  );
+
+  return (
+    <div className="min-h-screen flex flex-col lg:flex-row" style={{ background: '#0a1a0f' }}>
+      {/* Desktop left panel */}
+      <DesktopLeftPanel />
+
+      {/* Mobile hero */}
+      <div className="lg:hidden">
+        <DarkHeroSection variant="login" />
+      </div>
+
+      {/* Form card */}
+      <motion.div
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: 'spring', damping: 28, stiffness: 280, delay: 0.2 }}
+        className="relative z-10 lg:flex-1 lg:flex lg:items-center lg:justify-center"
+        style={{
+          background: 'white',
+          borderRadius: '28px 28px 0 0',
+          marginTop: -24,
+          padding: '28px 24px 40px',
+          paddingBottom: 'calc(40px + env(safe-area-inset-bottom))',
+          minHeight: '58vh',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.12)',
+        }}
+      >
+        {/* Desktop: remove mobile-specific styles */}
+        <div className="lg:hidden">
+          {formContent}
+        </div>
+        <div className="hidden lg:block w-full" style={{ maxWidth: 380, margin: '0 auto' }}>
+          {/* Desktop form - no handle bar, same content */}
+          <h2 style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.6px' }}>Bem-vindo de volta</h2>
+          <p style={{ fontSize: 14, color: '#94a3b8', marginTop: 4 }}>Entre na sua conta para continuar</p>
+
+          <AnimatePresence>
+            {error && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '12px 14px', marginTop: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <AlertCircle style={{ width: 14, height: 14, color: '#ef4444', flexShrink: 0 }} />
+                <span style={{ fontSize: 13, color: '#dc2626' }}>{error}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <motion.button onClick={handleGoogle} whileTap={{ scale: 0.97 }}
+            className="hover:bg-[#f8fafc] hover:border-[#cbd5e1] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+            style={{ marginTop: 20, height: 52, width: '100%', background: 'white', border: '1.5px solid #e2e8f0', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 150ms' }}>
+            <GoogleIcon />
+            <span style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>Continuar com Google</span>
+          </motion.button>
+
+          <div className="flex items-center gap-3" style={{ margin: '18px 0' }}>
+            <div className="flex-1" style={{ height: 1, background: '#f1f5f9' }} />
+            <span style={{ fontSize: 12, color: '#94a3b8' }}>ou</span>
+            <div className="flex-1" style={{ height: 1, background: '#f1f5f9' }} />
+          </div>
+
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 6 }}>E-MAIL</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="seu@email.com"
+                className={inputFocusClass} style={inputStyle} />
             </div>
-            <div>
-              <label className="label-upper text-muted block mb-1.5">Senha</label>
+            <div style={{ marginBottom: 4 }}>
+              <div className="flex justify-between items-center" style={{ marginBottom: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>SENHA</label>
+                <Link to="/forgot-password" style={{ fontSize: 12, fontWeight: 600, color: '#16a34a', textDecoration: 'none' }} className="hover:underline">Esqueci a senha</Link>
+              </div>
               <div className="relative">
                 <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required
-                  className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-fin-green-border bg-card text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all pr-10" />
-                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted">
-                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  className={inputFocusClass} style={{ ...inputStyle, paddingRight: 48 } as React.CSSProperties} />
+                <button type="button" onClick={() => setShowPw(!showPw)}
+                  style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', padding: 4, cursor: 'pointer' }}>
+                  {showPw ? <EyeOff style={{ width: 18, height: 18, color: '#94a3b8' }} /> : <Eye style={{ width: 18, height: 18, color: '#94a3b8' }} />}
                 </button>
               </div>
-              <Link to="/forgot-password" className="text-xs text-fin-green font-semibold mt-1 inline-block hover:underline">Esqueci minha senha</Link>
             </div>
-            <button type="submit" disabled={loading}
-              className="w-full py-2.5 rounded-[9px] bg-primary text-primary-foreground text-sm font-extrabold hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-              {loading && <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />}
-              Entrar
-            </button>
+            <motion.button type="submit" disabled={loading || success} whileTap={{ scale: 0.97 }}
+              animate={error ? { x: [0, -8, 8, -8, 8, 0] } : {}} transition={error ? { duration: 0.35 } : {}}
+              style={{
+                marginTop: 20, height: 54, width: '100%', background: success ? '#14532d' : '#16a34a',
+                border: 'none', borderRadius: 14, color: 'white', fontSize: 16, fontWeight: 800,
+                letterSpacing: '-0.2px', cursor: loading || success ? 'default' : 'pointer',
+                boxShadow: '0 4px 14px rgba(22,163,74,0.35), 0 1px 3px rgba(22,163,74,0.2)',
+                opacity: loading ? 0.85 : 1, transition: 'all 150ms',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}>
+              {loading && <div style={{ width: 18, height: 18, border: '2.5px solid white', borderTopColor: 'transparent', borderRadius: '50%' }} className="animate-spin" />}
+              {success ? <><Check style={{ width: 18, height: 18 }} /> Acessando...</> : loading ? 'Entrando...' : 'Entrar'}
+            </motion.button>
           </form>
 
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted">ou continue com</span>
-            <div className="flex-1 h-px bg-border" />
-          </div>
-
-          <button onClick={handleGoogle}
-            className="w-full py-2.5 rounded-[9px] border-[1.5px] border-border text-foreground text-sm font-bold hover:bg-secondary transition-all flex items-center justify-center gap-2">
-            <svg className="w-4 h-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-            Entrar com Google
-          </button>
-
-          <p className="text-center text-sm text-muted mt-6">
-            Não tem conta? <Link to="/register" className="text-fin-green font-bold hover:underline">Criar grátis</Link>
+          <p style={{ marginTop: 20, textAlign: 'center', fontSize: 14 }}>
+            <span style={{ color: '#94a3b8' }}>Não tem conta? </span>
+            <Link to="/register" style={{ color: '#16a34a', fontWeight: 700, textDecoration: 'none' }} className="hover:underline">Criar conta grátis →</Link>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
