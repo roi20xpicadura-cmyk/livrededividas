@@ -42,6 +42,9 @@ const IntegrationsPage = lazy(() => import("./pages/app/IntegrationsPage"));
 const SimulatorPage = lazy(() => import("./pages/app/SimulatorPage"));
 const PredictionsPage = lazy(() => import("./pages/app/PredictionsPage"));
 const ExportPage = lazy(() => import("./pages/app/ExportPage").then(m => ({ default: m.ExportPage })));
+const ChartsPage = lazy(() => import("./pages/app/ChartsPage"));
+const InvestmentsPage = lazy(() => import("./pages/app/InvestmentsPage"));
+const DREPage = lazy(() => import("./pages/app/DREPage"));
 
 // Optimized QueryClient with stale time and dedup
 const queryClient = new QueryClient({
@@ -140,6 +143,9 @@ const App = () => {
                     <Route path="referral" element={<ReferralPage />} />
                     <Route path="simulator" element={<SimulatorPage />} />
                     <Route path="predictions" element={<PredictionsPage />} />
+                    <Route path="charts" element={<ChartsPage />} />
+                    <Route path="investments" element={<InvestmentsPage />} />
+                    <Route path="dre" element={<DREPage />} />
                   </Route>
 
                   <Route path="*" element={<NotFound />} />
