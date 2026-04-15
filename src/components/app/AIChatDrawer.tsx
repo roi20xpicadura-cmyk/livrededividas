@@ -41,20 +41,31 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      
+      if (!session?.access_token) {
+        setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Você precisa estar logado para usar o assistente IA.', ts: new Date() }]);
+        setLoading(false);
+        return;
+      }
 
       const resp = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
         body: JSON.stringify({ messages: allMsgs }),
       });
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({ error: 'Erro desconhecido' }));
-        setMessages(prev => [...prev, { role: 'assistant', content: `⚠️ ${err.error || 'Erro ao conectar com a IA.'}`, ts: new Date() }]);
+        const errorMsg = resp.status === 429 
+          ? '⚠️ Muitas requisições. Aguarde um momento e tente novamente.'
+          : resp.status === 402
+          ? '⚠️ Créditos de IA esgotados. Adicione créditos nas configurações.'
+          : `⚠️ ${err.error || 'Erro ao conectar com a IA.'}`;
+        setMessages(prev => [...prev, { role: 'assistant', content: errorMsg, ts: new Date() }]);
         setLoading(false);
         return;
       }
