@@ -421,6 +421,24 @@
   color: var(--color-green-800, #166534);
 }
 
+/* Pulse green animation */
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+}
+
+/* AI chat input focus */
+.ai-chat-input-wrapper:focus-within {
+  border-color: var(--color-green-600) !important;
+  box-shadow: 0 0 0 3px rgba(22,163,74,0.10);
+  background: var(--color-bg-surface) !important;
+}
+
+/* AI chat scrollbar */
+.ai-chat-messages::-webkit-scrollbar { width: 4px; }
+.ai-chat-messages::-webkit-scrollbar-track { background: transparent; }
+.ai-chat-messages::-webkit-scrollbar-thumb { background: var(--color-border-base); border-radius: 99px; }
+
 /* Integrations grid XL breakpoint */
 @media (min-width: 1280px) {
   .integrations-grid {
