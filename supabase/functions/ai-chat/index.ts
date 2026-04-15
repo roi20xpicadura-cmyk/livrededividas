@@ -340,7 +340,7 @@ Os IDs dos lançamentos, metas e investimentos estão listados entre colchetes [
 ${financialContext}`;
 
     // Non-streaming approach with tool calling
-    const aiMessages = [
+    const aiMessages: any[] = [
       { role: "system", content: systemPrompt },
       ...messages,
     ];
@@ -352,21 +352,31 @@ ${financialContext}`;
     while (maxIterations > 0) {
       maxIterations--;
 
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: aiMessages,
-          tools: TOOLS,
-          stream: false,
-        }),
-      });
+      let response: Response;
+      try {
+        response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-3-flash-preview",
+            messages: aiMessages,
+            tools: TOOLS,
+            stream: false,
+          }),
+        });
+      } catch (fetchErr) {
+        console.error("Fetch to AI gateway failed:", fetchErr);
+        return new Response(JSON.stringify({ error: "Falha ao conectar com o serviço de IA." }), {
+          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       if (!response.ok) {
+        const errBody = await response.text().catch(() => "");
+        console.error("AI gateway error:", response.status, errBody);
         if (response.status === 429) {
           return new Response(JSON.stringify({ error: "Muitas requisições. Tente novamente em instantes." }), {
             status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -377,17 +387,24 @@ ${financialContext}`;
             status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
-        const t = await response.text();
-        console.error("AI gateway error:", response.status, t);
         return new Response(JSON.stringify({ error: "Erro no serviço de IA" }), {
           status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const result = await response.json();
-      const choice = result.choices?.[0];
+      let result: any;
+      try {
+        result = await response.json();
+      } catch (parseErr) {
+        console.error("Failed to parse AI response:", parseErr);
+        return new Response(JSON.stringify({ error: "Resposta inválida da IA." }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
+      const choice = result.choices?.[0];
       if (!choice) {
+        console.error("No choices in AI response:", JSON.stringify(result).slice(0, 500));
         return new Response(JSON.stringify({ error: "Resposta vazia da IA" }), {
           status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -404,20 +421,22 @@ ${financialContext}`;
           const fnName = toolCall.function.name;
           let fnArgs: any;
           try {
-            fnArgs = JSON.parse(toolCall.function.arguments);
+            fnArgs = typeof toolCall.function.arguments === "string"
+              ? JSON.parse(toolCall.function.arguments)
+              : toolCall.function.arguments || {};
           } catch {
             fnArgs = {};
           }
 
-          console.log(`Executing tool: ${fnName}`, fnArgs);
-          const result = await executeTool(serviceClient, userId, fnName, fnArgs);
-          actionsSummary.push(result.message);
+          console.log(`Executing tool: ${fnName}`, JSON.stringify(fnArgs));
+          const toolResult = await executeTool(serviceClient, userId, fnName, fnArgs);
+          actionsSummary.push(toolResult.message);
 
           // Add tool result to messages
           aiMessages.push({
             role: "tool",
             tool_call_id: toolCall.id,
-            content: JSON.stringify(result),
+            content: JSON.stringify(toolResult),
           });
         }
 
@@ -428,6 +447,13 @@ ${financialContext}`;
       // No tool calls — this is the final text response
       finalResponse = msg.content || "";
       break;
+    }
+
+    // Fallback if loop exhausted
+    if (!finalResponse && actionsSummary.length > 0) {
+      finalResponse = "✅ Ações executadas com sucesso! Veja o resumo acima.";
+    } else if (!finalResponse) {
+      finalResponse = "Desculpe, não consegui processar sua solicitação. Tente novamente.";
     }
 
     // Add actions summary as metadata
