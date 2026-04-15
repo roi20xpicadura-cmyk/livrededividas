@@ -1,16 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X, ArrowUp, Loader2 } from 'lucide-react';
+import { Sparkles, X, ArrowUp, Loader2, CheckCircle2, Zap } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/integrations/supabase/client';
 
-type Msg = { role: 'user' | 'assistant'; content: string; ts: Date };
+type Msg = { role: 'user' | 'assistant'; content: string; ts: Date; actions?: string[] };
 
 const SUGGESTIONS = [
   '📊 Como estão minhas finanças este mês?',
   '🎯 Estou no caminho certo para minha meta?',
   '💡 Onde posso economizar mais?',
-  '📈 Qual meu ROI atual?',
+  '➕ Adicione uma despesa de R$50 em Alimentação',
 ];
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
@@ -52,47 +52,21 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
         body: JSON.stringify({ messages: allMsgs }),
       });
 
-      if (!resp.ok || !resp.body) {
+      if (!resp.ok) {
         const err = await resp.json().catch(() => ({ error: 'Erro desconhecido' }));
         setMessages(prev => [...prev, { role: 'assistant', content: `⚠️ ${err.error || 'Erro ao conectar com a IA.'}`, ts: new Date() }]);
         setLoading(false);
         return;
       }
 
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let buf = '';
-      let assistantSoFar = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += decoder.decode(value, { stream: true });
-
-        let idx: number;
-        while ((idx = buf.indexOf('\n')) !== -1) {
-          let line = buf.slice(0, idx);
-          buf = buf.slice(idx + 1);
-          if (line.endsWith('\r')) line = line.slice(0, -1);
-          if (!line.startsWith('data: ')) continue;
-          const json = line.slice(6).trim();
-          if (json === '[DONE]') break;
-          try {
-            const parsed = JSON.parse(json);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              assistantSoFar += content;
-              setMessages(prev => {
-                const last = prev[prev.length - 1];
-                if (last?.role === 'assistant' && prev.length > 0 && prev[prev.length - 2]?.role === 'user') {
-                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
-                }
-                return [...prev, { role: 'assistant', content: assistantSoFar, ts: new Date() }];
-              });
-            }
-          } catch { /* partial */ }
-        }
-      }
+      const data = await resp.json();
+      const assistantMsg: Msg = {
+        role: 'assistant',
+        content: data.reply || 'Sem resposta.',
+        ts: new Date(),
+        actions: data.actions,
+      };
+      setMessages(prev => [...prev, assistantMsg]);
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Erro de conexão. Tente novamente.', ts: new Date() }]);
     }
@@ -117,7 +91,10 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[15px] font-extrabold text-foreground">Assistente FinDash IA</p>
-                <p className="text-[11px] text-muted-foreground">Powered by Lovable AI</p>
+                <div className="flex items-center gap-1.5">
+                  <Zap className="w-3 h-3 text-[#16a34a]" />
+                  <p className="text-[11px] text-muted-foreground">Pode consultar e alterar seus dados</p>
+                </div>
               </div>
               <button onClick={onClose} className="w-9 h-9 rounded-full bg-background flex items-center justify-center hover:bg-muted/30 transition-colors">
                 <X className="w-4 h-4 text-muted-foreground" />
@@ -134,7 +111,7 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
                   <div className="text-center">
                     <p className="text-[16px] font-extrabold text-foreground">Olá! Sou seu assistente financeiro.</p>
                     <p className="text-[13px] text-muted-foreground max-w-[280px] mt-1 leading-relaxed">
-                      Analiso seus dados em tempo real e respondo qualquer dúvida sobre suas finanças.
+                      Analiso e <strong>gerencio</strong> seus dados. Peça para adicionar lançamentos, atualizar metas, e muito mais.
                     </p>
                   </div>
                   <div className="flex flex-wrap justify-center gap-2 mt-2">
@@ -149,37 +126,60 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
               )}
 
               {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  {m.role === 'assistant' && (
-                    <div className="w-7 h-7 rounded-full bg-[#16a34a] flex items-center justify-center flex-shrink-0 mt-1 mr-2">
-                      <Sparkles className="w-3.5 h-3.5 text-white" />
-                    </div>
-                  )}
-                  <div className={`max-w-[85%] px-3.5 py-3 text-[13px] leading-relaxed ${
-                    m.role === 'user'
-                      ? 'bg-[#16a34a] text-white rounded-[12px_0_12px_12px]'
-                      : 'bg-secondary border border-[#d4edda] text-foreground rounded-[0_12px_12px_12px]'
-                  }`}>
-                    {m.role === 'assistant' ? (
-                      <div className="prose prose-sm prose-green max-w-none [&_p]:m-0 [&_ul]:my-1 [&_li]:my-0">
-                        <ReactMarkdown>{m.content}</ReactMarkdown>
+                <div key={i}>
+                  <div className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {m.role === 'assistant' && (
+                      <div className="w-7 h-7 rounded-full bg-[#16a34a] flex items-center justify-center flex-shrink-0 mt-1 mr-2">
+                        <Sparkles className="w-3.5 h-3.5 text-white" />
                       </div>
-                    ) : m.content}
+                    )}
+                    <div className={`max-w-[85%] px-3.5 py-3 text-[13px] leading-relaxed ${
+                      m.role === 'user'
+                        ? 'bg-[#16a34a] text-white rounded-[12px_0_12px_12px]'
+                        : 'bg-secondary border border-[#d4edda] text-foreground rounded-[0_12px_12px_12px]'
+                    }`}>
+                      {m.role === 'assistant' ? (
+                        <div className="prose prose-sm prose-green max-w-none [&_p]:m-0 [&_ul]:my-1 [&_li]:my-0">
+                          <ReactMarkdown>{m.content}</ReactMarkdown>
+                        </div>
+                      ) : m.content}
+                    </div>
                   </div>
+
+                  {/* Actions performed */}
+                  {m.actions && m.actions.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="ml-9 mt-2 space-y-1.5"
+                    >
+                      {m.actions.map((action, ai) => (
+                        <div key={ai} className="flex items-start gap-2 bg-[#f0fdf4] dark:bg-[#14532d]/20 border border-[#bbf7d0] dark:border-[#16a34a]/30 rounded-lg px-3 py-2">
+                          <CheckCircle2 className="w-4 h-4 text-[#16a34a] flex-shrink-0 mt-0.5" />
+                          <span className="text-[12px] text-[#166534] dark:text-[#4ade80] font-medium leading-snug">{action}</span>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
                 </div>
               ))}
 
-              {loading && messages[messages.length - 1]?.role === 'user' && (
+              {loading && (
                 <div className="flex justify-start">
                   <div className="w-7 h-7 rounded-full bg-[#16a34a] flex items-center justify-center flex-shrink-0 mt-1 mr-2">
                     <Sparkles className="w-3.5 h-3.5 text-white" />
                   </div>
-                  <div className="bg-secondary border border-[#d4edda] rounded-[0_12px_12px_12px] px-4 py-3 flex gap-1.5">
-                    {[0, 1, 2].map(i => (
-                      <motion.div key={i} className="w-2 h-2 rounded-full bg-[#16a34a]"
-                        animate={{ y: [0, -6, 0] }}
-                        transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.15 }} />
-                    ))}
+                  <div className="bg-secondary border border-[#d4edda] rounded-[0_12px_12px_12px] px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1.5">
+                        {[0, 1, 2].map(i => (
+                          <motion.div key={i} className="w-2 h-2 rounded-full bg-[#16a34a]"
+                            animate={{ y: [0, -6, 0] }}
+                            transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.15 }} />
+                        ))}
+                      </div>
+                      <span className="text-[11px] text-muted-foreground">Analisando e processando...</span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -191,7 +191,7 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
               <div className="relative">
                 <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && send(input)}
-                  placeholder="Pergunte qualquer coisa..."
+                  placeholder="Pergunte ou peça uma ação..."
                   className="w-full border-[1.5px] border-border rounded-[10px] py-2.5 pl-3.5 pr-11 text-[13px] focus:border-[#16a34a] focus:outline-none transition-colors"
                 />
                 <button onClick={() => send(input)} disabled={!input.trim() || loading}
