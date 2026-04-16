@@ -469,15 +469,15 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
                 <motion.button whileTap={{ scale: 0.9 }} onClick={startNewChat}
                   className="w-9 h-9 rounded-xl flex items-center justify-center"
                   title="Nova conversa"
-                  style={{ background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)' }}>
-                  <RotateCcw className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <RotateCcw className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.5)' }} />
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.9 }} onClick={onClose}
                   className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)' }}>
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   {isMobile
-                    ? <ChevronLeft className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
-                    : <X className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />}
+                    ? <ChevronLeft className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.5)' }} />
+                    : <X className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.5)' }} />}
                 </motion.button>
               </div>
             </div>
