@@ -18,6 +18,7 @@ import { Link, useNavigate } from 'react-router-dom';
 const PredictiveWidget = lazy(() => import('@/components/dashboard/PredictiveWidget'));
 const AIInsightsWidget = lazy(() => import('@/components/dashboard/AIInsightsWidget'));
 const WelcomeChecklist = lazy(() => import('@/components/app/WelcomeChecklist'));
+const PushNotificationOptIn = lazy(() => import('@/components/app/PushNotificationOptIn'));
 const AIChatDrawer = lazy(() => import('@/components/app/AIChatDrawer'));
 const WhatsAppPromoWidget = lazy(() => import('@/components/app/WhatsAppPromoWidget'));
 const SmartAlertsWidget = lazy(() => import('@/components/dashboard/SmartAlertsWidget'));
@@ -335,6 +336,9 @@ export default function OverviewPage() {
 
       {/* WELCOME CHECKLIST */}
       <Suspense fallback={null}><WelcomeChecklist /></Suspense>
+
+      {/* PUSH NOTIFICATIONS OPT-IN */}
+      <Suspense fallback={null}><PushNotificationOptIn /></Suspense>
 
       {/* WHATSAPP PROMO */}
       <Suspense fallback={null}><WhatsAppPromoWidget /></Suspense>
