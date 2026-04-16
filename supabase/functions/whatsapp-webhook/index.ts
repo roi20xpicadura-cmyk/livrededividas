@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (!connection) {
-      await sendWhatsApp(phoneNumber, config.fromNumber, "👋 Número não vinculado ao FinDash Pro.\n\nAcesse o app → Configurações → WhatsApp para conectar.");
+      await sendWhatsApp(phoneNumber, config.fromNumber, "👋 Número não vinculado ao KoraFinance.\n\nAcesse o app → Configurações → WhatsApp para conectar.");
       return twimlResponse("");
     }
 
@@ -193,7 +193,7 @@ async function processWithAI(userId: string, message: string): Promise<string> {
 
 // ━━━ SYSTEM PROMPT ━━━
 function buildSystemPrompt(data: any): string {
-  return `Você é a FinDash Pro IA no WhatsApp — assistente financeira pessoal.
+  return `Você é a KoraFinance IA no WhatsApp — assistente financeira pessoal.
 
 ━━━ DADOS FINANCEIROS (${new Date().toLocaleDateString("pt-BR")}) ━━━
 Nome: ${data.name}

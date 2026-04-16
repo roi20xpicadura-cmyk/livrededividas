@@ -243,7 +243,7 @@ export default function RegisterPage() {
             <div className="flex items-center justify-center" style={{ width: 42, height: 42, background: '#16a34a', borderRadius: 12, boxShadow: '0 4px 14px rgba(22,163,74,0.4)' }}>
               <BarChart3 className="text-white" style={{ width: 22, height: 22 }} />
             </div>
-            <span style={{ fontSize: 20, fontWeight: 800, color: 'white' }}>FinDash Pro</span>
+            <span style={{ fontSize: 20, fontWeight: 800, color: 'white' }}>KoraFinance</span>
           </div>
 
           <div>
@@ -257,7 +257,7 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>© 2026 FinDash Pro</p>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>© 2026 KoraFinance</p>
         </div>
       </div>
 
@@ -273,7 +273,7 @@ export default function RegisterPage() {
             <div className="flex items-center justify-center" style={{ width: 38, height: 38, background: '#16a34a', borderRadius: 11, boxShadow: '0 4px 14px rgba(22,163,74,0.4)' }}>
               <BarChart3 className="text-white" style={{ width: 20, height: 20 }} />
             </div>
-            <span style={{ fontSize: 18, fontWeight: 800, color: 'white' }}>FinDash Pro</span>
+            <span style={{ fontSize: 18, fontWeight: 800, color: 'white' }}>KoraFinance</span>
           </div>
 
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}

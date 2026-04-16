@@ -79,14 +79,14 @@ export default function OnboardingChat({ onComplete }: { onComplete: () => void 
       setFullName(profile!.full_name!);
       addMessage({
         role: 'assistant',
-        content: `Olá, ${firstName}! 👋\n\nEu sou a **FinDash Pro IA**, sua assistente financeira pessoal. Vou te ajudar a configurar tudo em menos de 1 minuto.\n\nComo você quer usar o FinDash Pro?`,
+        content: `Olá, ${firstName}! 👋\n\nEu sou a **KoraFinance IA**, sua assistente financeira pessoal. Vou te ajudar a configurar tudo em menos de 1 minuto.\n\nComo você quer usar o KoraFinance?`,
         options: PROFILE_OPTIONS,
       }, 800);
       setCurrentStep('profile');
     } else {
       addMessage({
         role: 'assistant',
-        content: `Olá! 👋\n\nEu sou a **FinDash Pro IA**, sua assistente financeira pessoal.\n\nAntes de tudo, como posso te chamar?`,
+        content: `Olá! 👋\n\nEu sou a **KoraFinance IA**, sua assistente financeira pessoal.\n\nAntes de tudo, como posso te chamar?`,
         inputType: 'text',
       }, 800);
       setCurrentStep('name');
@@ -103,7 +103,7 @@ export default function OnboardingChat({ onComplete }: { onComplete: () => void 
 
     addMessage({
       role: 'assistant',
-      content: `Prazer, **${name.split(' ')[0]}**! 🎉\n\nAgora me conta: como você quer usar o FinDash Pro?`,
+      content: `Prazer, **${name.split(' ')[0]}**! 🎉\n\nAgora me conta: como você quer usar o KoraFinance?`,
       options: PROFILE_OPTIONS,
     });
     setCurrentStep('profile');
@@ -179,7 +179,7 @@ export default function OnboardingChat({ onComplete }: { onComplete: () => void 
     }
 
     setSaving(false);
-    toast.success('🎉 Painel configurado! Bem-vindo ao FinDash Pro.');
+    toast.success('🎉 Painel configurado! Bem-vindo ao KoraFinance.');
     onComplete();
   };
 
@@ -219,7 +219,7 @@ export default function OnboardingChat({ onComplete }: { onComplete: () => void 
             <Sparkles size={18} color="white" />
           </div>
           <div>
-            <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-text-strong)' }}>FinDash Pro IA</p>
+            <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-text-strong)' }}>KoraFinance IA</p>
             <p style={{ fontSize: 11, color: 'var(--color-green-600)', fontWeight: 600 }}>
               {isTyping ? 'Digitando...' : 'Online'}
             </p>
@@ -254,7 +254,7 @@ export default function OnboardingChat({ onComplete }: { onComplete: () => void 
                     }}>
                       <Sparkles size={12} color="white" />
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)' }}>FinDash Pro IA</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)' }}>KoraFinance IA</span>
                   </div>
                 )}
 
@@ -414,7 +414,7 @@ export default function OnboardingChat({ onComplete }: { onComplete: () => void 
               opacity: saving ? 0.6 : 1,
             }}
           >
-            {saving ? 'Configurando...' : '🚀 Começar a usar o FinDash Pro'}
+            {saving ? 'Configurando...' : '🚀 Começar a usar o KoraFinance'}
           </motion.button>
         ) : currentStep === 'name' ? (
           <div className="flex items-center gap-2">

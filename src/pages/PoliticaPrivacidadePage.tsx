@@ -19,7 +19,7 @@ export default function PoliticaPrivacidadePage() {
     <LegalPageLayout label="PRIVACIDADE" title="Política de Privacidade" updatedAt="14 de abril de 2026" version="1.0" sections={sections}>
       <section id="controlador" className="mb-10">
         <h2 className="legal-h2">1. Controlador dos Dados</h2>
-        <p className="legal-p">O controlador dos seus dados pessoais é a empresa responsável pelo FinDash Pro, com sede no Brasil.</p>
+        <p className="legal-p">O controlador dos seus dados pessoais é a empresa responsável pelo KoraFinance, com sede no Brasil.</p>
         <p className="legal-p">Encarregado de Proteção de Dados (DPO): <a href="mailto:privacidade@korafinance.com.br" className="underline" style={{ color: 'var(--color-green-600)' }}>privacidade@korafinance.com.br</a></p>
       </section>
       <section id="coleta" className="mb-10">
@@ -98,7 +98,7 @@ export default function PoliticaPrivacidadePage() {
       </section>
       <section id="criancas" className="mb-10">
         <h2 className="legal-h2">10. Crianças e Adolescentes</h2>
-        <p className="legal-p">O FinDash Pro não é direcionado a menores de 18 anos. Não coletamos dados de menores intencionalmente.</p>
+        <p className="legal-p">O KoraFinance não é direcionado a menores de 18 anos. Não coletamos dados de menores intencionalmente.</p>
       </section>
       <section id="alteracoes" className="mb-10">
         <h2 className="legal-h2">11. Alterações nesta Política</h2>

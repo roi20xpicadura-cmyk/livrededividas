@@ -45,7 +45,7 @@ export default function ResetPasswordPage() {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <BarChart3 className="w-5 h-5 text-primary-foreground" />
           </div>
-          <span className="font-black text-foreground">FinDash Pro</span>
+          <span className="font-black text-foreground">KoraFinance</span>
         </div>
 
         <h1 className="text-2xl font-black text-foreground mb-1">Nova senha</h1>

@@ -337,10 +337,10 @@ export default function AppLayout() {
           {!isMobile && (
             <div className="min-w-0">
               <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-text-strong)', letterSpacing: '-0.3px', lineHeight: 1 }}>
-                {PAGE_TITLES[location.pathname] || 'FinDash Pro'}
+                {PAGE_TITLES[location.pathname] || 'KoraFinance'}
               </h1>
               <p style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 2 }}>
-                FinDash Pro / {PAGE_TITLES[location.pathname] || ''}
+                KoraFinance / {PAGE_TITLES[location.pathname] || ''}
               </p>
             </div>
           )}
@@ -433,7 +433,7 @@ export default function AppLayout() {
         {isMobile && location.pathname !== '/app' && (
           <div style={{ padding: '12px 16px 4px' }}>
             <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-text-strong)', letterSpacing: '-0.3px' }}>
-              {PAGE_TITLES[location.pathname] || 'FinDash Pro'}
+              {PAGE_TITLES[location.pathname] || 'KoraFinance'}
             </h1>
           </div>
         )}

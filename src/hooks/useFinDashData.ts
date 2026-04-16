@@ -6,7 +6,7 @@ import { ptBR } from "date-fns/locale";
 const STORAGE_KEY = "kora_v4";
 
 const defaultCfg: Config = {
-  name: "FinDash Pro",
+  name: "KoraFinance",
   currency: "R$",
   period: "Mês",
   pStart: format(startOfMonth(new Date()), "yyyy-MM-dd"),

@@ -25,7 +25,7 @@ export default function HeroMockup() {
             <div className="w-6 h-6 rounded-md bg-primary-foreground/20 flex items-center justify-center">
               <BarChart3 className="w-3.5 h-3.5 text-primary-foreground" />
             </div>
-            <span className="text-[11px] font-bold text-primary-foreground">FinDash Pro</span>
+            <span className="text-[11px] font-bold text-primary-foreground">KoraFinance</span>
           </div>
           {[
             { icon: Home, label: 'Visão Geral', active: true },

@@ -33,7 +33,7 @@ export default function ReferralPage() {
   };
 
   const handleWhatsApp = () => {
-    const text = `Oi! Estou usando o FinDash Pro para controlar minhas finanças e está sendo incrível! Use meu link e ganhe 7 dias extras grátis: ${referralLink}`;
+    const text = `Oi! Estou usando o KoraFinance para controlar minhas finanças e está sendo incrível! Use meu link e ganhe 7 dias extras grátis: ${referralLink}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
   };
 

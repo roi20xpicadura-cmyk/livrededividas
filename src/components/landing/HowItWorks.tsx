@@ -15,7 +15,7 @@ const steps = [
     number: '02',
     icon: Settings2,
     title: 'Configure seu perfil',
-    description: 'Pessoal, negócio ou os dois. FinDash Pro se adapta.',
+    description: 'Pessoal, negócio ou os dois. KoraFinance se adapta.',
     color: '#7c3aed',
   },
   {

@@ -11,7 +11,7 @@ export default function PricingPage() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-black text-foreground">FinDash Pro</span>
+            <span className="text-lg font-black text-foreground">KoraFinance</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link to="/login" className="text-sm font-semibold text-muted hover:text-foreground">Entrar</Link>
