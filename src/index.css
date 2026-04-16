@@ -206,49 +206,49 @@
     --bg-elevated: #160B28;
     --bg-sunken: #0F0520;
 
-    /* Text — pure white */
+    /* Text — pure white, boosted contrast */
     --color-text-strong: #FFFFFF;
-    --color-text-base: rgba(255, 255, 255, 0.85);
-    --color-text-muted: rgba(255, 255, 255, 0.70);
-    --color-text-subtle: rgba(255, 255, 255, 0.40);
-    --color-text-disabled: rgba(255, 255, 255, 0.20);
+    --color-text-base: rgba(255, 255, 255, 0.92);
+    --color-text-muted: rgba(255, 255, 255, 0.72);
+    --color-text-subtle: rgba(255, 255, 255, 0.55);
+    --color-text-disabled: rgba(255, 255, 255, 0.30);
 
     --text-primary: #FFFFFF;
-    --text-secondary: rgba(255, 255, 255, 0.70);
-    --text-tertiary: rgba(255, 255, 255, 0.40);
-    --text-disabled: rgba(255, 255, 255, 0.20);
+    --text-secondary: rgba(255, 255, 255, 0.72);
+    --text-tertiary: rgba(255, 255, 255, 0.50);
+    --text-disabled: rgba(255, 255, 255, 0.28);
 
-    /* Borders — violet glow */
-    --color-border-weak: rgba(167, 139, 250, 0.08);
-    --color-border-base: rgba(167, 139, 250, 0.15);
-    --color-border-strong: rgba(167, 139, 250, 0.30);
-    --color-border-ghost: rgba(167, 139, 250, 0.05);
+    /* Borders — violet glow, more visible */
+    --color-border-weak: rgba(167, 139, 250, 0.14);
+    --color-border-base: rgba(167, 139, 250, 0.22);
+    --color-border-strong: rgba(167, 139, 250, 0.38);
+    --color-border-ghost: rgba(255, 255, 255, 0.06);
 
-    --border-base: rgba(167, 139, 250, 0.15);
-    --border-weak: rgba(167, 139, 250, 0.08);
-    --border-ghost: rgba(167, 139, 250, 0.05);
-    --border-strong: rgba(167, 139, 250, 0.30);
+    --border-base: rgba(167, 139, 250, 0.22);
+    --border-weak: rgba(167, 139, 250, 0.14);
+    --border-ghost: rgba(255, 255, 255, 0.06);
+    --border-strong: rgba(167, 139, 250, 0.38);
 
-    /* Brand re-aliased green tokens → violet */
-    --color-green-50: rgba(124, 58, 237, 0.06);
-    --color-green-100: rgba(124, 58, 237, 0.10);
-    --color-green-200: rgba(124, 58, 237, 0.15);
-    --color-green-300: #5B21B6;
-    --color-green-400: #6D28D9;
-    --color-green-500: #8B5CF6;
+    /* Brand re-aliased green tokens → violet (boosted for dark) */
+    --color-green-50: rgba(124, 58, 237, 0.20);
+    --color-green-100: rgba(124, 58, 237, 0.28);
+    --color-green-200: rgba(167, 139, 250, 0.40);
+    --color-green-300: #7C3AED;
+    --color-green-400: #8B5CF6;
+    --color-green-500: #A78BFA;
     --color-green-600: #A78BFA;
     --color-green-700: #C4B5FD;
-    --color-green-800: #DDD6FE;
+    --color-green-800: #FFFFFF;
     --color-green-900: #EDE9FE;
 
-    /* Danger */
-    --color-danger-bg: rgba(220, 38, 38, 0.12);
-    --color-danger-border: rgba(220, 38, 38, 0.25);
-    --color-danger-text: #F87171;
+    /* Danger — boosted */
+    --color-danger-bg: #DC2626;
+    --color-danger-border: rgba(248, 113, 113, 0.45);
+    --color-danger-text: #FFFFFF;
     --color-danger-solid: #F87171;
-    --danger-bg: rgba(220, 38, 38, 0.12);
-    --danger-border: rgba(220, 38, 38, 0.25);
-    --danger-text: #F87171;
+    --danger-bg: rgba(220, 38, 38, 0.18);
+    --danger-border: rgba(248, 113, 113, 0.40);
+    --danger-text: #FCA5A5;
 
     /* Warning */
     --color-warning-bg: rgba(217, 119, 6, 0.12);
@@ -324,13 +324,24 @@
     --purple-border: 263 50% 20%;
 
     --sidebar-background: 240 28% 5%;
-    --sidebar-foreground: 0 0% 60%;
-    --sidebar-primary: 258 90% 66%;
+    --sidebar-foreground: 0 0% 78%;
+    --sidebar-primary: 258 90% 70%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 263 60% 12%;
-    --sidebar-accent-foreground: 0 0% 85%;
-    --sidebar-border: 263 50% 20%;
-    --sidebar-ring: 258 90% 66%;
+    --sidebar-accent: 263 60% 18%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 263 50% 28%;
+    --sidebar-ring: 258 90% 70%;
+  }
+
+  /* Dark mode: stronger label contrast + crisper icons */
+  [data-theme="dark"] .label-upper,
+  .dark .label-upper {
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 800;
+  }
+  [data-theme="dark"] svg,
+  .dark svg {
+    stroke-width: 1.85;
   }
 }
 
