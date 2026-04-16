@@ -345,7 +345,7 @@ export default function OverviewPage() {
         border: '1.5px solid rgba(167, 139, 250, 0.20)',
         boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)',
       }}>
-        <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124, 58, 237, 0.18) 0%, transparent 70%)' }} />
+        
 
         <div className="flex items-center justify-between" style={{ marginBottom: 16, position: 'relative' }}>
           <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
