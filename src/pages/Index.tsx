@@ -19,12 +19,12 @@ export default function Index() {
   const hasData = fd.data.transactions.length > 0 || fd.data.goals.length > 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ background: 'var(--color-bg-base)' }}>
       <Header hasData={hasData} onReset={fd.resetAll} />
       <PeriodBar cfg={fd.data.cfg} setCfg={fd.setCfg} periodLabel={fd.periodLabel} />
       <TabBar active={activeTab} onChange={setActiveTab} />
 
-      <main className="max-w-[1400px] mx-auto px-4 md:px-6 py-5 space-y-4">
+      <main className="max-w-[1400px] mx-auto px-5 md:px-8 py-6 space-y-5">
         {activeTab === 0 && (
           <OverviewTab filteredTx={fd.filteredTx} stats={fd.stats} currency={fd.data.cfg.currency} onGoToTransactions={() => setActiveTab(1)} />
         )}
