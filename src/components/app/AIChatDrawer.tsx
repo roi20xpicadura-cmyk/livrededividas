@@ -88,14 +88,13 @@ function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
           <div className={`px-4 py-3 text-[14px] leading-[1.65] ${
             isUser ? 'rounded-2xl rounded-tr-sm' : 'rounded-2xl rounded-tl-sm'
           }`} style={isUser ? {
-            background: 'linear-gradient(135deg, #16a34a, #15803d)',
-            color: 'white',
-            boxShadow: '0 2px 12px rgba(22,163,74,0.25)',
+            background: 'rgba(255,255,255,0.08)',
+            color: '#ecf5ec',
+            border: '1px solid rgba(255,255,255,0.06)',
           } : {
-            background: 'var(--color-bg-surface)',
-            border: '1px solid var(--color-border-weak)',
-            color: 'var(--color-text-base)',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            color: '#c8dcc8',
           }}>
             {isUser ? msg.content : (
               <div className="ai-markdown-content">
