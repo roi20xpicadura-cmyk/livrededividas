@@ -227,6 +227,9 @@ export default function OverviewPage() {
       {/* WELCOME CHECKLIST */}
       <WelcomeChecklist />
 
+      {/* WHATSAPP PROMO */}
+      <WhatsAppPromoWidget />
+
       {/* 2. HERO BALANCE CARD */}
       <motion.div {...stagger(1)} className="p-5 md:p-6" style={{
         background: 'linear-gradient(135deg, #16a34a 0%, #14532d 100%)',
