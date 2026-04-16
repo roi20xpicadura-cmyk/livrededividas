@@ -45,7 +45,7 @@ export default function ComparisonSection() {
           <div className="grid grid-cols-[1fr_80px_80px_80px] md:grid-cols-[1fr_120px_120px_120px] px-4 md:px-6 py-3.5" style={{ borderBottom: '1px solid #E2E8E5', background: '#F7F8F6' }}>
             <div className="text-[12px] font-bold" style={{ color: '#6B7975' }}>Funcionalidade</div>
             {[
-              { name: 'FinDash', highlight: true },
+              { name: 'KoraFinance', highlight: true },
               { name: 'Pierre', highlight: false },
               { name: 'Mobills', highlight: false },
             ].map(app => (
