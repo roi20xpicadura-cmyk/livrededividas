@@ -19,6 +19,7 @@ import AIInsightsWidget from '@/components/dashboard/AIInsightsWidget';
 import WelcomeChecklist from '@/components/app/WelcomeChecklist';
 import AIChatDrawer from '@/components/app/AIChatDrawer';
 import WhatsAppPromoWidget from '@/components/app/WhatsAppPromoWidget';
+import SmartAlertsWidget from '@/components/dashboard/SmartAlertsWidget';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const LazyChart = lazy(() => import('recharts').then(m => ({
@@ -304,6 +305,9 @@ export default function OverviewPage() {
           </div>
         )}
       </motion.div>
+
+      {/* SMART ALERTS */}
+      <SmartAlertsWidget />
 
       {/* 3. QUICK STATS — 2x2 */}
       <div className="grid grid-cols-2 gap-2">
