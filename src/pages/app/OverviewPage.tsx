@@ -14,12 +14,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
-import PredictiveWidget from '@/components/dashboard/PredictiveWidget';
-import AIInsightsWidget from '@/components/dashboard/AIInsightsWidget';
-import WelcomeChecklist from '@/components/app/WelcomeChecklist';
-import AIChatDrawer from '@/components/app/AIChatDrawer';
-import WhatsAppPromoWidget from '@/components/app/WhatsAppPromoWidget';
-import SmartAlertsWidget from '@/components/dashboard/SmartAlertsWidget';
+// Heavy below-the-fold widgets are lazy-loaded so the dashboard hero paints fast.
+const PredictiveWidget = lazy(() => import('@/components/dashboard/PredictiveWidget'));
+const AIInsightsWidget = lazy(() => import('@/components/dashboard/AIInsightsWidget'));
+const WelcomeChecklist = lazy(() => import('@/components/app/WelcomeChecklist'));
+const AIChatDrawer = lazy(() => import('@/components/app/AIChatDrawer'));
+const WhatsAppPromoWidget = lazy(() => import('@/components/app/WhatsAppPromoWidget'));
+const SmartAlertsWidget = lazy(() => import('@/components/dashboard/SmartAlertsWidget'));
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const LazyChart = lazy(() => import('recharts').then(m => ({
