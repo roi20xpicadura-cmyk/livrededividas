@@ -574,7 +574,7 @@ export default function DebtsPage() {
               </div>
               <div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 4 }}>Total em juros</div>
-                <div style={{ fontSize: 24, fontWeight: 900, color: '#f87171', letterSpacing: '-0.03em' }}>
+                <div style={{ fontSize: 24, fontWeight: 900, color: payoffInfo.totalInterest > 1000 ? '#f87171' : 'rgba(255,255,255,0.7)', letterSpacing: '-0.03em' }}>
                   R$ {fmtCompact(payoffInfo.totalInterest)}
                 </div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>pagando mínimo</div>
@@ -593,6 +593,8 @@ export default function DebtsPage() {
           </div>
         )}
       </div>
+
+      <div style={{ height: 24 }} />
 
       {/* ── Sheets ── */}
       <AddDebtSheet open={addingDebt} onClose={() => { setAddingDebt(false); resetForm(); setEditingDebt(null); }}
@@ -709,7 +711,7 @@ function DebtCard({ debt, isPriority, rank, onPay, onEdit, onDelete, onStatusCha
           {rank}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-strong)', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{debt.name}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-strong)', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'capitalize' }}>{debt.name}</div>
           <div style={{ display: 'flex', gap: 8, fontSize: 11, color: 'var(--color-text-muted)' }}>
             {rate > 0 ? (
               <span style={{ color: rate > 10 ? '#dc2626' : 'var(--color-text-muted)' }}>{rate}%/mês</span>
