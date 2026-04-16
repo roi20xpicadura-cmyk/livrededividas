@@ -1,27 +1,27 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import Anthropic from "npm:@anthropic-ai/sdk";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const anthropic = new Anthropic({
+  apiKey: Deno.env.get("ANTHROPIC_API_KEY")!,
+});
 
-serve(async (req) => {
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+);
+
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
   }
 
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
-  const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
-  const TWILIO_WHATSAPP_NUMBER = Deno.env.get("TWILIO_WHATSAPP_NUMBER");
-
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
   try {
-    // Twilio sends form-encoded POST
     const contentType = req.headers.get("content-type") || "";
     let phoneNumber = "";
     let body = "";
@@ -32,22 +32,16 @@ serve(async (req) => {
       body = formData.get("Body")?.toString()?.trim() || "";
       phoneNumber = from.replace("whatsapp:", "").replace("+", "");
     } else {
-      // JSON fallback for testing
       const json = await req.json();
       phoneNumber = json.phoneNumber?.replace("+", "") || "";
       body = json.message?.trim() || "";
     }
 
-    if (!phoneNumber || !body) {
-      return new Response('<Response></Response>', {
-        headers: { "Content-Type": "text/xml" },
-        status: 200,
-      });
-    }
+    console.log(`📱 WhatsApp from ${phoneNumber}: "${body}"`);
 
-    console.log(`WhatsApp from ${phoneNumber}: ${body}`);
+    if (!body) return twimlResponse("");
 
-    // Find user by verified phone
+    // Find user
     const { data: connection } = await supabase
       .from("whatsapp_connections")
       .select("user_id, active")
@@ -56,77 +50,48 @@ serve(async (req) => {
       .single();
 
     if (!connection) {
-      await sendWhatsApp(phoneNumber,
-        "📱 Número não vinculado ao FinDash Pro.\n\nAcesse o app → Configurações → WhatsApp para conectar sua conta.",
-        TWILIO_ACCOUNT_SID!, TWILIO_AUTH_TOKEN!, TWILIO_WHATSAPP_NUMBER!
-      );
-      return twimlResponse();
+      await sendWhatsApp(phoneNumber, "👋 Número não vinculado ao FinDash Pro.\n\nAcesse o app → Configurações → WhatsApp para conectar.");
+      return twimlResponse("");
     }
 
     if (!connection.active) {
-      await sendWhatsApp(phoneNumber,
-        "FinDash IA desativada. Reative em Configurações → WhatsApp.",
-        TWILIO_ACCOUNT_SID!, TWILIO_AUTH_TOKEN!, TWILIO_WHATSAPP_NUMBER!
-      );
-      return twimlResponse();
+      await sendWhatsApp(phoneNumber, "IA desativada. Reative em Configurações → WhatsApp.");
+      return twimlResponse("");
     }
 
     const userId = connection.user_id;
 
-    // Save inbound message
+    // Save inbound
     await supabase.from("whatsapp_messages").insert({
-      user_id: userId,
-      phone_number: phoneNumber,
-      direction: "inbound",
-      message: body,
+      user_id: userId, phone_number: phoneNumber, direction: "inbound", message: body,
     });
 
-    // Process with AI
-    const response = await processMessage(supabase, userId, phoneNumber, body, LOVABLE_API_KEY!);
-
-    // Send reply
-    if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_WHATSAPP_NUMBER) {
-      await sendWhatsApp(phoneNumber, response, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_NUMBER);
-    }
-
-    // Save outbound
-    await supabase.from("whatsapp_messages").insert({
-      user_id: userId,
-      phone_number: phoneNumber,
-      direction: "outbound",
-      message: response,
-    });
-
-    // Update stats
     await supabase.from("whatsapp_connections")
       .update({ last_message_at: new Date().toISOString() })
       .eq("user_id", userId);
 
-    return twimlResponse();
+    // Process with Claude
+    const reply = await processWithClaude(userId, body);
+
+    // Send reply
+    await sendWhatsApp(phoneNumber, reply);
+
+    // Save outbound
+    await supabase.from("whatsapp_messages").insert({
+      user_id: userId, phone_number: phoneNumber, direction: "outbound", message: reply,
+    });
+
+    return twimlResponse("");
   } catch (error) {
     console.error("Webhook error:", error);
-    return twimlResponse();
+    return twimlResponse("");
   }
 });
 
-function twimlResponse() {
-  return new Response('<Response></Response>', {
-    headers: { "Content-Type": "text/xml" },
-    status: 200,
-  });
-}
+// ━━━ PROCESS WITH CLAUDE ━━━
+async function processWithClaude(userId: string, message: string): Promise<string> {
+  const data = await loadFinancialData(userId);
 
-// ── PROCESS MESSAGE ──
-async function processMessage(
-  supabase: any,
-  userId: string,
-  phoneNumber: string,
-  message: string,
-  apiKey: string
-): Promise<string> {
-  const financialData = await loadFinancialData(supabase, userId);
-
-  // Load context
   const { data: ctx } = await supabase
     .from("whatsapp_context")
     .select("messages, pending_confirmation")
@@ -136,241 +101,226 @@ async function processMessage(
   const history = ctx?.messages || [];
   const pending = ctx?.pending_confirmation;
 
-  // Check confirmation
-  const lower = message.toLowerCase().trim();
+  // Confirmation flow
   if (pending) {
+    const lower = message.toLowerCase().trim();
     if (["sim", "s", "ok", "yes", "confirmar", "1"].includes(lower)) {
-      await clearPending(supabase, userId);
-      return await registerTransaction(supabase, userId, pending, financialData);
+      await clearPending(userId);
+      return await executeTransaction(userId, pending, data);
     }
     if (["não", "nao", "n", "no", "cancelar", "2"].includes(lower)) {
-      await clearPending(supabase, userId);
-      return "❌ Cancelado! O que mais posso ajudar?";
+      await clearPending(userId);
+      return "❌ Cancelado! Como posso ajudar?";
     }
   }
 
-  const systemPrompt = buildSystemPrompt(financialData);
-  const messages = [
+  const systemPrompt = `Você é a FinDash IA no WhatsApp — assistente financeira pessoal.
+
+━━━ DADOS FINANCEIROS (${new Date().toLocaleDateString("pt-BR")}) ━━━
+Nome: ${data.name}
+Saldo do mês: R$ ${data.balance.toFixed(2)} ${data.balance >= 0 ? "✓" : "⚠️"}
+Receitas: R$ ${data.income.toFixed(2)}
+Despesas: R$ ${data.expenses.toFixed(2)}
+Score: ${data.score}/1000
+
+Gastos por categoria:
+${data.categories.map((c: any) => `• ${c.category}: R$ ${c.total.toFixed(2)}`).join("\n") || "• Nenhum gasto"}
+
+Dívidas:
+${data.debts.length > 0 ? data.debts.map((d: any) => `• ${d.name}: R$ ${Number(d.remaining_amount).toFixed(2)}`).join("\n") : "• Sem dívidas ✓"}
+
+Metas:
+${data.goals.length > 0 ? data.goals.map((g: any) => `• ${g.name}: ${((Number(g.current_amount || 0) / Number(g.target_amount)) * 100).toFixed(0)}%`).join("\n") : "• Sem metas"}
+
+Orçamentos:
+${data.budgets.length > 0 ? data.budgets.map((b: any) => `• ${b.category}: R$ ${(b.spent || 0).toFixed(0)}/${b.limit_amount} (${((b.spent || 0) / b.limit_amount * 100).toFixed(0)}%)`).join("\n") : "• Sem orçamentos"}
+
+━━━ COMO RESPONDER ━━━
+
+Para REGISTRAR GASTO (gastei, paguei, comprei):
+Responda SOMENTE com JSON:
+{"action":"expense","amount":VALOR,"description":"descrição","category":"Categoria","confirm":false}
+Se valor > 500: confirm:true
+
+Para REGISTRAR RECEITA (recebi, entrou, ganhei):
+{"action":"income","amount":VALOR,"description":"descrição","category":"Categoria"}
+
+Para CONSULTAS: texto simples, *negrito* nos valores, máx 5 linhas, dados reais.
+
+REGRAS:
+- Use dados reais SEMPRE
+- Respostas curtas (WhatsApp)
+- Português brasileiro informal
+- Para registros responda SOMENTE JSON`;
+
+  const messages: Array<{ role: "user" | "assistant"; content: string }> = [
     ...history.slice(-6),
     { role: "user", content: message },
   ];
 
-  // Call Lovable AI
-  const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...messages,
-      ],
-      max_tokens: 600,
-    }),
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 500,
+    system: systemPrompt,
+    messages,
   });
 
-  if (!aiResponse.ok) {
-    const errText = await aiResponse.text();
-    console.error("AI error:", aiResponse.status, errText);
-    if (aiResponse.status === 429) return "⏳ Muitas mensagens seguidas. Tente de novo em 1 minuto.";
-    if (aiResponse.status === 402) return "⚠️ Limite de uso atingido. Entre no app para mais detalhes.";
-    return "Ops! Tive um problema. Tente de novo em alguns segundos. 🙏";
-  }
+  const aiText = response.content[0].type === "text" ? response.content[0].text : "";
 
-  const aiData = await aiResponse.json();
-  const aiText = aiData.choices?.[0]?.message?.content || "";
+  let finalReply = aiText;
 
-  let finalResponse = aiText;
-
-  // Try parse JSON action
+  // Parse action JSON
   try {
-    const jsonMatch = aiText.match(/\{[\s\S]*"action"[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      if (parsed.action === "register_transaction") {
-        if (parsed.amount > 500) {
-          await setPending(supabase, userId, parsed);
-          finalResponse =
-            `⚠️ Confirmar registro?\n\n` +
-            `${parsed.type === "expense" ? "💸 Despesa" : "💰 Receita"}: *R$ ${parsed.amount.toFixed(2)}*\n` +
-            `📝 ${parsed.description}\n` +
-            `📂 ${parsed.category}\n\n` +
-            `Responda *SIM* para confirmar ou *NÃO* para cancelar.`;
+    const trimmed = aiText.trim();
+    if (trimmed.startsWith("{")) {
+      const action = JSON.parse(trimmed);
+      if (action.action === "expense" || action.action === "income") {
+        if (action.confirm) {
+          await setPending(userId, action);
+          finalReply =
+            `⚠️ *Confirmar?*\n\n${action.action === "expense" ? "💸 Despesa" : "💰 Receita"}: *R$ ${parseFloat(action.amount).toFixed(2)}*\n📝 ${action.description}\n📂 ${action.category}\n\nResponda *SIM* ou *NÃO*`;
         } else {
-          finalResponse = await registerTransaction(supabase, userId, parsed, financialData);
+          finalReply = await executeTransaction(userId, action, data);
         }
       }
     }
   } catch {
-    // Not JSON, use as-is
+    // Plain text
   }
 
-  // Update context
+  // Save context
   await supabase.from("whatsapp_context").upsert({
     user_id: userId,
-    messages: [...messages, { role: "assistant", content: finalResponse }].slice(-10),
+    messages: [...messages, { role: "assistant", content: finalReply }].slice(-10),
+    pending_confirmation: null,
     updated_at: new Date().toISOString(),
-  });
+  }, { onConflict: "user_id" });
 
-  return finalResponse;
+  return finalReply;
 }
 
-// ── SYSTEM PROMPT ──
-function buildSystemPrompt(data: any): string {
-  return `Você é a FinDash IA no WhatsApp — assistente financeira pessoal.
-Dados financeiros REAIS do usuário:
+// ━━━ EXECUTE TRANSACTION ━━━
+async function executeTransaction(userId: string, action: any, data: any): Promise<string> {
+  const amount = parseFloat(action.amount);
+  const type = action.action === "income" ? "income" : "expense";
 
-Nome: ${data.profile?.full_name || "usuário"}
-Saldo este mês: R$ ${data.balance?.toFixed(2) || "0,00"}
-Receitas: R$ ${data.income?.toFixed(2) || "0,00"}
-Despesas: R$ ${data.expenses?.toFixed(2) || "0,00"}
-Score: ${data.score || 0}/1000
-
-Gastos por categoria:
-${data.topCategories?.map((c: any) => `• ${c.category}: R$ ${c.total.toFixed(2)}`).join("\n") || "Nenhum"}
-
-Dívidas ativas:
-${data.debts?.map((d: any) => `• ${d.name}: R$ ${Number(d.remaining_amount).toFixed(2)}`).join("\n") || "Sem dívidas"}
-
-Metas:
-${data.goals?.map((g: any) => `• ${g.name}: ${((Number(g.current_amount || 0) / Number(g.target_amount)) * 100).toFixed(0)}%`).join("\n") || "Sem metas"}
-
-INTENÇÕES:
-1. REGISTRAR GASTO: "gastei", "paguei", "comprei" → Responda APENAS JSON:
-{"action":"register_transaction","type":"expense","amount":50,"description":"mercado","category":"Supermercado"}
-
-2. REGISTRAR RECEITA: "recebi", "entrou", "salário" → JSON similar com type:"income"
-
-3. CONSULTAS: "quanto tenho", "meu saldo", "gastos" → texto com dados reais
-
-4. CONSELHO: "posso comprar", "vale a pena" → conselho baseado nos dados
-
-5. AJUDA: "ajuda", "comandos" → lista de exemplos
-
-REGRAS:
-- Nunca invente dados
-- Para registro > R$ 500: inclua "needs_confirmation":true no JSON
-- WhatsApp: respostas curtas (máx 5 linhas)
-- Use *negrito* para valores, emojis com moderação
-- Português brasileiro informal
-- Para registros, responda SOMENTE com o JSON (sem texto extra)
-- Categorias válidas despesa: Supermercado, Alimentação, Transporte, Moradia, Saúde, Educação, Lazer, Vestuário, Assinaturas, Contas, Financeiro, Outros
-- Categorias válidas receita: Salário, Freelance, Vendas, Investimentos, Aluguel, Outro`;
-}
-
-// ── REGISTER TRANSACTION ──
-async function registerTransaction(supabase: any, userId: string, action: any, data: any): Promise<string> {
   const { error } = await supabase.from("transactions").insert({
     user_id: userId,
-    type: action.type,
-    amount: action.amount,
+    type,
+    amount,
     description: action.description,
-    category: action.category || "Outros",
+    category: action.category || detectCategory(action.description, type),
     date: new Date().toISOString().split("T")[0],
     origin: "personal",
   });
 
   if (error) {
-    console.error("Insert error:", error);
+    console.error("Transaction error:", error);
     return "❌ Erro ao registrar. Tente novamente.";
   }
 
-  const newBalance = action.type === "income"
-    ? data.balance + action.amount
-    : data.balance - action.amount;
+  const newBalance = type === "income" ? data.balance + amount : data.balance - amount;
+  const alert = checkBudget(action.category, amount, data.budgets);
 
-  // Check budget
-  const budget = data.budgets?.find((b: any) => b.category === action.category);
-  let budgetAlert = "";
-  if (budget && action.type === "expense") {
-    const newSpent = (budget.spent || 0) + action.amount;
-    const pct = (newSpent / budget.limit_amount) * 100;
-    if (pct >= 100) budgetAlert = `\n\n⚠️ Orçamento de ${action.category} *ultrapassado*!`;
-    else if (pct >= 80) budgetAlert = `\n\n⚠️ ${pct.toFixed(0)}% do orçamento de ${action.category} usado.`;
-  }
+  let reply = type === "expense"
+    ? `✅ *Despesa registrada!*\n\n💸 R$ ${amount.toFixed(2)} — ${action.category}\n📝 ${action.description}\n💰 Saldo: *R$ ${newBalance.toFixed(2)}*`
+    : `✅ *Receita registrada!*\n\n💰 R$ ${amount.toFixed(2)} — ${action.category}\n📝 ${action.description}\n💰 Saldo: *R$ ${newBalance.toFixed(2)}*`;
 
-  return action.type === "expense"
-    ? `✅ *Despesa registrada!*\n\n💸 R$ ${action.amount.toFixed(2)} em ${action.category}\n📝 ${action.description}\n💰 Saldo: *R$ ${newBalance.toFixed(2)}*${budgetAlert}`
-    : `✅ *Receita registrada!*\n\n💰 R$ ${action.amount.toFixed(2)} em ${action.category}\n📝 ${action.description}\n💰 Saldo: *R$ ${newBalance.toFixed(2)}*${budgetAlert}`;
+  if (alert) reply += `\n\n⚠️ ${alert}`;
+  return reply;
 }
 
-// ── LOAD FINANCIAL DATA ──
-async function loadFinancialData(supabase: any, userId: string) {
-  const now = new Date();
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+// ━━━ LOAD FINANCIAL DATA ━━━
+async function loadFinancialData(userId: string) {
+  const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0];
 
   const [txRes, debtRes, goalRes, budgetRes, profileRes, configRes] = await Promise.all([
-    supabase.from("transactions").select("*").eq("user_id", userId).gte("date", firstDay).is("deleted_at", null),
-    supabase.from("debts").select("*").eq("user_id", userId).eq("status", "active"),
-    supabase.from("goals").select("*").eq("user_id", userId).is("deleted_at", null),
-    supabase.from("budgets").select("*").eq("user_id", userId),
+    supabase.from("transactions").select("type,amount,category").eq("user_id", userId).gte("date", firstDay).is("deleted_at", null),
+    supabase.from("debts").select("name,remaining_amount").eq("user_id", userId).eq("status", "active"),
+    supabase.from("goals").select("name,current_amount,target_amount").eq("user_id", userId).is("deleted_at", null),
+    supabase.from("budgets").select("category,limit_amount").eq("user_id", userId),
     supabase.from("profiles").select("full_name").eq("id", userId).single(),
-    supabase.from("user_config").select("financial_score, streak_days").eq("user_id", userId).single(),
+    supabase.from("user_config").select("financial_score").eq("user_id", userId).single(),
   ]);
 
-  const transactions = txRes.data || [];
-  const income = transactions.filter((t: any) => t.type === "income").reduce((s: number, t: any) => s + Number(t.amount), 0);
-  const expenses = transactions.filter((t: any) => t.type === "expense").reduce((s: number, t: any) => s + Number(t.amount), 0);
+  const txs = txRes.data || [];
+  const income = txs.filter((t: any) => t.type === "income").reduce((s: number, t: any) => s + Number(t.amount), 0);
+  const expenses = txs.filter((t: any) => t.type === "expense").reduce((s: number, t: any) => s + Number(t.amount), 0);
 
-  const categoryMap: Record<string, number> = {};
-  transactions.filter((t: any) => t.type === "expense").forEach((t: any) => {
-    categoryMap[t.category] = (categoryMap[t.category] || 0) + Number(t.amount);
+  const catMap: Record<string, number> = {};
+  txs.filter((t: any) => t.type === "expense").forEach((t: any) => {
+    catMap[t.category] = (catMap[t.category] || 0) + Number(t.amount);
   });
 
-  const topCategories = Object.entries(categoryMap)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([category, total]) => ({ category, total }));
-
-  const budgetsWithSpent = (budgetRes.data || []).map((b: any) => ({
-    ...b,
-    spent: categoryMap[b.category] || 0,
-  }));
-
   return {
-    profile: profileRes.data,
+    name: profileRes.data?.full_name?.split(" ")[0] || "usuário",
     income,
     expenses,
     balance: income - expenses,
-    topCategories,
+    categories: Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([category, total]) => ({ category, total })),
     debts: debtRes.data || [],
     goals: goalRes.data || [],
-    budgets: budgetsWithSpent,
+    budgets: (budgetRes.data || []).map((b: any) => ({ ...b, spent: catMap[b.category] || 0 })),
     score: configRes.data?.financial_score || 0,
   };
 }
 
-// ── TWILIO SEND ──
-async function sendWhatsApp(to: string, message: string, sid: string, token: string, fromNum: string) {
-  const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+// ━━━ HELPERS ━━━
+function checkBudget(category: string, amount: number, budgets: any[]): string | null {
+  const b = budgets?.find((x: any) => x.category === category);
+  if (!b) return null;
+  const pct = ((b.spent || 0) + amount) / b.limit_amount * 100;
+  if (pct >= 100) return `Orçamento de *${category}* estourado! (${pct.toFixed(0)}%)`;
+  if (pct >= 80) return `Orçamento de *${category}* em ${pct.toFixed(0)}% do limite.`;
+  return null;
+}
+
+async function setPending(userId: string, action: any) {
+  await supabase.from("whatsapp_context").upsert({
+    user_id: userId, pending_confirmation: action, updated_at: new Date().toISOString(),
+  }, { onConflict: "user_id" });
+}
+
+async function clearPending(userId: string) {
+  await supabase.from("whatsapp_context").update({ pending_confirmation: null }).eq("user_id", userId);
+}
+
+function detectCategory(desc: string, type: string): string {
+  if (type === "income") {
+    if (/salário|salario/i.test(desc)) return "Salário";
+    if (/freelance|freela/i.test(desc)) return "Freelance";
+    if (/venda/i.test(desc)) return "Vendas";
+    return "Outro";
+  }
+  if (/mercado|supermercado/i.test(desc)) return "Supermercado";
+  if (/ifood|rappi|restaurante|lanche/i.test(desc)) return "Alimentação";
+  if (/uber|99|gasolina|metrô/i.test(desc)) return "Transporte";
+  if (/aluguel|condomínio/i.test(desc)) return "Moradia";
+  if (/farmácia|médico|saúde/i.test(desc)) return "Saúde";
+  if (/netflix|spotify|assinatura/i.test(desc)) return "Assinaturas";
+  return "Outros";
+}
+
+function twimlResponse(msg: string): Response {
+  const xml = msg
+    ? `<?xml version="1.0"?><Response><Message>${msg}</Message></Response>`
+    : `<?xml version="1.0"?><Response></Response>`;
+  return new Response(xml, { headers: { "Content-Type": "text/xml" }, status: 200 });
+}
+
+async function sendWhatsApp(to: string, message: string) {
+  const sid = Deno.env.get("TWILIO_ACCOUNT_SID")!;
+  const token = Deno.env.get("TWILIO_AUTH_TOKEN")!;
+  const from = (Deno.env.get("TWILIO_WHATSAPP_NUMBER") || "14155238886").replace("+", "");
+
+  await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
     method: "POST",
     headers: {
       Authorization: "Basic " + btoa(`${sid}:${token}`),
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({
-      From: `whatsapp:+${fromNum}`,
-      To: `whatsapp:+${to}`,
-      Body: message,
+      From: `whatsapp:+${from}`, To: `whatsapp:+${to}`, Body: message,
     }).toString(),
   });
-  if (!resp.ok) console.error("Twilio error:", await resp.text());
-}
-
-// ── PENDING HELPERS ──
-async function setPending(supabase: any, userId: string, action: any) {
-  await supabase.from("whatsapp_context").upsert({
-    user_id: userId,
-    pending_confirmation: action,
-    updated_at: new Date().toISOString(),
-  });
-}
-
-async function clearPending(supabase: any, userId: string) {
-  await supabase.from("whatsapp_context")
-    .update({ pending_confirmation: null })
-    .eq("user_id", userId);
 }
