@@ -1,6 +1,6 @@
 {
-  "name": "FinDash Pro",
-  "short_name": "FinDash",
+  "name": "KoraFinance",
+  "short_name": "KoraFinance",
   "description": "Controle total das suas finanças",
   "start_url": "/app",
   "display": "standalone",

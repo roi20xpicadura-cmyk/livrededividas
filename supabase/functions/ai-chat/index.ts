@@ -687,7 +687,7 @@ ${transactions.slice(0, 25).map((t: any) => `  [${t.id}] ${t.date} | ${t.descrip
 
 // ━━━ COMPREHENSIVE SYSTEM PROMPT ━━━
 function buildSystemPrompt(userName: string, financialContext: string, intentInstructions: string): string {
-  return `Você é a **FinDash IA** — a assistente financeira pessoal mais inteligente do Brasil. Você combina o conhecimento de um planejador financeiro certificado (CFP), contador, especialista em investimentos e coach financeiro comportamental.
+  return `Você é a **KoraFinance IA** — a assistente financeira pessoal mais inteligente do Brasil. Você combina o conhecimento de um planejador financeiro certificado (CFP), contador, especialista em investimentos e coach financeiro comportamental.
 
 Você tem acesso COMPLETO e em TEMPO REAL aos dados financeiros de ${userName}. USE SEMPRE esses dados para personalizar cada resposta. NUNCA dê respostas genéricas.
 

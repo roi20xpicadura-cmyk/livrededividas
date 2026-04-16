@@ -14,7 +14,7 @@ const rights = [
 ];
 
 const steps = [
-  { n: '1', text: 'Envie e-mail para privacidade@findashpro.com.br' },
+  { n: '1', text: 'Envie e-mail para privacidade@korafinance.com.br' },
   { n: '2', text: 'Identifique-se com o e-mail cadastrado' },
   { n: '3', text: 'Descreva o direito que deseja exercer' },
   { n: '4', text: 'Respondemos em até 15 dias úteis' },
@@ -54,7 +54,7 @@ export default function LGPDPage() {
             <Mail size={20} style={{ color: 'var(--color-green-600)' }} />
             <p className="text-[15px] font-bold" style={{ color: 'var(--color-text-base)' }}>Encarregado de Proteção de Dados (DPO)</p>
           </div>
-          <p className="text-[14px]" style={{ color: 'var(--color-text-muted)' }}>Email: <a href="mailto:privacidade@findashpro.com.br" className="underline" style={{ color: 'var(--color-green-600)' }}>privacidade@findashpro.com.br</a></p>
+          <p className="text-[14px]" style={{ color: 'var(--color-text-muted)' }}>Email: <a href="mailto:privacidade@korafinance.com.br" className="underline" style={{ color: 'var(--color-green-600)' }}>privacidade@korafinance.com.br</a></p>
           <p className="text-[13px] mt-2" style={{ color: 'var(--color-text-subtle)' }}>Você também pode contatar a ANPD (Autoridade Nacional de Proteção de Dados) em <a href="https://gov.br/anpd" target="_blank" rel="noreferrer" className="underline">gov.br/anpd</a></p>
         </div>
       </div>

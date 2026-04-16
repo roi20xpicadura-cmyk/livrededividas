@@ -149,7 +149,7 @@ export default function HeroSection() {
               </div>
               <div className="flex-1 flex justify-center">
                 <div className="bg-white border border-[#e2e8f0] rounded-md px-3 py-0.5 text-[11px] text-[#94a3b8]">
-                  app.findashpro.com.br
+                  app.korafinance.com.br
                 </div>
               </div>
             </div>

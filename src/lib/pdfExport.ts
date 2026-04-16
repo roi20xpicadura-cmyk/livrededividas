@@ -33,7 +33,7 @@ export function generateMonthlyPDF({ transactions, userName, period, currency }:
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text('FinDash Pro', margin, 16);
+  doc.text('KoraFinance', margin, 16);
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
   doc.text(`Relatório Financeiro — ${period}`, margin, 26);
@@ -154,8 +154,8 @@ export function generateMonthlyPDF({ transactions, userName, period, currency }:
     const h = doc.internal.pageSize.getHeight();
     doc.setFontSize(7);
     doc.setTextColor(160, 160, 160);
-    doc.text(`FinDash Pro • ${period} • Página ${i}/${totalPages}`, margin, h - 8);
+    doc.text(`KoraFinance • ${period} • Página ${i}/${totalPages}`, margin, h - 8);
   }
 
-  doc.save(`findash-relatorio-${period.replace(/\s/g, '-').toLowerCase()}.pdf`);
+  doc.save(`kora-relatorio-${period.replace(/\s/g, '-').toLowerCase()}.pdf`);
 }

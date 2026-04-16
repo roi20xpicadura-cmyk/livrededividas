@@ -1,47 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://findashpro.com.br/</loc>
+    <loc>https://korafinance.com.br/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://findashpro.com.br/pricing</loc>
+    <loc>https://korafinance.com.br/pricing</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://findashpro.com.br/sobre</loc>
+    <loc>https://korafinance.com.br/sobre</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://findashpro.com.br/login</loc>
+    <loc>https://korafinance.com.br/login</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://findashpro.com.br/register</loc>
+    <loc>https://korafinance.com.br/register</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://findashpro.com.br/termos-de-uso</loc>
+    <loc>https://korafinance.com.br/termos-de-uso</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://findashpro.com.br/politica-de-privacidade</loc>
+    <loc>https://korafinance.com.br/politica-de-privacidade</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://findashpro.com.br/lgpd</loc>
+    <loc>https://korafinance.com.br/lgpd</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://findashpro.com.br/seguranca</loc>
+    <loc>https://korafinance.com.br/seguranca</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

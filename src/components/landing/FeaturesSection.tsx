@@ -145,7 +145,7 @@ export default function FeaturesSection() {
                 <div className="w-[80px] md:w-[120px] h-[140px] md:h-[220px] rounded-[16px] md:rounded-[24px] border-[3px] md:border-4 border-[#333] bg-[#1a1a1a] p-1 md:p-1.5 overflow-hidden">
                   <div className="w-full h-full rounded-[12px] md:rounded-[18px] bg-gradient-to-b from-[#0f172a] to-[#14532d] flex flex-col items-center justify-center gap-1 md:gap-2 text-center">
                     <Smartphone className="w-4 md:w-6 h-4 md:h-6 text-[#4ade80]" />
-                    <span className="text-[7px] md:text-[9px] text-white/70">FinDash Pro</span>
+                    <span className="text-[7px] md:text-[9px] text-white/70">KoraFinance</span>
                     <span className="text-[12px] md:text-[16px] font-[900] text-white">R$ 3.200</span>
                   </div>
                 </div>

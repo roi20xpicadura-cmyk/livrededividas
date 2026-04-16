@@ -23,7 +23,7 @@ export default function ExportTab({ data, filteredTx, currency }: Props) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `findash-lancamentos-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.download = `kora-lancamentos-${format(new Date(), "yyyy-MM-dd")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -33,7 +33,7 @@ export default function ExportTab({ data, filteredTx, currency }: Props) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `findash-backup-${format(new Date(), "yyyy-MM-dd")}.json`;
+    a.download = `kora-backup-${format(new Date(), "yyyy-MM-dd")}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -49,7 +49,7 @@ export default function ExportTab({ data, filteredTx, currency }: Props) {
       reader.onload = (ev) => {
         try {
           const imported = JSON.parse(ev.target?.result as string);
-          localStorage.setItem("findash_v4", JSON.stringify(imported));
+          localStorage.setItem("kora_v4", JSON.stringify(imported));
           window.location.reload();
         } catch { alert("Arquivo inválido"); }
       };

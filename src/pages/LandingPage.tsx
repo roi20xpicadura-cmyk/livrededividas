@@ -28,7 +28,7 @@ export default function LandingPage() {
       <SEO
         title="Controle total das suas finanças — pessoal e negócio"
         description="O painel financeiro mais completo do Brasil. Controle pessoal e empresarial, DRE automático, IA financeira e conexão bancária via Open Finance. Grátis para começar."
-        url="https://findashpro.com.br"
+        url="https://korafinance.com.br"
       />
       <Navbar />
       <HeroSection />

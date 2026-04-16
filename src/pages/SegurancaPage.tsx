@@ -35,7 +35,7 @@ export default function SegurancaPage() {
             <Mail size={20} style={{ color: 'var(--color-green-600)' }} />
             <p className="text-[15px] font-bold" style={{ color: 'var(--color-text-base)' }}>Encontrou uma vulnerabilidade?</p>
           </div>
-          <p className="text-[14px] mb-2" style={{ color: 'var(--color-text-muted)' }}>Agradecemos reports responsáveis de segurança. Entre em contato: <a href="mailto:seguranca@findashpro.com.br" className="underline" style={{ color: 'var(--color-green-600)' }}>seguranca@findashpro.com.br</a></p>
+          <p className="text-[14px] mb-2" style={{ color: 'var(--color-text-muted)' }}>Agradecemos reports responsáveis de segurança. Entre em contato: <a href="mailto:seguranca@korafinance.com.br" className="underline" style={{ color: 'var(--color-green-600)' }}>seguranca@korafinance.com.br</a></p>
           <p className="text-[13px]" style={{ color: 'var(--color-text-subtle)' }}>Prometemos responder em até 48h e não entrar com ações legais contra pesquisadores de boa-fé.</p>
         </div>
       </div>

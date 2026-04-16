@@ -150,7 +150,7 @@ export default function AppLayout() {
               <BarChart3 className="text-white" style={{ width: 18, height: 18 }} />
             </div>
             <div className="flex items-center" style={{ gap: 2 }}>
-              <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--color-text-strong)' }}>FinDash</span>
+              <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--color-text-strong)' }}>KoraFinance</span>
               <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--color-green-600)' }}>Pro</span>
             </div>
             <span className="ml-auto" style={{ ...planBadgeStyle, fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 'var(--radius-md)', letterSpacing: '0.5px' }}>
@@ -332,7 +332,7 @@ export default function AppLayout() {
               <div className="flex items-center justify-center" style={{ width: 28, height: 28, borderRadius: 'var(--radius-sm)', background: 'var(--color-green-600)' }}>
                 <BarChart3 className="text-white" style={{ width: 15, height: 15 }} />
               </div>
-              <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text-strong)' }}>FinDash</span>
+              <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text-strong)' }}>KoraFinance</span>
             </div>
           )}
 
@@ -340,10 +340,10 @@ export default function AppLayout() {
           {!isMobile && (
             <div className="min-w-0">
               <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-text-strong)', letterSpacing: '-0.3px', lineHeight: 1 }}>
-                {PAGE_TITLES[location.pathname] || 'FinDash Pro'}
+                {PAGE_TITLES[location.pathname] || 'KoraFinance'}
               </h1>
               <p style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 2 }}>
-                FinDash Pro / {PAGE_TITLES[location.pathname] || ''}
+                KoraFinance / {PAGE_TITLES[location.pathname] || ''}
               </p>
             </div>
           )}
@@ -436,7 +436,7 @@ export default function AppLayout() {
         {isMobile && location.pathname !== '/app' && (
           <div style={{ padding: '12px 16px 4px' }}>
             <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-text-strong)', letterSpacing: '-0.3px' }}>
-              {PAGE_TITLES[location.pathname] || 'FinDash Pro'}
+              {PAGE_TITLES[location.pathname] || 'KoraFinance'}
             </h1>
           </div>
         )}

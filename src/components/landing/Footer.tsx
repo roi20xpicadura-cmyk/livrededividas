@@ -15,7 +15,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-7 h-7 rounded-lg bg-[#16a34a] flex items-center justify-center"><BarChart3 className="w-4 h-4 text-white" /></div>
-              <span className="text-[15px] font-[900] text-white">FinDash<span className="text-[#16a34a]">Pro</span></span>
+              <span className="text-[15px] font-[900] text-white">KoraFinance<span className="text-[#16a34a]">Pro</span></span>
             </div>
             <p className="text-[12px] text-white/40 leading-[1.8] max-w-[240px] mb-5">O painel financeiro mais completo do Brasil. Para quem quer organizar, crescer e realizar.</p>
             <div className="flex gap-2">
@@ -43,7 +43,7 @@ export default function Footer() {
         </div>
         <div className="border-t border-white/[0.06] pt-8 flex flex-col md:flex-row justify-between items-center gap-3">
           <div className="text-[11px] text-white/25 text-center md:text-left">
-            <div>© 2026 FinDash Pro. Todos os direitos reservados.</div>
+            <div>© 2026 KoraFinance. Todos os direitos reservados.</div>
             <div>CNPJ: XX.XXX.XXX/0001-XX</div>
           </div>
           <div className="text-[11px] text-white/25">Feito com 💚 no Brasil</div>

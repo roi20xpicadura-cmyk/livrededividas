@@ -77,7 +77,7 @@ export default function LegalPageLayout({ label, title, updatedAt, version, sect
         <div className="mt-10 p-6 rounded-xl" style={{ background: 'var(--color-bg-sunken)' }}>
           <p className="text-[15px] font-bold mb-1" style={{ color: 'var(--color-text-base)' }}>Dúvidas sobre este documento?</p>
           <p className="text-[14px]" style={{ color: 'var(--color-text-muted)' }}>
-            Entre em contato: <a href="mailto:privacidade@findashpro.com.br" className="underline" style={{ color: 'var(--color-green-600)' }}>privacidade@findashpro.com.br</a>
+            Entre em contato: <a href="mailto:privacidade@korafinance.com.br" className="underline" style={{ color: 'var(--color-green-600)' }}>privacidade@korafinance.com.br</a>
           </p>
           <p className="text-[13px] mt-1" style={{ color: 'var(--color-text-subtle)' }}>Resposta em até 5 dias úteis.</p>
         </div>

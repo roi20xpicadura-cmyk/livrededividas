@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const CONSENT_KEY = 'findash_cookie_consent';
+const CONSENT_KEY = 'kora_cookie_consent';
 
 export default function CookieConsentBanner() {
   const [show, setShow] = useState(false);

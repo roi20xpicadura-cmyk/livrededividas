@@ -417,7 +417,7 @@ async function sendWhatsAppAlert(alert: AgentAlert) {
 
     if (!sid || !token) return;
 
-    const message = `${alert.title}\n\n${alert.description}\n\n— FinDash IA 🤖`;
+    const message = `${alert.title}\n\n${alert.description}\n\n— KoraFinance IA 🤖`;
 
     await fetch(
       `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,

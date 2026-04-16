@@ -75,7 +75,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
       onboarding_step: totalSteps,
     }).eq('user_id', user!.id);
     setSaving(false);
-    toast.success('🎉 Painel configurado! Bem-vindo ao FinDash Pro.');
+    toast.success('🎉 Painel configurado! Bem-vindo ao KoraFinance.');
     onComplete();
   };
 
@@ -124,7 +124,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
 
             {step === 1 && (
               <div className="text-center">
-                <h2 className="text-3xl font-black text-fin-green-dark tracking-tight">Como você quer usar o FinDash Pro?</h2>
+                <h2 className="text-3xl font-black text-fin-green-dark tracking-tight">Como você quer usar o KoraFinance?</h2>
                 <p className="text-sm text-muted mt-2">Você pode mudar isso depois nas configurações.</p>
                 <div className="mt-10 space-y-3 max-w-lg mx-auto">
                   {PROFILE_TYPES.map(pt => (

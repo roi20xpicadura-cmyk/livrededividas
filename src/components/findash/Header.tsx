@@ -17,7 +17,7 @@ export default function Header({ hasData, onReset }: HeaderProps) {
           <div className="w-[34px] h-[34px] rounded-lg bg-primary flex items-center justify-center">
             <BarChart3 className="w-5 h-5 text-primary-foreground" />
           </div>
-          <span className="text-lg font-black text-foreground">FinDash Pro</span>
+          <span className="text-lg font-black text-foreground">KoraFinance</span>
           <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground text-[10px] font-bold uppercase tracking-wider">
             E-commerce
           </span>

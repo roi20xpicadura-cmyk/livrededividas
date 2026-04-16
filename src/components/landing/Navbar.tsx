@@ -38,7 +38,7 @@ export default function Navbar() {
             <BarChart3 className="w-4 h-4 text-white" />
           </div>
           <span className="text-[15px] font-[900] text-[#0f172a]">
-            FinDash<span className="text-[#16a34a]">Pro</span>
+            KoraFinance<span className="text-[#16a34a]">Pro</span>
           </span>
         </Link>
 
