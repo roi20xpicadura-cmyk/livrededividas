@@ -86,6 +86,11 @@ export default function RegisterPage() {
         terms_version: '1.0',
         marketing_emails: false,
       } as any).eq('id', data.user.id);
+
+      // Fire-and-forget welcome email (non-blocking)
+      supabase.functions.invoke('send-welcome-email', {
+        body: { email, name: fullName },
+      }).catch(err => console.error('Welcome email failed:', err));
     }
 
     setLoading(false);
