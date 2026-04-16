@@ -8,6 +8,15 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
 
+/** Detect sandbox vs production based on configured number */
+function getWhatsAppConfig() {
+  const configuredNumber = Deno.env.get("TWILIO_WHATSAPP_NUMBER") || "";
+  const SANDBOX_NUMBER = "+14155238886";
+  const isProduction = configuredNumber !== "" && configuredNumber !== SANDBOX_NUMBER;
+  const fromNumber = isProduction ? configuredNumber : SANDBOX_NUMBER;
+  return { isProduction, fromNumber };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -39,6 +48,8 @@ Deno.serve(async (req) => {
 
     if (!body) return twimlResponse("");
 
+    const config = getWhatsAppConfig();
+
     // Find user
     const { data: connection } = await supabase
       .from("whatsapp_connections")
@@ -48,12 +59,12 @@ Deno.serve(async (req) => {
       .single();
 
     if (!connection) {
-      await sendWhatsApp(phoneNumber, "👋 Número não vinculado ao FinDash Pro.\n\nAcesse o app → Configurações → WhatsApp para conectar.");
+      await sendWhatsApp(phoneNumber, config.fromNumber, "👋 Número não vinculado ao FinDash Pro.\n\nAcesse o app → Configurações → WhatsApp para conectar.");
       return twimlResponse("");
     }
 
     if (!connection.active) {
-      await sendWhatsApp(phoneNumber, "IA desativada. Reative em Configurações → WhatsApp.");
+      await sendWhatsApp(phoneNumber, config.fromNumber, "IA desativada. Reative em Configurações → WhatsApp.");
       return twimlResponse("");
     }
 
@@ -71,8 +82,8 @@ Deno.serve(async (req) => {
     // Process with AI
     const reply = await processWithAI(userId, body);
 
-    // Send reply
-    await sendWhatsApp(phoneNumber, reply);
+    // Send reply (within 24h session window — plain text works for both sandbox and production)
+    await sendWhatsApp(phoneNumber, config.fromNumber, reply);
 
     // Save outbound
     await supabase.from("whatsapp_messages").insert({
@@ -112,44 +123,7 @@ async function processWithAI(userId: string, message: string): Promise<string> {
     }
   }
 
-  const systemPrompt = `Você é a FinDash IA no WhatsApp — assistente financeira pessoal.
-
-━━━ DADOS FINANCEIROS (${new Date().toLocaleDateString("pt-BR")}) ━━━
-Nome: ${data.name}
-Saldo do mês: R$ ${data.balance.toFixed(2)} ${data.balance >= 0 ? "✓" : "⚠️"}
-Receitas: R$ ${data.income.toFixed(2)}
-Despesas: R$ ${data.expenses.toFixed(2)}
-Score: ${data.score}/1000
-
-Gastos por categoria:
-${data.categories.map((c: any) => `• ${c.category}: R$ ${c.total.toFixed(2)}`).join("\n") || "• Nenhum gasto"}
-
-Dívidas:
-${data.debts.length > 0 ? data.debts.map((d: any) => `• ${d.name}: R$ ${Number(d.remaining_amount).toFixed(2)}`).join("\n") : "• Sem dívidas ✓"}
-
-Metas:
-${data.goals.length > 0 ? data.goals.map((g: any) => `• ${g.name}: ${((Number(g.current_amount || 0) / Number(g.target_amount)) * 100).toFixed(0)}%`).join("\n") : "• Sem metas"}
-
-Orçamentos:
-${data.budgets.length > 0 ? data.budgets.map((b: any) => `• ${b.category}: R$ ${(b.spent || 0).toFixed(0)}/${b.limit_amount} (${((b.spent || 0) / b.limit_amount * 100).toFixed(0)}%)`).join("\n") : "• Sem orçamentos"}
-
-━━━ COMO RESPONDER ━━━
-
-Para REGISTRAR GASTO (gastei, paguei, comprei):
-Responda SOMENTE com JSON:
-{"action":"expense","amount":VALOR,"description":"descrição","category":"Categoria","confirm":false}
-Se valor > 500: confirm:true
-
-Para REGISTRAR RECEITA (recebi, entrou, ganhei):
-{"action":"income","amount":VALOR,"description":"descrição","category":"Categoria"}
-
-Para CONSULTAS: texto simples, *negrito* nos valores, máx 5 linhas, dados reais.
-
-REGRAS:
-- Use dados reais SEMPRE
-- Respostas curtas (WhatsApp)
-- Português brasileiro informal
-- Para registros responda SOMENTE JSON`;
+  const systemPrompt = buildSystemPrompt(data);
 
   const messages = [
     { role: "system", content: systemPrompt },
@@ -201,7 +175,7 @@ REGRAS:
       }
     }
   } catch {
-    // Plain text
+    // Plain text response
   }
 
   // Save context
@@ -215,6 +189,48 @@ REGRAS:
   }, { onConflict: "user_id" });
 
   return finalReply;
+}
+
+// ━━━ SYSTEM PROMPT ━━━
+function buildSystemPrompt(data: any): string {
+  return `Você é a FinDash IA no WhatsApp — assistente financeira pessoal.
+
+━━━ DADOS FINANCEIROS (${new Date().toLocaleDateString("pt-BR")}) ━━━
+Nome: ${data.name}
+Saldo do mês: R$ ${data.balance.toFixed(2)} ${data.balance >= 0 ? "✓" : "⚠️"}
+Receitas: R$ ${data.income.toFixed(2)}
+Despesas: R$ ${data.expenses.toFixed(2)}
+Score: ${data.score}/1000
+
+Gastos por categoria:
+${data.categories.map((c: any) => `• ${c.category}: R$ ${c.total.toFixed(2)}`).join("\n") || "• Nenhum gasto"}
+
+Dívidas:
+${data.debts.length > 0 ? data.debts.map((d: any) => `• ${d.name}: R$ ${Number(d.remaining_amount).toFixed(2)}`).join("\n") : "• Sem dívidas ✓"}
+
+Metas:
+${data.goals.length > 0 ? data.goals.map((g: any) => `• ${g.name}: ${((Number(g.current_amount || 0) / Number(g.target_amount)) * 100).toFixed(0)}%`).join("\n") : "• Sem metas"}
+
+Orçamentos:
+${data.budgets.length > 0 ? data.budgets.map((b: any) => `• ${b.category}: R$ ${(b.spent || 0).toFixed(0)}/${b.limit_amount} (${((b.spent || 0) / b.limit_amount * 100).toFixed(0)}%)`).join("\n") : "• Sem orçamentos"}
+
+━━━ COMO RESPONDER ━━━
+
+Para REGISTRAR GASTO (gastei, paguei, comprei):
+Responda SOMENTE com JSON:
+{"action":"expense","amount":VALOR,"description":"descrição","category":"Categoria","confirm":false}
+Se valor > 500: confirm:true
+
+Para REGISTRAR RECEITA (recebi, entrou, ganhei):
+{"action":"income","amount":VALOR,"description":"descrição","category":"Categoria"}
+
+Para CONSULTAS: texto simples, *negrito* nos valores, máx 5 linhas, dados reais.
+
+REGRAS:
+- Use dados reais SEMPRE
+- Respostas curtas (WhatsApp)
+- Português brasileiro informal
+- Para registros responda SOMENTE JSON`;
 }
 
 // ━━━ EXECUTE TRANSACTION ━━━
@@ -326,18 +342,11 @@ function twimlResponse(msg: string): Response {
   return new Response(xml, { headers: { "Content-Type": "text/xml" }, status: 200 });
 }
 
-async function sendWhatsApp(to: string, message: string) {
+async function sendWhatsApp(to: string, from: string, message: string) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) {
-    console.error("LOVABLE_API_KEY is not configured");
-    return;
-  }
-
+  if (!LOVABLE_API_KEY) { console.error("LOVABLE_API_KEY not configured"); return; }
   const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
-  if (!TWILIO_API_KEY) {
-    console.error("TWILIO_API_KEY is not configured");
-    return;
-  }
+  if (!TWILIO_API_KEY) { console.error("TWILIO_API_KEY not configured"); return; }
 
   const resp = await fetch(`${GATEWAY_URL}/Messages.json`, {
     method: "POST",
@@ -347,7 +356,7 @@ async function sendWhatsApp(to: string, message: string) {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({
-      From: "whatsapp:+14155238886",
+      From: `whatsapp:+${from.replace(/\D/g, "")}`,
       To: `whatsapp:+${to}`,
       Body: message,
     }).toString(),

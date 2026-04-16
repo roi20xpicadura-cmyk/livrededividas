@@ -11,16 +11,22 @@ const corsHeaders = {
 const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
 
 function respond(body: Record<string, unknown>, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: jsonHeaders,
-  });
+  return new Response(JSON.stringify(body), { status, headers: jsonHeaders });
 }
 
 function normalizeBrazilPhone(phone: string) {
   const digits = phone.replace(/\D/g, "");
   if (!digits) return "";
   return digits.startsWith("55") ? digits : `55${digits}`;
+}
+
+/** Detect mode: if TWILIO_WHATSAPP_NUMBER is set and not the sandbox number, we're in production */
+function getWhatsAppConfig() {
+  const configuredNumber = Deno.env.get("TWILIO_WHATSAPP_NUMBER") || "";
+  const SANDBOX_NUMBER = "+14155238886";
+  const isProduction = configuredNumber !== "" && configuredNumber !== SANDBOX_NUMBER;
+  const fromNumber = isProduction ? configuredNumber : SANDBOX_NUMBER;
+  return { isProduction, fromNumber };
 }
 
 serve(async (req) => {
@@ -38,6 +44,8 @@ serve(async (req) => {
     if (!userId || !action) {
       return respond({ error: "Missing required fields" }, 400);
     }
+
+    const config = getWhatsAppConfig();
 
     if (action === "send_code") {
       if (!phoneNumber) {
@@ -68,16 +76,30 @@ serve(async (req) => {
         return respond({ error: "Erro ao salvar conexão do WhatsApp." }, 500);
       }
 
-      const sendResult = await sendWhatsApp(
-        cleanPhone,
-        `🔐 *FinDash Pro — Verificação*\n\nSeu código: *${verificationCode}*\n\nVálido por 10 minutos.`
-      );
+      let sendResult: SendResult;
+
+      if (config.isProduction) {
+        // Production: use approved Content Template for verification
+        sendResult = await sendWhatsAppTemplate(
+          cleanPhone,
+          config.fromNumber,
+          "findash_verification_code", // Template SID or name
+          { "1": verificationCode }
+        );
+      } else {
+        // Sandbox: send plain text
+        sendResult = await sendWhatsApp(
+          cleanPhone,
+          config.fromNumber,
+          `🔐 *FinDash Pro — Verificação*\n\nSeu código: *${verificationCode}*\n\nVálido por 10 minutos.`
+        );
+      }
 
       if (!sendResult.success) {
         return respond({ error: sendResult.error }, 502);
       }
 
-      return respond({ sent: true, phone_number: cleanPhone });
+      return respond({ sent: true, phone_number: cleanPhone, mode: config.isProduction ? "production" : "sandbox" });
     }
 
     if (action === "verify_code") {
@@ -115,10 +137,22 @@ serve(async (req) => {
 
       const name = profile?.full_name?.split(" ")[0] || "você";
 
-      const welcomeResult = await sendWhatsApp(
-        conn.phone_number,
-        `✅ *WhatsApp conectado ao FinDash Pro!*\n\nOlá, ${name}! Agora gerencie finanças por aqui.\n\n*Exemplos:*\n💸 "gastei 50 no mercado"\n💰 "recebi 3000 de salário"\n📊 "como estão minhas finanças?"\n🎯 "progresso da minha meta"\n\nPode começar! 🚀`
-      );
+      // Welcome message (template in production, plain text in sandbox)
+      let welcomeResult: SendResult;
+      if (config.isProduction) {
+        welcomeResult = await sendWhatsAppTemplate(
+          conn.phone_number,
+          config.fromNumber,
+          "findash_welcome",
+          { "1": name }
+        );
+      } else {
+        welcomeResult = await sendWhatsApp(
+          conn.phone_number,
+          config.fromNumber,
+          `✅ *WhatsApp conectado ao FinDash Pro!*\n\nOlá, ${name}! Agora gerencie finanças por aqui.\n\n*Exemplos:*\n💸 "gastei 50 no mercado"\n💰 "recebi 3000 de salário"\n📊 "como estão minhas finanças?"\n🎯 "progresso da minha meta"\n\nPode começar! 🚀`
+        );
+      }
 
       if (!welcomeResult.success) {
         return respond({ verified: true, warning: welcomeResult.error });
@@ -144,7 +178,10 @@ serve(async (req) => {
         .eq("active", true)
         .single();
 
-      return respond({ connection: data || null });
+      return respond({
+        connection: data || null,
+        mode: config.isProduction ? "production" : "sandbox",
+      });
     }
 
     return respond({ error: "Unknown action" }, 400);
@@ -154,16 +191,14 @@ serve(async (req) => {
   }
 });
 
-async function sendWhatsApp(to: string, message: string): Promise<{ success: true } | { success: false; error: string }> {
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) {
-    return { success: false, error: "Configuração ausente do backend (LOVABLE_API_KEY)." };
-  }
+// ━━━ TYPES ━━━
+type SendResult = { success: true } | { success: false; error: string };
 
-  const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
-  if (!TWILIO_API_KEY) {
-    return { success: false, error: "Configuração ausente do Twilio no projeto." };
-  }
+// ━━━ SEND PLAIN TEXT (sandbox + session replies) ━━━
+async function sendWhatsApp(to: string, from: string, message: string): Promise<SendResult> {
+  const { LOVABLE_API_KEY, TWILIO_API_KEY } = getGatewayKeys();
+  if (!LOVABLE_API_KEY) return { success: false, error: "Configuração ausente do backend (LOVABLE_API_KEY)." };
+  if (!TWILIO_API_KEY) return { success: false, error: "Configuração ausente do Twilio no projeto." };
 
   const resp = await fetch(`${GATEWAY_URL}/Messages.json`, {
     method: "POST",
@@ -173,12 +208,59 @@ async function sendWhatsApp(to: string, message: string): Promise<{ success: tru
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({
-      From: "whatsapp:+14155238886",
+      From: `whatsapp:+${from.replace(/\D/g, "")}`,
       To: `whatsapp:+${to}`,
       Body: message,
     }).toString(),
   });
 
+  return handleTwilioResponse(resp);
+}
+
+// ━━━ SEND TEMPLATE (production - outbound initiation) ━━━
+async function sendWhatsAppTemplate(
+  to: string,
+  from: string,
+  contentSid: string,
+  variables: Record<string, string>
+): Promise<SendResult> {
+  const { LOVABLE_API_KEY, TWILIO_API_KEY } = getGatewayKeys();
+  if (!LOVABLE_API_KEY) return { success: false, error: "Configuração ausente do backend (LOVABLE_API_KEY)." };
+  if (!TWILIO_API_KEY) return { success: false, error: "Configuração ausente do Twilio no projeto." };
+
+  const params: Record<string, string> = {
+    From: `whatsapp:+${from.replace(/\D/g, "")}`,
+    To: `whatsapp:+${to}`,
+    ContentSid: contentSid,
+  };
+
+  // Add template variables (ContentVariables is JSON)
+  if (Object.keys(variables).length > 0) {
+    params.ContentVariables = JSON.stringify(variables);
+  }
+
+  const resp = await fetch(`${GATEWAY_URL}/Messages.json`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      "X-Connection-Api-Key": TWILIO_API_KEY,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams(params).toString(),
+  });
+
+  return handleTwilioResponse(resp);
+}
+
+// ━━━ HELPERS ━━━
+function getGatewayKeys() {
+  return {
+    LOVABLE_API_KEY: Deno.env.get("LOVABLE_API_KEY"),
+    TWILIO_API_KEY: Deno.env.get("TWILIO_API_KEY"),
+  };
+}
+
+async function handleTwilioResponse(resp: Response): Promise<SendResult> {
   const payload = await resp.json().catch(() => null);
 
   if (!resp.ok) {
