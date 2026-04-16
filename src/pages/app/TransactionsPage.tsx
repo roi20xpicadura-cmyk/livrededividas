@@ -55,11 +55,20 @@ function formatCompact(n: number) {
   return abs.toFixed(0);
 }
 
-export default function TransactionsPage() {
+interface TransactionsPageProps {
+  /** When set, this page only shows transactions of this origin and locks the add-sheet to it. */
+  profile?: 'personal' | 'business';
+}
+
+export default function TransactionsPage({ profile }: TransactionsPageProps = {}) {
   const { user } = useAuth();
   const { config } = useProfile();
   const profileType = config?.profile_type || 'personal';
-  const showOriginFilter = profileType === 'both';
+  // When the page is locked to a profile (via /transactions/personal or /business),
+  // hide the origin chip filter — the page is already scoped.
+  const showOriginFilter = profileType === 'both' && !profile;
+  const lockedOrigin: 'personal' | 'business' | null = profile
+    ?? (profileType === 'personal' ? 'personal' : profileType === 'business' ? 'business' : null);
 
   const [txs, setTxs] = useState<Tx[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,12 +83,14 @@ export default function TransactionsPage() {
     if (!user) return;
     const start = format(startOfMonth(new Date()), 'yyyy-MM-dd');
     const end = format(endOfMonth(new Date()), 'yyyy-MM-dd');
-    const { data } = await supabase.from('transactions').select('*')
+    let q = supabase.from('transactions').select('*')
       .eq('user_id', user.id).gte('date', start).lte('date', end)
       .order('date', { ascending: false });
+    if (lockedOrigin) q = q.eq('origin', lockedOrigin);
+    const { data } = await q;
     setTxs((data || []) as Tx[]);
     setLoading(false);
-  }, [user]);
+  }, [user, lockedOrigin]);
 
   useEffect(() => { fetchTxs(); }, [fetchTxs]);
 
@@ -163,6 +174,23 @@ export default function TransactionsPage() {
       {/* Page header */}
       <div style={{ padding: '14px 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
+          {/* Profile badge — only when route locks the page to a profile */}
+          {profile && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: profile === 'personal' ? 'rgba(124,58,237,0.12)' : 'rgba(37,99,235,0.12)',
+              border: `1px solid ${profile === 'personal' ? 'rgba(124,58,237,0.25)' : 'rgba(37,99,235,0.25)'}`,
+              borderRadius: 99, padding: '3px 10px', marginBottom: 6,
+            }}>
+              <span style={{ fontSize: 11 }}>{profile === 'personal' ? '🏠' : '💼'}</span>
+              <span style={{
+                fontSize: 10, fontWeight: 800, letterSpacing: '0.04em',
+                color: profile === 'personal' ? '#7C3AED' : '#2563eb',
+              }}>
+                {profile === 'personal' ? 'PESSOAL' : 'NEGÓCIO'}
+              </span>
+            </div>
+          )}
           <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text-strong)', letterSpacing: '-0.03em', lineHeight: 1 }}>
             Lançamentos
           </h1>
@@ -469,6 +497,7 @@ export default function TransactionsPage() {
         onClose={() => setShowSheet(false)}
         onSuccess={fetchTxs}
         profileType={profileType}
+        forceOrigin={profile}
       />
       <ImportModal
         open={showImport}

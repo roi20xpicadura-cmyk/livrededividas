@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState, useEffect, memo } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +11,7 @@ import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
 import { AppErrorBoundary } from "@/components/app/ErrorBoundary";
 import { AnimatePresence } from "framer-motion";
 import SplashScreen from "@/components/app/SplashScreen";
+import { useProfile } from "@/hooks/useProfile";
 
 // Lazy-loaded routes
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -70,6 +71,20 @@ const PageSkeleton = memo(function PageSkeleton() {
     </div>
   );
 });
+
+/**
+ * Routes /app/transactions to the right page based on user's profile_type.
+ *  - 'business' → /app/transactions/business
+ *  - 'both' or 'personal' (default) → /app/transactions/personal
+ *  Renders the personal page directly while config loads to avoid a flash.
+ */
+function TransactionsRouter() {
+  const { config, loading } = useProfile();
+  if (loading) return <PageSkeleton />;
+  const profileType = config?.profile_type || 'personal';
+  if (profileType === 'business') return <Navigate to="/app/transactions/business" replace />;
+  return <Navigate to="/app/transactions/personal" replace />;
+}
 
 // Prefetch common app routes after initial load
 function usePrefetchAppRoutes() {
@@ -133,7 +148,9 @@ const App = () => {
                   {/* Protected app routes */}
                   <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                     <Route index element={<OverviewPage />} />
-                    <Route path="transactions" element={<TransactionsPage />} />
+                    <Route path="transactions" element={<TransactionsRouter />} />
+                    <Route path="transactions/personal" element={<TransactionsPage profile="personal" />} />
+                    <Route path="transactions/business" element={<TransactionsPage profile="business" />} />
                     <Route path="goals" element={<GoalsPage />} />
                     <Route path="debts" element={<DebtsPage />} />
                     <Route path="budget" element={<BudgetPage />} />

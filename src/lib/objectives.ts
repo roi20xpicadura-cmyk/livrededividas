@@ -30,10 +30,137 @@ export const SMART_TIPS: Record<string, string> = {
   custom: '💡 Defina metas SMART: Específica, Mensurável, Atingível, Relevante e com Prazo.',
 };
 
-export const PERSONAL_INCOME_CATS = ['Salário', 'Freelance', 'Renda Extra', 'Presente', 'Reembolso', 'Outro'];
-export const PERSONAL_EXPENSE_CATS = ['Moradia', 'Alimentação', 'Transporte', 'Saúde', 'Educação', 'Lazer', 'Roupas', 'Assinaturas', 'Dívidas', 'Cartão de Crédito', 'Outro'];
-export const BUSINESS_INCOME_CATS = ['Vendas', 'Serviços', 'Consultoria', 'Assinaturas', 'Parceria', 'Outro'];
-export const BUSINESS_EXPENSE_CATS = ['Marketing', 'Fornecedor', 'Folha de Pagamento', 'Aluguel', 'Software', 'Impostos', 'Equipamentos', 'Logística', 'Outro'];
+// ─────────────────────────────────────────────────────────────
+// CATEGORIES — separated by profile (Personal vs Business)
+// Stored as Portuguese labels (compatible with existing data).
+// ─────────────────────────────────────────────────────────────
+
+export interface CategoryItem {
+  label: string;
+  emoji: string;
+}
+
+export const PERSONAL_EXPENSE_CATEGORIES: CategoryItem[] = [
+  // Alimentação
+  { label: 'Supermercado', emoji: '🛒' },
+  { label: 'Restaurante', emoji: '🍽️' },
+  { label: 'Delivery', emoji: '🛵' },
+  { label: 'Lanches', emoji: '🥤' },
+  // Transporte
+  { label: 'Combustível', emoji: '⛽' },
+  { label: 'Uber/Taxi', emoji: '🚕' },
+  { label: 'Transporte público', emoji: '🚌' },
+  { label: 'Estacionamento', emoji: '🅿️' },
+  // Moradia
+  { label: 'Aluguel', emoji: '🏠' },
+  { label: 'Contas (luz/água)', emoji: '💡' },
+  { label: 'Internet', emoji: '📶' },
+  { label: 'Condomínio', emoji: '🏢' },
+  // Saúde
+  { label: 'Saúde', emoji: '❤️' },
+  { label: 'Farmácia', emoji: '💊' },
+  { label: 'Academia', emoji: '🏋️' },
+  { label: 'Dentista', emoji: '🦷' },
+  // Educação
+  { label: 'Educação', emoji: '📚' },
+  { label: 'Cursos', emoji: '🎓' },
+  { label: 'Livros', emoji: '📖' },
+  // Lazer
+  { label: 'Lazer', emoji: '🎮' },
+  { label: 'Streaming', emoji: '📺' },
+  { label: 'Viagem', emoji: '✈️' },
+  { label: 'Esportes', emoji: '⚽' },
+  // Vestuário
+  { label: 'Roupas', emoji: '👕' },
+  { label: 'Beleza', emoji: '💄' },
+  // Financeiro pessoal
+  { label: 'Cartão de Crédito', emoji: '💳' },
+  { label: 'Dívidas', emoji: '⚠️' },
+  { label: 'Poupança', emoji: '🐷' },
+  { label: 'Investimentos', emoji: '📈' },
+  // Casa
+  { label: 'Casa / Reforma', emoji: '🔨' },
+  { label: 'Eletrônicos', emoji: '📱' },
+  { label: 'Pets', emoji: '🐾' },
+  { label: 'Outros', emoji: '💸' },
+];
+
+export const PERSONAL_INCOME_CATEGORIES: CategoryItem[] = [
+  { label: 'Salário', emoji: '💼' },
+  { label: 'Freelance', emoji: '💻' },
+  { label: 'Bônus', emoji: '🎁' },
+  { label: 'Aluguel Recebido', emoji: '🏠' },
+  { label: 'Rendimentos', emoji: '📊' },
+  { label: 'Dividendos', emoji: '💰' },
+  { label: 'Presente', emoji: '🎀' },
+  { label: 'Venda de itens', emoji: '📦' },
+  { label: 'Outras receitas', emoji: '💵' },
+];
+
+export const BUSINESS_EXPENSE_CATEGORIES: CategoryItem[] = [
+  // Operacional
+  { label: 'Fornecedores', emoji: '🏭' },
+  { label: 'Matéria-prima', emoji: '📦' },
+  { label: 'Escritório', emoji: '🏢' },
+  { label: 'Aluguel comercial', emoji: '🔑' },
+  { label: 'Contas do negócio', emoji: '💡' },
+  { label: 'Equipamentos', emoji: '🖥️' },
+  { label: 'Software', emoji: '⚙️' },
+  { label: 'Telefone / Internet', emoji: '📱' },
+  // Pessoal/RH
+  { label: 'Folha de Pagamento', emoji: '👥' },
+  { label: 'Prestadores', emoji: '🤝' },
+  { label: 'Treinamentos', emoji: '🎓' },
+  { label: 'Benefícios', emoji: '❤️' },
+  // Vendas / Marketing
+  { label: 'Marketing', emoji: '📢' },
+  { label: 'Anúncios pagos', emoji: '📣' },
+  { label: 'Eventos', emoji: '🎪' },
+  { label: 'Brindes / Cortesias', emoji: '🎁' },
+  // Logística
+  { label: 'Frete / Entrega', emoji: '🚚' },
+  { label: 'Combustível', emoji: '⛽' },
+  { label: 'Viagens a negócio', emoji: '✈️' },
+  // Financeiro
+  { label: 'Impostos', emoji: '📋' },
+  { label: 'Contabilidade', emoji: '🧾' },
+  { label: 'Tarifas bancárias', emoji: '🏦' },
+  { label: 'Empréstimos', emoji: '💳' },
+  { label: 'Seguros', emoji: '🛡️' },
+  // Jurídico
+  { label: 'Jurídico', emoji: '⚖️' },
+  { label: 'Licenças / Alvarás', emoji: '📜' },
+  { label: 'Outros', emoji: '💸' },
+];
+
+export const BUSINESS_INCOME_CATEGORIES: CategoryItem[] = [
+  { label: 'Vendas', emoji: '📦' },
+  { label: 'Serviços', emoji: '🤝' },
+  { label: 'Assinaturas', emoji: '🔄' },
+  { label: 'Consultoria', emoji: '💡' },
+  { label: 'Comissões', emoji: '💰' },
+  { label: 'Licenciamento', emoji: '📜' },
+  { label: 'Aluguel de espaço', emoji: '🏢' },
+  { label: 'Reembolsos', emoji: '↩️' },
+  { label: 'Outras receitas', emoji: '💵' },
+];
+
+/** New profile-aware accessor returning rich objects (label + emoji). */
+export function getCategoriesByProfile(
+  txType: 'income' | 'expense',
+  profile: 'personal' | 'business'
+): CategoryItem[] {
+  if (txType === 'expense') {
+    return profile === 'business' ? BUSINESS_EXPENSE_CATEGORIES : PERSONAL_EXPENSE_CATEGORIES;
+  }
+  return profile === 'business' ? BUSINESS_INCOME_CATEGORIES : PERSONAL_INCOME_CATEGORIES;
+}
+
+// ── Legacy string-array exports (kept for backward compat) ──
+export const PERSONAL_INCOME_CATS = PERSONAL_INCOME_CATEGORIES.map(c => c.label);
+export const PERSONAL_EXPENSE_CATS = PERSONAL_EXPENSE_CATEGORIES.map(c => c.label);
+export const BUSINESS_INCOME_CATS = BUSINESS_INCOME_CATEGORIES.map(c => c.label);
+export const BUSINESS_EXPENSE_CATS = BUSINESS_EXPENSE_CATEGORIES.map(c => c.label);
 
 export function getCategories(profileType: string, txType: 'income' | 'expense') {
   if (profileType === 'personal') return txType === 'income' ? PERSONAL_INCOME_CATS : PERSONAL_EXPENSE_CATS;
