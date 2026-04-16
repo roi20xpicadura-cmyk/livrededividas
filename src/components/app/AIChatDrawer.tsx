@@ -147,96 +147,84 @@ function StreamingBubble({ content }: { content: string }) {
   );
 }
 
-/* ─── Welcome Screen ─── */
+/* ─── Welcome Screen (Pierre-style) ─── */
 function WelcomeScreen({ onSend }: { onSend: (text: string) => void }) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
 
-  const actions = [
-    { label: 'Lançar despesa', msg: 'Quero adicionar uma despesa', icon: ArrowDown, gradient: 'linear-gradient(135deg, #fef2f2, #fff1f2)', color: '#dc2626', iconBg: 'hsl(0 72% 51% / 0.08)' },
-    { label: 'Lançar receita', msg: 'Quero adicionar uma receita', icon: ArrowUpIcon, gradient: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)', color: '#16a34a', iconBg: 'hsl(142 71% 45% / 0.08)' },
-    { label: 'Nova meta', msg: 'Quero criar uma nova meta financeira', icon: Target, gradient: 'linear-gradient(135deg, #f5f3ff, #ede9fe)', color: '#7c3aed', iconBg: 'hsl(263 70% 50% / 0.08)' },
-    { label: 'Novo cartão', msg: 'Quero adicionar um cartão de crédito', icon: CreditCard, gradient: 'linear-gradient(135deg, #eff6ff, #dbeafe)', color: '#2563eb', iconBg: 'hsl(217 91% 60% / 0.08)' },
-  ];
-
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
-      className="flex flex-col p-5 gap-4">
+    <div className="flex flex-col items-center justify-center h-full px-6" style={{ minHeight: '100%' }}>
+      {/* Spacer */}
+      <div className="flex-1" />
 
-      {/* Greeting card */}
+      {/* Logo / Mascot */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="rounded-2xl px-5 py-4 relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', border: '1px solid hsl(142 71% 45% / 0.15)' }}>
-        <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(22,163,74,0.06)' }} />
-        <div style={{ position: 'absolute', bottom: -10, left: '40%', width: 60, height: 60, borderRadius: '50%', background: 'rgba(22,163,74,0.04)' }} />
-        <p className="text-[17px] font-black relative" style={{ color: 'var(--color-text-strong)' }}>
-          {greeting}! 👋
-        </p>
-        <p className="text-[13px] mt-1 relative" style={{ color: 'hsl(142 64% 24%)', lineHeight: 1.5 }}>
-          Pergunte qualquer coisa — eu tenho acesso a todos os seus dados.
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="flex items-center justify-center mb-6"
+      >
+        <div className="w-20 h-20 rounded-[22px] flex items-center justify-center"
+          style={{
+            background: 'linear-gradient(145deg, rgba(34,197,94,0.12), rgba(34,197,94,0.04))',
+            border: '1px solid rgba(34,197,94,0.15)',
+            boxShadow: '0 0 40px rgba(34,197,94,0.08)',
+          }}>
+          <Sparkles className="w-9 h-9" style={{ color: 'rgba(34,197,94,0.7)' }} />
+        </div>
+      </motion.div>
+
+      {/* Greeting */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.4 }}
+        className="text-center mb-2"
+      >
+        <h2 style={{ fontSize: 26, fontWeight: 300, color: 'var(--color-text-strong)', letterSpacing: '-0.5px' }}>
+          {greeting},
+        </h2>
+        <p style={{ fontSize: 18, fontWeight: 300, color: 'var(--color-text-subtle)', marginTop: 4, lineHeight: 1.5 }}>
+          Como eu posso<br />te ajudar hoje?
         </p>
       </motion.div>
 
-      {/* Quick questions */}
-      <div>
-        <p className="text-[10px] font-extrabold uppercase mb-2.5 px-1" style={{ color: 'var(--color-text-subtle)', letterSpacing: '1.2px' }}>
-          Perguntas rápidas
-        </p>
-        <div className="flex flex-col gap-2">
-          {QUICK_QUESTIONS.map((item, i) => (
-            <motion.button key={i}
-              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 + i * 0.06 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => onSend(item.q)}
-              className="flex items-center gap-3 rounded-2xl px-4 py-3.5 text-left group"
-              style={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-weak)', transition: 'border-color 0.2s, box-shadow 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(142 71% 45% / 0.3)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(22,163,74,0.08)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border-weak)'; e.currentTarget.style.boxShadow = 'none'; }}
+      {/* Spacer */}
+      <div className="flex-1" />
+
+      {/* Quick chips - horizontal scroll */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.4 }}
+        className="w-full mb-3"
+      >
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
+          {QUICK_CHIPS.map((chip, i) => (
+            <motion.button
+              key={i}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.35 + i * 0.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => onSend(chip.q)}
+              className="flex items-center gap-2 flex-shrink-0 transition-all"
+              style={{
+                padding: '10px 16px',
+                borderRadius: 99,
+                border: '1px solid var(--color-border-base)',
+                background: 'transparent',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
             >
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: item.gradient }}>
-                <span className="text-[18px]">{item.icon}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold" style={{ color: 'var(--color-text-strong)' }}>{item.q}</p>
-                <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>{item.sub}</p>
-              </div>
-              <ChevronRight className="w-4 h-4 flex-shrink-0 transition-transform group-hover:translate-x-0.5" style={{ color: 'var(--color-text-subtle)' }} />
+              <span style={{ fontSize: 16 }}>{chip.icon}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)' }}>{chip.label}</span>
             </motion.button>
           ))}
         </div>
-      </div>
-
-      {/* Quick actions */}
-      <div>
-        <p className="text-[10px] font-extrabold uppercase mb-2.5 px-1" style={{ color: 'var(--color-text-subtle)', letterSpacing: '1.2px' }}>
-          Ações rápidas
-        </p>
-        <div className="grid grid-cols-2 gap-2.5">
-          {actions.map((action, i) => {
-            const Icon = action.icon;
-            return (
-              <motion.button key={i}
-                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.25 + i * 0.05 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => onSend(action.msg)}
-                className="flex flex-col items-center gap-2 rounded-2xl py-4 px-3 transition-all"
-                style={{ background: action.gradient, border: '1px solid var(--color-border-weak)' }}
-                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.06)'; }}
-                onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; }}
-              >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: action.iconBg, backdropFilter: 'blur(4px)' }}>
-                  <Icon className="w-[18px] h-[18px]" style={{ color: action.color }} />
-                </div>
-                <span className="text-[12px] font-bold" style={{ color: 'var(--color-text-base)' }}>{action.label}</span>
-              </motion.button>
-            );
-          })}
-        </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
 
