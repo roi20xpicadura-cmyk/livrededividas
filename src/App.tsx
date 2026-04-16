@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState, useEffect, memo } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +11,7 @@ import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
 import { AppErrorBoundary } from "@/components/app/ErrorBoundary";
 import { AnimatePresence } from "framer-motion";
 import SplashScreen from "@/components/app/SplashScreen";
+import { useProfile } from "@/hooks/useProfile";
 
 // Lazy-loaded routes
 const LandingPage = lazy(() => import("./pages/LandingPage"));
