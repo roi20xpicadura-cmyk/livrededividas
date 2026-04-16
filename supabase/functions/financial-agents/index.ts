@@ -411,27 +411,26 @@ async function sendWhatsAppAlert(alert: AgentAlert) {
       if (alert.alert_type.startsWith("debt") && !prefs.debt_reminders) return;
     }
 
-    const sid = Deno.env.get("TWILIO_ACCOUNT_SID");
-    const token = Deno.env.get("TWILIO_AUTH_TOKEN");
-    const from = Deno.env.get("TWILIO_WHATSAPP_NUMBER") || "+14155238886";
+    const ZAPI_INSTANCE_ID = Deno.env.get("ZAPI_INSTANCE_ID");
+    const ZAPI_TOKEN = Deno.env.get("ZAPI_TOKEN");
+    const ZAPI_CLIENT_TOKEN = Deno.env.get("ZAPI_CLIENT_TOKEN");
 
-    if (!sid || !token) return;
+    if (!ZAPI_INSTANCE_ID || !ZAPI_TOKEN || !ZAPI_CLIENT_TOKEN) return;
 
     const message = `${alert.title}\n\n${alert.description}\n\n— KoraFinance IA 🤖`;
 
     await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
+      `https://api.z-api.io/instances/${ZAPI_INSTANCE_ID}/token/${ZAPI_TOKEN}/send-text`,
       {
         method: "POST",
         headers: {
-          Authorization: "Basic " + btoa(`${sid}:${token}`),
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type": "application/json",
+          "Client-Token": ZAPI_CLIENT_TOKEN,
         },
-        body: new URLSearchParams({
-          From: `whatsapp:+${from.replace("+", "")}`,
-          To: `whatsapp:+${connection.phone_number}`,
-          Body: message,
-        }).toString(),
+        body: JSON.stringify({
+          phone: connection.phone_number,
+          message,
+        }),
       }
     );
 
