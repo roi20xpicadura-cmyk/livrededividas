@@ -1,797 +1,1137 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { formatCurrency, PLAN_LIMITS, PlanType } from '@/lib/plans';
 import { OBJECTIVES } from '@/lib/objectives';
 import {
-  Target, Trophy, TrendingUp, Star, PlusCircle, ChevronDown, X,
-  MoreHorizontal, Pencil, DollarSign, Award, Trash2, Calendar, Clock, Check, Flame
+  Plus, ChevronDown, Pencil, Sparkles, Check, Zap, Trophy,
+  PiggyBank, Archive, Target
 } from 'lucide-react';
-import { format, parseISO, differenceInDays, subDays, isSameDay, startOfDay } from 'date-fns';
+import { format, subDays, isSameDay, differenceInDays, parseISO, addMonths } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
+import BottomSheet from '@/components/app/BottomSheet';
 
-const GOAL_COLORS = ['#16a34a', '#2563eb', '#7c3aed', '#d97706', '#dc2626', '#0f766e', '#db2777', '#ea580c'];
+/* ─── Helpers ─── */
+function formatMoney(v: number): string {
+  return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function formatCompact(v: number): string {
+  if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`;
+  if (v >= 1000) return `${(v / 1000).toFixed(1)}k`;
+  return v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
 
-type SortMode = 'recent' | 'value' | 'deadline' | 'progress';
+function getGoalEmoji(name: string): string {
+  if (!name) return '🎯';
+  const n = name.toLowerCase();
+  if (/viagem|férias|ferias|trip|europa|eua|disney/.test(n)) return '✈️';
+  if (/casa|apartamento|imóvel|imovel|moradia/.test(n)) return '🏠';
+  if (/carro|veículo|veiculo|moto/.test(n)) return '🚗';
+  if (/casamento|wedding|noivado/.test(n)) return '💍';
+  if (/faculdade|universidade|estudo|curso|mba/.test(n)) return '🎓';
+  if (/emergência|emergencia|reserva/.test(n)) return '🛡️';
+  if (/dívida|divida|cartão|cartao/.test(n)) return '💳';
+  if (/negócio|negocio|empresa|empreend/.test(n)) return '💼';
+  if (/aposentadoria|pensão|pensao/.test(n)) return '🏖️';
+  if (/computador|notebook|celular|iphone|tech/.test(n)) return '💻';
+  if (/filho|filha|criança|bebe|bebê/.test(n)) return '👶';
+  if (/saúde|saude|cirurgia|plano/.test(n)) return '❤️';
+  if (/reforma|renovar|obra/.test(n)) return '🔨';
+  if (/investimento|bolsa|ações|acoes/.test(n)) return '📈';
+  return '🎯';
+}
 
+/* ─── Main Page ─── */
 export default function GoalsPage() {
   const { user } = useAuth();
-  const { profile, config } = useProfile();
+  const { profile } = useProfile();
   const plan = (profile?.plan || 'free') as PlanType;
   const limits = PLAN_LIMITS[plan];
 
   const [goals, setGoals] = useState<any[]>([]);
-  const [checkins, setCheckins] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
-  const [formOpen, setFormOpen] = useState(false);
-  const [sortMode, setSortMode] = useState<SortMode>('recent');
-
-  // Form state
-  const [name, setName] = useState('');
-  const [target, setTarget] = useState('');
-  const [current, setCurrent] = useState('');
-  const [deadline, setDeadline] = useState('');
-  const [objectiveType, setObjectiveType] = useState('custom');
-  const [goalColor, setGoalColor] = useState(GOAL_COLORS[0]);
-  const [creating, setCreating] = useState(false);
-
-  // Edit modal
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [editGoal, setEditGoal] = useState<any>(null);
-  const [editName, setEditName] = useState('');
-  const [editTarget, setEditTarget] = useState('');
-  const [editCurrent, setEditCurrent] = useState('');
-  const [editDeadline, setEditDeadline] = useState('');
-  const [editObjectiveType, setEditObjectiveType] = useState('custom');
-  const [editColor, setEditColor] = useState(GOAL_COLORS[0]);
 
-  // Dropdown
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
-
-  const formRef = useRef<HTMLDivElement>(null);
-
-  const fetchGoals = async () => {
+  const fetchGoals = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase.from('goals').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+    const { data } = await supabase
+      .from('goals')
+      .select('*')
+      .eq('user_id', user.id)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
     setGoals(data || []);
-    // Fetch checkins for last 7 days
-    const weekAgo = format(subDays(new Date(), 6), 'yyyy-MM-dd');
-    const { data: cks } = await supabase.from('goal_checkins').select('*').eq('user_id', user.id).gte('date', weekAgo).order('date', { ascending: true });
-    const grouped: Record<string, any[]> = {};
-    (cks || []).forEach(ck => {
-      if (!grouped[ck.goal_id]) grouped[ck.goal_id] = [];
-      grouped[ck.goal_id].push(ck);
-    });
-    setCheckins(grouped);
     setLoading(false);
-  };
+  }, [user]);
 
-  useEffect(() => { fetchGoals(); }, [user]);
+  useEffect(() => { fetchGoals(); }, [fetchGoals]);
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handler = () => setOpenMenu(null);
-    document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
-  }, []);
-
-  const activeGoals = useMemo(() => goals.filter(g => Number(g.current_amount) < Number(g.target_amount)), [goals]);
-  const completedGoals = useMemo(() => goals.filter(g => Number(g.current_amount) >= Number(g.target_amount)), [goals]);
-
-  const totalRemaining = useMemo(() => activeGoals.reduce((s, g) => s + Math.max(0, Number(g.target_amount) - Number(g.current_amount)), 0), [activeGoals]);
-  const biggestGoal = useMemo(() => goals.length ? goals.reduce((a, b) => Number(a.target_amount) > Number(b.target_amount) ? a : b) : null, [goals]);
-
-  const sortedActive = useMemo(() => {
-    const arr = [...activeGoals];
-    switch (sortMode) {
-      case 'value': return arr.sort((a, b) => Number(b.target_amount) - Number(a.target_amount));
-      case 'deadline': return arr.sort((a, b) => {
-        if (!a.deadline) return 1; if (!b.deadline) return -1;
-        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
-      });
-      case 'progress': return arr.sort((a, b) => (Number(b.current_amount) / Number(b.target_amount)) - (Number(a.current_amount) / Number(a.target_amount)));
-      default: return arr;
-    }
-  }, [activeGoals, sortMode]);
+  const activeGoals = useMemo(() =>
+    goals.filter(g => Number(g.current_amount) < Number(g.target_amount)),
+    [goals]
+  );
+  const completedGoals = useMemo(() =>
+    goals.filter(g => Number(g.current_amount) >= Number(g.target_amount)),
+    [goals]
+  );
 
   const triggerConfetti = () => {
     confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#16a34a', '#22c55e', '#d97706', '#f59e0b', '#ffffff'] });
   };
 
-  const handleAdd = async () => {
-    const t = parseFloat(target);
-    const c = parseFloat(current) || 0;
-    if (!name.trim() || isNaN(t) || t <= 0) { toast.error('Preencha nome e valor alvo'); return; }
-    if (limits.goals !== Infinity && goals.length >= limits.goals) { toast.error('Limite de metas atingido. Faça upgrade!'); return; }
-    setCreating(true);
-    await supabase.from('goals').insert({
-      user_id: user!.id, name: name.trim(), target_amount: t, current_amount: c,
-      start_date: format(new Date(), 'yyyy-MM-dd'), deadline: deadline || null,
-      objective_type: objectiveType, color: goalColor,
-    });
-    toast.success('Meta criada com sucesso!');
-    setName(''); setTarget(''); setCurrent(''); setDeadline(''); setObjectiveType('custom'); setGoalColor(GOAL_COLORS[0]);
-    setCreating(false);
-    setFormOpen(false);
-    if (c >= t) triggerConfetti();
-    fetchGoals();
-  };
-
-  const handleQuickAdd = async (id: string, amount: number) => {
-    const goal = goals.find(g => g.id === id);
+  const handleDeposit = async (goalId: string, amount: number) => {
+    if (!user || amount <= 0) return;
+    const goal = goals.find(g => g.id === goalId);
     if (!goal) return;
+
     const newVal = Number(goal.current_amount) + amount;
     const today = format(new Date(), 'yyyy-MM-dd');
-    // Update goal amount
-    await supabase.from('goals').update({ current_amount: newVal }).eq('id', id);
-    // Upsert daily checkin
-    const existing = (checkins[id] || []).find(c => c.date === today);
-    if (existing) {
-      await supabase.from('goal_checkins').update({ amount: Number(existing.amount) + amount }).eq('id', existing.id);
-    } else {
-      await supabase.from('goal_checkins').insert({ user_id: user!.id, goal_id: id, date: today, amount });
-    }
-    // Save to goal_deposits history
-    await supabase.from('goal_deposits').insert({
-      user_id: user!.id, goal_id: id, amount, deposit_date: today,
-    });
-    toast.success(`✓ ${formatCurrency(amount)} adicionado!`);
+
+    await Promise.all([
+      supabase.from('goals').update({ current_amount: newVal }).eq('id', goalId),
+      supabase.from('goal_deposits').insert({ user_id: user.id, goal_id: goalId, amount, deposit_date: today }),
+      supabase.from('goal_checkins').insert({ user_id: user.id, goal_id: goalId, date: today, amount }),
+    ]);
+
     if (newVal >= Number(goal.target_amount) && Number(goal.current_amount) < Number(goal.target_amount)) {
       triggerConfetti();
-      toast('🏆 Parabéns! Você atingiu sua meta!', { description: goal.name, duration: 3000 });
-    }
-    fetchGoals();
-  };
-
-  const handleCustomAdd = async (id: string, val: string) => {
-    const amount = parseFloat(val);
-    if (isNaN(amount) || amount <= 0) return;
-    await handleQuickAdd(id, amount);
-  };
-
-  const handleCheckinToday = async (goalId: string) => {
-    const today = format(new Date(), 'yyyy-MM-dd');
-    const existing = (checkins[goalId] || []).find(c => c.date === today);
-    if (existing) {
-      // Already checked in today — uncheckin
-      await supabase.from('goal_checkins').delete().eq('id', existing.id);
-      toast('Check-in de hoje removido');
+      toast('🏆 Parabéns! Meta concluída!', { description: goal.name, duration: 4000 });
+      if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
     } else {
-      // Check in with 0 amount (just marking the day)
-      await supabase.from('goal_checkins').insert({ user_id: user!.id, goal_id: goalId, date: today, amount: 0 });
-      toast.success('✓ Dia marcado!');
+      toast.success(`+R$ ${formatMoney(amount)} guardado para "${goal.name}" 🎯`);
     }
     fetchGoals();
   };
 
-  const handleRemove = async (id: string) => {
-    await supabase.from('goals').delete().eq('id', id);
-    toast.success('Meta removida');
-    setOpenMenu(null);
+  const handleSaveGoal = async (form: any) => {
+    if (!user) return;
+    const target = parseFloat(form.target_amount);
+    if (!form.name?.trim() || isNaN(target) || target <= 0) {
+      toast.error('Preencha nome e valor da meta');
+      return;
+    }
+
+    if (editGoal) {
+      await supabase.from('goals').update({
+        name: form.name.trim(),
+        target_amount: target,
+        current_amount: parseFloat(form.current_amount) || 0,
+        deadline: form.deadline || null,
+        objective_type: form.objective_type || 'custom',
+      }).eq('id', editGoal.id);
+      toast.success('Meta atualizada!');
+    } else {
+      if (limits.goals !== Infinity && goals.length >= limits.goals) {
+        toast.error('Limite de metas atingido. Faça upgrade!');
+        return;
+      }
+      await supabase.from('goals').insert({
+        user_id: user.id,
+        name: form.name.trim(),
+        target_amount: target,
+        current_amount: parseFloat(form.current_amount) || 0,
+        start_date: format(new Date(), 'yyyy-MM-dd'),
+        deadline: form.deadline || null,
+        objective_type: form.objective_type || 'custom',
+      });
+      toast.success('Meta criada com sucesso! 🎯');
+    }
+    setSheetOpen(false);
+    setEditGoal(null);
     fetchGoals();
   };
 
-  const handleMarkComplete = async (id: string) => {
+  const handleDelete = async (id: string) => {
+    await supabase.from('goals').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+    toast.success('Meta removida');
+    fetchGoals();
+  };
+
+  const handleComplete = async (id: string) => {
     const goal = goals.find(g => g.id === id);
     if (!goal) return;
     await supabase.from('goals').update({ current_amount: Number(goal.target_amount) }).eq('id', id);
     triggerConfetti();
     toast('🏆 Parabéns! Meta concluída!', { description: goal.name, duration: 3000 });
-    setOpenMenu(null);
     fetchGoals();
   };
 
-  const openEditModal = (g: any) => {
-    setEditGoal(g);
-    setEditName(g.name);
-    setEditTarget(String(g.target_amount));
-    setEditCurrent(String(g.current_amount));
-    setEditDeadline(g.deadline || '');
-    setEditObjectiveType(g.objective_type || 'custom');
-    setEditColor(g.color || GOAL_COLORS[0]);
-    setOpenMenu(null);
+  const openEdit = (goal: any) => {
+    setEditGoal(goal);
+    setSheetOpen(true);
   };
 
-  const handleSaveEdit = async () => {
-    if (!editGoal) return;
-    const t = parseFloat(editTarget);
-    if (!editName.trim() || isNaN(t) || t <= 0) { toast.error('Preencha os campos'); return; }
-    await supabase.from('goals').update({
-      name: editName.trim(), target_amount: t,
-      current_amount: parseFloat(editCurrent) || 0,
-      deadline: editDeadline || null, objective_type: editObjectiveType,
-      color: editColor,
-    }).eq('id', editGoal.id);
-    toast.success('Meta atualizada!');
-    setEditGoal(null);
-    fetchGoals();
+  const openAddGoal = (prefill?: { name?: string }) => {
+    setEditGoal(prefill ? { _prefill: true, name: prefill.name } : null);
+    setSheetOpen(true);
   };
 
-  const openFormWithObjective = (key: string) => {
-    const obj = OBJECTIVES.find(o => o.key === key);
-    setObjectiveType(key);
-    if (obj) setName(obj.label);
-    setFormOpen(true);
-    setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-  };
-
-  const clearForm = () => {
-    setName(''); setTarget(''); setCurrent(''); setDeadline('');
-    setObjectiveType('custom'); setGoalColor(GOAL_COLORS[0]);
-  };
-
-  const getPresets = (targetVal: number) => {
-    if (targetVal <= 1000) return [50, 100, 200];
-    if (targetVal <= 10000) return [100, 500, 1000];
-    return [500, 1000, 5000];
-  };
-
-  if (loading) return <div className="p-7 space-y-4"><div className="h-20 rounded-xl bg-muted/30 animate-pulse" /><div className="h-48 rounded-xl bg-muted/30 animate-pulse" /><div className="grid grid-cols-3 gap-4"><div className="h-64 rounded-xl bg-muted/30 animate-pulse" /><div className="h-64 rounded-xl bg-muted/30 animate-pulse" /><div className="h-64 rounded-xl bg-muted/30 animate-pulse" /></div></div>;
-
-  return (
-    <div className="px-4 py-5 md:p-7 pb-4 space-y-5" style={{ background: 'var(--bg-page)', minHeight: '100vh' }}>
-      {/* STATS STRIP */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          { label: 'Ativas', value: String(activeGoals.length), Icon: Target, iconBg: '#f0fdf4', iconColor: '#16a34a' },
-          { label: 'Concluídas', value: String(completedGoals.length), Icon: Trophy, iconBg: '#fefce8', iconColor: '#d97706' },
-          { label: 'A alcançar', value: formatCurrency(totalRemaining), Icon: TrendingUp, iconBg: '#eff6ff', iconColor: '#2563eb' },
-          { label: 'Maior meta', value: biggestGoal ? (biggestGoal.name.length > 10 ? biggestGoal.name.slice(0, 10) + '…' : biggestGoal.name) : '—', subValue: biggestGoal ? formatCurrency(Number(biggestGoal.target_amount)) : undefined, Icon: Star, iconBg: '#f5f3ff', iconColor: '#7c3aed' },
-        ].map((s, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-            className="flex items-center gap-2.5 md:gap-3.5 bg-card border border-border rounded-xl p-3 md:p-4" style={{ borderWidth: '1.5px' }}>
-            <div className="flex items-center justify-center rounded-[10px] flex-shrink-0" style={{ width: 36, height: 36, background: s.iconBg }}>
-              <s.Icon size={16} style={{ color: s.iconColor }} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[9px] md:text-[10px] font-bold tracking-wider uppercase" style={{ color: 'var(--text-hint)', letterSpacing: '0.6px' }}>{s.label}</p>
-              <p className="text-[15px] md:text-lg font-black tracking-tight truncate" style={{ color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{s.value}</p>
-              {s.subValue && <p className="text-[11px] truncate" style={{ color: 'var(--text-hint)' }}>{s.subValue}</p>}
-            </div>
-          </motion.div>
+  if (loading) {
+    return (
+      <div className="p-5 space-y-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-40 rounded-2xl skeleton-shimmer" />
         ))}
       </div>
+    );
+  }
 
-      {/* NOVA META CARD */}
-      <div ref={formRef} className="bg-card rounded-2xl overflow-hidden" style={{ border: '1.5px solid var(--border-default)' }}>
-        <button onClick={() => setFormOpen(!formOpen)}
-          className="w-full flex items-center justify-between p-4 md:p-[18px_20px] cursor-pointer hover:bg-background transition-colors">
-          <div className="flex items-center gap-2 min-w-0">
-            <PlusCircle size={18} className="text-[#16a34a] flex-shrink-0" />
-            <span className="text-[14px] md:text-[15px] font-extrabold truncate" style={{ color: 'var(--text-primary)' }}>Nova Meta</span>
-            {!formOpen && <span className="text-xs hidden md:inline" style={{ color: 'var(--text-hint)', marginLeft: 4 }}>Clique para adicionar uma nova meta financeira</span>}
-          </div>
-          <motion.div animate={{ rotate: formOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronDown size={16} style={{ color: 'var(--text-hint)' }} />
-          </motion.div>
-        </button>
-
-        <AnimatePresence>
-          {formOpen && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
-              <div className="px-5 pb-5 space-y-4">
-                {/* STEP 1: Tipo */}
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#6b8f6b', letterSpacing: '0.6px' }}>1. Qual é o tipo desta meta?</p>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                    {OBJECTIVES.map(obj => {
-                      const selected = objectiveType === obj.key;
-                      return (
-                        <button key={obj.key} onClick={() => { setObjectiveType(obj.key); if (!name || OBJECTIVES.some(o => o.label === name)) setName(obj.label); }}
-                          className="relative flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all cursor-pointer text-center"
-                          style={{
-                            borderWidth: selected ? 2 : 1.5, borderColor: selected ? '#16a34a' : '#e2e8f0',
-                            background: selected ? '#f0fdf4' : 'white', minHeight: 76,
-                          }}>
-                          {selected && (
-                            <div className="absolute -top-1.5 -right-1.5 w-[18px] h-[18px] rounded-full bg-[#16a34a] flex items-center justify-center">
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            </div>
-                          )}
-                          <span className="text-2xl leading-none">{obj.emoji}</span>
-                          <span className="text-[11px] font-semibold leading-tight break-words w-full"
-                            style={{ color: selected ? '#166534' : '#374151', fontWeight: selected ? 700 : 600, whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                            {obj.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Divider */}
-                <div style={{ borderTop: '1px solid #f1f5f9', margin: '16px 0' }} />
-
-                {/* STEP 2: Detalhes */}
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#6b8f6b', letterSpacing: '0.6px' }}>2. Detalhes da meta</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="sm:col-span-2">
-                      <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Nome da meta</label>
-                      <input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Reserva de emergência"
-                        className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-card focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a] outline-none transition-colors" />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Valor alvo (R$)</label>
-                      <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={target} onChange={e => setTarget(e.target.value)} placeholder="10.000,00"
-                        className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-card focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a] outline-none transition-colors" />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Já tenho (R$)</label>
-                      <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={current} onChange={e => setCurrent(e.target.value)} placeholder="0,00"
-                        className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-card focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a] outline-none transition-colors" />
-                      <p className="text-[11px] mt-1" style={{ color: 'var(--text-hint)' }}>Quanto você já tem guardado</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                    <div>
-                      <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Data limite</label>
-                      <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)}
-                        className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-card focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a] outline-none transition-colors" />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Cor da meta</label>
-                      <div className="flex gap-2 mt-1">
-                        {GOAL_COLORS.map(c => (
-                          <button key={c} onClick={() => setGoalColor(c)}
-                            className="rounded-full transition-transform"
-                            style={{
-                              width: 28, height: 28, background: c,
-                              border: goalColor === c ? `2px solid white` : '2px solid transparent',
-                              boxShadow: goalColor === c ? `0 0 0 2px ${c}` : 'none',
-                              transform: goalColor === c ? 'scale(1.2)' : 'scale(1)',
-                            }} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Divider */}
-                <div style={{ borderTop: '1px solid #f1f5f9', margin: '16px 0' }} />
-
-                {/* STEP 3: Preview & Submit */}
-                {name.trim() && target && (
-                  <div className="rounded-xl p-4" style={{ background: 'var(--bg-page)', border: '1.5px solid var(--border-default)' }}>
-                    <p className="text-[11px] uppercase font-bold tracking-wide mb-3" style={{ color: 'var(--text-hint)' }}>Prévia da sua meta</p>
-                    <div className="bg-card rounded-xl p-4" style={{ borderTop: `4px solid ${goalColor}`, border: '1.5px solid var(--border-default)', borderTopColor: goalColor }}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-[10px] flex items-center justify-center text-xl" style={{ background: goalColor + '20', border: `1.5px solid ${goalColor}40` }}>
-                          {OBJECTIVES.find(o => o.key === objectiveType)?.emoji || '🎯'}
-                        </div>
-                        <div>
-                          <p className="font-extrabold text-sm" style={{ color: 'var(--text-primary)' }}>{name}</p>
-                          <p className="text-[10px]" style={{ color: 'var(--text-hint)' }}>Meta: {formatCurrency(parseFloat(target) || 0)}</p>
-                        </div>
-                      </div>
-                      <div className="mt-3 h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
-                        <div className="h-full rounded-full" style={{ background: goalColor, width: `${Math.min(((parseFloat(current) || 0) / (parseFloat(target) || 1)) * 100, 100)}%` }} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between pt-2">
-                  <button onClick={clearForm} className="text-xs" style={{ color: 'var(--text-hint)' }}>Limpar formulário</button>
-                  <button onClick={handleAdd} disabled={creating}
-                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-[10px] text-white text-sm font-extrabold transition-all hover:brightness-110 disabled:opacity-50"
-                    style={{ background: '#16a34a' }}>
-                    {creating ? 'Criando...' : <><PlusCircle size={15} /> Criar Meta</>}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--color-bg-base)',
+      paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '16px 20px 0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <div>
+          <h1 style={{
+            fontSize: 22, fontWeight: 900,
+            color: 'var(--color-text-strong)',
+            letterSpacing: '-0.03em',
+            lineHeight: 1,
+          }}>
+            Minhas Metas
+          </h1>
+          {goals.length > 0 && (
+            <p style={{ fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 3 }}>
+              {activeGoals.length} ativa{activeGoals.length !== 1 ? 's' : ''}
+              {completedGoals.length > 0 && ` · ${completedGoals.length} concluída${completedGoals.length !== 1 ? 's' : ''}`}
+            </p>
           )}
-        </AnimatePresence>
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => openAddGoal()}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            height: 36, padding: '0 14px',
+            background: 'hsl(var(--primary))',
+            border: 'none', borderRadius: 10,
+            color: 'white', fontSize: 13, fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(22,163,74,0.3)',
+          }}
+        >
+          <Plus size={14} />
+          Nova meta
+        </motion.button>
       </div>
 
-      {/* GOALS SECTION HEADER */}
-      {goals.length > 0 && (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-[15px] font-extrabold" style={{ color: 'var(--text-primary)' }}>Minhas Metas</span>
-            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full" style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #d4edda' }}>
-              {completedGoals.length}/{goals.length} concluídas
-            </span>
-          </div>
-          <select value={sortMode} onChange={e => setSortMode(e.target.value as SortMode)}
-            className="text-xs font-medium px-3 py-1.5 rounded-full border border-border bg-card text-muted-foreground cursor-pointer outline-none">
-            <option value="recent">Mais recente</option>
-            <option value="value">Maior valor</option>
-            <option value="deadline">Prazo próximo</option>
-            <option value="progress">% concluído</option>
-          </select>
-        </div>
+      {/* Empty state */}
+      {goals.length === 0 && (
+        <EmptyState onAdd={openAddGoal} />
       )}
 
-      {/* ACTIVE GOALS GRID */}
-      {sortedActive.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sortedActive.map((g, i) => (
-            <GoalCard key={g.id} goal={g} index={i} openMenu={openMenu} setOpenMenu={setOpenMenu}
-              onQuickAdd={handleQuickAdd} onCustomAdd={handleCustomAdd} onRemove={handleRemove}
-              onComplete={handleMarkComplete} onEdit={openEditModal}
-              checkins={checkins[g.id] || []} onCheckinToday={() => handleCheckinToday(g.id)} />
+      {/* Summary bar */}
+      {activeGoals.length >= 2 && (
+        <SummaryBar goals={activeGoals} />
+      )}
+
+      {/* Active goals */}
+      {activeGoals.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 0' }}>
+          {activeGoals.map((g, i) => (
+            <GoalCard
+              key={g.id}
+              goal={g}
+              index={i}
+              onDeposit={handleDeposit}
+              onEdit={openEdit}
+              onDelete={handleDelete}
+              onComplete={handleComplete}
+            />
           ))}
         </div>
       )}
 
-      {/* EMPTY STATE */}
-      {goals.length === 0 && (
-        <div className="flex flex-col items-center text-center py-16 px-6 gap-4">
-          <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: '#f0fdf4' }}>
-            <div className="w-[72px] h-[72px] rounded-full flex items-center justify-center" style={{ background: '#dcfce7' }}>
-              <Target size={36} style={{ color: '#16a34a' }} />
-            </div>
-          </div>
-          <h3 className="text-lg font-extrabold" style={{ color: 'var(--text-primary)' }}>Nenhuma meta ainda</h3>
-          <p className="text-sm leading-relaxed max-w-[340px]" style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-            Defina seus objetivos financeiros e acompanhe cada passo da sua jornada rumo à liberdade financeira.
-          </p>
-          <div className="rounded-r-lg p-3 px-4 max-w-[400px]" style={{ background: '#f0fdf4', borderLeft: '3px solid #16a34a' }}>
-            <p className="text-[13px] italic" style={{ color: 'var(--text-primary)' }}>
-              "Uma meta sem prazo é apenas um sonho. Com prazo, ela se torna um plano."
-            </p>
-          </div>
-          <button onClick={() => { setFormOpen(true); setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth' }), 100); }}
-            className="mt-2 px-6 py-3 rounded-[10px] text-white font-extrabold text-sm hover:brightness-110 transition-all" style={{ background: '#16a34a' }}>
-            + Criar minha primeira meta
-          </button>
-          <div className="mt-2">
-            <p className="text-[11px] mb-2" style={{ color: 'var(--text-hint)' }}>Sugestões rápidas:</p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {['emergency_fund', 'pay_card', 'save_money', 'buy_house'].map(key => {
-                const obj = OBJECTIVES.find(o => o.key === key)!;
-                return (
-                  <button key={key} onClick={() => openFormWithObjective(key)}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer transition-colors hover:bg-secondary"
-                    style={{ border: '1px solid #d4edda', color: '#166534', background: 'white' }}>
-                    {obj.emoji} {obj.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* COMPLETED GOALS */}
+      {/* Completed goals */}
       {completedGoals.length > 0 && (
         <CompletedSection goals={completedGoals} />
       )}
 
-      {/* EDIT MODAL */}
-      <AnimatePresence>
-        {editGoal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }} onClick={() => setEditGoal(null)}>
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-card rounded-2xl p-7 w-full max-w-[520px] space-y-4" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-extrabold" style={{ color: 'var(--text-primary)' }}>Editar Meta</h3>
-                <button onClick={() => setEditGoal(null)} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-background transition-colors">
-                  <X size={16} style={{ color: 'var(--text-hint)' }} />
-                </button>
-              </div>
-
-              {/* Objective tiles */}
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                {OBJECTIVES.map(obj => (
-                  <button key={obj.key} onClick={() => setEditObjectiveType(obj.key)}
-                    className="flex flex-col items-center gap-1 p-2 rounded-xl border transition-all text-center"
-                    style={{ borderWidth: editObjectiveType === obj.key ? 2 : 1.5, borderColor: editObjectiveType === obj.key ? '#16a34a' : '#e2e8f0', background: editObjectiveType === obj.key ? '#f0fdf4' : 'white' }}>
-                    <span className="text-lg">{obj.emoji}</span>
-                    <span className="text-[10px] font-semibold leading-tight break-words w-full" style={{ color: editObjectiveType === obj.key ? '#166534' : '#374151', whiteSpace: 'normal', wordBreak: 'break-word' }}>{obj.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Nome</label>
-                  <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-card focus:border-[#16a34a] outline-none" />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Valor alvo</label>
-                  <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={editTarget} onChange={e => setEditTarget(e.target.value)} className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-card focus:border-[#16a34a] outline-none" />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Valor atual</label>
-                  <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={editCurrent} onChange={e => setEditCurrent(e.target.value)} className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-card focus:border-[#16a34a] outline-none" />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Prazo</label>
-                  <input type="date" value={editDeadline} onChange={e => setEditDeadline(e.target.value)} className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-card focus:border-[#16a34a] outline-none" />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Cor</label>
-                  <div className="flex gap-2 mt-1">
-                    {GOAL_COLORS.map(c => (
-                      <button key={c} onClick={() => setEditColor(c)} className="rounded-full transition-transform"
-                        style={{ width: 24, height: 24, background: c, border: editColor === c ? '2px solid white' : '2px solid transparent', boxShadow: editColor === c ? `0 0 0 2px ${c}` : 'none', transform: editColor === c ? 'scale(1.2)' : 'scale(1)' }} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button onClick={() => setEditGoal(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-muted-foreground hover:bg-background transition-colors">Cancelar</button>
-                <button onClick={handleSaveEdit} className="px-5 py-2 text-sm font-extrabold rounded-lg text-white transition-all hover:brightness-110" style={{ background: '#16a34a' }}>Salvar alterações</button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Add/Edit sheet */}
+      <GoalSheet
+        open={sheetOpen}
+        onClose={() => { setSheetOpen(false); setEditGoal(null); }}
+        editGoal={editGoal}
+        onSave={handleSaveGoal}
+      />
     </div>
   );
 }
 
-/* ─── GOAL CARD COMPONENT ─── */
-function GoalCard({ goal: g, index: i, openMenu, setOpenMenu, onQuickAdd, onCustomAdd, onRemove, onComplete, onEdit, checkins, onCheckinToday }: {
-  goal: any; index: number; openMenu: string | null; setOpenMenu: (id: string | null) => void;
-  onQuickAdd: (id: string, amount: number) => void; onCustomAdd: (id: string, val: string) => void;
-  onRemove: (id: string) => void; onComplete: (id: string) => void; onEdit: (g: any) => void;
-  checkins: any[]; onCheckinToday: () => void;
-}) {
-  const pct = Math.min((Number(g.current_amount) / Number(g.target_amount)) * 100, 100);
-  const obj = OBJECTIVES.find(o => o.key === g.objective_type);
-  const color = g.color || '#16a34a';
-  const remaining = Math.max(0, Number(g.target_amount) - Number(g.current_amount));
-  const daysLeft = g.deadline ? differenceInDays(parseISO(g.deadline), new Date()) : null;
-  const targetNum = Number(g.target_amount);
-
-  const presets = targetNum <= 1000 ? [50, 100, 200] : targetNum <= 10000 ? [100, 500, 1000] : [500, 1000, 5000];
-
-  const getDaysColor = () => {
-    if (daysLeft === null) return '#64748b';
-    if (daysLeft < 0) return '#dc2626';
-    if (daysLeft < 10) return '#dc2626';
-    if (daysLeft < 30) return '#d97706';
-    return '#16a34a';
-  };
-
-  const getDaysText = () => {
-    if (daysLeft === null) return 'Sem prazo definido';
-    if (daysLeft < 0) return 'Prazo vencido';
-    if (daysLeft < 10) return `Urgente — ${daysLeft} dias!`;
-    return `${daysLeft} dias restantes`;
-  };
-
-  const getStatusBadge = () => {
-    if (pct >= 100) return { bg: '#fefce8', border: '#fde68a', color: '#92400e', text: '🏆 Meta concluída! Parabéns!' };
-    if (pct >= 70) return { bg: '#f0fdf4', border: '#d4edda', color: '#166534', text: '✓ Quase lá! Continue assim.' };
-    if (pct >= 30) return { bg: '#fffbeb', border: '#fde68a', color: '#92400e', text: '↑ No caminho certo' };
-    if (daysLeft !== null && daysLeft > 0) {
-      const daily = remaining / daysLeft;
-      return { bg: '#fef2f2', border: '#fecaca', color: '#991b1b', text: `Precisa de ${formatCurrency(daily)}/dia para atingir` };
-    }
-    return { bg: '#f8fafc', border: '#e2e8f0', color: 'var(--text-secondary)', text: 'Começando a jornada 💪' };
-  };
-
-  const status = getStatusBadge();
-  const customInputRef = useRef<HTMLInputElement>(null);
+/* ─── Empty State ─── */
+function EmptyState({ onAdd }: { onAdd: (prefill?: { name?: string }) => void }) {
+  const inspirations = [
+    { emoji: '✈️', label: 'Viagem dos sonhos' },
+    { emoji: '🏠', label: 'Casa própria' },
+    { emoji: '🚗', label: 'Carro novo' },
+    { emoji: '🎓', label: 'Curso ou faculdade' },
+    { emoji: '🛡️', label: 'Reserva de emergência' },
+    { emoji: '💍', label: 'Casamento' },
+  ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08, duration: 0.4 }}
-      className="bg-card rounded-2xl p-5 relative group transition-all duration-200 hover:-translate-y-0.5"
-      style={{ borderTop: `4px solid ${color}`, border: `1.5px solid #e2e8f0`, borderTopColor: color, borderTopWidth: 4 }}>
-      {/* Top */}
-      <div className="flex items-start justify-between">
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: color + '20', border: `1.5px solid ${color}40` }}>
-          {obj?.emoji || '🎯'}
+    <div style={{
+      flex: 1, display: 'flex', flexDirection: 'column',
+      alignItems: 'center', padding: '32px 24px 40px', textAlign: 'center',
+    }}>
+      <motion.div
+        initial={{ scale: 0.5, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', damping: 12 }}
+        style={{ fontSize: 56, marginBottom: 20, lineHeight: 1 }}
+      >
+        🎯
+      </motion.div>
+
+      <motion.h2
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        style={{
+          fontSize: 20, fontWeight: 900,
+          color: 'var(--color-text-strong)',
+          letterSpacing: '-0.02em', marginBottom: 8,
+        }}
+      >
+        Quais são seus sonhos?
+      </motion.h2>
+
+      <motion.p
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        style={{
+          fontSize: 14, color: 'var(--color-text-subtle)',
+          lineHeight: 1.6, maxWidth: 260, marginBottom: 28,
+        }}
+      >
+        Defina metas e a KoraFinance IA cria um plano para você chegar lá.
+      </motion.p>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        style={{
+          display: 'flex', flexWrap: 'wrap', gap: 8,
+          justifyContent: 'center', marginBottom: 28, maxWidth: 300,
+        }}
+      >
+        {inspirations.map((g, i) => (
+          <motion.button
+            key={i}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 + i * 0.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => onAdd({ name: g.label })}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '7px 12px',
+              background: 'var(--color-bg-surface)',
+              border: '1px solid var(--color-border-base)',
+              borderRadius: 99, fontSize: 13, fontWeight: 500,
+              color: 'var(--color-text-base)', cursor: 'pointer',
+            }}
+          >
+            <span style={{ fontSize: 15 }}>{g.emoji}</span>
+            {g.label}
+          </motion.button>
+        ))}
+      </motion.div>
+
+      <motion.button
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        whileTap={{ scale: 0.97 }}
+        onClick={() => onAdd()}
+        style={{
+          height: 50, padding: '0 32px',
+          background: 'hsl(var(--primary))',
+          border: 'none', borderRadius: 14,
+          color: 'white', fontSize: 15, fontWeight: 800,
+          cursor: 'pointer',
+          boxShadow: '0 4px 14px rgba(22,163,74,0.35)',
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}
+      >
+        <Plus size={18} />
+        Criar minha primeira meta
+      </motion.button>
+    </div>
+  );
+}
+
+/* ─── Summary Bar ─── */
+function SummaryBar({ goals }: { goals: any[] }) {
+  const totalTarget = goals.reduce((s, g) => s + Number(g.target_amount), 0);
+  const totalSaved = goals.reduce((s, g) => s + Number(g.current_amount), 0);
+  const overallPct = totalTarget > 0 ? Math.min(100, (totalSaved / totalTarget) * 100) : 0;
+
+  return (
+    <div style={{
+      margin: '12px 16px 0',
+      background: 'var(--color-bg-surface)',
+      borderRadius: 16,
+      padding: '16px 18px',
+      boxShadow: 'var(--shadow-sm)',
+    }}>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between',
+        alignItems: 'flex-end', marginBottom: 12,
+      }}>
+        <div>
+          <div style={{
+            fontSize: 11, fontWeight: 600,
+            color: 'var(--color-text-subtle)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em', marginBottom: 4,
+          }}>
+            Progresso geral
+          </div>
+          <div style={{
+            fontSize: 26, fontWeight: 900,
+            fontFamily: 'var(--font-mono)',
+            letterSpacing: '-0.03em',
+            color: 'var(--color-text-strong)',
+            lineHeight: 1,
+          }}>
+            R$ {formatMoney(totalSaved)}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 2 }}>
+            de R$ {formatMoney(totalTarget)}
+          </div>
         </div>
-        <div className="relative">
-          <button onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === g.id ? null : g.id); }}
-            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-background transition-colors">
-            <MoreHorizontal size={16} style={{ color: 'var(--text-hint)' }} />
-          </button>
-          {openMenu === g.id && (
-            <div className="absolute right-0 top-9 bg-card rounded-[10px] py-1 z-50 min-w-[180px]" style={{ border: '1px solid var(--border-default)', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
-              onClick={e => e.stopPropagation()}>
-              {[
-                { icon: Pencil, label: '✏️ Editar meta', action: () => onEdit(g), danger: false },
-                { icon: DollarSign, label: '💰 Atualizar valor', action: () => customInputRef.current?.focus(), danger: false },
-                { icon: Award, label: '🏆 Marcar como concluída', action: () => onComplete(g.id), danger: false },
-                { icon: Trash2, label: '🗑️ Excluir meta', action: () => { if (confirm('Excluir esta meta?')) onRemove(g.id); }, danger: true },
-              ].map((item, idx) => (
-                <button key={idx} onClick={item.action}
-                  className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-background transition-colors"
-                  style={{ color: item.danger ? '#dc2626' : '#374151' }}>
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          )}
+        <div style={{ textAlign: 'right' }}>
+          <div style={{
+            fontSize: 32, fontWeight: 900,
+            fontFamily: 'var(--font-mono)',
+            color: 'hsl(var(--primary))',
+            letterSpacing: '-0.03em', lineHeight: 1,
+          }}>
+            {overallPct.toFixed(0)}%
+          </div>
         </div>
       </div>
 
-      {/* Name */}
-      <p className="mt-3 text-base font-extrabold leading-tight" style={{ color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>{g.name}</p>
+      <div style={{
+        height: 8, background: 'var(--color-bg-sunken)',
+        borderRadius: 99, overflow: 'hidden',
+      }}>
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${overallPct}%` }}
+          transition={{ duration: 1.2, ease: 'easeOut' }}
+          style={{
+            height: '100%', borderRadius: 99,
+            background: overallPct >= 75
+              ? 'linear-gradient(90deg, #16a34a, #22c55e)'
+              : overallPct >= 40
+              ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+              : 'linear-gradient(90deg, #ef4444, #f87171)',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
 
-      {/* Objective badge */}
-      {obj && (
-        <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: color + '15', color: color, border: `1px solid ${color}30` }}>
-          {obj.label}
-        </span>
+/* ─── Goal Card ─── */
+function GoalCard({ goal, index, onDeposit, onEdit, onDelete, onComplete }: {
+  goal: any; index: number;
+  onDeposit: (id: string, amount: number) => void;
+  onEdit: (g: any) => void;
+  onDelete: (id: string) => void;
+  onComplete: (id: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [depositAmount, setDepositAmount] = useState('');
+
+  const current = Number(goal.current_amount);
+  const target = Number(goal.target_amount);
+  const pct = Math.min(100, target > 0 ? (current / target) * 100 : 0);
+  const remaining = Math.max(0, target - current);
+  const isCompleted = pct >= 100;
+
+  const emoji = getGoalEmoji(goal.name);
+  const obj = OBJECTIVES.find(o => o.key === goal.objective_type);
+
+  const daysLeft = goal.deadline ? differenceInDays(parseISO(goal.deadline), new Date()) : null;
+  const isLate = daysLeft !== null && daysLeft < 0 && !isCompleted;
+
+  const barColor = isCompleted ? '#16a34a'
+    : isLate ? '#ef4444'
+    : pct >= 60 ? '#16a34a'
+    : pct >= 30 ? '#f59e0b'
+    : '#ef4444';
+
+  const handleDepositSubmit = () => {
+    const val = parseFloat(depositAmount);
+    if (val > 0) {
+      onDeposit(goal.id, val);
+      setDepositAmount('');
+    }
+  };
+
+  const presets = target <= 1000 ? [50, 100, 200] : target <= 10000 ? [100, 500, 1000] : [500, 1000, 5000];
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.07 }}
+      style={{
+        margin: '0 16px',
+        background: 'var(--color-bg-surface)',
+        borderRadius: 18, overflow: 'hidden',
+        boxShadow: 'var(--shadow-sm)',
+        border: isCompleted
+          ? '1.5px solid hsl(var(--primary))'
+          : '0.5px solid var(--color-border-weak)',
+      }}
+    >
+      {/* Completed banner */}
+      {isCompleted && (
+        <div style={{
+          background: 'hsl(var(--primary))', padding: '5px 16px',
+          fontSize: 10, fontWeight: 800, color: 'white',
+          letterSpacing: '0.1em', textTransform: 'uppercase',
+          display: 'flex', alignItems: 'center', gap: 5,
+        }}>
+          🏆 Meta concluída! Parabéns!
+        </div>
       )}
 
-      {/* Target + deadline */}
-      <div className="flex flex-wrap gap-3 mt-2">
-        <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
-          <Target size={12} style={{ color: 'var(--text-hint)' }} /> Meta: {formatCurrency(targetNum)}
-        </span>
-        <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
-          <Calendar size={12} style={{ color: 'var(--text-hint)' }} /> {g.deadline ? format(parseISO(g.deadline), 'dd/MM/yyyy') : 'Sem prazo'}
-        </span>
-        <span className="flex items-center gap-1 text-xs font-medium" style={{ color: getDaysColor() }}>
-          <Clock size={12} /> {getDaysText()}
-        </span>
-      </div>
+      {/* Late warning */}
+      {isLate && (
+        <div style={{
+          background: 'var(--color-danger-bg)', padding: '5px 16px',
+          fontSize: 10, fontWeight: 700, color: 'var(--color-danger-text)',
+          letterSpacing: '0.06em', textTransform: 'uppercase',
+        }}>
+          ⚠️ Prazo vencido — ajuste seu plano
+        </div>
+      )}
 
-      {/* Divider */}
-      <div className="my-3.5" style={{ borderTop: '1px solid #f8fafc' }} />
-
-      {/* Progress */}
-      <div className="flex items-baseline justify-between">
-        <span className="text-[32px] font-black leading-none" style={{ color, letterSpacing: '-1px' }}>{pct.toFixed(0)}%</span>
-        <span className="text-xs text-right" style={{ color: 'var(--text-secondary)' }}>
-          <span className="font-bold" style={{ color }}>{formatCurrency(Number(g.current_amount))}</span>
-          <span style={{ color: 'var(--text-hint)' }}> / {formatCurrency(targetNum)}</span>
-        </span>
-      </div>
-
-      <div className="mt-2.5 h-2.5 rounded-full overflow-hidden relative" style={{ background: 'var(--bg-elevated)' }}>
-        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-          className="h-full rounded-full relative overflow-hidden" style={{ background: color }}>
-          <div className="absolute inset-0 opacity-30" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)', animation: 'shimmer 2s infinite' }} />
-        </motion.div>
-      </div>
-
-      <div className="flex justify-between mt-1.5">
-        <span className="text-[11px]" style={{ color: 'var(--text-hint)' }}>{formatCurrency(Number(g.current_amount))} guardados</span>
-        <span className="text-[11px]" style={{ color: 'var(--text-hint)' }}>Faltam {formatCurrency(remaining)}</span>
-      </div>
-
-      {/* Status badge */}
-      <div className="mt-2.5 text-center">
-        <span className="inline-block text-[11px] font-semibold px-3 py-1 rounded-full" style={{ background: status.bg, border: `1px solid ${status.border}`, color: status.color }}>
-          {status.text}
-        </span>
-      </div>
-
-      {/* Daily Check-in Tracker */}
-      <div className="mt-3 pt-3" style={{ borderTop: '1px solid #f8fafc' }}>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-1.5">
-            <Flame size={13} style={{ color: '#d97706' }} />
-            <span className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>Streak diário</span>
-            {(() => {
-              let streak = 0;
-              for (let d = 0; d < 30; d++) {
-                const day = format(subDays(new Date(), d), 'yyyy-MM-dd');
-                if (checkins.some(c => c.date === day)) streak++;
-                else break;
-              }
-              return streak > 0 ? (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#fefce8', color: '#d97706', border: '1px solid #fde68a' }}>
-                  🔥 {streak} {streak === 1 ? 'dia' : 'dias'}
-                </span>
-              ) : null;
-            })()}
+      {/* Main content */}
+      <div style={{ padding: '18px 18px 0' }}>
+        {/* Top row */}
+        <div style={{
+          display: 'flex', alignItems: 'flex-start',
+          gap: 12, marginBottom: 14,
+        }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 14,
+            background: isCompleted ? 'var(--color-success-bg)' : 'var(--color-bg-sunken)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 24, flexShrink: 0,
+          }}>
+            {obj?.emoji || emoji}
           </div>
-          <button onClick={onCheckinToday}
-            className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer transition-all active:scale-95"
-            style={{
-              background: checkins.some(c => c.date === format(new Date(), 'yyyy-MM-dd')) ? '#16a34a' : '#f0fdf4',
-              color: checkins.some(c => c.date === format(new Date(), 'yyyy-MM-dd')) ? 'white' : '#166534',
-              border: `1px solid ${checkins.some(c => c.date === format(new Date(), 'yyyy-MM-dd')) ? '#16a34a' : '#d4edda'}`,
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: 16, fontWeight: 800,
+              color: 'var(--color-text-strong)',
+              letterSpacing: '-0.01em', marginBottom: 3,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
-            <Check size={11} />
-            {checkins.some(c => c.date === format(new Date(), 'yyyy-MM-dd')) ? 'Feito hoje ✓' : 'Marcar hoje'}
-          </button>
-        </div>
-        <div className="flex gap-1">
-          {Array.from({ length: 7 }).map((_, idx) => {
-            const day = subDays(new Date(), 6 - idx);
-            const dayStr = format(day, 'yyyy-MM-dd');
-            const ck = checkins.find(c => c.date === dayStr);
-            const isToday = isSameDay(day, new Date());
-            const dayLabel = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][day.getDay()];
-            return (
-              <div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-[9px] font-medium" style={{ color: 'var(--text-hint)' }}>{dayLabel}</span>
-                <div className="w-full aspect-square rounded-lg flex items-center justify-center transition-all"
-                  style={{
-                    background: ck ? (Number(ck.amount) > 0 ? '#16a34a' : '#86efac') : (isToday ? '#f8faf8' : '#f1f5f9'),
-                    border: isToday ? '1.5px solid #16a34a' : '1px solid transparent',
-                  }}>
-                  {ck ? (
-                    <Check size={12} style={{ color: Number(ck.amount) > 0 ? 'white' : '#166534' }} />
-                  ) : (
-                    <span className="text-[9px]" style={{ color: '#cbd5e1' }}>{format(day, 'd')}</span>
-                  )}
-                </div>
-                {ck && Number(ck.amount) > 0 && (
-                  <span className="text-[8px] font-bold" style={{ color: '#16a34a' }}>+{Number(ck.amount).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <div className="mt-3.5 pt-3.5" style={{ borderTop: '1px solid var(--color-border-weak)' }}>
-        <span className="text-[11px] font-semibold block mb-2" style={{ color: 'var(--color-text-subtle)' }}>Adicionar valor:</span>
-        <div className="flex items-center gap-1.5">
-          {presets.map(p => (
-            <button key={p} onClick={() => onQuickAdd(g.id, p)}
-              className="text-[11px] font-bold py-1.5 rounded-lg cursor-pointer transition-colors active:scale-95 flex-1 text-center"
-              style={{ background: 'var(--color-green-50)', color: 'var(--color-green-800)', border: '1px solid var(--color-green-200)' }}>
-              {formatCurrency(p)}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-1.5 mt-2">
-          <div className="relative flex-1">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold" style={{ color: 'var(--color-text-subtle)' }}>R$</span>
-            <input ref={customInputRef} type="text" inputMode="decimal" pattern="[0-9.,]*" placeholder="Outro valor"
-              className="w-full h-9 text-[13px] pl-8 pr-3 rounded-lg outline-none transition-colors"
-              style={{ border: '1.5px solid var(--color-border-base)', background: 'var(--color-bg-surface)' }}
-              onFocus={e => e.target.style.borderColor = 'var(--color-green-500)'}
-              onBlur={e => e.target.style.borderColor = 'var(--color-border-base)'}
-              onKeyDown={e => { if (e.key === 'Enter') { onCustomAdd(g.id, (e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value = ''; } }} />
+              {goal.name}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>
+              {goal.deadline
+                ? `Prazo: ${new Date(goal.deadline).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}`
+                : 'Sem prazo definido'}
+            </div>
           </div>
-          <button onClick={() => { if (customInputRef.current) { onCustomAdd(g.id, customInputRef.current.value); customInputRef.current.value = ''; } }}
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm font-bold flex-shrink-0 active:scale-95 transition-transform"
-            style={{ background: 'var(--color-green-600)' }}>+</button>
+          <motion.button
+            whileTap={{ scale: 0.88 }}
+            onClick={() => setExpanded(!expanded)}
+            style={{
+              width: 30, height: 30, borderRadius: 8,
+              background: 'var(--color-bg-sunken)',
+              border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <ChevronDown
+              size={15}
+              color="var(--color-text-subtle)"
+              style={{
+                transform: expanded ? 'rotate(180deg)' : 'none',
+                transition: 'transform 200ms',
+              }}
+            />
+          </motion.button>
         </div>
+
+        {/* Amount row */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between',
+          alignItems: 'baseline', marginBottom: 10,
+        }}>
+          <div>
+            <div style={{
+              fontSize: 11, fontWeight: 600,
+              color: 'var(--color-text-subtle)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em', marginBottom: 3,
+            }}>
+              Guardado
+            </div>
+            <div style={{
+              fontSize: 22, fontWeight: 900,
+              fontFamily: 'var(--font-mono)',
+              letterSpacing: '-0.03em',
+              color: isCompleted ? 'hsl(var(--primary))' : 'var(--color-text-strong)',
+              lineHeight: 1,
+            }}>
+              R$ {formatMoney(current)}
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{
+              fontSize: 11, fontWeight: 600,
+              color: 'var(--color-text-subtle)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em', marginBottom: 3,
+            }}>
+              Meta
+            </div>
+            <div style={{
+              fontSize: 16, fontWeight: 700,
+              fontFamily: 'var(--font-mono)',
+              letterSpacing: '-0.02em',
+              color: 'var(--color-text-muted)',
+            }}>
+              R$ {formatMoney(target)}
+            </div>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div style={{ marginBottom: 8 }}>
+          <div style={{
+            height: 10, background: 'var(--color-bg-sunken)',
+            borderRadius: 99, overflow: 'hidden', position: 'relative',
+          }}>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${pct}%` }}
+              transition={{ duration: 1.2, ease: 'easeOut', delay: index * 0.1 }}
+              style={{
+                height: '100%', borderRadius: 99,
+                background: barColor, position: 'relative',
+              }}
+            >
+              <div style={{
+                position: 'absolute', top: 1, left: 4, right: 4,
+                height: 3, background: 'rgba(255,255,255,0.3)',
+                borderRadius: 99,
+              }} />
+            </motion.div>
+          </div>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', marginTop: 5,
+          }}>
+            <div style={{
+              fontSize: 12, fontWeight: 800,
+              color: barColor, fontFamily: 'var(--font-mono)',
+            }}>
+              {pct.toFixed(0)}% completo
+            </div>
+            {!isCompleted && (
+              <div style={{ fontSize: 11, color: 'var(--color-text-subtle)' }}>
+                Falta R$ {formatMoney(remaining)}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick CTA when collapsed */}
+        {!isCompleted && !expanded && (
+          <div style={{ paddingBottom: 16 }}>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setExpanded(true)}
+              style={{
+                width: '100%', height: 40,
+                background: 'var(--color-bg-sunken)',
+                border: '1px solid var(--color-border-base)',
+                borderRadius: 10, fontSize: 13, fontWeight: 700,
+                color: 'var(--color-text-muted)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center',
+                justifyContent: 'center', gap: 6,
+              }}
+            >
+              <PiggyBank size={14} />
+              Guardar dinheiro
+            </motion.button>
+          </div>
+        )}
+
+        {isCompleted && !expanded && <div style={{ height: 16 }} />}
       </div>
+
+      {/* Expanded */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{
+              padding: '14px 18px 18px',
+              borderTop: '0.5px solid var(--color-border-ghost)',
+            }}>
+              {/* Deposit input */}
+              {!isCompleted && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{
+                    fontSize: 11, fontWeight: 700,
+                    color: 'var(--color-text-subtle)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em', marginBottom: 8,
+                  }}>
+                    Guardar agora
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{
+                      flex: 1, display: 'flex', alignItems: 'center',
+                      background: 'var(--color-bg-sunken)',
+                      border: '1.5px solid var(--color-border-base)',
+                      borderRadius: 12, padding: '0 14px', height: 46,
+                    }}>
+                      <span style={{
+                        fontSize: 14, color: 'var(--color-text-subtle)',
+                        marginRight: 6, fontWeight: 600,
+                      }}>
+                        R$
+                      </span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        value={depositAmount}
+                        onChange={e => setDepositAmount(e.target.value)}
+                        placeholder="0,00"
+                        onKeyDown={e => { if (e.key === 'Enter') handleDepositSubmit(); }}
+                        style={{
+                          flex: 1, background: 'none', border: 'none',
+                          outline: 'none', fontSize: 16, fontWeight: 700,
+                          color: 'var(--color-text-strong)',
+                          fontFamily: 'var(--font-mono)',
+                        }}
+                      />
+                    </div>
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleDepositSubmit}
+                      disabled={!depositAmount || parseFloat(depositAmount) <= 0}
+                      style={{
+                        width: 46, height: 46, borderRadius: 12,
+                        background: depositAmount && parseFloat(depositAmount) > 0
+                          ? 'hsl(var(--primary))' : 'var(--color-bg-sunken)',
+                        border: 'none', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: depositAmount && parseFloat(depositAmount) > 0
+                          ? '0 2px 8px rgba(22,163,74,0.3)' : 'none',
+                      }}
+                    >
+                      <Check
+                        size={18}
+                        color={depositAmount && parseFloat(depositAmount) > 0
+                          ? 'white' : 'var(--color-text-disabled)'}
+                      />
+                    </motion.button>
+                  </div>
+
+                  {/* Quick pills */}
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                    {presets.map(amt => (
+                      <button
+                        key={amt}
+                        onClick={() => setDepositAmount(String(amt))}
+                        style={{
+                          padding: '4px 10px',
+                          background: String(depositAmount) === String(amt)
+                            ? 'var(--color-success-bg)' : 'var(--color-bg-sunken)',
+                          border: `1px solid ${String(depositAmount) === String(amt)
+                            ? 'var(--color-success-border)' : 'var(--color-border-base)'}`,
+                          borderRadius: 99, fontSize: 12, fontWeight: 600,
+                          color: String(depositAmount) === String(amt)
+                            ? 'var(--color-success-text)' : 'var(--color-text-subtle)',
+                          cursor: 'pointer',
+                          fontFamily: 'var(--font-mono)',
+                        }}
+                      >
+                        R$ {amt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => onEdit(goal)}
+                  style={{
+                    flex: 1, height: 38,
+                    background: 'var(--color-bg-sunken)',
+                    border: '1px solid var(--color-border-base)',
+                    borderRadius: 10, fontSize: 12, fontWeight: 700,
+                    color: 'var(--color-text-muted)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', gap: 5,
+                  }}
+                >
+                  <Pencil size={12} />
+                  Editar
+                </motion.button>
+                {!isCompleted && (
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => onComplete(goal.id)}
+                    style={{
+                      flex: 1, height: 38,
+                      background: 'var(--color-bg-sunken)',
+                      border: '1px solid var(--color-border-base)',
+                      borderRadius: 10, fontSize: 12, fontWeight: 700,
+                      color: 'var(--color-text-muted)', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', gap: 5,
+                    }}
+                  >
+                    <Trophy size={12} />
+                    Concluir
+                  </motion.button>
+                )}
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    if (confirm('Excluir esta meta?')) onDelete(goal.id);
+                  }}
+                  style={{
+                    width: 38, height: 38,
+                    background: 'var(--color-bg-sunken)',
+                    border: '1px solid var(--color-border-base)',
+                    borderRadius: 10, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  <Archive size={13} color="var(--color-text-muted)" />
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
 
-/* ─── COMPLETED SECTION ─── */
+/* ─── Completed Section ─── */
 function CompletedSection({ goals }: { goals: any[] }) {
   const [open, setOpen] = useState(false);
   return (
-    <div>
-      <button onClick={() => setOpen(!open)} className="flex items-center gap-2 mb-3 cursor-pointer">
-        <span className="text-[15px] font-extrabold" style={{ color: '#d97706' }}>🏆 Metas Concluídas</span>
+    <div style={{ padding: '0 16px', marginTop: 16 }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          marginBottom: 10, cursor: 'pointer',
+          background: 'none', border: 'none', padding: 0,
+        }}
+      >
+        <span style={{ fontSize: 15, fontWeight: 800, color: '#d97706' }}>
+          🏆 Concluídas ({goals.length})
+        </span>
         <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
-          <ChevronDown size={14} style={{ color: '#d97706' }} />
+          <ChevronDown size={14} color="#d97706" />
         </motion.div>
       </button>
       <AnimatePresence>
         {open && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {goals.map((g, i) => {
-              const obj = OBJECTIVES.find(o => o.key === g.objective_type);
-              return (
-                <motion.div key={g.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}
-                  className="bg-card rounded-2xl p-5 opacity-75" style={{ borderTop: '4px solid #d97706', border: '1.5px solid var(--border-default)', borderTopColor: '#d97706', borderTopWidth: 4 }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: '#fefce820', border: '1.5px solid #fde68a' }}>
-                      {obj?.emoji || '🎯'}
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {goals.map((g, i) => {
+                const obj = OBJECTIVES.find(o => o.key === g.objective_type);
+                return (
+                  <motion.div
+                    key={g.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    style={{
+                      background: 'var(--color-bg-surface)',
+                      borderRadius: 14, padding: '14px 16px',
+                      border: '1px solid var(--color-border-weak)',
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      opacity: 0.8,
+                    }}
+                  >
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10,
+                      background: 'var(--color-warning-bg)',
+                      border: '1px solid var(--color-warning-border)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 20, flexShrink: 0,
+                    }}>
+                      {obj?.emoji || getGoalEmoji(g.name)}
                     </div>
-                    <div>
-                      <p className="font-extrabold text-sm" style={{ color: 'var(--text-primary)' }}>{g.name}</p>
-                      <p className="text-[10px]" style={{ color: 'var(--text-hint)' }}>{formatCurrency(Number(g.target_amount))}</p>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontSize: 14, fontWeight: 700,
+                        color: 'var(--color-text-strong)',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {g.name}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>
+                        R$ {formatMoney(Number(g.target_amount))}
+                      </div>
                     </div>
-                  </div>
-                  <div className="mt-3 h-2.5 rounded-full" style={{ background: '#d97706' }} />
-                  <div className="mt-2 text-center">
-                    <span className="text-[11px] font-semibold px-3 py-1 rounded-full" style={{ background: '#fefce8', border: '1px solid #fde68a', color: '#92400e' }}>
-                      🏆 Concluída!
+                    <span style={{
+                      fontSize: 10, fontWeight: 700,
+                      padding: '3px 8px', borderRadius: 99,
+                      background: 'var(--color-warning-bg)',
+                      border: '1px solid var(--color-warning-border)',
+                      color: 'var(--color-warning-text)',
+                    }}>
+                      🏆 100%
                     </span>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  </motion.div>
+                );
+              })}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+/* ─── Goal Sheet (Add/Edit) ─── */
+function GoalSheet({ open, onClose, editGoal, onSave }: {
+  open: boolean;
+  onClose: () => void;
+  editGoal: any;
+  onSave: (form: any) => void;
+}) {
+  const isEdit = editGoal && !editGoal._prefill;
+  const [form, setForm] = useState({
+    name: '',
+    target_amount: '',
+    current_amount: '0',
+    deadline: '',
+    objective_type: 'custom',
+  });
+
+  useEffect(() => {
+    if (open) {
+      if (isEdit) {
+        setForm({
+          name: editGoal.name || '',
+          target_amount: String(editGoal.target_amount || ''),
+          current_amount: String(editGoal.current_amount || '0'),
+          deadline: editGoal.deadline ? editGoal.deadline.slice(0, 7) : '',
+          objective_type: editGoal.objective_type || 'custom',
+        });
+      } else {
+        setForm({
+          name: editGoal?.name || '',
+          target_amount: '',
+          current_amount: '0',
+          deadline: '',
+          objective_type: 'custom',
+        });
+      }
+    }
+  }, [open, editGoal]);
+
+  const suggestedEmoji = getGoalEmoji(form.name);
+
+  const canSave = form.name.trim() && form.target_amount && parseFloat(form.target_amount) > 0;
+
+  return (
+    <BottomSheet open={open} onClose={onClose} title={isEdit ? 'Editar meta' : 'Nova meta'}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {/* Name with emoji */}
+        <div>
+          <label style={{
+            fontSize: 11, fontWeight: 700,
+            color: 'var(--color-text-subtle)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            display: 'block', marginBottom: 6,
+          }}>
+            Nome da meta *
+          </label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{
+              width: 52, height: 52, borderRadius: 12,
+              background: 'var(--color-bg-sunken)',
+              border: '1.5px solid var(--color-border-base)',
+              fontSize: 24, display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              {suggestedEmoji}
+            </div>
+            <input
+              value={form.name}
+              onChange={e => setForm({ ...form, name: e.target.value })}
+              placeholder="Ex: Viagem para Europa"
+              style={{
+                flex: 1, height: 52, padding: '0 14px',
+                background: 'var(--color-bg-sunken)',
+                border: '1.5px solid var(--color-border-base)',
+                borderRadius: 12, fontSize: 16,
+                color: 'var(--color-text-strong)', outline: 'none',
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Target */}
+        <div>
+          <label style={{
+            fontSize: 11, fontWeight: 700,
+            color: 'var(--color-text-subtle)',
+            textTransform: 'uppercase', letterSpacing: '0.08em',
+            display: 'block', marginBottom: 6,
+          }}>
+            Valor total da meta *
+          </label>
+          <div style={{
+            display: 'flex', alignItems: 'center',
+            background: 'var(--color-bg-sunken)',
+            border: '1.5px solid var(--color-border-base)',
+            borderRadius: 12, padding: '0 14px', height: 52,
+          }}>
+            <span style={{
+              fontSize: 14, color: 'var(--color-text-subtle)',
+              marginRight: 6, fontWeight: 600,
+            }}>R$</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={form.target_amount}
+              onChange={e => setForm({ ...form, target_amount: e.target.value })}
+              placeholder="0,00"
+              style={{
+                flex: 1, background: 'none', border: 'none',
+                outline: 'none', fontSize: 16, fontWeight: 700,
+                color: 'var(--color-text-strong)',
+                fontFamily: 'var(--font-mono)',
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Current amount (only for edit) */}
+        {isEdit && (
+          <div>
+            <label style={{
+              fontSize: 11, fontWeight: 700,
+              color: 'var(--color-text-subtle)',
+              textTransform: 'uppercase', letterSpacing: '0.08em',
+              display: 'block', marginBottom: 6,
+            }}>
+              Valor atual guardado
+            </label>
+            <div style={{
+              display: 'flex', alignItems: 'center',
+              background: 'var(--color-bg-sunken)',
+              border: '1.5px solid var(--color-border-base)',
+              borderRadius: 12, padding: '0 14px', height: 52,
+            }}>
+              <span style={{
+                fontSize: 14, color: 'var(--color-text-subtle)',
+                marginRight: 6, fontWeight: 600,
+              }}>R$</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={form.current_amount}
+                onChange={e => setForm({ ...form, current_amount: e.target.value })}
+                placeholder="0,00"
+                style={{
+                  flex: 1, background: 'none', border: 'none',
+                  outline: 'none', fontSize: 16, fontWeight: 700,
+                  color: 'var(--color-text-strong)',
+                  fontFamily: 'var(--font-mono)',
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Deadline */}
+        <div>
+          <label style={{
+            fontSize: 11, fontWeight: 700,
+            color: 'var(--color-text-subtle)',
+            textTransform: 'uppercase', letterSpacing: '0.08em',
+            display: 'block', marginBottom: 6,
+          }}>
+            Prazo <span style={{ fontWeight: 400, textTransform: 'none' }}>(opcional)</span>
+          </label>
+          <input
+            type="month"
+            value={form.deadline}
+            onChange={e => setForm({ ...form, deadline: e.target.value })}
+            style={{
+              width: '100%', height: 52, padding: '0 14px',
+              background: 'var(--color-bg-sunken)',
+              border: '1.5px solid var(--color-border-base)',
+              borderRadius: 12, fontSize: 16,
+              color: 'var(--color-text-strong)', outline: 'none',
+            }}
+          />
+        </div>
+
+        {/* Save button */}
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => onSave(form)}
+          disabled={!canSave}
+          style={{
+            width: '100%', height: 52,
+            background: canSave ? 'hsl(var(--primary))' : 'var(--color-bg-sunken)',
+            border: 'none', borderRadius: 14,
+            color: canSave ? 'white' : 'var(--color-text-disabled)',
+            fontSize: 15, fontWeight: 800, cursor: 'pointer',
+            boxShadow: canSave ? '0 4px 14px rgba(22,163,74,0.35)' : 'none',
+            transition: 'all 200ms',
+            marginTop: 4,
+          }}
+        >
+          {isEdit ? 'Salvar alterações' : 'Criar meta 🎯'}
+        </motion.button>
+      </div>
+    </BottomSheet>
   );
 }
