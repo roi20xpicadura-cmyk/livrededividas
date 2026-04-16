@@ -18,9 +18,12 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Note: 'Lançamentos' is rendered specially per profile_type (see navItems memo below).
 const ALL_NAV_ITEMS = [
   { label: 'Visão Geral', path: '/app', icon: LayoutDashboard, profiles: ['personal', 'business', 'both'] },
-  { label: 'Lançamentos', path: '/app/transactions', icon: ArrowLeftRight, profiles: ['personal', 'business', 'both'] },
+  { label: 'Lançamentos', path: '/app/transactions', icon: ArrowLeftRight, profiles: ['personal', 'business'] },
+  { label: 'Lançamentos Pessoais', path: '/app/transactions/personal', icon: Home, profiles: ['both'], emoji: '🏠' },
+  { label: 'Lançamentos Negócio', path: '/app/transactions/business', icon: Briefcase, profiles: ['both'], emoji: '💼' },
   { label: 'Orçamento', path: '/app/budget', icon: CalendarDays, profiles: ['personal', 'business', 'both'] },
   { label: 'Metas', path: '/app/goals', icon: Target, profiles: ['personal', 'both'] },
   { label: 'Dívidas', path: '/app/debts', icon: AlertCircle, profiles: ['personal', 'both'] },
@@ -31,7 +34,7 @@ const ALL_NAV_ITEMS = [
   { label: 'Integrações', path: '/app/integrations', icon: Plug, profiles: ['personal', 'business', 'both'] },
   { label: 'Simulador', path: '/app/simulator', icon: FlaskConical, profiles: ['personal', 'business', 'both'], badge: 'NOVO' },
   { label: 'Previsões', path: '/app/predictions', icon: Building2, profiles: ['personal', 'business', 'both'] },
-  
+
 ];
 
 const ACCOUNT_ITEMS = [
