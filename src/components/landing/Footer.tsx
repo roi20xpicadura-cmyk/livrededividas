@@ -4,7 +4,7 @@ import { BarChart3 } from 'lucide-react';
 const columns = [
   { title: 'Produto', links: [{ label: 'Recursos', href: '#recursos' }, { label: 'Preços', href: '#precos' }, { label: 'Integrações', href: '#integracoes' }, { label: 'Changelog', href: '#' }, { label: 'Roadmap', href: '#' }, { label: 'App Mobile', href: '#' }] },
   { title: 'Legal', links: [{ label: 'Nossa Promessa', to: '/privacidade' }, { label: 'Termos de Uso', to: '/termos-de-uso' }, { label: 'Privacidade', to: '/politica-de-privacidade' }, { label: 'Cookies', to: '/politica-cookies' }, { label: 'LGPD', to: '/lgpd' }, { label: 'Segurança', to: '/seguranca' }, { label: 'Sobre', to: '/sobre' }] },
-  { title: 'Suporte', links: [{ label: 'Central de Ajuda', href: '#' }, { label: 'Contato', href: '#' }, { label: 'Status', href: '#' }, { label: 'Comunidade', href: '#' }, { label: 'Blog', href: '#' }] },
+  { title: 'Suporte', links: [{ label: 'Central de Ajuda', href: '#' }, { label: 'Contato: suporte@korafinance.app', href: 'mailto:suporte@korafinance.app' }, { label: 'Status', href: '#' }, { label: 'Comunidade', href: '#' }, { label: 'Blog', href: '#' }] },
 ];
 
 export default function Footer() {
