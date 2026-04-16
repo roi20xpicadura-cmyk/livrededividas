@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { MessageCircle, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function WhatsAppPromoWidget() {
@@ -27,22 +27,25 @@ export default function WhatsAppPromoWidget() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
       onClick={() => navigate('/app/settings')}
-      className="w-full flex items-center gap-3 p-4 rounded-2xl transition-all hover:brightness-95 active:scale-[0.98]"
+      className="w-full flex items-center gap-3 p-3.5 rounded-2xl transition-all hover:brightness-[0.98] active:scale-[0.98]"
       style={{
-        background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
-        border: 'none',
+        background: 'var(--color-bg-surface)',
+        border: '1px solid var(--color-border-base)',
         cursor: 'pointer',
         textAlign: 'left',
+        boxShadow: 'var(--shadow-xs)',
       }}
     >
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.2)' }}>
-        <MessageCircle size={20} color="white" />
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--color-success-bg)', fontSize: 20 }}>
+        💬
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-extrabold text-white">Registre gastos pelo WhatsApp</p>
-        <p className="text-[11px] text-white/70">"gastei 50 no mercado" → registrado automaticamente</p>
+        <p className="text-[13px] font-bold" style={{ color: 'var(--color-text-base)' }}>Registre gastos pelo WhatsApp</p>
+        <p className="text-[11px]" style={{ color: 'var(--color-text-subtle)' }}>"gastei 50 no mercado" → registrado na hora</p>
       </div>
-      <ArrowRight size={16} color="rgba(255,255,255,0.7)" className="flex-shrink-0" />
+      <div className="flex-shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-lg" style={{ background: 'var(--color-success-bg)', color: 'var(--color-success-text)' }}>
+        Conectar
+      </div>
     </motion.button>
   );
 }
