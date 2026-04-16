@@ -19,6 +19,7 @@ import AIInsightsWidget from '@/components/dashboard/AIInsightsWidget';
 import WelcomeChecklist from '@/components/app/WelcomeChecklist';
 import AIChatDrawer from '@/components/app/AIChatDrawer';
 import WhatsAppPromoWidget from '@/components/app/WhatsAppPromoWidget';
+import SmartAlertsWidget from '@/components/dashboard/SmartAlertsWidget';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const LazyChart = lazy(() => import('recharts').then(m => ({
