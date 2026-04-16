@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Sparkles, X, Loader2, CheckCircle2, MessageSquare, Trash2, RotateCcw,
-  ArrowUp, ChevronLeft, ChevronRight, ArrowDown, ArrowUpIcon, Target,
-  CreditCard, Send, Clock, Bot, Lock
+  Sparkles, X, Loader2, CheckCircle2, RotateCcw,
+  ArrowUp, ChevronLeft, Clock, Lock
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +12,7 @@ type Msg = { role: 'user' | 'assistant'; content: string; ts: Date; actions?: st
 type Conversation = { id: string; title: string; updated_at: string };
 
 const QUICK_CHIPS = [
-  { icon: '💳', label: 'Gastos do mês' , q: 'Como estão meus gastos este mês?' },
+  { icon: '💳', label: 'Gastos do mês', q: 'Como estão meus gastos este mês?' },
   { icon: '🏦', label: 'Contas conectadas', q: 'Mostre minhas contas conectadas' },
   { icon: '📊', label: 'Resumo financeiro', q: 'Faça um resumo completo das minhas finanças' },
   { icon: '🎯', label: 'Minhas metas', q: 'Como estão minhas metas?' },
@@ -21,6 +20,47 @@ const QUICK_CHIPS = [
 ];
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
+
+/* ─── Pulsing Glow Ring ─── */
+function GlowRing({ size = 80 }: { size?: number }) {
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      {/* Outer glow rings */}
+      <motion.div
+        className="absolute inset-0 rounded-[22px]"
+        style={{ background: 'radial-gradient(circle, var(--color-green-500) 0%, transparent 70%)', opacity: 0.08 }}
+        animate={{ scale: [1, 1.25, 1], opacity: [0.08, 0.15, 0.08] }}
+        transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute rounded-[22px]"
+        style={{ inset: -6, border: '1.5px solid var(--color-green-500)', opacity: 0.1, borderRadius: 28 }}
+        animate={{ scale: [1, 1.08, 1], opacity: [0.1, 0.2, 0.1] }}
+        transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut', delay: 0.3 }}
+      />
+      {/* Icon container */}
+      <div
+        className="w-full h-full rounded-[22px] flex items-center justify-center relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(145deg, var(--color-green-50), var(--color-green-100))',
+          border: '1px solid var(--color-green-200)',
+          boxShadow: '0 8px 32px rgba(22,163,74,0.12), inset 0 1px 0 rgba(255,255,255,0.5)',
+        }}
+      >
+        {/* Shimmer effect */}
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%)',
+          }}
+          animate={{ x: ['-100%', '200%'] }}
+          transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut', repeatDelay: 2 }}
+        />
+        <Sparkles className="w-9 h-9 relative z-10" style={{ color: 'var(--color-green-600)' }} />
+      </div>
+    </div>
+  );
+}
 
 /* ─── Typing Indicator ─── */
 function TypingIndicator() {
@@ -88,13 +128,14 @@ function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
           <div className={`px-4 py-3 text-[14px] leading-[1.65] ${
             isUser ? 'rounded-2xl rounded-tr-sm' : 'rounded-2xl rounded-tl-sm'
           }`} style={isUser ? {
-            background: 'var(--color-green-600)',
+            background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))',
             color: 'white',
-            border: '1px solid var(--color-green-500)',
+            boxShadow: '0 2px 12px rgba(22,163,74,0.2)',
           } : {
-            background: 'var(--color-bg-sunken)',
+            background: 'var(--color-bg-surface)',
             border: '1px solid var(--color-border-weak)',
             color: 'var(--color-text-base)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           }}>
             {isUser ? msg.content : (
               <div className="ai-markdown-content">
@@ -134,7 +175,7 @@ function StreamingBubble({ content }: { content: string }) {
         <Sparkles className="w-3.5 h-3.5 text-white" />
       </div>
       <div className="rounded-2xl rounded-tl-sm px-4 py-3 text-[14px] leading-[1.65]"
-        style={{ maxWidth: '85%', background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)', color: 'var(--color-text-base)' }}>
+        style={{ maxWidth: '85%', background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-weak)', color: 'var(--color-text-base)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <div className="ai-markdown-content">
           <ReactMarkdown components={markdownComponents}>{content}</ReactMarkdown>
           <motion.span className="inline-block w-[2px] h-[16px] rounded-full ml-0.5 align-middle"
@@ -146,77 +187,93 @@ function StreamingBubble({ content }: { content: string }) {
   );
 }
 
-/* ─── Welcome Screen (Pierre-style layout) ─── */
+/* ─── Welcome Screen ─── */
 function WelcomeScreen({ onSend }: { onSend: (text: string) => void }) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-6" style={{ minHeight: '100%' }}>
-      <div className="flex-1" />
+      <div className="flex-1 min-h-[60px]" />
 
-      {/* Logo */}
+      {/* Animated Logo with Glow */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="flex items-center justify-center mb-6"
+        initial={{ opacity: 0, scale: 0.7, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="mb-8"
       >
-        <div className="w-20 h-20 rounded-[22px] flex items-center justify-center"
-          style={{
-            background: 'var(--color-green-50)',
-            border: '1px solid var(--color-green-200)',
-            boxShadow: '0 0 40px rgba(22,163,74,0.08)',
-          }}>
-          <Sparkles className="w-9 h-9" style={{ color: 'var(--color-green-600)' }} />
-        </div>
+        <GlowRing size={88} />
       </motion.div>
 
       {/* Greeting */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15, duration: 0.4 }}
-        className="text-center mb-2"
-      >
-        <h2 style={{ fontSize: 26, fontWeight: 300, color: 'var(--color-green-600)', letterSpacing: '-0.5px' }}>
-          {greeting},
-        </h2>
-        <p style={{ fontSize: 18, fontWeight: 300, color: 'var(--color-text-muted)', marginTop: 4, lineHeight: 1.5 }}>
-          Como eu posso<br />te ajudar hoje?
-        </p>
-      </motion.div>
-
-      <div className="flex-1" />
-
-      {/* Quick chips */}
-      <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.4 }}
-        className="w-full mb-3"
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="text-center mb-1"
       >
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
+        <h2 style={{
+          fontSize: 30,
+          fontWeight: 300,
+          letterSpacing: '-0.8px',
+          lineHeight: 1.15,
+          background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-800))',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        }}>
+          {greeting},
+        </h2>
+      </motion.div>
+
+      <motion.p
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="text-center"
+        style={{
+          fontSize: 20,
+          fontWeight: 400,
+          color: 'var(--color-text-base)',
+          lineHeight: 1.4,
+          letterSpacing: '-0.3px',
+        }}
+      >
+        Como eu posso<br />te ajudar hoje?
+      </motion.p>
+
+      <div className="flex-1 min-h-[40px]" />
+
+      {/* Quick chips — premium pill style */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45, duration: 0.5 }}
+        className="w-full mb-4"
+      >
+        <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide px-1">
           {QUICK_CHIPS.map((chip, i) => (
             <motion.button
               key={i}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.35 + i * 0.05 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 + i * 0.06 }}
               whileTap={{ scale: 0.95 }}
+              whileHover={{ y: -2 }}
               onClick={() => onSend(chip.q)}
-              className="flex items-center gap-2 flex-shrink-0 transition-all"
+              className="flex items-center gap-2.5 flex-shrink-0 transition-shadow"
               style={{
-                padding: '10px 16px',
-                borderRadius: 99,
+                padding: '12px 18px',
+                borderRadius: 'var(--radius-xl)',
                 border: '1px solid var(--color-border-base)',
-                background: 'var(--color-bg-sunken)',
+                background: 'var(--color-bg-surface)',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
               }}
             >
-              <span style={{ fontSize: 16 }}>{chip.icon}</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)' }}>{chip.label}</span>
+              <span style={{ fontSize: 18 }}>{chip.icon}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-base)', letterSpacing: '-0.1px' }}>{chip.label}</span>
             </motion.button>
           ))}
         </div>
@@ -410,7 +467,7 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
         <>
           {!isMobile && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[500]" style={{ background: 'var(--color-bg-overlay)', backdropFilter: 'blur(6px)' }}
+              className="fixed inset-0 z-[500]" style={{ background: 'var(--color-bg-overlay)', backdropFilter: 'blur(8px)' }}
               onClick={onClose} />
           )}
 
@@ -423,64 +480,71 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
             style={{
               background: 'var(--color-bg-base)',
               borderLeft: isMobile ? 'none' : '1px solid var(--color-border-weak)',
-              boxShadow: isMobile ? 'none' : 'var(--shadow-xl)',
+              boxShadow: isMobile ? 'none' : '-12px 0 40px rgba(0,0,0,0.12)',
             }}
           >
             {/* ─── Header ─── */}
-            <div className="flex items-center gap-3 px-4 shrink-0"
+            <div className="flex items-center gap-3 px-5 shrink-0"
               style={{
-                height: 64,
+                height: 68,
                 background: 'var(--color-bg-surface)',
                 borderBottom: '1px solid var(--color-border-weak)',
                 paddingTop: isMobile ? 'env(safe-area-inset-top)' : 0,
-                minHeight: isMobile ? 'calc(64px + env(safe-area-inset-top))' : 64,
-                backdropFilter: 'blur(16px)',
+                minHeight: isMobile ? 'calc(68px + env(safe-area-inset-top))' : 68,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
               }}>
               {/* Avatar */}
               <div className="relative flex-shrink-0">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))', boxShadow: '0 2px 10px rgba(22,163,74,0.3)' }}>
-                  <Sparkles className="w-[18px] h-[18px] text-white" />
+                <div className="w-11 h-11 rounded-[14px] flex items-center justify-center"
+                  style={{
+                    background: 'linear-gradient(145deg, var(--color-green-500), var(--color-green-700))',
+                    boxShadow: '0 4px 14px rgba(22,163,74,0.25)',
+                  }}>
+                  <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full flex items-center justify-center"
-                  style={{ background: 'var(--color-bg-surface)', padding: 2 }}>
-                  <div className="w-full h-full rounded-full" style={{ background: '#22c55e' }} />
-                </div>
+                <motion.div
+                  className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+                  style={{ background: 'var(--color-bg-surface)', padding: 2 }}
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ repeat: Infinity, duration: 2.5 }}
+                >
+                  <div className="w-full h-full rounded-full" style={{ background: '#22c55e', boxShadow: '0 0 6px #22c55e' }} />
+                </motion.div>
               </div>
 
               {/* Name */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-[16px] font-black" style={{ color: 'var(--color-text-strong)', letterSpacing: '-0.3px' }}>FinDash IA</span>
-                  <span style={{ fontSize: 11, color: 'var(--color-text-disabled)' }}>·</span>
-                  <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#22c55e', boxShadow: '0 0 6px #22c55e' }} />
-                    <span className="text-[12px] font-bold" style={{ color: 'var(--color-green-600)' }}>Online</span>
+                  <span style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-text-strong)', letterSpacing: '-0.4px' }}>FinDash IA</span>
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full"
+                    style={{ background: 'var(--color-green-50)', border: '1px solid var(--color-green-200)' }}>
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#22c55e' }} />
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-green-700)', letterSpacing: '0.3px' }}>ONLINE</span>
                   </div>
                 </div>
                 <p className="text-[11px] truncate mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>Assistente financeira pessoal</p>
               </div>
 
               {/* Buttons */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <motion.button whileTap={{ scale: 0.9 }} onClick={startNewChat}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
                   title="Nova conversa"
-                  style={{ background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-base)' }}>
-                  <RotateCcw className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+                  style={{ background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)' }}>
+                  <RotateCcw className="w-[18px] h-[18px]" style={{ color: 'var(--color-text-muted)' }} />
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.9 }} onClick={onClose}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-base)' }}>
+                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+                  style={{ background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)' }}>
                   {isMobile
-                    ? <ChevronLeft className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
-                    : <X className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />}
+                    ? <ChevronLeft className="w-[18px] h-[18px]" style={{ color: 'var(--color-text-muted)' }} />
+                    : <X className="w-[18px] h-[18px]" style={{ color: 'var(--color-text-muted)' }} />}
                 </motion.button>
               </div>
             </div>
 
             {/* ─── Messages / Welcome ─── */}
-            <div className="flex-1 overflow-y-auto ai-chat-messages" style={{
+            <div className="flex-1 overflow-y-auto" style={{
               background: 'var(--color-bg-base)',
               scrollbarWidth: 'thin',
               scrollbarColor: 'var(--color-border-weak) transparent',
@@ -488,7 +552,7 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
               {messages.length === 0 && !loading && !streamingText ? (
                 <WelcomeScreen onSend={send} />
               ) : (
-                <div className="flex flex-col gap-3 p-4">
+                <div className="flex flex-col gap-4 p-4">
                   {messages.map((m, i) => <MessageBubble key={i} msg={m} index={i} />)}
 
                   {streamActions.length > 0 && (
@@ -514,13 +578,15 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
             <div className="shrink-0" style={{
               background: 'var(--color-bg-surface)',
               borderTop: '1px solid var(--color-border-weak)',
-              padding: '12px 16px',
-              paddingBottom: isMobile ? 'calc(12px + env(safe-area-inset-bottom))' : '12px',
+              padding: '14px 16px',
+              paddingBottom: isMobile ? 'calc(14px + env(safe-area-inset-bottom))' : '14px',
+              boxShadow: '0 -2px 8px rgba(0,0,0,0.03)',
             }}>
-              <div className="flex items-end gap-2.5 rounded-2xl px-4 py-3 transition-all"
+              <div className="flex items-end gap-3 rounded-2xl px-4 py-3 transition-all"
                 style={{
                   background: 'var(--color-bg-sunken)',
                   border: '1.5px solid var(--color-border-base)',
+                  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.03)',
                 }}>
                 <textarea
                   ref={textareaRef}
@@ -544,22 +610,28 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
                   whileTap={hasText && !loading ? { scale: 0.85 } : undefined}
                   onClick={() => send(input)}
                   disabled={!hasText || loading}
-                  className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
+                  className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
                   style={{
-                    background: loading ? 'var(--color-bg-sunken)' : hasText ? 'var(--color-green-600)' : 'var(--color-bg-sunken)',
+                    background: loading
+                      ? 'var(--color-bg-sunken)'
+                      : hasText
+                        ? 'linear-gradient(135deg, var(--color-green-500), var(--color-green-700))'
+                        : 'var(--color-bg-sunken)',
                     cursor: hasText && !loading ? 'pointer' : 'default',
+                    boxShadow: hasText && !loading ? '0 4px 12px rgba(22,163,74,0.25)' : 'none',
+                    border: hasText ? 'none' : '1px solid var(--color-border-weak)',
                   }}
                 >
                   {loading ? (
                     <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--color-green-500)' }} />
                   ) : (
-                    <ArrowUp className="w-4 h-4" style={{ color: hasText ? 'white' : 'var(--color-text-disabled)' }} />
+                    <ArrowUp className="w-[18px] h-[18px]" style={{ color: hasText ? 'white' : 'var(--color-text-disabled)' }} />
                   )}
                 </motion.button>
               </div>
-              <div className="flex items-center justify-center gap-1.5 mt-2">
-                <Lock className="w-[9px] h-[9px]" style={{ color: 'var(--color-text-disabled)' }} />
-                <p style={{ fontSize: 10, color: 'var(--color-text-disabled)' }}>
+              <div className="flex items-center justify-center gap-1.5 mt-2.5">
+                <Lock className="w-[10px] h-[10px]" style={{ color: 'var(--color-text-disabled)' }} />
+                <p style={{ fontSize: 10, color: 'var(--color-text-disabled)', letterSpacing: '0.2px' }}>
                   Dados criptografados · Privacidade garantida
                 </p>
               </div>
