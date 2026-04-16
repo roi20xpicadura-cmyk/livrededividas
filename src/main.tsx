@@ -18,7 +18,23 @@ if (isPreviewHost || isInIframe) {
 } else if ('serviceWorker' in navigator) {
   // Production: register SW for static asset caching (instant repeat visits)
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      const notify = (sw: ServiceWorker) => {
+        window.dispatchEvent(new CustomEvent('sw-update-available', { detail: sw }));
+      };
+      // SW already waiting on load
+      if (reg.waiting && navigator.serviceWorker.controller) notify(reg.waiting);
+      // New SW found during this session
+      reg.addEventListener('updatefound', () => {
+        const installing = reg.installing;
+        if (!installing) return;
+        installing.addEventListener('statechange', () => {
+          if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+            notify(installing);
+          }
+        });
+      });
+    }).catch(() => {});
   });
 }
 

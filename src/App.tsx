@@ -11,6 +11,7 @@ import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
 import { AppErrorBoundary } from "@/components/app/ErrorBoundary";
 import { AnimatePresence } from "framer-motion";
 import SplashScreen from "@/components/app/SplashScreen";
+import SWUpdateBanner from "@/components/app/SWUpdateBanner";
 import { useProfile } from "@/hooks/useProfile";
 
 // Lazy-loaded routes
@@ -122,6 +123,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <SWUpdateBanner />
         <AnimatePresence>
           {showSplash && <SplashScreen key="splash" />}
         </AnimatePresence>
