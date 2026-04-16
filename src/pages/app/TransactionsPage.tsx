@@ -321,7 +321,7 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
           {!search && filter === 'all' && (
             <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowSheet(true)}
               style={{
-                height: 44, padding: '0 24px', background: 'var(--color-green-600)',
+                height: 44, padding: '0 24px', background: '#7C3AED',
                 border: 'none', borderRadius: 12, color: 'white',
                 fontSize: 14, fontWeight: 800, cursor: 'pointer',
                 boxShadow: '0 4px 14px rgba(124, 58, 237,0.3)',
