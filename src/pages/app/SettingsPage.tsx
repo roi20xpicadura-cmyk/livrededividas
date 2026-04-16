@@ -261,7 +261,7 @@ export default function SettingsPage() {
                     setPushEnabled(granted);
                     if (granted) {
                       toast.success('Notificações ativadas!');
-                      sendLocalNotification('FinDash Pro', '🎉 Notificações ativadas com sucesso!');
+                      sendLocalNotification('KoraFinance', '🎉 Notificações ativadas com sucesso!');
                     } else {
                       toast.error('Permissão negada. Ative nas configurações do navegador.');
                     }
