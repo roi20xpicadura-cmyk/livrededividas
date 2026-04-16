@@ -32,7 +32,7 @@ function TypingIndicator() {
         <Sparkles className="w-3.5 h-3.5 text-white" />
       </div>
       <div className="rounded-2xl rounded-tl-sm px-4 py-3"
-        style={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-weak)', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
+        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-1.5">
           {[0, 1, 2].map(i => (
             <motion.div key={i} className="w-[6px] h-[6px] rounded-full"
@@ -103,8 +103,8 @@ function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
             )}
           </div>
           <div className="flex items-center gap-1 mt-1 px-1">
-            <Clock className="w-[9px] h-[9px]" style={{ color: 'var(--color-text-subtle)', opacity: 0.6 }} />
-            <span className="text-[10px]" style={{ color: 'var(--color-text-subtle)', opacity: 0.6 }}>{timeStr}</span>
+            <Clock className="w-[9px] h-[9px]" style={{ color: 'rgba(255,255,255,0.25)' }} />
+            <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>{timeStr}</span>
           </div>
         </div>
       </div>
@@ -134,7 +134,7 @@ function StreamingBubble({ content }: { content: string }) {
         <Sparkles className="w-3.5 h-3.5 text-white" />
       </div>
       <div className="rounded-2xl rounded-tl-sm px-4 py-3 text-[14px] leading-[1.65]"
-        style={{ maxWidth: '85%', background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-weak)', color: 'var(--color-text-base)', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
+        style={{ maxWidth: '85%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', color: '#c8dcc8' }}>
         <div className="ai-markdown-content">
           <ReactMarkdown components={markdownComponents}>{content}</ReactMarkdown>
           <motion.span className="inline-block w-[2px] h-[16px] rounded-full ml-0.5 align-middle"
