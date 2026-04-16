@@ -1,9 +1,7 @@
-import Anthropic from "npm:@anthropic-ai/sdk";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const anthropic = new Anthropic({
-  apiKey: Deno.env.get("ANTHROPIC_API_KEY")!,
-});
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
+const AI_GATEWAY_URL = "https://ai-gateway.lovable.dev/v1/chat/completions";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -70,8 +68,8 @@ Deno.serve(async (req) => {
       .update({ last_message_at: new Date().toISOString() })
       .eq("user_id", userId);
 
-    // Process with Claude
-    const reply = await processWithClaude(userId, body);
+    // Process with AI
+    const reply = await processWithAI(userId, body);
 
     // Send reply
     await sendWhatsApp(phoneNumber, reply);
@@ -88,8 +86,8 @@ Deno.serve(async (req) => {
   }
 });
 
-// ━━━ PROCESS WITH CLAUDE ━━━
-async function processWithClaude(userId: string, message: string): Promise<string> {
+// ━━━ PROCESS WITH AI (Lovable AI Gateway) ━━━
+async function processWithAI(userId: string, message: string): Promise<string> {
   const data = await loadFinancialData(userId);
 
   const { data: ctx } = await supabase
@@ -153,19 +151,37 @@ REGRAS:
 - Português brasileiro informal
 - Para registros responda SOMENTE JSON`;
 
-  const messages: Array<{ role: "user" | "assistant"; content: string }> = [
-    ...history.slice(-6),
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...history.slice(-6).map((m: any) => ({ role: m.role, content: m.content })),
     { role: "user", content: message },
   ];
 
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 500,
-    system: systemPrompt,
-    messages,
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) {
+    return "❌ Erro de configuração. Tente novamente mais tarde.";
+  }
+
+  const response = await fetch(AI_GATEWAY_URL, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages,
+      max_tokens: 500,
+    }),
   });
 
-  const aiText = response.content[0].type === "text" ? response.content[0].text : "";
+  if (!response.ok) {
+    console.error("AI Gateway error:", await response.text());
+    return "❌ Erro ao processar. Tente novamente.";
+  }
+
+  const result = await response.json();
+  const aiText = result.choices?.[0]?.message?.content || "";
 
   let finalReply = aiText;
 
@@ -189,9 +205,11 @@ REGRAS:
   }
 
   // Save context
+  const userMsg = { role: "user", content: message };
+  const assistantMsg = { role: "assistant", content: finalReply };
   await supabase.from("whatsapp_context").upsert({
     user_id: userId,
-    messages: [...messages, { role: "assistant", content: finalReply }].slice(-10),
+    messages: [...history.slice(-8), userMsg, assistantMsg],
     pending_confirmation: null,
     updated_at: new Date().toISOString(),
   }, { onConflict: "user_id" });
@@ -309,18 +327,33 @@ function twimlResponse(msg: string): Response {
 }
 
 async function sendWhatsApp(to: string, message: string) {
-  const sid = Deno.env.get("TWILIO_ACCOUNT_SID")!;
-  const token = Deno.env.get("TWILIO_AUTH_TOKEN")!;
-  const from = (Deno.env.get("TWILIO_WHATSAPP_NUMBER") || "14155238886").replace("+", "");
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) {
+    console.error("LOVABLE_API_KEY is not configured");
+    return;
+  }
 
-  await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+  const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
+  if (!TWILIO_API_KEY) {
+    console.error("TWILIO_API_KEY is not configured");
+    return;
+  }
+
+  const resp = await fetch(`${GATEWAY_URL}/Messages.json`, {
     method: "POST",
     headers: {
-      Authorization: "Basic " + btoa(`${sid}:${token}`),
+      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      "X-Connection-Api-Key": TWILIO_API_KEY,
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({
-      From: `whatsapp:+${from}`, To: `whatsapp:+${to}`, Body: message,
+      From: "whatsapp:+14155238886",
+      To: `whatsapp:+${to}`,
+      Body: message,
     }).toString(),
   });
+
+  if (!resp.ok) {
+    console.error("Twilio gateway error:", await resp.text());
+  }
 }

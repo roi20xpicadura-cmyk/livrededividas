@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -13,10 +15,6 @@ serve(async (req) => {
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
-  const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
-  const TWILIO_WHATSAPP_NUMBER = Deno.env.get("TWILIO_WHATSAPP_NUMBER");
-
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
@@ -41,7 +39,6 @@ serve(async (req) => {
       const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-      // Upsert connection
       await supabase.from("whatsapp_connections").upsert(
         {
           user_id: userId,
@@ -54,16 +51,10 @@ serve(async (req) => {
         { onConflict: "user_id" }
       );
 
-      // Send code via WhatsApp
-      if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_WHATSAPP_NUMBER) {
-        await sendWhatsApp(
-          cleanPhone,
-          `🔐 *FinDash Pro — Verificação*\n\nSeu código: *${verificationCode}*\n\nVálido por 10 minutos.`,
-          TWILIO_ACCOUNT_SID,
-          TWILIO_AUTH_TOKEN,
-          TWILIO_WHATSAPP_NUMBER
-        );
-      }
+      await sendWhatsApp(
+        cleanPhone,
+        `🔐 *FinDash Pro — Verificação*\n\nSeu código: *${verificationCode}*\n\nVálido por 10 minutos.`
+      );
 
       return new Response(JSON.stringify({ sent: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -71,8 +62,6 @@ serve(async (req) => {
     }
 
     if (action === "verify_code") {
-      const cleanPhone = phoneNumber?.replace(/\D/g, "") || "";
-
       const { data: conn } = await supabase
         .from("whatsapp_connections")
         .select("*")
@@ -101,24 +90,18 @@ serve(async (req) => {
         .update({ verified: true, connected_at: new Date().toISOString() })
         .eq("user_id", userId);
 
-      // Send welcome
-      if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_WHATSAPP_NUMBER) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", userId)
-          .single();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", userId)
+        .single();
 
-        const name = profile?.full_name?.split(" ")[0] || "você";
+      const name = profile?.full_name?.split(" ")[0] || "você";
 
-        await sendWhatsApp(
-          conn.phone_number,
-          `✅ *WhatsApp conectado ao FinDash Pro!*\n\nOlá, ${name}! Agora gerencie finanças por aqui.\n\n*Exemplos:*\n💸 "gastei 50 no mercado"\n💰 "recebi 3000 de salário"\n📊 "como estão minhas finanças?"\n🎯 "progresso da minha meta"\n\nPode começar! 🚀`,
-          TWILIO_ACCOUNT_SID,
-          TWILIO_AUTH_TOKEN,
-          TWILIO_WHATSAPP_NUMBER
-        );
-      }
+      await sendWhatsApp(
+        conn.phone_number,
+        `✅ *WhatsApp conectado ao FinDash Pro!*\n\nOlá, ${name}! Agora gerencie finanças por aqui.\n\n*Exemplos:*\n💸 "gastei 50 no mercado"\n💰 "recebi 3000 de salário"\n📊 "como estão minhas finanças?"\n🎯 "progresso da minha meta"\n\nPode começar! 🚀`
+      );
 
       return new Response(JSON.stringify({ verified: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -162,18 +145,34 @@ serve(async (req) => {
   }
 });
 
-async function sendWhatsApp(to: string, message: string, sid: string, token: string, fromNum: string) {
-  const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+async function sendWhatsApp(to: string, message: string) {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) {
+    console.error("LOVABLE_API_KEY is not configured");
+    return;
+  }
+
+  const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
+  if (!TWILIO_API_KEY) {
+    console.error("TWILIO_API_KEY is not configured");
+    return;
+  }
+
+  const resp = await fetch(`${GATEWAY_URL}/Messages.json`, {
     method: "POST",
     headers: {
-      Authorization: "Basic " + btoa(`${sid}:${token}`),
+      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      "X-Connection-Api-Key": TWILIO_API_KEY,
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({
-      From: `whatsapp:+${fromNum}`,
+      From: "whatsapp:+14155238886",
       To: `whatsapp:+${to}`,
       Body: message,
     }).toString(),
   });
-  if (!resp.ok) console.error("Twilio send error:", await resp.text());
+
+  if (!resp.ok) {
+    console.error("Twilio gateway error:", await resp.text());
+  }
 }
