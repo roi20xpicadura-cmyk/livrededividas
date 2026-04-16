@@ -7,6 +7,7 @@ import { PROFILE_TYPES } from '@/components/onboarding/OnboardingFlow';
 import { Check, Download, Trash2, FileText, Camera, Bell, BellOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { requestPushPermission, checkNotificationSupport, sendLocalNotification } from '@/lib/pushNotifications';
+import WhatsAppSettings from '@/components/app/WhatsAppSettings';
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -133,6 +134,9 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 max-w-2xl px-4 py-5 md:px-0 pb-4">
+      {/* WhatsApp Integration */}
+      <WhatsAppSettings />
+
       {/* Profile Type */}
       <div className="card-surface p-6">
         <h2 className="text-[13px] font-extrabold text-fin-green-dark mb-4">Tipo de perfil</h2>
