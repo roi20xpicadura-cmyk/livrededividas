@@ -515,8 +515,14 @@ export default function AppLayout() {
                 maxHeight: '70vh',
                 padding: '0 20px 20px',
               }}>
-              {/* Handle */}
-              <div style={{ width: 40, height: 4, background: 'var(--color-border-strong)', borderRadius: 99, margin: '12px auto 20px', display: 'block' }} />
+              {/* Handle + Close */}
+              <div className="sticky top-0 z-10 flex items-center justify-between" style={{ paddingTop: 12, paddingBottom: 12, background: 'var(--color-bg-surface)' }}>
+                <div style={{ width: 40, height: 4, background: 'var(--color-border-strong)', borderRadius: 99, position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: 12 }} />
+                <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-strong)', marginTop: 12 }}>Mais opções</span>
+                <button onClick={() => setShowMoreDrawer(false)} aria-label="Fechar" className="flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: 'var(--color-bg-sunken)', marginTop: 12 }}>
+                  <X style={{ width: 18, height: 18, color: 'var(--color-text-muted)' }} />
+                </button>
+              </div>
 
               {/* Grid of remaining nav items */}
               <div className="grid grid-cols-3" style={{ gap: 12 }}>
