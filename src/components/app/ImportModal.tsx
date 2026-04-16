@@ -138,11 +138,11 @@ export default function ImportModal({ open, onClose, onSuccess, profileType }: P
               {!csvData && parsed.length === 0 && (
                 <div>
                   {/* Privacy trust banner */}
-                  <div className="mb-4 p-3 rounded-xl flex items-start gap-3" style={{ background: 'var(--color-green-50, #f0fdf4)', border: '1px solid var(--color-green-200, #bbf7d0)' }}>
+                  <div className="mb-4 p-3 rounded-xl flex items-start gap-3" style={{ background: 'var(--color-green-50, #F5F3FF)', border: '1px solid var(--color-green-200, #DDD6FE)' }}>
                     <span className="text-xl flex-shrink-0">🛡️</span>
                     <div>
-                      <p className="text-[12px] font-extrabold" style={{ color: 'var(--color-green-700, #15803d)' }}>Nunca pedimos sua senha do banco</p>
-                      <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-green-700, #15803d)', opacity: 0.8, lineHeight: 1.5 }}>Você importa apenas o arquivo de extrato. Nenhum acesso às suas credenciais bancárias.</p>
+                      <p className="text-[12px] font-extrabold" style={{ color: 'var(--color-green-700, #6D28D9)' }}>Nunca pedimos sua senha do banco</p>
+                      <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-green-700, #6D28D9)', opacity: 0.8, lineHeight: 1.5 }}>Você importa apenas o arquivo de extrato. Nenhum acesso às suas credenciais bancárias.</p>
                     </div>
                   </div>
                   <div

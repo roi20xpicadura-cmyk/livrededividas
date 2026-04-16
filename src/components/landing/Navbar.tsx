@@ -34,7 +34,7 @@ export default function Navbar() {
     >
       <div className="max-w-[1200px] mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#16a34a] flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-[#7C3AED] flex items-center justify-center">
             <BarChart3 className="w-4 h-4 text-white" />
           </div>
           <span className="text-[15px] font-[900] text-[#0f172a]">
@@ -63,8 +63,8 @@ export default function Navbar() {
           </Link>
           <Link
             to="/register"
-            className="px-5 py-2.5 rounded-[10px] bg-[#16a34a] text-white text-[14px] font-bold hover:bg-[#14532d] transition-all duration-200 hover:-translate-y-px inline-flex items-center gap-1.5"
-            style={{ boxShadow: '0 4px 14px rgba(22,163,74,0.35)' }}
+            className="px-5 py-2.5 rounded-[10px] bg-[#7C3AED] text-white text-[14px] font-bold hover:bg-[#1A0D35] transition-all duration-200 hover:-translate-y-px inline-flex items-center gap-1.5"
+            style={{ boxShadow: '0 4px 14px rgba(124, 58, 237,0.35)' }}
           >
             Começar grátis <ArrowRight className="w-3.5 h-3.5" />
           </Link>
@@ -92,7 +92,7 @@ export default function Navbar() {
             <Link
               to="/register"
               onClick={() => setMobileOpen(false)}
-              className="px-8 py-3.5 rounded-[12px] bg-[#16a34a] text-white font-bold text-base inline-flex items-center gap-2"
+              className="px-8 py-3.5 rounded-[12px] bg-[#7C3AED] text-white font-bold text-base inline-flex items-center gap-2"
             >
               Começar grátis <ArrowRight className="w-4 h-4" />
             </Link>

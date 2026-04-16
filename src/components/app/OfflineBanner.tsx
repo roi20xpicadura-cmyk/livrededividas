@@ -61,7 +61,7 @@ export default function OfflineBanner() {
           className="flex items-center justify-center gap-2"
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
-            background: 'var(--color-green-600, #16a34a)', color: 'white',
+            background: 'var(--color-green-600, #7C3AED)', color: 'white',
             padding: '10px 16px', fontSize: 13, fontWeight: 600,
           }}
         >

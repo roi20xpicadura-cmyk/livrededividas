@@ -1,31 +1,39 @@
 ---
-name: Design Tokens
-description: Premium fintech design system — Geist fonts, warm whites, shadow-based cards, dark hero card
+name: Design system tokens (KoraFinance Violet)
+description: Complete violet color system, typography, spacing, shadows, radius for light/dark modes
 type: design
 ---
+## Brand
+- Primary: `--brand-600` = #7C3AED (violet)
+- Scale: --brand-50 (#F5F3FF) → --brand-900 (#4C1D95)
+- Dark mode primary boost: #8B5CF6 / #A78BFA for active states
 
-## Fonts
-- Display/body: Geist (loaded from Google Fonts)
-- Numbers/mono: Geist Mono
-- Never use Inter, Roboto, or system defaults as primary
+## Color System
+- All colors use CSS custom properties in src/index.css
+- Light/dark via `[data-theme="dark"]` or `.dark`
+- Backgrounds: `--bg-base` #F8F7FF (lavender) / #08080F dark
+- Surfaces: `--bg-surface`, `--bg-elevated`, `--bg-sunken` (--color-bg-* aliases)
+- Text light: #1A0D35 → #7B6A9B → #B8A8D8
+- Text dark: #FFFFFF → rgba(255,255,255,0.7) → 0.4 → 0.2
+- Borders: rgba(124,58,237,0.07–0.25) light / rgba(167,139,250,0.05–0.30) dark
+- Legacy `--color-green-*` tokens are remapped to violet — components using them get the new brand for free
 
-## Color Philosophy
-- Warm white bg (#F7F8F6), near-black text (#0D1412)
-- Green used sparingly — only for primary actions and success states
-- Cards use box-shadow (not thick borders) for depth
-- Dark mode: deep green-blacks (#0C0F0D, #131815)
+## Financial Semantic (KEEP GREEN — money is green)
+- `--color-success-*` / `--success-*` stays green
+- Income amounts: #16A34A light / #4ADE80 dark
+- Expense amounts: #DC2626 light / #F87171 dark
+- Warning: #D97706 / #FCD34D
 
-## Key Utilities
-- `.metric-value` — mono font, tabular nums, -0.02em tracking
-- `.metric-hero` — 38px, 800 weight, -0.04em tracking
-- `.label-upper` — 11px, 600 weight, 0.08em tracking, uppercase
-- `.section-title` — 16px, 700 weight, -0.01em tracking
-- `.card-surface` — bg-surface, radius-lg, shadow-sm, overflow-hidden
-- `.btn-primary` — green bg, green shadow, scale(0.97) on active
-- `.btn-ghost` — transparent, sunken bg on hover
+## Typography
+- Geist (sans) + Geist Mono (numbers)
+- Always `font-variant-numeric: tabular-nums` on metric values
 
-## Charts
-- No CartesianGrid — clean axes only
-- Gradient area fills, not solid
-- Premium tooltip with card styling (rounded, shadow-md)
-- Axis: 11px, color-text-subtle, no axis/tick lines
+## Shadows
+- All shadows tinted with violet: rgba(109,40,217,*) light, black dark
+- `--shadow-brand` = 0 4px 14px rgba(124,58,237,0.35) — for primary buttons/FAB
+
+## Rules
+- NEVER hardcode hex in components — use CSS vars
+- Income/positive → green semantic tokens, NOT brand
+- Buttons/badges/charts/progress → violet brand
+- 44x44px min touch target on mobile

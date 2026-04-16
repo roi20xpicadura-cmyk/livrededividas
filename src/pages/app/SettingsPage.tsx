@@ -372,7 +372,7 @@ export default function SettingsPage() {
 
       {/* Security & Privacy link */}
       <Link to="/app/settings/security" className="card-surface p-4 flex items-center gap-3 hover:brightness-95 transition-all">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--color-green-100, #dcfce7)' }}>
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--color-green-100, #EDE9FE)' }}>
           <Shield size={18} style={{ color: 'var(--color-green-600)' }} />
         </div>
         <div className="flex-1 min-w-0">

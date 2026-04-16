@@ -15,22 +15,22 @@ export default function UseCasesSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, ease }}
-            className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-[20px] md:rounded-[24px] p-6 md:p-10">
-            <div className="w-10 md:w-12 h-10 md:h-12 rounded-full bg-[#16a34a] flex items-center justify-center mb-3 md:mb-4">
+            className="bg-[#F5F3FF] border border-[#DDD6FE] rounded-[20px] md:rounded-[24px] p-6 md:p-10">
+            <div className="w-10 md:w-12 h-10 md:h-12 rounded-full bg-[#7C3AED] flex items-center justify-center mb-3 md:mb-4">
               <User className="w-5 md:w-6 h-5 md:h-6 text-white" />
             </div>
-            <span className="text-[10px] md:text-[11px] font-[700] text-[#16a34a] bg-white px-3 py-1 rounded-full border border-[#bbf7d0]">Vida Pessoal</span>
+            <span className="text-[10px] md:text-[11px] font-[700] text-[#7C3AED] bg-white px-3 py-1 rounded-full border border-[#DDD6FE]">Vida Pessoal</span>
             <h3 className="text-[22px] md:text-[32px] font-[800] text-[#0f172a] mt-3 md:mt-4 mb-4 md:mb-5 tracking-[-0.5px]">
               Quer organizar sua vida financeira?
             </h3>
             <ul className="space-y-2.5 md:space-y-3 mb-6 md:mb-8">
               {['Controle de gastos diários', 'Metas de curto e longo prazo', 'Sair das dívidas mais rápido', 'Score de saúde financeira', 'Relatório mensal inteligente', 'Orçamento por categoria'].map(f => (
                 <li key={f} className="flex items-center gap-2 text-[13px] md:text-[14px] text-[#0f172a]">
-                  <Check className="w-4 h-4 text-[#16a34a] flex-shrink-0" />{f}
+                  <Check className="w-4 h-4 text-[#7C3AED] flex-shrink-0" />{f}
                 </li>
               ))}
             </ul>
-            <Link to="/register" className="w-full h-11 md:h-12 rounded-[10px] md:rounded-[12px] bg-[#16a34a] text-white font-bold text-[14px] md:text-[15px] flex items-center justify-center gap-2 hover:bg-[#14532d] transition-colors">
+            <Link to="/register" className="w-full h-11 md:h-12 rounded-[10px] md:rounded-[12px] bg-[#7C3AED] text-white font-bold text-[14px] md:text-[15px] flex items-center justify-center gap-2 hover:bg-[#1A0D35] transition-colors">
               Começar agora <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>

@@ -15,7 +15,7 @@ function fmt(v: number, c: string) {
   return `${c} ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-const CARD_COLORS = ['#16a34a', '#2563eb', '#7c3aed', '#dc2626', '#d97706', '#0891b2'];
+const CARD_COLORS = ['#7C3AED', '#2563eb', '#7c3aed', '#dc2626', '#d97706', '#0891b2'];
 
 export default function CardsTab({ cards, currency, onAdd, onUpdate, onRemove }: Props) {
   const [name, setName] = useState("");

@@ -24,7 +24,7 @@ export default function SplashScreen() {
             height: 72,
             borderRadius: 'var(--radius-2xl)',
             background: 'linear-gradient(135deg, var(--color-green-500), var(--color-green-700))',
-            boxShadow: '0 12px 40px rgba(22, 163, 74, 0.3)',
+            boxShadow: '0 12px 40px rgba(124, 58, 237, 0.3)',
           }}
         >
           <BarChart3 className="text-white" style={{ width: 36, height: 36 }} />

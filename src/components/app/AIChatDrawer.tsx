@@ -26,7 +26,7 @@ function TypingIndicator() {
     <motion.div initial={{ opacity: 0, y: 12, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }} className="flex items-start gap-2.5">
       <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-        style={{ background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))', boxShadow: '0 2px 8px rgba(22,163,74,0.3)' }}>
+        style={{ background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))', boxShadow: '0 2px 8px rgba(124, 58, 237,0.3)' }}>
         <Sparkles className="w-3.5 h-3.5 text-white" />
       </div>
       <div className="rounded-2xl rounded-tl-sm px-4 py-3"
@@ -78,7 +78,7 @@ function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
       <div className={`flex ${isUser ? 'justify-end' : 'items-start gap-2.5'}`}>
         {!isUser && (
           <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-            style={{ background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))', boxShadow: '0 2px 8px rgba(22,163,74,0.25)' }}>
+            style={{ background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))', boxShadow: '0 2px 8px rgba(124, 58, 237,0.25)' }}>
             <Sparkles className="w-3.5 h-3.5 text-white" />
           </div>
         )}
@@ -88,7 +88,7 @@ function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
           }`} style={isUser ? {
             background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))',
             color: 'white',
-            boxShadow: '0 2px 12px rgba(22,163,74,0.2)',
+            boxShadow: '0 2px 12px rgba(124, 58, 237,0.2)',
           } : {
             background: 'var(--color-bg-surface)',
             border: '1px solid var(--color-border-weak)',
@@ -129,7 +129,7 @@ function StreamingBubble({ content }: { content: string }) {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-2.5">
       <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-        style={{ background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))', boxShadow: '0 2px 8px rgba(22,163,74,0.25)' }}>
+        style={{ background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))', boxShadow: '0 2px 8px rgba(124, 58, 237,0.25)' }}>
         <Sparkles className="w-3.5 h-3.5 text-white" />
       </div>
       <div className="rounded-2xl rounded-tl-sm px-4 py-3 text-[14px] leading-[1.65]"
@@ -190,7 +190,7 @@ function WelcomeScreen({ onSend, firstName, financialData }: {
         <div className="flex-shrink-0 w-11 h-11 rounded-[13px] flex items-center justify-center"
           style={{
             background: 'linear-gradient(135deg, var(--color-green-600), #0d9488)',
-            boxShadow: '0 3px 10px rgba(22,163,74,0.3)',
+            boxShadow: '0 3px 10px rgba(124, 58, 237,0.3)',
           }}>
           <Sparkles className="w-5 h-5 text-white" />
         </div>
@@ -627,7 +627,7 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
                 <div className="w-[38px] h-[38px] rounded-[11px] flex items-center justify-center"
                   style={{
                     background: 'linear-gradient(135deg, var(--color-green-600), #0d9488)',
-                    boxShadow: '0 2px 8px rgba(22,163,74,0.2)',
+                    boxShadow: '0 2px 8px rgba(124, 58, 237,0.2)',
                   }}>
                   <Sparkles className="w-[17px] h-[17px] text-white" />
                 </div>
@@ -736,7 +736,7 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
                         ? 'var(--color-green-600)'
                         : 'transparent',
                     cursor: hasText && !loading ? 'pointer' : 'default',
-                    boxShadow: hasText && !loading ? '0 2px 8px rgba(22,163,74,0.3)' : 'none',
+                    boxShadow: hasText && !loading ? '0 2px 8px rgba(124, 58, 237,0.3)' : 'none',
                     border: 'none',
                   }}
                 >

@@ -80,8 +80,8 @@ export default function SecuritySettingsPage() {
 
       <div className="max-w-[680px] mx-auto px-4 pt-4 space-y-5">
         {/* Hero */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-2xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #0a0f0a, #14532d)' }}>
-          <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl pointer-events-none" style={{ background: 'rgba(34,197,94,0.25)' }} />
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-2xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #0a0f0a, #1A0D35)' }}>
+          <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl pointer-events-none" style={{ background: 'rgba(139, 92, 246,0.25)' }} />
           <div className="relative">
             <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-3" style={{ background: 'rgba(255,255,255,0.08)' }}>🛡️</div>
             <h2 className="text-[18px] font-black text-white mb-2 tracking-tight">Seus dados estão protegidos</h2>
@@ -94,7 +94,7 @@ export default function SecuritySettingsPage() {
         {/* What we collect */}
         <Card title="O que coletamos">
           {collected.map((item, i) => (
-            <Row key={i} item={item} badge={{ text: 'Sim', color: '#16a34a', bg: '#f0fdf4' }} last={i === collected.length - 1} />
+            <Row key={i} item={item} badge={{ text: 'Sim', color: '#7C3AED', bg: '#F5F3FF' }} last={i === collected.length - 1} />
           ))}
         </Card>
 
@@ -124,7 +124,7 @@ export default function SecuritySettingsPage() {
         {/* Your rights */}
         <Card title="Seus direitos (LGPD)">
           <div className="p-4 space-y-2">
-            <ActionRow icon="📥" label="Exportar meus dados" desc="Baixe todos os seus dados em JSON" cta={exporting ? '...' : 'Exportar'} onClick={handleExport} color="#16a34a" />
+            <ActionRow icon="📥" label="Exportar meus dados" desc="Baixe todos os seus dados em JSON" cta={exporting ? '...' : 'Exportar'} onClick={handleExport} color="#7C3AED" />
             <ActionRow icon="🗑️" label="Excluir minha conta" desc="Apaga permanentemente todos os dados" cta="Excluir" onClick={() => setShowDelete(true)} color="#dc2626" />
           </div>
         </Card>

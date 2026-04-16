@@ -30,7 +30,7 @@ export default function HeroSection() {
         <div
           className="absolute inset-0"
           style={{
-            background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(22,163,74,0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124, 58, 237,0.12) 0%, transparent 70%)',
           }}
         />
         <div
@@ -49,11 +49,11 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease }}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#bbf7d0] bg-[#f0fdf4] cursor-pointer hover:border-[#16a34a] transition-colors mb-6 md:mb-8"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#DDD6FE] bg-[#F5F3FF] cursor-pointer hover:border-[#7C3AED] transition-colors mb-6 md:mb-8"
         >
-          <span className="text-[9px] font-[800] bg-[#16a34a] text-white px-2 py-0.5 rounded-full uppercase">Novo</span>
-          <span className="text-[12px] md:text-[13px] font-medium text-[#166534]">IA Financeira disponível para todos</span>
-          <ArrowRight className="w-3 h-3 text-[#16a34a]" />
+          <span className="text-[9px] font-[800] bg-[#7C3AED] text-white px-2 py-0.5 rounded-full uppercase">Novo</span>
+          <span className="text-[12px] md:text-[13px] font-medium text-[#5B21B6]">IA Financeira disponível para todos</span>
+          <ArrowRight className="w-3 h-3 text-[#7C3AED]" />
         </motion.a>
 
         {/* Headline */}
@@ -68,7 +68,7 @@ export default function HeroSection() {
           <br />
           das suas finanças.
           <br />
-          <span className="text-[#16a34a]">Pessoal e negócio.</span>
+          <span className="text-[#7C3AED]">Pessoal e negócio.</span>
         </motion.h1>
 
         {/* Subtitle */}
@@ -90,8 +90,8 @@ export default function HeroSection() {
         >
           <Link
             to="/register"
-            className="h-[52px] md:h-[54px] px-6 md:px-7 rounded-[14px] bg-[#16a34a] text-white text-[15px] md:text-[16px] font-[800] hover:bg-[#14532d] active:scale-[0.97] transition-all duration-200 inline-flex items-center justify-center gap-2 hover:-translate-y-0.5"
-            style={{ boxShadow: '0 8px 30px rgba(22,163,74,0.35), 0 2px 8px rgba(22,163,74,0.2)' }}
+            className="h-[52px] md:h-[54px] px-6 md:px-7 rounded-[14px] bg-[#7C3AED] text-white text-[15px] md:text-[16px] font-[800] hover:bg-[#1A0D35] active:scale-[0.97] transition-all duration-200 inline-flex items-center justify-center gap-2 hover:-translate-y-0.5"
+            style={{ boxShadow: '0 8px 30px rgba(124, 58, 237,0.35), 0 2px 8px rgba(124, 58, 237,0.2)' }}
           >
             Começar grátis <ArrowRight className="w-[18px] h-[18px]" />
           </Link>
@@ -118,7 +118,7 @@ export default function HeroSection() {
         {/* Social proof */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.75 }} className="mt-5 md:mt-6 flex items-center justify-center gap-3">
           <div className="flex -space-x-2">
-            {['bg-[#16a34a]', 'bg-[#2563eb]', 'bg-[#7c3aed]', 'bg-[#f59e0b]', 'bg-[#ef4444]'].map((c, i) => (
+            {['bg-[#7C3AED]', 'bg-[#2563eb]', 'bg-[#7c3aed]', 'bg-[#f59e0b]', 'bg-[#ef4444]'].map((c, i) => (
               <div key={i} className={`w-7 h-7 md:w-8 md:h-8 rounded-full ${c} flex items-center justify-center text-[9px] md:text-[10px] font-bold text-white border-2 border-white`}>
                 {['AS', 'CS', 'MO', 'PF', 'RL'][i]}
               </div>
@@ -130,7 +130,7 @@ export default function HeroSection() {
         {/* Screenshot */}
         <div className="relative mt-12 md:mt-20 max-w-[1100px] mx-auto">
           {/* Blur orbs - hidden on mobile for performance */}
-          <div className="hidden md:block absolute -left-20 top-1/4 w-[400px] h-[400px] rounded-full bg-[rgba(22,163,74,0.12)] blur-[80px] -z-10" />
+          <div className="hidden md:block absolute -left-20 top-1/4 w-[400px] h-[400px] rounded-full bg-[rgba(124, 58, 237,0.12)] blur-[80px] -z-10" />
           <div className="hidden md:block absolute -right-20 top-1/3 w-[300px] h-[300px] rounded-full bg-[rgba(37,99,235,0.08)] blur-[60px] -z-10" />
 
           <motion.div
@@ -159,11 +159,11 @@ export default function HeroSection() {
           {/* Floating cards - desktop only */}
           <FloatingCard className="-left-10 xl:-left-16 top-8" delay={0}>
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-[#16a34a]" />
+              <TrendingUp className="w-4 h-4 text-[#7C3AED]" />
               <span className="text-[11px] font-medium text-[#64748b]">Score Financeiro</span>
             </div>
             <span className="text-[28px] font-[900] text-[#0f172a] leading-none">847</span>
-            <div className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#16a34a] bg-[#f0fdf4] px-2 py-0.5 rounded-full">
+            <div className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#7C3AED] bg-[#F5F3FF] px-2 py-0.5 rounded-full">
               ↑ +23 esse mês
             </div>
           </FloatingCard>
@@ -174,7 +174,7 @@ export default function HeroSection() {
               <span className="text-[11px] font-medium text-[#64748b]">Meta: Viagem</span>
             </div>
             <div className="w-36 h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
-              <div className="h-full bg-[#16a34a] rounded-full" style={{ width: '67%' }} />
+              <div className="h-full bg-[#7C3AED] rounded-full" style={{ width: '67%' }} />
             </div>
             <span className="text-[10px] text-[#94a3b8] mt-1 block">R$ 6.700 / R$ 10.000</span>
           </FloatingCard>

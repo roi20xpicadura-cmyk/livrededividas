@@ -132,7 +132,7 @@ export default function IntegrationsPage() {
       {/* Stats strip */}
       <div className="grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: isMobile ? 8 : 12, marginBottom: 20 }}>
         {[
-          { label: 'Conectadas', value: String(connectedList.length), icon: CheckCircle2, bg: '#f0fdf4', iconColor: '#16a34a', valueColor: '#16a34a' },
+          { label: 'Conectadas', value: String(connectedList.length), icon: CheckCircle2, bg: '#F5F3FF', iconColor: '#7C3AED', valueColor: '#7C3AED' },
           { label: 'Disponíveis', value: String(INTEGRATIONS.length), icon: Plug, bg: '#eff6ff', iconColor: '#2563eb', valueColor: '#2563eb' },
           { label: 'Última sync', value: lastSync ? timeAgo(lastSync) : '—', icon: Clock, bg: '#fffbeb', iconColor: '#d97706', valueColor: '#d97706' },
         ].map(s => (
@@ -165,7 +165,7 @@ export default function IntegrationsPage() {
               return (
                 <div key={conn.id} className="flex-shrink-0" style={{ width: 220, background: 'var(--color-bg-surface)', border: '1px solid var(--color-green-200)', borderRadius: 'var(--radius-xl)', padding: 14 }}>
                   <div className="flex items-center" style={{ gap: 8, marginBottom: 6 }}>
-                    <IntegrationLogo name={conn.platform_display_name} domain={def?.domain || ''} color={def?.color || '#16a34a'} size={28} />
+                    <IntegrationLogo name={conn.platform_display_name} domain={def?.domain || ''} color={def?.color || '#7C3AED'} size={28} />
                     <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-strong)' }}>{conn.platform_display_name}</span>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', marginLeft: 'auto' }} />
                   </div>

@@ -96,10 +96,11 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        "premium-sm": "0 2px 6px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
-        "premium-md": "0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)",
-        "premium-lg": "0 8px 32px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06)",
-        "green-glow": "0 4px 14px rgba(22,163,74,0.25)",
+        "premium-sm": "0 2px 6px rgba(109,40,217,0.08), 0 1px 2px rgba(109,40,217,0.05)",
+        "premium-md": "0 4px 16px rgba(109,40,217,0.10), 0 2px 6px rgba(109,40,217,0.06)",
+        "premium-lg": "0 8px 32px rgba(109,40,217,0.12), 0 4px 12px rgba(109,40,217,0.07)",
+        "green-glow": "0 4px 14px rgba(124,58,237,0.35)",
+        "brand-glow": "0 4px 14px rgba(124,58,237,0.35)",
       },
       keyframes: {
         "accordion-down": {

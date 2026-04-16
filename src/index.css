@@ -15,66 +15,109 @@
     --font-sans: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'Geist Mono', 'SF Mono', ui-monospace, monospace;
 
-    /* ── Backgrounds — layered depth ── */
-    --color-bg-base: #F7F8F6;
+    /* ── Brand — Violet (KoraFinance) ── */
+    --brand-50:  #F5F3FF;
+    --brand-100: #EDE9FE;
+    --brand-200: #DDD6FE;
+    --brand-300: #C4B5FD;
+    --brand-400: #A78BFA;
+    --brand-500: #8B5CF6;
+    --brand-600: #7C3AED;
+    --brand-700: #6D28D9;
+    --brand-800: #5B21B6;
+    --brand-900: #4C1D95;
+
+    /* ── Backgrounds — lavender-tinted depth ── */
+    --color-bg-base: #F8F7FF;
     --color-bg-surface: #FFFFFF;
     --color-bg-elevated: #FFFFFF;
-    --color-bg-sunken: #F0F2EF;
-    --color-bg-overlay: rgba(0,0,0,0.4);
+    --color-bg-sunken: #F0EEFF;
+    --color-bg-overlay: rgba(26,13,53,0.4);
 
-    /* ── Text — clear hierarchy ── */
-    --color-text-strong: #0D1412;
-    --color-text-base: #1A2420;
-    --color-text-muted: #3D4B47;
-    --color-text-subtle: #6B7975;
-    --color-text-disabled: #A8B5B0;
+    --bg-base: #F8F7FF;
+    --bg-surface: #FFFFFF;
+    --bg-elevated: #FFFFFF;
+    --bg-sunken: #F0EEFF;
 
-    /* ── Borders — very subtle ── */
-    --color-border-weak: #EDF0EE;
-    --color-border-base: #E2E8E5;
-    --color-border-strong: #C8D0CD;
-    --color-border-ghost: #F4F6F5;
+    /* ── Text — purple-tinted hierarchy ── */
+    --color-text-strong: #1A0D35;
+    --color-text-base: #2A1A4F;
+    --color-text-muted: #4A3A6B;
+    --color-text-subtle: #7B6A9B;
+    --color-text-disabled: #B8A8D8;
 
-    /* ── Green — brand, used sparingly ── */
-    --color-green-50: #F0FDF4;
-    --color-green-100: #DCFCE7;
-    --color-green-200: #BBF7D0;
-    --color-green-300: #86EFAC;
-    --color-green-400: #4ADE80;
-    --color-green-500: #22C55E;
-    --color-green-600: #16A34A;
-    --color-green-700: #15803D;
-    --color-green-800: #166534;
-    --color-green-900: #14532D;
+    --text-primary: #1A0D35;
+    --text-secondary: #4A3A6B;
+    --text-tertiary: #7B6A9B;
+    --text-disabled: #B8A8D8;
 
-    /* ── Semantic colors ── */
-    --color-danger-bg: #FFF1F2;
-    --color-danger-border: #FECDD3;
-    --color-danger-text: #BE123C;
-    --color-danger-solid: #E11D48;
+    /* ── Borders — violet tint ── */
+    --color-border-weak: rgba(124, 58, 237, 0.07);
+    --color-border-base: rgba(124, 58, 237, 0.12);
+    --color-border-strong: rgba(124, 58, 237, 0.25);
+    --color-border-ghost: rgba(124, 58, 237, 0.05);
 
+    --border-base: rgba(124, 58, 237, 0.12);
+    --border-weak: rgba(124, 58, 237, 0.07);
+    --border-ghost: rgba(124, 58, 237, 0.05);
+    --border-strong: rgba(124, 58, 237, 0.25);
+
+    /* ── Brand scale re-aliased through legacy --color-green-* so all existing
+       components that reference green tokens shift to violet automatically.
+       FINANCIAL semantics use --color-success-* below (kept GREEN). ── */
+    --color-green-50: #F5F3FF;
+    --color-green-100: #EDE9FE;
+    --color-green-200: #DDD6FE;
+    --color-green-300: #C4B5FD;
+    --color-green-400: #A78BFA;
+    --color-green-500: #8B5CF6;
+    --color-green-600: #7C3AED;
+    --color-green-700: #6D28D9;
+    --color-green-800: #5B21B6;
+    --color-green-900: #4C1D95;
+
+    /* ── Semantic — danger ── */
+    --color-danger-bg: #FEF2F2;
+    --color-danger-border: #FECACA;
+    --color-danger-text: #DC2626;
+    --color-danger-solid: #DC2626;
+    --danger-bg: #FEF2F2;
+    --danger-border: #FECACA;
+    --danger-text: #DC2626;
+
+    /* ── Semantic — warning ── */
     --color-warning-bg: #FFFBEB;
     --color-warning-border: #FDE68A;
-    --color-warning-text: #92400E;
+    --color-warning-text: #D97706;
     --color-warning-solid: #D97706;
+    --warning-bg: #FFFBEB;
+    --warning-border: #FDE68A;
+    --warning-text: #D97706;
 
+    /* ── Semantic — info ── */
     --color-info-bg: #F8FAFC;
     --color-info-border: #E2E8F0;
     --color-info-text: #334155;
     --color-info-solid: #2563EB;
 
+    /* ── Semantic — success (KEEP GREEN — for income/positive money) ── */
     --color-success-bg: #F0FDF4;
-    --color-success-border: #BBF7D0;
+    --color-success-border: #86EFAC;
     --color-success-text: #166534;
     --color-success-solid: #16A34A;
+    --success-bg: #F0FDF4;
+    --success-border: #86EFAC;
+    --success-text: #166534;
+    --success-strong: #16A34A;
 
-    /* ── Shadows — depth without weight ── */
-    --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-sm: 0 2px 6px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
-    --shadow-lg: 0 8px 32px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
-    --shadow-xl: 0 20px 48px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.06);
-    --shadow-green: 0 4px 14px rgba(22,163,74,0.25);
+    /* ── Shadows — violet glow ── */
+    --shadow-xs: 0 1px 3px rgba(109, 40, 217, 0.08);
+    --shadow-sm: 0 2px 8px rgba(109, 40, 217, 0.10);
+    --shadow-md: 0 4px 16px rgba(109, 40, 217, 0.12);
+    --shadow-lg: 0 8px 30px rgba(109, 40, 217, 0.15);
+    --shadow-xl: 0 20px 48px rgba(109, 40, 217, 0.18);
+    --shadow-green: 0 4px 14px rgba(124, 58, 237, 0.35);
+    --shadow-brand: 0 4px 14px rgba(124, 58, 237, 0.35);
 
     /* ── Spacing ── */
     --space-1: 4px;
@@ -97,168 +140,197 @@
     --radius-2xl: 24px;
     --radius-full: 9999px;
 
-    /* ── Shadcn tokens (HSL) ── */
-    --background: 100 8% 97%;
-    --foreground: 160 25% 7%;
+    /* ── Shadcn tokens (HSL) — Violet brand ── */
+    --background: 252 100% 98%;
+    --foreground: 263 60% 13%;
     --card: 0 0% 100%;
-    --card-foreground: 160 25% 7%;
+    --card-foreground: 263 60% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 160 25% 7%;
-    --primary: 142 71% 37%;
+    --popover-foreground: 263 60% 13%;
+    --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 140 10% 95%;
-    --secondary-foreground: 160 15% 25%;
-    --muted: 140 8% 65%;
-    --muted-foreground: 155 10% 40%;
-    --accent: 140 10% 95%;
-    --accent-foreground: 160 15% 25%;
-    --destructive: 347 77% 50%;
+    --secondary: 252 100% 96%;
+    --secondary-foreground: 263 40% 25%;
+    --muted: 263 30% 65%;
+    --muted-foreground: 263 20% 40%;
+    --accent: 252 100% 96%;
+    --accent-foreground: 263 40% 25%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 0%;
     --success: 142 71% 37%;
     --gold: 51 100% 50%;
-    --green: 142 71% 37%;
-    --green-light: 142 71% 50%;
-    --green-pale: 138 60% 97%;
-    --green-border: 140 30% 90%;
-    --green-dark: 160 25% 15%;
-    --red: 347 77% 50%;
-    --red-pale: 350 80% 97%;
-    --red-border: 350 70% 90%;
+    --green: 262 83% 58%;
+    --green-light: 262 83% 70%;
+    --green-pale: 252 100% 96%;
+    --green-border: 263 60% 90%;
+    --green-dark: 263 60% 20%;
+    --red: 0 84% 60%;
+    --red-pale: 0 86% 97%;
+    --red-border: 0 80% 90%;
     --amber: 38 92% 50%;
     --amber-pale: 48 80% 97%;
     --amber-border: 48 60% 85%;
     --blue: 217 91% 60%;
     --blue-pale: 214 80% 97%;
     --blue-border: 212 60% 88%;
-    --purple: 263 70% 58%;
-    --purple-pale: 263 80% 97%;
+    --purple: 262 83% 58%;
+    --purple-pale: 252 100% 96%;
     --purple-border: 263 60% 88%;
-    --border: 150 10% 90%;
-    --input: 150 10% 90%;
-    --ring: 142 71% 37%;
+    --border: 263 60% 92%;
+    --input: 263 60% 92%;
+    --ring: 262 83% 58%;
     --radius: 0.75rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 155 10% 40%;
-    --sidebar-primary: 142 71% 37%;
+    --sidebar-foreground: 263 20% 40%;
+    --sidebar-primary: 262 83% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 140 10% 95%;
-    --sidebar-accent-foreground: 160 15% 25%;
-    --sidebar-border: 150 10% 90%;
-    --sidebar-ring: 142 71% 37%;
+    --sidebar-accent: 252 100% 96%;
+    --sidebar-accent-foreground: 263 40% 25%;
+    --sidebar-border: 263 60% 92%;
+    --sidebar-ring: 262 83% 58%;
   }
 
-  [data-theme="dark"] {
-    /* Backgrounds — neutral gray, NOT green */
-    --color-bg-base: #0A0A0A;
-    --color-bg-surface: #111111;
-    --color-bg-elevated: #1A1A1A;
-    --color-bg-sunken: #080808;
+  [data-theme="dark"], .dark {
+    /* Backgrounds — near-black with purple tint */
+    --color-bg-base: #08080F;
+    --color-bg-surface: #110820;
+    --color-bg-elevated: #160B28;
+    --color-bg-sunken: #0F0520;
     --color-bg-overlay: rgba(0,0,0,0.72);
 
-    /* Text — high contrast neutral */
-    --color-text-strong: #EDEDED;
-    --color-text-base: #D4D4D4;
-    --color-text-muted: #A1A1A1;
-    --color-text-subtle: #6B6B6B;
-    --color-text-disabled: #3A3A3A;
+    --bg-base: #08080F;
+    --bg-surface: #110820;
+    --bg-elevated: #160B28;
+    --bg-sunken: #0F0520;
 
-    /* Borders — neutral gray */
-    --color-border-weak: #1A1A1A;
-    --color-border-base: #222222;
-    --color-border-strong: #2E2E2E;
-    --color-border-ghost: #141414;
+    /* Text — pure white */
+    --color-text-strong: #FFFFFF;
+    --color-text-base: rgba(255, 255, 255, 0.85);
+    --color-text-muted: rgba(255, 255, 255, 0.70);
+    --color-text-subtle: rgba(255, 255, 255, 0.40);
+    --color-text-disabled: rgba(255, 255, 255, 0.20);
 
-    /* Green stays same — brand accent only */
-    --color-green-50: rgba(34,197,94,0.06);
-    --color-green-100: rgba(34,197,94,0.10);
-    --color-green-200: rgba(34,197,94,0.15);
-    --color-green-300: #1F5C1F;
-    --color-green-400: #2D7D2D;
-    --color-green-500: #22C55E;
-    --color-green-600: #4ADE80;
-    --color-green-700: #86EFAC;
-    --color-green-800: #BBF7D0;
-    --color-green-900: #DCFCE7;
+    --text-primary: #FFFFFF;
+    --text-secondary: rgba(255, 255, 255, 0.70);
+    --text-tertiary: rgba(255, 255, 255, 0.40);
+    --text-disabled: rgba(255, 255, 255, 0.20);
 
-    /* Semantic — subtle alpha-based */
-    --color-danger-bg: rgba(239,68,68,0.08);
-    --color-danger-border: rgba(239,68,68,0.15);
+    /* Borders — violet glow */
+    --color-border-weak: rgba(167, 139, 250, 0.08);
+    --color-border-base: rgba(167, 139, 250, 0.15);
+    --color-border-strong: rgba(167, 139, 250, 0.30);
+    --color-border-ghost: rgba(167, 139, 250, 0.05);
+
+    --border-base: rgba(167, 139, 250, 0.15);
+    --border-weak: rgba(167, 139, 250, 0.08);
+    --border-ghost: rgba(167, 139, 250, 0.05);
+    --border-strong: rgba(167, 139, 250, 0.30);
+
+    /* Brand re-aliased green tokens → violet */
+    --color-green-50: rgba(124, 58, 237, 0.06);
+    --color-green-100: rgba(124, 58, 237, 0.10);
+    --color-green-200: rgba(124, 58, 237, 0.15);
+    --color-green-300: #5B21B6;
+    --color-green-400: #6D28D9;
+    --color-green-500: #8B5CF6;
+    --color-green-600: #A78BFA;
+    --color-green-700: #C4B5FD;
+    --color-green-800: #DDD6FE;
+    --color-green-900: #EDE9FE;
+
+    /* Danger */
+    --color-danger-bg: rgba(220, 38, 38, 0.12);
+    --color-danger-border: rgba(220, 38, 38, 0.25);
     --color-danger-text: #F87171;
-    --color-danger-solid: #F43F5E;
+    --color-danger-solid: #F87171;
+    --danger-bg: rgba(220, 38, 38, 0.12);
+    --danger-border: rgba(220, 38, 38, 0.25);
+    --danger-text: #F87171;
 
-    --color-warning-bg: rgba(245,158,11,0.08);
-    --color-warning-border: rgba(245,158,11,0.15);
+    /* Warning */
+    --color-warning-bg: rgba(217, 119, 6, 0.12);
+    --color-warning-border: rgba(217, 119, 6, 0.25);
     --color-warning-text: #FCD34D;
     --color-warning-solid: #F59E0B;
+    --warning-bg: rgba(217, 119, 6, 0.12);
+    --warning-border: rgba(217, 119, 6, 0.25);
+    --warning-text: #FCD34D;
 
+    /* Info */
     --color-info-bg: rgba(148,163,184,0.06);
     --color-info-border: rgba(148,163,184,0.12);
     --color-info-text: #94A3B8;
     --color-info-solid: #60A5FA;
 
-    --color-success-bg: rgba(34,197,94,0.08);
-    --color-success-border: rgba(34,197,94,0.15);
+    /* Success — KEEP GREEN for income */
+    --color-success-bg: rgba(22, 163, 74, 0.12);
+    --color-success-border: rgba(22, 163, 74, 0.25);
     --color-success-text: #4ADE80;
-    --color-success-solid: #4ADE80;
+    --color-success-solid: #22C55E;
+    --success-bg: rgba(22, 163, 74, 0.12);
+    --success-border: rgba(22, 163, 74, 0.25);
+    --success-text: #4ADE80;
+    --success-strong: #22C55E;
 
-    --shadow-xs: 0 1px 2px rgba(0,0,0,0.4);
-    --shadow-sm: 0 2px 8px rgba(0,0,0,0.5);
-    --shadow-md: 0 4px 20px rgba(0,0,0,0.6);
-    --shadow-lg: 0 8px 40px rgba(0,0,0,0.7);
-    --shadow-xl: 0 20px 48px rgba(0,0,0,0.8);
-    --shadow-green: 0 4px 14px rgba(74,222,128,0.15);
+    --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.7);
+    --shadow-green: 0 4px 14px rgba(124, 58, 237, 0.4);
+    --shadow-brand: 0 4px 14px rgba(124, 58, 237, 0.4);
 
-    /* Shadcn HSL tokens — NEUTRAL gray, zero green hue */
-    --background: 0 0% 4%;
-    --foreground: 0 0% 93%;
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 93%;
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 93%;
-    --primary: 142 69% 50%;
+    /* Shadcn HSL — Violet */
+    --background: 240 28% 5%;
+    --foreground: 0 0% 100%;
+    --card: 263 60% 8%;
+    --card-foreground: 0 0% 100%;
+    --popover: 263 60% 10%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 258 90% 66%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 11%;
-    --secondary-foreground: 0 0% 70%;
-    --muted: 0 0% 45%;
-    --muted-foreground: 0 0% 55%;
-    --accent: 0 0% 11%;
-    --accent-foreground: 0 0% 70%;
-    --destructive: 347 77% 60%;
+    --secondary: 263 60% 12%;
+    --secondary-foreground: 0 0% 85%;
+    --muted: 263 30% 30%;
+    --muted-foreground: 263 15% 65%;
+    --accent: 263 60% 12%;
+    --accent-foreground: 0 0% 85%;
+    --destructive: 0 84% 70%;
     --destructive-foreground: 0 0% 100%;
     --warning: 38 92% 60%;
     --warning-foreground: 0 0% 0%;
-    --border: 0 0% 14%;
-    --input: 0 0% 14%;
-    --ring: 142 69% 50%;
-    --green: 142 69% 50%;
-    --green-light: 142 72% 60%;
-    --green-pale: 0 0% 11%;
-    --green-border: 0 0% 16%;
-    --green-dark: 142 72% 60%;
-    --red: 347 77% 60%;
-    --red-pale: 0 0% 11%;
-    --red-border: 0 0% 16%;
+    --border: 263 50% 20%;
+    --input: 263 50% 20%;
+    --ring: 258 90% 66%;
+    --green: 258 90% 66%;
+    --green-light: 258 90% 76%;
+    --green-pale: 263 60% 12%;
+    --green-border: 263 50% 20%;
+    --green-dark: 258 90% 76%;
+    --red: 0 84% 70%;
+    --red-pale: 263 60% 12%;
+    --red-border: 263 50% 20%;
     --amber: 38 92% 60%;
-    --amber-pale: 0 0% 11%;
-    --amber-border: 0 0% 16%;
+    --amber-pale: 263 60% 12%;
+    --amber-border: 263 50% 20%;
     --blue: 217 91% 65%;
-    --blue-pale: 0 0% 11%;
-    --blue-border: 0 0% 16%;
-    --purple: 263 70% 65%;
-    --purple-pale: 0 0% 11%;
-    --purple-border: 0 0% 16%;
+    --blue-pale: 263 60% 12%;
+    --blue-border: 263 50% 20%;
+    --purple: 258 90% 66%;
+    --purple-pale: 263 60% 12%;
+    --purple-border: 263 50% 20%;
 
-    --sidebar-background: 0 0% 5%;
-    --sidebar-foreground: 0 0% 55%;
-    --sidebar-primary: 142 69% 50%;
+    --sidebar-background: 240 28% 5%;
+    --sidebar-foreground: 0 0% 60%;
+    --sidebar-primary: 258 90% 66%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 11%;
-    --sidebar-accent-foreground: 0 0% 70%;
-    --sidebar-border: 0 0% 14%;
-    --sidebar-ring: 142 69% 50%;
+    --sidebar-accent: 263 60% 12%;
+    --sidebar-accent-foreground: 0 0% 85%;
+    --sidebar-border: 263 50% 20%;
+    --sidebar-ring: 258 90% 66%;
   }
 }
 
@@ -354,7 +426,7 @@
     transition: all 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
   .card-glow:hover {
-    box-shadow: var(--shadow-md), 0 0 20px rgba(22,163,74,0.06);
+    box-shadow: var(--shadow-md), 0 0 20px rgba(124, 58, 237, 0.08);
     transform: translateY(-1px);
   }
 
@@ -417,7 +489,7 @@
   .focus-ring {
     @apply focus-visible:outline-none;
     &:focus-visible {
-      box-shadow: 0 0 0 2px var(--color-bg-surface), 0 0 0 4px var(--color-green-500);
+      box-shadow: 0 0 0 2px var(--color-bg-surface), 0 0 0 4px var(--brand-600);
     }
   }
 }
@@ -515,16 +587,16 @@
   color: var(--color-green-800);
 }
 
-/* Pulse green animation */
+/* Pulse brand animation */
 @keyframes pulse-green {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
-  50% { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(124, 58, 237, 0); }
 }
 
 /* AI chat */
 .ai-chat-input-wrapper:focus-within {
-  border-color: var(--color-green-600) !important;
-  box-shadow: 0 0 0 3px rgba(22,163,74,0.10);
+  border-color: var(--brand-600) !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
   background: var(--color-bg-surface) !important;
 }
 .ai-chat-messages::-webkit-scrollbar { width: 4px; }

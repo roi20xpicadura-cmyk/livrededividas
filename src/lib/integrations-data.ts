@@ -87,7 +87,7 @@ export const CATEGORY_EMOJI: Record<IntegrationCategory, string> = {
 
 export const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   bancos: { bg: '#eff6ff', text: '#1d4ed8' },
-  ecommerce: { bg: '#f0fdf4', text: '#15803d' },
+  ecommerce: { bg: '#F5F3FF', text: '#6D28D9' },
   pagamentos: { bg: '#fef9c3', text: '#854d0e' },
   infoprodutos: { bg: '#fdf4ff', text: '#7e22ce' },
   contabilidade: { bg: '#fff7ed', text: '#c2410c' },

@@ -41,17 +41,17 @@ const ACCOUNT_ITEMS = [
 ];
 
 const MOBILE_NAV_PERSONAL = [
-  { label: 'Início', path: '/app', icon: Home, activeColor: '#16a34a' },
+  { label: 'Início', path: '/app', icon: Home, activeColor: '#7C3AED' },
   { label: 'Lançar', path: '/app/transactions', icon: ArrowLeftRight, activeColor: '#2563eb' },
-  { label: '', path: 'fab', icon: Plus, activeColor: '#16a34a' },
+  { label: '', path: 'fab', icon: Plus, activeColor: '#7C3AED' },
   { label: 'Metas', path: '/app/goals', icon: Target, activeColor: '#7c3aed' },
   { label: 'Mais', path: 'more', icon: MoreHorizontal, activeColor: '#64748b' },
 ];
 
 const MOBILE_NAV_BUSINESS = [
-  { label: 'Início', path: '/app', icon: Home, activeColor: '#16a34a' },
+  { label: 'Início', path: '/app', icon: Home, activeColor: '#7C3AED' },
   { label: 'Lançar', path: '/app/transactions', icon: ArrowLeftRight, activeColor: '#2563eb' },
-  { label: '', path: 'fab', icon: Plus, activeColor: '#16a34a' },
+  { label: '', path: 'fab', icon: Plus, activeColor: '#7C3AED' },
   { label: 'Cartões', path: '/app/cards', icon: CreditCard, activeColor: '#7c3aed' },
   { label: 'Mais', path: 'more', icon: MoreHorizontal, activeColor: '#64748b' },
 ];
@@ -581,7 +581,7 @@ export default function AppLayout() {
           bottom: isMobile ? 84 : 24, right: isMobile ? 16 : 20,
           width: 56, height: 56, borderRadius: 18,
           background: 'linear-gradient(145deg, var(--color-green-500), var(--color-green-700))',
-          boxShadow: '0 8px 24px rgba(22,163,74,0.3), 0 0 0 1px rgba(22,163,74,0.1)', color: 'white',
+          boxShadow: '0 8px 24px rgba(124, 58, 237,0.3), 0 0 0 1px rgba(124, 58, 237,0.1)', color: 'white',
           border: '1px solid rgba(255,255,255,0.15)',
         }}
         aria-label="Assistente IA">

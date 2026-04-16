@@ -66,7 +66,7 @@ export default function PricingSection() {
         {/* Toggle */}
         <div className="flex items-center justify-center gap-3 mb-8 md:mb-12">
           <span className={`text-[13px] md:text-[14px] font-semibold transition-colors ${!annual ? 'text-[#0f172a]' : 'text-[#94a3b8]'}`}>Mensal</span>
-          <button onClick={() => setAnnual(!annual)} className={`w-12 h-6 rounded-full transition-colors duration-200 relative ${annual ? 'bg-[#16a34a]' : 'bg-[#e2e8f0]'}`}>
+          <button onClick={() => setAnnual(!annual)} className={`w-12 h-6 rounded-full transition-colors duration-200 relative ${annual ? 'bg-[#7C3AED]' : 'bg-[#e2e8f0]'}`}>
             <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-transform duration-200 shadow-sm ${annual ? 'translate-x-6' : 'translate-x-0.5'}`} />
           </button>
           <span className={`text-[13px] md:text-[14px] font-semibold transition-colors ${annual ? 'text-[#0f172a]' : 'text-[#94a3b8]'}`}>Anual</span>
@@ -85,13 +85,13 @@ export default function PricingSection() {
                 transition={{ delay: idx * 0.1, duration: 0.5, ease }}
                 className={`relative rounded-[16px] md:rounded-[20px] p-6 md:p-8 ${
                   p.dark ? 'bg-[#0f172a] text-white'
-                    : p.featured ? 'bg-white border-2 border-[#16a34a] md:scale-[1.04]'
+                    : p.featured ? 'bg-white border-2 border-[#7C3AED] md:scale-[1.04]'
                     : 'bg-white border border-[#e2e8f0]'
                 }`}
-                style={p.featured ? { boxShadow: '0 20px 60px rgba(22,163,74,0.15)' } : {}}
+                style={p.featured ? { boxShadow: '0 20px 60px rgba(124, 58, 237,0.15)' } : {}}
               >
                 {p.featured && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-[#16a34a] text-white text-[11px] md:text-[12px] font-bold whitespace-nowrap" style={{ boxShadow: '0 4px 12px rgba(22,163,74,0.3)' }}>
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-[#7C3AED] text-white text-[11px] md:text-[12px] font-bold whitespace-nowrap" style={{ boxShadow: '0 4px 12px rgba(124, 58, 237,0.3)' }}>
                     Mais popular
                   </span>
                 )}
@@ -107,7 +107,7 @@ export default function PricingSection() {
                   {price > 0 && <span className={`text-[13px] md:text-[14px] ${p.dark ? 'text-white/50' : 'text-[#94a3b8]'}`}>/mês</span>}
                 </div>
                 {annual && price > 0 && (
-                  <div className="text-[11px] text-[#16a34a] font-semibold bg-[#f0fdf4] inline-block px-2 py-0.5 rounded-full mb-1">
+                  <div className="text-[11px] text-[#7C3AED] font-semibold bg-[#F5F3FF] inline-block px-2 py-0.5 rounded-full mb-1">
                     Economize R$ {(p.price - p.priceAnnual) * 12}/ano
                   </div>
                 )}
@@ -119,8 +119,8 @@ export default function PricingSection() {
                   {p.features.map(f => (
                     <li key={f.label} className="flex items-center gap-2 text-[12px] md:text-[13px]">
                       {f.included ? (
-                        <div className="w-4 h-4 rounded-full bg-[#16a34a]/15 flex items-center justify-center flex-shrink-0">
-                          <Check className="w-2.5 h-2.5 text-[#16a34a]" />
+                        <div className="w-4 h-4 rounded-full bg-[#7C3AED]/15 flex items-center justify-center flex-shrink-0">
+                          <Check className="w-2.5 h-2.5 text-[#7C3AED]" />
                         </div>
                       ) : (
                         <X className="w-4 h-4 text-[#cbd5e1] flex-shrink-0" />
@@ -132,9 +132,9 @@ export default function PricingSection() {
 
                 <Link to="/register" className={`block w-full py-3 md:py-3.5 rounded-[10px] md:rounded-[12px] text-[14px] md:text-[15px] font-[800] text-center transition-all duration-200 ${
                   p.dark ? 'bg-white text-[#0f172a] hover:bg-[#f1f5f9]'
-                    : p.featured ? 'bg-[#16a34a] text-white hover:bg-[#14532d]'
-                    : 'bg-white border-[1.5px] border-[#e2e8f0] text-[#0f172a] hover:border-[#16a34a] hover:text-[#16a34a]'
-                }`} style={p.featured ? { boxShadow: '0 8px 24px rgba(22,163,74,0.35)' } : {}}>
+                    : p.featured ? 'bg-[#7C3AED] text-white hover:bg-[#1A0D35]'
+                    : 'bg-white border-[1.5px] border-[#e2e8f0] text-[#0f172a] hover:border-[#7C3AED] hover:text-[#7C3AED]'
+                }`} style={p.featured ? { boxShadow: '0 8px 24px rgba(124, 58, 237,0.35)' } : {}}>
                   {p.cta}
                 </Link>
               </motion.div>
@@ -148,8 +148,8 @@ export default function PricingSection() {
 
         {/* Money-back */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          className="mt-6 md:mt-8 bg-[#f0fdf4] border border-[#bbf7d0] rounded-2xl p-4 md:p-5 md:px-8 flex items-center gap-3 md:gap-4">
-          <Shield className="w-7 md:w-8 h-7 md:h-8 text-[#16a34a] flex-shrink-0" />
+          className="mt-6 md:mt-8 bg-[#F5F3FF] border border-[#DDD6FE] rounded-2xl p-4 md:p-5 md:px-8 flex items-center gap-3 md:gap-4">
+          <Shield className="w-7 md:w-8 h-7 md:h-8 text-[#7C3AED] flex-shrink-0" />
           <div>
             <div className="text-[14px] md:text-[16px] font-bold text-[#0f172a]">Garantia de 7 dias</div>
             <div className="text-[12px] md:text-[14px] text-[#64748b]">Devolvemos 100% se não ficar satisfeito.</div>

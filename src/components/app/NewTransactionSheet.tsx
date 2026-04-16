@@ -85,8 +85,8 @@ export default function NewTransactionSheet({ open, onClose, onSuccess, profileT
     onClose();
   };
 
-  const accent = type === 'expense' ? '#dc2626' : '#16a34a';
-  const accentBg = type === 'expense' ? 'rgba(220,38,38,0.2)' : 'rgba(22,163,74,0.2)';
+  const accent = type === 'expense' ? '#dc2626' : '#7C3AED';
+  const accentBg = type === 'expense' ? 'rgba(220,38,38,0.2)' : 'rgba(124, 58, 237,0.2)';
 
   const labelStyle: React.CSSProperties = {
     fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)',
@@ -110,7 +110,7 @@ export default function NewTransactionSheet({ open, onClose, onSuccess, profileT
         }}>
           {[
             { id: 'expense' as const, label: '💸 Despesa', color: '#dc2626' },
-            { id: 'income' as const, label: '💰 Receita', color: '#16a34a' },
+            { id: 'income' as const, label: '💰 Receita', color: '#7C3AED' },
           ].map(t => (
             <button key={t.id} onClick={() => setType(t.id)}
               style={{
@@ -190,7 +190,7 @@ export default function NewTransactionSheet({ open, onClose, onSuccess, profileT
                 <button key={o.id} onClick={() => setOrigin(o.id)}
                   style={{
                     flex: 1, height: 40, borderRadius: 10,
-                    border: `1.5px solid ${origin === o.id ? '#16a34a' : 'var(--color-border-base)'}`,
+                    border: `1.5px solid ${origin === o.id ? '#7C3AED' : 'var(--color-border-base)'}`,
                     background: origin === o.id ? 'var(--color-success-bg)' : 'var(--color-bg-surface)',
                     fontSize: 13, fontWeight: 700,
                     color: origin === o.id ? 'var(--color-success-text)' : 'var(--color-text-muted)',
@@ -216,7 +216,7 @@ export default function NewTransactionSheet({ open, onClose, onSuccess, profileT
           <button onClick={() => setRecurring(!recurring)}
             style={{
               position: 'relative', width: 40, height: 22, borderRadius: 99, border: 'none',
-              background: recurring ? '#16a34a' : 'var(--color-border-base)',
+              background: recurring ? '#7C3AED' : 'var(--color-border-base)',
               cursor: 'pointer', transition: 'background 150ms',
             }}>
             <span style={{
@@ -236,7 +236,7 @@ export default function NewTransactionSheet({ open, onClose, onSuccess, profileT
             color: !canSubmit ? 'var(--color-text-disabled)' : 'white',
             fontSize: 15, fontWeight: 800,
             cursor: !canSubmit ? 'not-allowed' : 'pointer',
-            boxShadow: canSubmit ? `0 4px 14px ${type === 'expense' ? 'rgba(220,38,38,0.3)' : 'rgba(22,163,74,0.3)'}` : 'none',
+            boxShadow: canSubmit ? `0 4px 14px ${type === 'expense' ? 'rgba(220,38,38,0.3)' : 'rgba(124, 58, 237,0.3)'}` : 'none',
             transition: 'all 200ms',
           }}>
           {submitting ? 'Salvando...' : type === 'expense' ? '💸 Registrar despesa' : '💰 Registrar receita'}

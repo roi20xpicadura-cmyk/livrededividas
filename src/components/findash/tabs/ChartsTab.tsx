@@ -17,7 +17,7 @@ function fmt(v: number, c: string) {
   return `${c} ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-const COLORS = ['#16A34A', '#2563EB', '#7C3AED', '#D97706', '#0891B2', '#DC2626', '#E11D48', '#059669', '#6366F1'];
+const COLORS = ['#7C3AED', '#2563EB', '#7C3AED', '#D97706', '#0891B2', '#DC2626', '#E11D48', '#059669', '#6366F1'];
 
 const axisStyle = {
   axisLine: false,
@@ -86,7 +86,7 @@ export default function ChartsTab({ filteredTx, investments, currency, rangeStar
                 <XAxis dataKey="date" {...axisStyle} tickMargin={8} />
                 <YAxis {...axisStyle} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : `${v}`} width={40} />
                 <Tooltip formatter={(v: number) => fmt(v, currency)} {...tooltipStyle} />
-                <Bar dataKey="receitas" name="Receitas" fill="#16A34A" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="receitas" name="Receitas" fill="#7C3AED" radius={[6, 6, 0, 0]} />
                 <Bar dataKey="despesas" name="Despesas" fill="#E11D48" radius={[6, 6, 0, 0]} opacity={0.8} />
               </BarChart>
             </ResponsiveContainer>
@@ -133,7 +133,7 @@ export default function ChartsTab({ filteredTx, investments, currency, rangeStar
                 <Pie data={originData} cx="50%" cy="50%" innerRadius={55} outerRadius={95} dataKey="value" paddingAngle={3}
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   labelLine={{ stroke: 'var(--color-text-subtle)', strokeWidth: 1 }}>
-                  <Cell fill="#16A34A" />
+                  <Cell fill="#7C3AED" />
                   <Cell fill="#D97706" />
                 </Pie>
                 <Tooltip formatter={(v: number) => fmt(v, currency)} {...tooltipStyle} />

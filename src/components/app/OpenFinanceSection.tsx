@@ -174,7 +174,7 @@ export default function OpenFinanceSection() {
         <div className="flex items-center" style={{ gap: 10 }}>
           <div style={{
             width: 36, height: 36, borderRadius: 10,
-            background: 'linear-gradient(135deg, #16a34a, #14532d)',
+            background: 'linear-gradient(135deg, #7C3AED, #1A0D35)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <Landmark style={{ width: 18, height: 18, color: 'white' }} />
@@ -198,7 +198,7 @@ export default function OpenFinanceSection() {
 
       {/* Info banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
+        background: 'linear-gradient(135deg, #F5F3FF, #ecfdf5)',
         border: '1px solid var(--color-green-200)',
         borderRadius: 14, padding: '14px 16px', marginBottom: 16,
       }}>
@@ -349,12 +349,12 @@ export default function OpenFinanceSection() {
         disabled={connecting || loading}
         style={{
           width: '100%', height: 52, borderRadius: 14,
-          background: 'linear-gradient(135deg, #16a34a, #14532d)',
+          background: 'linear-gradient(135deg, #7C3AED, #1A0D35)',
           color: 'white', fontSize: 14, fontWeight: 800,
           border: 'none', cursor: connecting ? 'wait' : 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           opacity: connecting ? 0.7 : 1,
-          boxShadow: '0 4px 14px rgba(22,163,74,0.3)',
+          boxShadow: '0 4px 14px rgba(124, 58, 237,0.3)',
         }}
       >
         {connecting ? (

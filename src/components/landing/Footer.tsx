@@ -14,7 +14,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-10 md:gap-8 mb-12">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-lg bg-[#16a34a] flex items-center justify-center"><BarChart3 className="w-4 h-4 text-white" /></div>
+              <div className="w-7 h-7 rounded-lg bg-[#7C3AED] flex items-center justify-center"><BarChart3 className="w-4 h-4 text-white" /></div>
               <span className="text-[15px] font-[900] text-white">KoraFinance</span>
             </div>
             <p className="text-[12px] text-white/40 leading-[1.8] max-w-[240px] mb-5">O painel financeiro mais completo do Brasil. Para quem quer organizar, crescer e realizar.</p>

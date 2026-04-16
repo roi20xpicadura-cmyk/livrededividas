@@ -51,7 +51,7 @@ export default function AchievementsPage() {
           </div>
           <div className="p-3 md:p-4 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
             <p className="text-[9px] md:text-[10px] uppercase font-bold" style={{ color: 'var(--text-hint)' }}>Total XP</p>
-            <p className="text-lg md:text-2xl font-black" style={{ color: '#16a34a' }}>{xp}</p>
+            <p className="text-lg md:text-2xl font-black" style={{ color: '#7C3AED' }}>{xp}</p>
           </div>
           <div className="p-3 md:p-4 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
             <p className="text-[9px] md:text-[10px] uppercase font-bold" style={{ color: 'var(--text-hint)' }}>Nível</p>
@@ -85,8 +85,8 @@ export default function AchievementsPage() {
             <button key={f} onClick={() => setFilter(f)}
               className="px-4 py-2 rounded-lg text-xs font-bold transition-all"
               style={{
-                background: filter === f ? '#f0fdf4' : 'var(--bg-surface)',
-                color: filter === f ? '#16a34a' : 'var(--text-secondary)',
+                background: filter === f ? '#F5F3FF' : 'var(--bg-surface)',
+                color: filter === f ? '#7C3AED' : 'var(--text-secondary)',
                 border: filter === f ? '1.5px solid #d4edda' : '1.5px solid var(--border-default)',
               }}>
               {f === 'all' ? 'Todas' : f === 'unlocked' ? 'Desbloqueadas' : 'Bloqueadas'}
@@ -120,7 +120,7 @@ export default function AchievementsPage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-3">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#f0fdf4', color: '#16a34a' }}>+{a.xp} XP</span>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#F5F3FF', color: '#7C3AED' }}>+{a.xp} XP</span>
                   {isUnlocked && unlocked[a.key] && (
                     <span className="text-[10px]" style={{ color: 'var(--text-hint)' }}>
                       {format(new Date(unlocked[a.key]), 'dd/MM/yyyy')}

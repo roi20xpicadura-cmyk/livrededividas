@@ -47,7 +47,7 @@ export default function OverviewTab({ filteredTx, stats, currency, onGoToTransac
       >
         {/* Subtle green glow */}
         <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full opacity-20"
-          style={{ background: 'radial-gradient(circle, rgba(74,222,128,0.5) 0%, transparent 70%)' }} />
+          style={{ background: 'radial-gradient(circle, rgba(167, 139, 250,0.5) 0%, transparent 70%)' }} />
         {/* Noise texture */}
         <div className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }} />

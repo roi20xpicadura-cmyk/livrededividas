@@ -15,7 +15,7 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-  { key: 'transaction', icon: ReceiptText, title: 'Adicione seu primeiro lançamento', desc: 'Registre uma receita ou despesa.', route: '/app/transactions', color: '#16a34a' },
+  { key: 'transaction', icon: ReceiptText, title: 'Adicione seu primeiro lançamento', desc: 'Registre uma receita ou despesa.', route: '/app/transactions', color: '#7C3AED' },
   { key: 'goal', icon: Target, title: 'Crie uma meta financeira', desc: 'Defina quanto quer economizar.', route: '/app/goals', color: '#7c3aed' },
   { key: 'card', icon: CreditCard, title: 'Cadastre um cartão de crédito', desc: 'Controle limites e faturas.', route: '/app/cards', color: '#0891b2' },
   { key: 'budget', icon: Landmark, title: 'Defina um orçamento mensal', desc: 'Limite gastos por categoria.', route: '/app/budget', color: '#ea580c' },
@@ -98,7 +98,7 @@ export default function WelcomeChecklist() {
         <div style={{ position: 'relative', flexShrink: 0 }}>
           <svg width="36" height="36" viewBox="0 0 36 36">
             <circle cx="18" cy="18" r="15" fill="none" stroke="var(--color-border-base)" strokeWidth="3" />
-            <circle cx="18" cy="18" r="15" fill="none" stroke="#16a34a" strokeWidth="3"
+            <circle cx="18" cy="18" r="15" fill="none" stroke="#7C3AED" strokeWidth="3"
               strokeDasharray={`${progress * 0.94} 94`}
               strokeLinecap="round"
               transform="rotate(-90 18 18)"
@@ -108,7 +108,7 @@ export default function WelcomeChecklist() {
           <span style={{
             position: 'absolute', inset: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 10, fontWeight: 800, color: '#16a34a',
+            fontSize: 10, fontWeight: 800, color: '#7C3AED',
           }}>
             {completedCount}/{STEPS.length}
           </span>
@@ -163,7 +163,7 @@ export default function WelcomeChecklist() {
                     {/* Check circle */}
                     <div style={{
                       width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-                      background: done ? '#16a34a' : 'transparent',
+                      background: done ? '#7C3AED' : 'transparent',
                       border: done ? 'none' : '2px solid var(--color-border-base)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>

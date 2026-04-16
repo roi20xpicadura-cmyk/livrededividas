@@ -27,7 +27,7 @@ interface AgentAlert {
 const typeStyles: Record<string, { bg: string; border: string; text: string }> = {
   danger: { bg: '#fef2f2', border: '#fecaca', text: '#991b1b' },
   warning: { bg: '#fffbeb', border: '#fde68a', text: '#92400e' },
-  success: { bg: '#f0fdf4', border: '#bbf7d0', text: '#166534' },
+  success: { bg: '#F5F3FF', border: '#DDD6FE', text: '#5B21B6' },
   info: { bg: '#f8fafc', border: '#e2e8f0', text: '#0f172a' },
 };
 
@@ -138,14 +138,14 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
         <div className="flex items-center gap-2">
           <div style={{
             width: 28, height: 28, borderRadius: 8,
-            background: 'linear-gradient(135deg, #16a34a, #15803d)',
+            background: 'linear-gradient(135deg, #7C3AED, #6D28D9)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(22,163,74,0.25)',
+            boxShadow: '0 2px 8px rgba(124, 58, 237,0.25)',
           }}>
             <Sparkles className="w-3.5 h-3.5 text-white" />
           </div>
           <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-base)' }}>IA Financeira</span>
-          <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 99, background: 'rgba(22,163,74,0.08)', color: '#16a34a' }}>AGENTE</span>
+          <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 99, background: 'rgba(124, 58, 237,0.08)', color: '#7C3AED' }}>AGENTE</span>
           {criticalCount > 0 && (
             <span style={{
               fontSize: 9, fontWeight: 800, color: 'white',
@@ -177,7 +177,7 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
             className="flex items-center gap-1.5"
             style={{
               height: 28, padding: '0 12px', borderRadius: 99, border: 'none',
-              background: 'linear-gradient(135deg, #16a34a, #15803d)',
+              background: 'linear-gradient(135deg, #7C3AED, #6D28D9)',
               color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer',
             }}
           >
@@ -194,8 +194,8 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
           style={{
             fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 8,
             border: 'none', cursor: 'pointer',
-            background: tab === 'agents' ? 'var(--color-green-100, rgba(22,163,74,0.1))' : 'transparent',
-            color: tab === 'agents' ? 'var(--color-green-700, #16a34a)' : 'var(--color-text-muted)',
+            background: tab === 'agents' ? 'var(--color-green-100, rgba(124, 58, 237,0.1))' : 'transparent',
+            color: tab === 'agents' ? 'var(--color-green-700, #7C3AED)' : 'var(--color-text-muted)',
           }}
         >
           <span style={{ marginRight: 4 }}>🤖</span>
@@ -206,8 +206,8 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
           style={{
             fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 8,
             border: 'none', cursor: 'pointer',
-            background: tab === 'insights' ? 'var(--color-green-100, rgba(22,163,74,0.1))' : 'transparent',
-            color: tab === 'insights' ? 'var(--color-green-700, #16a34a)' : 'var(--color-text-muted)',
+            background: tab === 'insights' ? 'var(--color-green-100, rgba(124, 58, 237,0.1))' : 'transparent',
+            color: tab === 'insights' ? 'var(--color-green-700, #7C3AED)' : 'var(--color-text-muted)',
           }}
         >
           <span style={{ marginRight: 4 }}>💡</span>
@@ -239,7 +239,7 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
                 }}>
                   <span style={{ fontSize: 12 }}>{a.emoji}</span>
                   <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--color-text-strong)' }}>{a.name}</span>
-                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#16a34a', boxShadow: '0 0 4px #16a34a' }} />
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#7C3AED', boxShadow: '0 0 4px #7C3AED' }} />
                 </div>
               ))}
             </div>

@@ -9,7 +9,7 @@ const steps = [
     icon: UserPlus,
     title: 'Crie sua conta grátis',
     description: 'Em menos de 1 minuto. Sem cartão de crédito.',
-    color: '#16a34a',
+    color: '#7C3AED',
   },
   {
     number: '02',

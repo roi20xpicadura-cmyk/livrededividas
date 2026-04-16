@@ -17,7 +17,7 @@ function fmt(v: number, c: string) {
   return `${c} ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-const COLORS = ['#16a34a', '#2563eb', '#7c3aed', '#d97706', '#0891b2', '#dc2626', '#e11d48'];
+const COLORS = ['#7C3AED', '#2563eb', '#7c3aed', '#d97706', '#0891b2', '#dc2626', '#e11d48'];
 
 export default function InvestmentsTab({ investments, currency, onAdd, onUpdate, onRemove }: Props) {
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));

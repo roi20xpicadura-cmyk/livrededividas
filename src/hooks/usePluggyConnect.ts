@@ -68,14 +68,14 @@ export function usePluggyConnect({ onSuccess, onError }: PluggyConnectOptions = 
       });
 
       let institutionLogo = '';
-      let institutionColor = '#16a34a';
+      let institutionColor = '#7C3AED';
       let accountType = 'BANK';
 
       if (itemRes.ok) {
         const itemData = await itemRes.json();
         institutionName = itemData.connector?.name || institutionName;
         institutionLogo = itemData.connector?.imageUrl || '';
-        institutionColor = itemData.connector?.primaryColor || '#16a34a';
+        institutionColor = itemData.connector?.primaryColor || '#7C3AED';
         accountType = itemData.connector?.type === 'PERSONAL_BANK' ? 'BANK' : itemData.connector?.type || 'BANK';
       }
 

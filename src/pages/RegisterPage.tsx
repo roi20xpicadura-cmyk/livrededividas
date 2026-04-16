@@ -22,7 +22,7 @@ const inputStyle: React.CSSProperties = {
   width: '100%', outline: 'none', transition: 'all 150ms',
 };
 
-const inputFocusClass = "focus:bg-white focus:!border-[#16a34a] focus:shadow-[0_0_0_4px_rgba(22,163,74,0.10)]";
+const inputFocusClass = "focus:bg-white focus:!border-[#7C3AED] focus:shadow-[0_0_0_4px_rgba(124, 58, 237,0.10)]";
 
 function getStrength(pw: string) {
   let score = 0;
@@ -34,7 +34,7 @@ function getStrength(pw: string) {
 }
 
 const strengthLabels = ['', 'Fraca', 'Média', 'Boa', 'Forte'];
-const strengthColors = ['#e2e8f0', '#ef4444', '#f59e0b', '#3b82f6', '#16a34a'];
+const strengthColors = ['#e2e8f0', '#ef4444', '#f59e0b', '#3b82f6', '#7C3AED'];
 
 const BENEFIT_PILLS = ['🤖 IA Financeira', '🎯 Score financeiro', '📊 Dashboard completo', '🏆 Gamificação'];
 
@@ -180,8 +180,8 @@ export default function RegisterPage() {
             onClick={(e) => { e.preventDefault(); setAgreedTerms(!agreedTerms); haptic.light(); }}
             style={{
               width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 1,
-              border: agreedTerms ? '1.5px solid #16a34a' : '1.5px solid #e2e8f0',
-              background: agreedTerms ? '#16a34a' : '#fafafa',
+              border: agreedTerms ? '1.5px solid #7C3AED' : '1.5px solid #e2e8f0',
+              background: agreedTerms ? '#7C3AED' : '#fafafa',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'all 200ms',
             }}
@@ -194,9 +194,9 @@ export default function RegisterPage() {
           </motion.div>
           <span style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>
             Aceito os{' '}
-            <a href="/termos-de-uso" target="_blank" style={{ color: '#16a34a', fontWeight: 600 }}>Termos de Uso</a>
+            <a href="/termos-de-uso" target="_blank" style={{ color: '#7C3AED', fontWeight: 600 }}>Termos de Uso</a>
             {' '}e a{' '}
-            <a href="/politica-de-privacidade" target="_blank" style={{ color: '#16a34a', fontWeight: 600 }}>Política de Privacidade</a>
+            <a href="/politica-de-privacidade" target="_blank" style={{ color: '#7C3AED', fontWeight: 600 }}>Política de Privacidade</a>
           </span>
         </motion.label>
 
@@ -209,11 +209,11 @@ export default function RegisterPage() {
           transition={error ? { duration: 0.35 } : {}}
           style={{
             marginTop: 20, height: 54, width: '100%',
-            background: !agreedTerms ? '#94a3b8' : success ? '#14532d' : '#16a34a',
+            background: !agreedTerms ? '#94a3b8' : success ? '#1A0D35' : '#7C3AED',
             border: 'none', borderRadius: 14, color: 'white',
             fontSize: 16, fontWeight: 800, letterSpacing: '-0.2px',
             cursor: loading || success || !agreedTerms ? 'default' : 'pointer',
-            boxShadow: agreedTerms ? '0 4px 14px rgba(22,163,74,0.35), 0 1px 3px rgba(22,163,74,0.2)' : 'none',
+            boxShadow: agreedTerms ? '0 4px 14px rgba(124, 58, 237,0.35), 0 1px 3px rgba(124, 58, 237,0.2)' : 'none',
             opacity: loading ? 0.85 : 1, transition: 'all 300ms',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}
@@ -225,7 +225,7 @@ export default function RegisterPage() {
 
       <p style={{ marginTop: 20, textAlign: 'center', fontSize: 14 }}>
         <span style={{ color: '#94a3b8' }}>Já tem conta? </span>
-        <Link to="/login" style={{ color: '#16a34a', fontWeight: 700, textDecoration: 'none' }} className="hover:underline">Entrar →</Link>
+        <Link to="/login" style={{ color: '#7C3AED', fontWeight: 700, textDecoration: 'none' }} className="hover:underline">Entrar →</Link>
       </p>
     </>
   );
@@ -234,13 +234,13 @@ export default function RegisterPage() {
     <div className="min-h-screen flex flex-col lg:flex-row" style={{ background: '#0a1a0f' }}>
       {/* Desktop left panel */}
       <div className="hidden lg:flex w-[55%] flex-col justify-between relative overflow-hidden" style={{ background: '#0a1a0f', padding: '48px 48px 40px' }}>
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 80% 70% at 40% 50%, rgba(22,163,74,0.30) 0%, rgba(22,163,74,0.08) 50%, transparent 80%)' }} />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 80% 70% at 40% 50%, rgba(124, 58, 237,0.30) 0%, rgba(124, 58, 237,0.08) 50%, transparent 80%)' }} />
         <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-        <div className="absolute" style={{ width: 250, height: 250, borderRadius: '50%', background: 'rgba(22,163,74,0.18)', filter: 'blur(60px)', top: -60, right: -60 }} />
+        <div className="absolute" style={{ width: 250, height: 250, borderRadius: '50%', background: 'rgba(124, 58, 237,0.18)', filter: 'blur(60px)', top: -60, right: -60 }} />
 
         <div className="relative z-10 flex flex-col justify-between h-full">
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center" style={{ width: 42, height: 42, background: '#16a34a', borderRadius: 12, boxShadow: '0 4px 14px rgba(22,163,74,0.4)' }}>
+            <div className="flex items-center justify-center" style={{ width: 42, height: 42, background: '#7C3AED', borderRadius: 12, boxShadow: '0 4px 14px rgba(124, 58, 237,0.4)' }}>
               <BarChart3 className="text-white" style={{ width: 22, height: 22 }} />
             </div>
             <span style={{ fontSize: 20, fontWeight: 800, color: 'white' }}>KoraFinance</span>
@@ -263,14 +263,14 @@ export default function RegisterPage() {
 
       {/* Mobile hero */}
       <div className="lg:hidden relative overflow-hidden" style={{ minHeight: '38vh', background: '#0a1a0f' }}>
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 80% 70% at 40% 50%, rgba(22,163,74,0.30) 0%, rgba(22,163,74,0.08) 50%, transparent 80%)' }} />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 80% 70% at 40% 50%, rgba(124, 58, 237,0.30) 0%, rgba(124, 58, 237,0.08) 50%, transparent 80%)' }} />
         <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-        <div className="absolute" style={{ width: 180, height: 180, borderRadius: '50%', background: 'rgba(22,163,74,0.18)', filter: 'blur(50px)', top: -40, right: -40 }} />
+        <div className="absolute" style={{ width: 180, height: 180, borderRadius: '50%', background: 'rgba(124, 58, 237,0.18)', filter: 'blur(50px)', top: -40, right: -40 }} />
         <div className="absolute" style={{ width: 120, height: 120, borderRadius: '50%', background: 'rgba(16,185,129,0.12)', filter: 'blur(40px)', bottom: 20, left: -20 }} />
 
         <div className="relative z-10" style={{ padding: '48px 28px 56px' }}>
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center" style={{ width: 38, height: 38, background: '#16a34a', borderRadius: 11, boxShadow: '0 4px 14px rgba(22,163,74,0.4)' }}>
+            <div className="flex items-center justify-center" style={{ width: 38, height: 38, background: '#7C3AED', borderRadius: 11, boxShadow: '0 4px 14px rgba(124, 58, 237,0.4)' }}>
               <BarChart3 className="text-white" style={{ width: 20, height: 20 }} />
             </div>
             <span style={{ fontSize: 18, fontWeight: 800, color: 'white' }}>KoraFinance</span>

@@ -24,7 +24,7 @@ function DarkHeroSection({ variant = 'login' }: { variant?: 'login' | 'register'
     >
       {/* Radial gradient overlay */}
       <div className="absolute inset-0" style={{
-        background: 'radial-gradient(ellipse 80% 70% at 40% 50%, rgba(22,163,74,0.30) 0%, rgba(22,163,74,0.08) 50%, transparent 80%)',
+        background: 'radial-gradient(ellipse 80% 70% at 40% 50%, rgba(124, 58, 237,0.30) 0%, rgba(124, 58, 237,0.08) 50%, transparent 80%)',
       }} />
       {/* Dot grid */}
       <div className="absolute inset-0" style={{
@@ -34,7 +34,7 @@ function DarkHeroSection({ variant = 'login' }: { variant?: 'login' | 'register'
       {/* Orb 1 */}
       <div className="absolute" style={{
         width: 180, height: 180, borderRadius: '50%',
-        background: 'rgba(22,163,74,0.18)', filter: 'blur(50px)',
+        background: 'rgba(124, 58, 237,0.18)', filter: 'blur(50px)',
         top: -40, right: -40,
       }} />
       {/* Orb 2 */}
@@ -48,8 +48,8 @@ function DarkHeroSection({ variant = 'login' }: { variant?: 'login' | 'register'
         {/* Logo */}
         <div className="flex items-center gap-2.5">
           <div className="flex items-center justify-center" style={{
-            width: 38, height: 38, background: '#16a34a', borderRadius: 11,
-            boxShadow: '0 4px 14px rgba(22,163,74,0.4)',
+            width: 38, height: 38, background: '#7C3AED', borderRadius: 11,
+            boxShadow: '0 4px 14px rgba(124, 58, 237,0.4)',
           }}>
             <BarChart3 className="text-white" style={{ width: 20, height: 20 }} />
           </div>
@@ -115,21 +115,21 @@ function DesktopLeftPanel() {
     >
       {/* Gradients and dots */}
       <div className="absolute inset-0" style={{
-        background: 'radial-gradient(ellipse 80% 70% at 40% 50%, rgba(22,163,74,0.30) 0%, rgba(22,163,74,0.08) 50%, transparent 80%)',
+        background: 'radial-gradient(ellipse 80% 70% at 40% 50%, rgba(124, 58, 237,0.30) 0%, rgba(124, 58, 237,0.08) 50%, transparent 80%)',
       }} />
       <div className="absolute inset-0" style={{
         backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)',
         backgroundSize: '24px 24px',
       }} />
-      <div className="absolute" style={{ width: 250, height: 250, borderRadius: '50%', background: 'rgba(22,163,74,0.18)', filter: 'blur(60px)', top: -60, right: -60 }} />
+      <div className="absolute" style={{ width: 250, height: 250, borderRadius: '50%', background: 'rgba(124, 58, 237,0.18)', filter: 'blur(60px)', top: -60, right: -60 }} />
       <div className="absolute" style={{ width: 160, height: 160, borderRadius: '50%', background: 'rgba(16,185,129,0.12)', filter: 'blur(50px)', bottom: 40, left: -40 }} />
 
       <div className="relative z-10 flex flex-col justify-between h-full">
         {/* Logo */}
         <div className="flex items-center gap-2.5">
           <div className="flex items-center justify-center" style={{
-            width: 42, height: 42, background: '#16a34a', borderRadius: 12,
-            boxShadow: '0 4px 14px rgba(22,163,74,0.4)',
+            width: 42, height: 42, background: '#7C3AED', borderRadius: 12,
+            boxShadow: '0 4px 14px rgba(124, 58, 237,0.4)',
           }}>
             <BarChart3 className="text-white" style={{ width: 22, height: 22 }} />
           </div>
@@ -239,7 +239,7 @@ const inputStyle: React.CSSProperties = {
   width: '100%', outline: 'none', transition: 'all 150ms',
 };
 
-const inputFocusClass = "focus:bg-white focus:!border-[#16a34a] focus:shadow-[0_0_0_4px_rgba(22,163,74,0.10)]";
+const inputFocusClass = "focus:bg-white focus:!border-[#7C3AED] focus:shadow-[0_0_0_4px_rgba(124, 58, 237,0.10)]";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -362,7 +362,7 @@ export default function LoginPage() {
             <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               SENHA
             </label>
-            <Link to="/forgot-password" style={{ fontSize: 12, fontWeight: 600, color: '#16a34a', textDecoration: 'none' }}
+            <Link to="/forgot-password" style={{ fontSize: 12, fontWeight: 600, color: '#7C3AED', textDecoration: 'none' }}
               className="hover:underline">
               Esqueci a senha
             </Link>
@@ -398,11 +398,11 @@ export default function LoginPage() {
           transition={error ? { duration: 0.35 } : {}}
           style={{
             marginTop: 20, height: 54, width: '100%',
-            background: success ? '#14532d' : '#16a34a',
+            background: success ? '#1A0D35' : '#7C3AED',
             border: 'none', borderRadius: 14, color: 'white',
             fontSize: 16, fontWeight: 800, letterSpacing: '-0.2px',
             cursor: loading || success ? 'default' : 'pointer',
-            boxShadow: '0 4px 14px rgba(22,163,74,0.35), 0 1px 3px rgba(22,163,74,0.2)',
+            boxShadow: '0 4px 14px rgba(124, 58, 237,0.35), 0 1px 3px rgba(124, 58, 237,0.2)',
             opacity: loading ? 0.85 : 1, transition: 'all 150ms',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}
@@ -420,7 +420,7 @@ export default function LoginPage() {
       {/* Register link */}
       <p style={{ marginTop: 20, textAlign: 'center', fontSize: 14 }}>
         <span style={{ color: '#94a3b8' }}>Não tem conta? </span>
-        <Link to="/register" style={{ color: '#16a34a', fontWeight: 700, textDecoration: 'none' }}
+        <Link to="/register" style={{ color: '#7C3AED', fontWeight: 700, textDecoration: 'none' }}
           className="hover:underline">
           Criar conta grátis →
         </Link>
@@ -495,7 +495,7 @@ export default function LoginPage() {
             <div style={{ marginBottom: 4 }}>
               <div className="flex justify-between items-center" style={{ marginBottom: 6 }}>
                 <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>SENHA</label>
-                <Link to="/forgot-password" style={{ fontSize: 12, fontWeight: 600, color: '#16a34a', textDecoration: 'none' }} className="hover:underline">Esqueci a senha</Link>
+                <Link to="/forgot-password" style={{ fontSize: 12, fontWeight: 600, color: '#7C3AED', textDecoration: 'none' }} className="hover:underline">Esqueci a senha</Link>
               </div>
               <div className="relative">
                 <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required
@@ -509,10 +509,10 @@ export default function LoginPage() {
             <motion.button type="submit" disabled={loading || success} whileTap={{ scale: 0.97 }}
               animate={error ? { x: [0, -8, 8, -8, 8, 0] } : {}} transition={error ? { duration: 0.35 } : {}}
               style={{
-                marginTop: 20, height: 54, width: '100%', background: success ? '#14532d' : '#16a34a',
+                marginTop: 20, height: 54, width: '100%', background: success ? '#1A0D35' : '#7C3AED',
                 border: 'none', borderRadius: 14, color: 'white', fontSize: 16, fontWeight: 800,
                 letterSpacing: '-0.2px', cursor: loading || success ? 'default' : 'pointer',
-                boxShadow: '0 4px 14px rgba(22,163,74,0.35), 0 1px 3px rgba(22,163,74,0.2)',
+                boxShadow: '0 4px 14px rgba(124, 58, 237,0.35), 0 1px 3px rgba(124, 58, 237,0.2)',
                 opacity: loading ? 0.85 : 1, transition: 'all 150ms',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}>
@@ -523,7 +523,7 @@ export default function LoginPage() {
 
           <p style={{ marginTop: 20, textAlign: 'center', fontSize: 14 }}>
             <span style={{ color: '#94a3b8' }}>Não tem conta? </span>
-            <Link to="/register" style={{ color: '#16a34a', fontWeight: 700, textDecoration: 'none' }} className="hover:underline">Criar conta grátis →</Link>
+            <Link to="/register" style={{ color: '#7C3AED', fontWeight: 700, textDecoration: 'none' }} className="hover:underline">Criar conta grátis →</Link>
           </p>
         </div>
       </motion.div>

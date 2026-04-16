@@ -18,7 +18,7 @@ export default function ComparisonSection() {
     <section className="py-20 md:py-28 px-4" style={{ background: 'white' }}>
       <div className="max-w-[860px] mx-auto">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
-          <span className="inline-block text-[11px] font-extrabold tracking-[0.1em] uppercase px-3.5 py-1 rounded-full mb-4" style={{ color: '#16a34a', background: '#f0fdf4' }}>
+          <span className="inline-block text-[11px] font-extrabold tracking-[0.1em] uppercase px-3.5 py-1 rounded-full mb-4" style={{ color: '#7C3AED', background: '#F5F3FF' }}>
             Comparativo
           </span>
           <h2 className="text-[28px] md:text-[36px] font-black tracking-tight" style={{ color: '#0D1412' }}>
@@ -49,7 +49,7 @@ export default function ComparisonSection() {
               { name: 'Pierre', highlight: false },
               { name: 'Mobills', highlight: false },
             ].map(app => (
-              <div key={app.name} className="text-center text-[12px] md:text-[13px] font-extrabold" style={{ color: app.highlight ? '#16a34a' : '#6B7975' }}>
+              <div key={app.name} className="text-center text-[12px] md:text-[13px] font-extrabold" style={{ color: app.highlight ? '#7C3AED' : '#6B7975' }}>
                 {app.highlight && '⭐ '}{app.name}
               </div>
             ))}
@@ -67,7 +67,7 @@ export default function ComparisonSection() {
             >
               <div className="flex items-center gap-2 text-[12px] md:text-[13px] font-medium" style={{ color: '#3D4B47' }}>
                 {f.kora && !f.pierre && (
-                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: '#dcfce7', color: '#166534' }}>
+                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: '#EDE9FE', color: '#5B21B6' }}>
                     exclusivo
                   </span>
                 )}
@@ -76,7 +76,7 @@ export default function ComparisonSection() {
               {[f.kora, f.pierre, f.mobills].map((has, j) => (
                 <div key={j} className="text-center text-[16px]">
                   {has
-                    ? <span style={{ color: '#16a34a' }}>✓</span>
+                    ? <span style={{ color: '#7C3AED' }}>✓</span>
                     : <span style={{ color: '#E2E8E5' }}>—</span>
                   }
                 </div>

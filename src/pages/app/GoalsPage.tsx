@@ -80,7 +80,7 @@ export default function GoalsPage() {
   );
 
   const triggerConfetti = () => {
-    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#16a34a', '#22c55e', '#d97706', '#f59e0b', '#ffffff'] });
+    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#7C3AED', '#22c55e', '#d97706', '#f59e0b', '#ffffff'] });
   };
 
   const handleDeposit = async (goalId: string, amount: number) => {
@@ -219,7 +219,7 @@ export default function GoalsPage() {
             border: 'none', borderRadius: 10,
             color: 'white', fontSize: 13, fontWeight: 700,
             cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(22,163,74,0.3)',
+            boxShadow: '0 2px 8px rgba(124, 58, 237,0.3)',
           }}
         >
           <Plus size={14} />
@@ -364,7 +364,7 @@ function EmptyState({ onAdd }: { onAdd: (prefill?: { name?: string }) => void })
           border: 'none', borderRadius: 14,
           color: 'white', fontSize: 15, fontWeight: 800,
           cursor: 'pointer',
-          boxShadow: '0 4px 14px rgba(22,163,74,0.35)',
+          boxShadow: '0 4px 14px rgba(124, 58, 237,0.35)',
           display: 'flex', alignItems: 'center', gap: 8,
         }}
       >
@@ -438,7 +438,7 @@ function SummaryBar({ goals }: { goals: any[] }) {
           style={{
             height: '100%', borderRadius: 99,
             background: overallPct >= 75
-              ? 'linear-gradient(90deg, #16a34a, #22c55e)'
+              ? 'linear-gradient(90deg, #7C3AED, #22c55e)'
               : overallPct >= 40
               ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
               : 'linear-gradient(90deg, #ef4444, #f87171)',
@@ -472,9 +472,9 @@ function GoalCard({ goal, index, onDeposit, onEdit, onDelete, onComplete }: {
   const daysLeft = goal.deadline ? differenceInDays(parseISO(goal.deadline), new Date()) : null;
   const isLate = daysLeft !== null && daysLeft < 0 && !isCompleted;
 
-  const barColor = isCompleted ? '#16a34a'
+  const barColor = isCompleted ? '#7C3AED'
     : isLate ? '#ef4444'
-    : pct >= 60 ? '#16a34a'
+    : pct >= 60 ? '#7C3AED'
     : pct >= 30 ? '#f59e0b'
     : '#ef4444';
 
@@ -750,7 +750,7 @@ function GoalCard({ goal, index, onDeposit, onEdit, onDelete, onComplete }: {
                         border: 'none', cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         boxShadow: depositAmount && parseFloat(depositAmount) > 0
-                          ? '0 2px 8px rgba(22,163,74,0.3)' : 'none',
+                          ? '0 2px 8px rgba(124, 58, 237,0.3)' : 'none',
                       }}
                     >
                       <Check
@@ -1124,7 +1124,7 @@ function GoalSheet({ open, onClose, editGoal, onSave }: {
             border: 'none', borderRadius: 14,
             color: canSave ? 'white' : 'var(--color-text-disabled)',
             fontSize: 15, fontWeight: 800, cursor: 'pointer',
-            boxShadow: canSave ? '0 4px 14px rgba(22,163,74,0.35)' : 'none',
+            boxShadow: canSave ? '0 4px 14px rgba(124, 58, 237,0.35)' : 'none',
             transition: 'all 200ms',
             marginTop: 4,
           }}

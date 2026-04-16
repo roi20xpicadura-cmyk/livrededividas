@@ -33,13 +33,13 @@ export default function SecuritySection() {
       <div className="max-w-[1100px] mx-auto">
         {/* Header */}
         <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#f0fdf4] border border-[#bbf7d0] mb-5">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#F5F3FF] border border-[#DDD6FE] mb-5">
             <span>🛡️</span>
-            <span className="text-[11px] font-extrabold tracking-[1.5px] uppercase text-[#166534]">Segurança & Privacidade</span>
+            <span className="text-[11px] font-extrabold tracking-[1.5px] uppercase text-[#5B21B6]">Segurança & Privacidade</span>
           </div>
           <h2 className="text-[clamp(28px,4vw,44px)] font-black tracking-[-0.03em] text-[#0f172a] mb-4 leading-[1.1]">
             Seus dados são seus.<br />
-            <span className="text-[#16a34a]">Sempre.</span>
+            <span className="text-[#7C3AED]">Sempre.</span>
           </h2>
           <p className="text-[15px] md:text-[16px] text-[#475569] max-w-[620px] mx-auto leading-[1.7]">
             Enquanto outros apps pedem sua senha do banco, o KoraFinance nunca precisa disso. Seus dados ficam com você.
@@ -48,7 +48,7 @@ export default function SecuritySection() {
 
         {/* Promise card */}
         <div className="relative rounded-[24px] bg-[#0a0f0a] p-8 md:p-10 mb-10 overflow-hidden">
-          <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#16a34a]/20 blur-3xl pointer-events-none" />
+          <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#7C3AED]/20 blur-3xl pointer-events-none" />
           <div className="relative">
             <div className="text-[11px] font-extrabold tracking-[2px] uppercase text-[#4ade80] mb-6">Nossa promessa</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -77,7 +77,7 @@ export default function SecuritySection() {
           <div className="grid grid-cols-[1.5fr_1fr_1fr] bg-[#f8fafc] border-b border-[#e2e8f0]">
             <div className="px-4 py-3 text-[11px] font-extrabold uppercase tracking-[1px] text-[#64748b]">Prática</div>
             <div className="px-4 py-3 text-[11px] font-extrabold uppercase tracking-[1px] text-[#64748b] text-center">Outros apps</div>
-            <div className="px-4 py-3 text-[11px] font-extrabold uppercase tracking-[1px] text-[#16a34a] text-center">⭐ KoraFinance</div>
+            <div className="px-4 py-3 text-[11px] font-extrabold uppercase tracking-[1px] text-[#7C3AED] text-center">⭐ KoraFinance</div>
           </div>
           {comparison.map((row, i) => (
             <div
@@ -96,11 +96,11 @@ export default function SecuritySection() {
               </div>
               <div className="px-4 py-3 text-center">
                 {row.others === 'bad' ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#f0fdf4] text-[#16a34a] text-[11px] font-bold">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#F5F3FF] text-[#7C3AED] text-[11px] font-bold">
                     <Check size={11} strokeWidth={3} /> Nunca
                   </span>
                 ) : (
-                  <Check size={16} className="inline text-[#16a34a]" strokeWidth={3} />
+                  <Check size={16} className="inline text-[#7C3AED]" strokeWidth={3} />
                 )}
               </div>
             </div>

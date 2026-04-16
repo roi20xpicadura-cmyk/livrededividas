@@ -29,7 +29,7 @@ export const ACHIEVEMENTS: Achievement[] = [
 export const LEVELS = [
   { name: 'Iniciante', minXP: 0, color: '#94a3b8' },
   { name: 'Aprendiz', minXP: 200, color: '#22c55e' },
-  { name: 'Organizado', minXP: 500, color: '#16a34a' },
+  { name: 'Organizado', minXP: 500, color: '#7C3AED' },
   { name: 'Controlado', minXP: 1000, color: '#2563eb' },
   { name: 'Avançado', minXP: 2000, color: '#7c3aed' },
   { name: 'Expert', minXP: 3500, color: '#d97706' },

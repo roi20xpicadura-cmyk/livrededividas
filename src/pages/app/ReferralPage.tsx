@@ -41,7 +41,7 @@ export default function ReferralPage() {
     <div className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
       <div className="px-4 py-5 md:p-7 pb-4 flex flex-col gap-4 md:gap-5 max-w-[800px] mx-auto">
         {/* Hero */}
-        <div className="rounded-2xl p-5 md:p-8 text-white relative overflow-hidden" style={{ background: '#16a34a' }}>
+        <div className="rounded-2xl p-5 md:p-8 text-white relative overflow-hidden" style={{ background: '#7C3AED' }}>
           <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10" style={{ background: 'white' }} />
           <div className="relative z-10">
             <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
@@ -53,7 +53,7 @@ export default function ReferralPage() {
             </p>
             <div className="mt-4 md:mt-5 rounded-lg p-2.5 md:p-3 flex items-center gap-2 md:gap-3" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)' }}>
               <code className="flex-1 text-[11px] md:text-sm font-mono truncate">{referralLink}</code>
-              <button onClick={handleCopy} className="px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-[12px] md:text-sm font-bold flex items-center gap-1 flex-shrink-0" style={{ background: 'white', color: '#16a34a' }}>
+              <button onClick={handleCopy} className="px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-[12px] md:text-sm font-bold flex items-center gap-1 flex-shrink-0" style={{ background: 'white', color: '#7C3AED' }}>
                 {copied ? <><Check className="w-3 h-3" /> Copiado!</> : <><Copy className="w-3 h-3" /> Copiar</>}
               </button>
             </div>
@@ -80,7 +80,7 @@ export default function ReferralPage() {
               { step: '3', emoji: '🎁', label: 'Você ganha 1 mês grátis automaticamente' },
             ].map(s => (
               <div key={s.step} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white" style={{ background: '#16a34a' }}>{s.step}</div>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white" style={{ background: '#7C3AED' }}>{s.step}</div>
                 <span className="text-lg mr-1">{s.emoji}</span>
                 <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{s.label}</span>
               </div>
@@ -95,7 +95,7 @@ export default function ReferralPage() {
             <p className="text-[9px] md:text-[10px] font-bold" style={{ color: 'var(--text-hint)' }}>INDICAÇÕES</p>
           </div>
           <div className="p-3 md:p-4 rounded-xl text-center" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <p className="text-lg md:text-2xl font-black" style={{ color: '#16a34a' }}>{subscribedCount}</p>
+            <p className="text-lg md:text-2xl font-black" style={{ color: '#7C3AED' }}>{subscribedCount}</p>
             <p className="text-[9px] md:text-[10px] font-bold" style={{ color: 'var(--text-hint)' }}>ASSINARAM</p>
           </div>
           <div className="p-3 md:p-4 rounded-xl text-center" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
@@ -117,8 +117,8 @@ export default function ReferralPage() {
                   <p className="text-[13px] font-bold truncate" style={{ color: 'var(--text-primary)' }}>{r.referred_email}</p>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{
-                      background: r.status === 'subscribed' ? '#f0fdf4' : r.status === 'registered' ? '#eff6ff' : 'var(--bg-elevated)',
-                      color: r.status === 'subscribed' ? '#16a34a' : r.status === 'registered' ? '#2563eb' : 'var(--text-hint)',
+                      background: r.status === 'subscribed' ? '#F5F3FF' : r.status === 'registered' ? '#eff6ff' : 'var(--bg-elevated)',
+                      color: r.status === 'subscribed' ? '#7C3AED' : r.status === 'registered' ? '#2563eb' : 'var(--text-hint)',
                     }}>{r.status === 'subscribed' ? 'Assinou ✓' : r.status === 'registered' ? 'Registrado' : 'Cadastrou'}</span>
                     <span className="text-[11px]" style={{ color: 'var(--text-hint)' }}>{format(new Date(r.created_at), 'dd/MM/yy')}</span>
                   </div>
@@ -141,12 +141,12 @@ export default function ReferralPage() {
                     <td className="px-5 py-3 text-sm" style={{ color: 'var(--text-primary)' }}>{r.referred_email}</td>
                     <td className="px-5 py-3">
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{
-                        background: r.status === 'subscribed' ? '#f0fdf4' : r.status === 'registered' ? '#eff6ff' : 'var(--bg-elevated)',
-                        color: r.status === 'subscribed' ? '#16a34a' : r.status === 'registered' ? '#2563eb' : 'var(--text-hint)',
+                        background: r.status === 'subscribed' ? '#F5F3FF' : r.status === 'registered' ? '#eff6ff' : 'var(--bg-elevated)',
+                        color: r.status === 'subscribed' ? '#7C3AED' : r.status === 'registered' ? '#2563eb' : 'var(--text-hint)',
                       }}>{r.status === 'subscribed' ? 'Assinou Pro ✓' : r.status === 'registered' ? 'Registrado' : 'Cadastrou'}</span>
                     </td>
                     <td className="px-5 py-3 text-xs" style={{ color: 'var(--text-hint)' }}>{format(new Date(r.created_at), 'dd/MM/yyyy')}</td>
-                    <td className="px-5 py-3 text-right text-xs font-bold" style={{ color: r.status === 'subscribed' ? '#16a34a' : 'var(--text-hint)' }}>
+                    <td className="px-5 py-3 text-right text-xs font-bold" style={{ color: r.status === 'subscribed' ? '#7C3AED' : 'var(--text-hint)' }}>
                       {r.status === 'subscribed' ? '1 mês grátis ✓' : '—'}
                     </td>
                   </tr>

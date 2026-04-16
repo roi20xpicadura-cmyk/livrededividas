@@ -31,7 +31,7 @@ const NETWORKS = [
   { val: 'hipercard', label: 'Hiper' },
   { val: 'other', label: 'Outra' },
 ];
-const CARD_COLORS = ['#16a34a','#14532d','#2563eb','#7c3aed','#dc2626','#d97706','#0f766e','#db2777','#374151','#0f172a'];
+const CARD_COLORS = ['#7C3AED','#1A0D35','#2563eb','#7c3aed','#dc2626','#d97706','#0f766e','#db2777','#374151','#0f172a'];
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 function getMonthYear(offset = 0) {
@@ -85,7 +85,7 @@ function VisualCard({ card, onClick, onDelete, scale = 1 }: {
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}
         className="w-full h-full rounded-[18px] relative overflow-hidden cursor-pointer select-none"
-        style={{ background: card.color || '#16a34a', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
+        style={{ background: card.color || '#7C3AED', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
         onClick={onClick}>
         {/* Decorative circles */}
         <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/[0.08]" />
@@ -157,7 +157,7 @@ function FormField({ label, value, onChange, placeholder, type = 'text', prefix,
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full h-[42px] border-[1.5px] border-border rounded-[9px] text-[13px] font-semibold focus:border-[#16a34a] outline-none ${prefix ? 'pl-8 pr-3' : 'px-3'}`}
+          className={`w-full h-[42px] border-[1.5px] border-border rounded-[9px] text-[13px] font-semibold focus:border-[#7C3AED] outline-none ${prefix ? 'pl-8 pr-3' : 'px-3'}`}
         />
       </div>
       {helper && <p className="text-[10px] text-muted-foreground mt-0.5">{helper}</p>}
@@ -187,7 +187,7 @@ export default function CardsPage() {
   const [fClosing, setFClosing] = useState('');
   const [fDue, setFDue] = useState('');
   const [fUsed, setFUsed] = useState('');
-  const [fColor, setFColor] = useState('#16a34a');
+  const [fColor, setFColor] = useState('#7C3AED');
   const [submitting, setSubmitting] = useState(false);
 
   // Pay bill modal
@@ -248,7 +248,7 @@ export default function CardsPage() {
 
   const resetForm = () => {
     setFName(''); setFNetwork('visa'); setFLastFour(''); setFLimit('');
-    setFClosing(''); setFDue(''); setFUsed(''); setFColor('#16a34a');
+    setFClosing(''); setFDue(''); setFUsed(''); setFColor('#7C3AED');
   };
 
   const handleSaveCard = async () => {
@@ -286,7 +286,7 @@ export default function CardsPage() {
     setFLastFour(c.last_four || ''); setFLimit(String(c.credit_limit));
     setFClosing(c.closing_day ? String(c.closing_day) : '');
     setFDue(c.due_day ? String(c.due_day) : '');
-    setFUsed(String(c.used_amount)); setFColor(c.color || '#16a34a');
+    setFUsed(String(c.used_amount)); setFColor(c.color || '#7C3AED');
     setShowForm(true);
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
   };
@@ -335,7 +335,7 @@ export default function CardsPage() {
     <div className="flex flex-col items-center gap-4 py-16 px-4 pb-4 text-center">
       {/* CSS card stack */}
       <div className="relative w-[200px] h-[120px] mb-2">
-        {[{ rot: -8, bg: '#cbd5e1', z: 1 }, { rot: -3, bg: '#94a3b8', z: 2 }, { rot: 0, bg: '#16a34a', z: 3 }].map((c, i) => (
+        {[{ rot: -8, bg: '#cbd5e1', z: 1 }, { rot: -3, bg: '#94a3b8', z: 2 }, { rot: 0, bg: '#7C3AED', z: 3 }].map((c, i) => (
           <div key={i} className="absolute inset-0 rounded-xl" style={{ background: c.bg, transform: `rotate(${c.rot}deg)`, zIndex: c.z, width: 160, height: 96, left: 20, top: 12 }} />
         ))}
       </div>
@@ -347,7 +347,7 @@ export default function CardsPage() {
         <span>✓ Controle de limite</span><span>✓ Alertas de vencimento</span><span>✓ Histórico de faturas</span>
       </div>
       <button onClick={scrollToForm}
-        className="bg-[#16a34a] text-white font-extrabold text-[14px] px-6 py-3 rounded-[10px] hover:bg-[#14532d] transition-colors mt-2">
+        className="bg-[#7C3AED] text-white font-extrabold text-[14px] px-6 py-3 rounded-[10px] hover:bg-[#1A0D35] transition-colors mt-2">
         + Cadastrar meu primeiro cartão
       </button>
       {/* Form still available below */}
@@ -372,7 +372,7 @@ export default function CardsPage() {
                   {NETWORKS.map(n => (
                     <button key={n.val} onClick={() => setFNetwork(n.val)}
                       className={`w-[70px] py-2 rounded-lg border-[1.5px] text-[12px] font-bold text-center transition-all ${
-                        fNetwork === n.val ? 'border-[#16a34a] bg-secondary text-[#16a34a]' : 'border-border text-muted-foreground hover:border-[#d4edda]'
+                        fNetwork === n.val ? 'border-[#7C3AED] bg-secondary text-[#7C3AED]' : 'border-border text-muted-foreground hover:border-[#d4edda]'
                       }`}>{n.label}</button>
                   ))}
                 </div>
@@ -392,7 +392,7 @@ export default function CardsPage() {
                 <div className="flex gap-2">
                   {CARD_COLORS.map(c => (
                     <button key={c} onClick={() => setFColor(c)}
-                      className={`w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${fColor === c ? 'border-[#14532d] scale-110' : 'border-transparent'}`}
+                      className={`w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${fColor === c ? 'border-[#1A0D35] scale-110' : 'border-transparent'}`}
                       style={{ background: c }}>
                       {fColor === c && <Check className="w-3 h-3 text-white" />}
                     </button>
@@ -401,7 +401,7 @@ export default function CardsPage() {
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={handleSaveCard} disabled={submitting || !fName || !fLimit}
-                  className="bg-[#16a34a] text-white font-extrabold text-[13px] px-5 py-2.5 rounded-[9px] hover:bg-[#14532d] disabled:opacity-50 transition-all">
+                  className="bg-[#7C3AED] text-white font-extrabold text-[13px] px-5 py-2.5 rounded-[9px] hover:bg-[#1A0D35] disabled:opacity-50 transition-all">
                   {submitting ? 'Salvando...' : editCard ? 'Salvar alterações' : 'Salvar Cartão'}
                 </button>
                 <button onClick={() => { setShowForm(false); setEditCard(null); resetForm(); }}
@@ -441,15 +441,15 @@ export default function CardsPage() {
       {/* ═══ 1. STATS ═══ */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { icon: CreditCard, bg: '#f0fdf4', ic: '#16a34a', label: 'Limite Total', value: fmt(totalLimit), sub: `em ${cards.length} cartões`, color: '#16a34a' },
-          { icon: TrendingUp, bg: '#fee2e2', ic: '#dc2626', label: 'Total Utilizado', value: fmt(totalUsed), sub: `${utilPct.toFixed(0)}% do limite`, color: utilPct > 50 ? '#dc2626' : utilPct > 30 ? '#d97706' : '#16a34a' },
+          { icon: CreditCard, bg: '#F5F3FF', ic: '#7C3AED', label: 'Limite Total', value: fmt(totalLimit), sub: `em ${cards.length} cartões`, color: '#7C3AED' },
+          { icon: TrendingUp, bg: '#fee2e2', ic: '#dc2626', label: 'Total Utilizado', value: fmt(totalUsed), sub: `${utilPct.toFixed(0)}% do limite`, color: utilPct > 50 ? '#dc2626' : utilPct > 30 ? '#d97706' : '#7C3AED' },
           { icon: Wallet, bg: '#eff6ff', ic: '#2563eb', label: 'Disponível', value: fmt(totalAvailable), sub: 'crédito disponível', color: '#2563eb' },
           { icon: Calendar, bg: '#fffbeb', ic: '#d97706', label: 'Próximo Vencimento',
             value: nearestDue ? (nearestDue.days === 0 ? 'Hoje!' : nearestDue.days === 1 ? 'Amanhã' : `Em ${nearestDue.days} dias`) : '-',
             sub: nearestDue ? (nearestDue.card as Card).name : '-',
             color: nearestDue && nearestDue.days <= 1 ? '#dc2626' : nearestDue && nearestDue.days <= 3 ? '#d97706' : '#2563eb' },
         ].map((c, i) => (
-          <div key={i} className={`bg-card border-[1.5px] border-border rounded-xl p-4 flex items-center gap-3.5 hover:border-[#86efac] transition-colors ${
+          <div key={i} className={`bg-card border-[1.5px] border-border rounded-xl p-4 flex items-center gap-3.5 hover:border-[#C4B5FD] transition-colors ${
             i === 3 && nearestDue && nearestDue.days <= 3 ? 'border-[#d97706]' : ''
           }`}>
             <div className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: c.bg }}>
@@ -468,7 +468,7 @@ export default function CardsPage() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-[15px] font-black text-foreground">Meus Cartões</h3>
-          <button onClick={scrollToForm} className="text-[12px] font-bold text-[#16a34a] hover:underline">+ Adicionar cartão</button>
+          <button onClick={scrollToForm} className="text-[12px] font-bold text-[#7C3AED] hover:underline">+ Adicionar cartão</button>
         </div>
         <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-hide">
           {cards.map(c => (
@@ -476,9 +476,9 @@ export default function CardsPage() {
           ))}
           {/* Add placeholder */}
           <div onClick={scrollToForm}
-            className="flex-shrink-0 w-[300px] h-[178px] rounded-[18px] border-2 border-dashed border-[#d4edda] bg-card flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-secondary hover:border-[#16a34a] transition-all">
-            <PlusCircle className="w-8 h-8 text-[#86efac]" />
-            <span className="text-[13px] text-[#16a34a] font-bold">Adicionar cartão</span>
+            className="flex-shrink-0 w-[300px] h-[178px] rounded-[18px] border-2 border-dashed border-[#d4edda] bg-card flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-secondary hover:border-[#7C3AED] transition-all">
+            <PlusCircle className="w-8 h-8 text-[#C4B5FD]" />
+            <span className="text-[13px] text-[#7C3AED] font-bold">Adicionar cartão</span>
           </div>
         </div>
       </div>
@@ -489,7 +489,7 @@ export default function CardsPage() {
           <button onClick={() => { resetForm(); setEditCard(null); setShowForm(true); }}
             className="w-full bg-card border-[1.5px] border-border rounded-2xl px-5 py-4 flex items-center justify-between hover:bg-[#fafafa] transition-colors">
             <div className="flex items-center gap-2">
-              <PlusCircle className="w-4 h-4 text-[#16a34a]" />
+              <PlusCircle className="w-4 h-4 text-[#7C3AED]" />
               <span className="text-[14px] font-extrabold text-foreground">{editCard ? 'Editar Cartão' : '+ Novo Cartão'}</span>
             </div>
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
@@ -511,7 +511,7 @@ export default function CardsPage() {
         </div>
         {cards.map(c => {
           const u = c.credit_limit > 0 ? (c.used_amount / c.credit_limit) * 100 : 0;
-          const uColor = u < 30 ? '#16a34a' : u < 70 ? '#d97706' : '#dc2626';
+          const uColor = u < 30 ? '#7C3AED' : u < 70 ? '#d97706' : '#dc2626';
           const days = daysUntilDue(c.due_day);
           return (
             <div key={c.id} className="grid grid-cols-2 md:grid-cols-8 gap-2 px-5 py-3.5 border-b border-border/30 items-center hover:bg-accent/50 transition-colors"
@@ -529,7 +529,7 @@ export default function CardsPage() {
                 {editingUsed === c.id ? (
                   <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={editUsedVal} onChange={e => setEditUsedVal(e.target.value)}
                     onBlur={() => handleInlineUsedSave(c.id)} onKeyDown={e => e.key === 'Enter' && handleInlineUsedSave(c.id)}
-                    className="w-24 h-7 border border-[#16a34a] rounded px-2 text-[13px] font-bold outline-none" autoFocus />
+                    className="w-24 h-7 border border-[#7C3AED] rounded px-2 text-[13px] font-bold outline-none" autoFocus />
                 ) : (
                   <>
                     <span className="text-[13px] font-bold" style={{ color: uColor }}>{fmt(c.used_amount)}</span>
@@ -539,7 +539,7 @@ export default function CardsPage() {
                 )}
               </div>
               {/* Available */}
-              <span className="text-[13px] font-bold text-[#16a34a] hidden md:block">{fmt(c.credit_limit - c.used_amount)}</span>
+              <span className="text-[13px] font-bold text-[#7C3AED] hidden md:block">{fmt(c.credit_limit - c.used_amount)}</span>
               {/* Utilization bar */}
               <div className="hidden md:block">
                 <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden">
@@ -561,7 +561,7 @@ export default function CardsPage() {
               {/* Actions */}
               <div className="flex items-center gap-1.5 justify-end md:justify-start">
                 <button onClick={() => { setPayBillCard(c); setPayOption('total'); setPayCustom(''); setPayDate(new Date().toISOString().split('T')[0]); }}
-                  className="text-[11px] font-bold text-[#166534] bg-secondary border border-[#d4edda] px-2.5 py-1 rounded-[7px] hover:bg-[#dcfce7] transition-colors">
+                  className="text-[11px] font-bold text-[#5B21B6] bg-secondary border border-[#d4edda] px-2.5 py-1 rounded-[7px] hover:bg-[#EDE9FE] transition-colors">
                   Pagar
                 </button>
                 <button onClick={() => handleEditCard(c)} className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-secondary transition-colors">
@@ -611,13 +611,13 @@ export default function CardsPage() {
               </div>
               <div className="flex items-center gap-2">
                 {bill?.paid ? (
-                  <span className="text-[11px] font-bold text-[#16a34a] bg-[#dcfce7] px-2.5 py-1 rounded-md">✓ Paga</span>
+                  <span className="text-[11px] font-bold text-[#7C3AED] bg-[#EDE9FE] px-2.5 py-1 rounded-md">✓ Paga</span>
                 ) : (
                   <>
                     <span className="text-[11px] font-bold text-[#d97706] bg-[#fffbeb] px-2.5 py-1 rounded-md">Em aberto</span>
                     {amount > 0 && (
                       <button onClick={() => { setPayBillCard(c); setPayOption('total'); }}
-                        className="text-[11px] font-bold text-[#166534] bg-secondary border border-[#d4edda] px-2.5 py-1 rounded-[7px] hover:bg-[#dcfce7] transition-colors">
+                        className="text-[11px] font-bold text-[#5B21B6] bg-secondary border border-[#d4edda] px-2.5 py-1 rounded-[7px] hover:bg-[#EDE9FE] transition-colors">
                         Pagar {fmt(amount)}
                       </button>
                     )}
@@ -708,10 +708,10 @@ export default function CardsPage() {
                   ].map(o => (
                     <button key={o.key} onClick={() => setPayOption(o.key)}
                       className={`w-full text-left px-4 py-3 rounded-xl border-[1.5px] transition-all ${
-                        payOption === o.key ? (o.rec ? 'border-[#16a34a] bg-secondary' : 'border-[#d97706] bg-[#fffbeb]') : 'border-border hover:border-[#d4edda]'
+                        payOption === o.key ? (o.rec ? 'border-[#7C3AED] bg-secondary' : 'border-[#d97706] bg-[#fffbeb]') : 'border-border hover:border-[#d4edda]'
                       }`}>
                       <span className="text-[13px] font-bold text-foreground">{o.label}</span>
-                      {o.rec && <span className="ml-2 text-[10px] font-bold text-[#16a34a] bg-[#dcfce7] px-1.5 py-[1px] rounded">Recomendado</span>}
+                      {o.rec && <span className="ml-2 text-[10px] font-bold text-[#7C3AED] bg-[#EDE9FE] px-1.5 py-[1px] rounded">Recomendado</span>}
                     </button>
                   ))}
                 </div>
@@ -729,7 +729,7 @@ export default function CardsPage() {
                   <FormField label="Data do pagamento" value={payDate} onChange={setPayDate} type="date" />
                 </div>
                 <button onClick={handlePayBill}
-                  className="w-full bg-[#16a34a] text-white font-extrabold text-[14px] py-3 rounded-xl hover:bg-[#14532d] transition-all">
+                  className="w-full bg-[#7C3AED] text-white font-extrabold text-[14px] py-3 rounded-xl hover:bg-[#1A0D35] transition-all">
                   Confirmar pagamento
                 </button>
               </div>

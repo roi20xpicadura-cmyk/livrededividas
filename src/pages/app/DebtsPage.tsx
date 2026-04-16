@@ -243,7 +243,7 @@ export default function DebtsPage() {
     setPaySubmitting(false);
     if (payRes.error || updRes.error) { toast.error('Erro ao registrar pagamento'); return; }
     if (newStatus === 'paid') {
-      confetti({ particleCount: 200, spread: 90, colors: ['#16a34a', '#22c55e', '#d97706', '#ffffff'] });
+      confetti({ particleCount: 200, spread: 90, colors: ['#7C3AED', '#22c55e', '#d97706', '#ffffff'] });
       toast.success(`🏆 ${paymentModal.name} quitada!`, { duration: 4000 });
     } else {
       toast.success(`✓ Pagamento de ${fmt(amount)} registrado!`);
@@ -258,7 +258,7 @@ export default function DebtsPage() {
   };
 
   const handleStatusChange = async (id: string, status: string) => {
-    if (status === 'paid') confetti({ particleCount: 200, spread: 90, colors: ['#16a34a', '#22c55e', '#d97706', '#ffffff'] });
+    if (status === 'paid') confetti({ particleCount: 200, spread: 90, colors: ['#7C3AED', '#22c55e', '#d97706', '#ffffff'] });
     await supabase.from('debts').update({ status }).eq('id', id);
     toast.success(status === 'paid' ? '🏆 Dívida quitada!' : status === 'paused' ? 'Dívida pausada' : 'Dívida reativada');
     fetchData();
@@ -278,7 +278,7 @@ export default function DebtsPage() {
   if (debts.length === 0) {
     return (
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '40px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 20, minHeight: '70vh' }}>
-        <div style={{ width: 80, height: 80, borderRadius: 24, background: 'linear-gradient(135deg, var(--success-bg), rgba(34,197,94,0.12))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>🛡️</div>
+        <div style={{ width: 80, height: 80, borderRadius: 24, background: 'linear-gradient(135deg, var(--success-bg), rgba(139, 92, 246,0.12))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>🛡️</div>
         <div>
           <h2 style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text-strong)', letterSpacing: '-0.03em', marginBottom: 8 }}>Sem dívidas cadastradas</h2>
           <p style={{ fontSize: 14, color: 'var(--color-text-muted)', lineHeight: 1.6, maxWidth: 280, margin: '0 auto' }}>
@@ -352,7 +352,7 @@ export default function DebtsPage() {
   const heroColors = {
     critical: { bg: '#1a0505', border: 'rgba(239,68,68,0.25)', accent: '#f87171' },
     high:     { bg: '#1a0a05', border: 'rgba(245,158,11,0.25)', accent: '#fbbf24' },
-    medium:   { bg: '#0a1205', border: 'rgba(22,163,74,0.25)',  accent: '#4ade80' },
+    medium:   { bg: '#0a1205', border: 'rgba(124, 58, 237,0.25)',  accent: '#4ade80' },
   };
   const hc = heroColors[severity];
 
@@ -402,7 +402,7 @@ export default function DebtsPage() {
   const nextAction = getNextAction();
 
   const actionBg: Record<string, string> = { critical: '#1a0505', warning: '#1a1005', active: '#051205' };
-  const actionBorder: Record<string, string> = { critical: 'rgba(239,68,68,0.25)', warning: 'rgba(245,158,11,0.25)', active: 'rgba(22,163,74,0.25)' };
+  const actionBorder: Record<string, string> = { critical: 'rgba(239,68,68,0.25)', warning: 'rgba(245,158,11,0.25)', active: 'rgba(124, 58, 237,0.25)' };
   const actionColor: Record<string, string> = { critical: '#f87171', warning: '#fbbf24', active: '#4ade80' };
 
   return (
@@ -422,7 +422,7 @@ export default function DebtsPage() {
 
       {/* ── 1. Hero Status Card ── */}
       <div style={{
-        margin: '12px 16px 0', background: 'linear-gradient(135deg, #0a1f10, #061409)', border: '1.5px solid rgba(22,163,74,0.25)',
+        margin: '12px 16px 0', background: 'linear-gradient(135deg, #160B28, #0F0520)', border: '1.5px solid rgba(124, 58, 237,0.25)',
         borderRadius: 20, padding: 20, position: 'relative', overflow: 'hidden',
         boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
       }}>
@@ -471,7 +471,7 @@ export default function DebtsPage() {
               </div>
             )}
             <motion.button whileTap={{ scale: 0.97 }} onClick={nextAction.action}
-              style={{ width: '100%', height: 44, background: '#22c55e', border: 'none', borderRadius: 11, color: '#000000', fontSize: 14, fontWeight: 800, cursor: 'pointer', boxShadow: '0 3px 12px rgba(34,197,94,0.4)' }}>
+              style={{ width: '100%', height: 44, background: '#22c55e', border: 'none', borderRadius: 11, color: '#000000', fontSize: 14, fontWeight: 800, cursor: 'pointer', boxShadow: '0 3px 12px rgba(139, 92, 246,0.4)' }}>
               {nextAction.cta}
             </motion.button>
           </div>
@@ -559,8 +559,8 @@ export default function DebtsPage() {
             </button>
           </div>
         ) : (
-          <div style={{ background: 'linear-gradient(135deg, #0D2818, #061409)', borderRadius: 18, padding: 20, position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, borderRadius: '50%', background: 'rgba(22,163,74,0.15)', filter: 'blur(30px)', pointerEvents: 'none' }} />
+          <div style={{ background: 'linear-gradient(135deg, #1A0D35, #0F0520)', borderRadius: 18, padding: 20, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, borderRadius: '50%', background: 'rgba(124, 58, 237,0.15)', filter: 'blur(30px)', pointerEvents: 'none' }} />
             <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>🎯 Projeção de liberdade</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
               <div>
@@ -802,7 +802,7 @@ function DebtCard({ debt, isPriority, rank, onPay, onEdit, onDelete, onStatusCha
 
               {/* Simulator shortcut */}
               <div onClick={onSimulate} style={{
-                padding: '10px 12px', background: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.15)',
+                padding: '10px 12px', background: 'rgba(124, 58, 237,0.06)', border: '1px solid rgba(124, 58, 237,0.15)',
                 borderRadius: 10, fontSize: 12, color: 'var(--success-text)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
               }}>
                 <Sparkles size={12} />

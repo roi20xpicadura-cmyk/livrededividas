@@ -39,7 +39,7 @@ export default function PrivacidadePage() {
               transition={{ delay: i * 0.06 }}
               className="flex gap-4 p-6 rounded-2xl border border-[#e2e8f0] bg-white"
             >
-              <div className="w-12 h-12 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-2xl flex-shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-[#F5F3FF] flex items-center justify-center text-2xl flex-shrink-0">
                 {s.emoji}
               </div>
               <div>
@@ -53,7 +53,7 @@ export default function PrivacidadePage() {
         <div className="mt-12 p-6 rounded-2xl bg-[#f8fafc] border border-[#e2e8f0] text-center">
           <p className="text-[14px] text-[#475569] mb-2">
             Dúvidas sobre privacidade?{' '}
-            <a href="mailto:privacidade@korafinance.com.br" className="text-[#16a34a] font-semibold underline">
+            <a href="mailto:privacidade@korafinance.com.br" className="text-[#7C3AED] font-semibold underline">
               privacidade@korafinance.com.br
             </a>
           </p>

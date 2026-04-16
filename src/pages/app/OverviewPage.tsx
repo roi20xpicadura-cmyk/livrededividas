@@ -28,14 +28,14 @@ const LazyChart = lazy(() => import('recharts').then(m => ({
       <m.AreaChart data={data} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
         <defs>
           <linearGradient id="balanceGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#16a34a" stopOpacity={0.2} />
-            <stop offset="100%" stopColor="#16a34a" stopOpacity={0} />
+            <stop offset="0%" stopColor="#7C3AED" stopOpacity={0.2} />
+            <stop offset="100%" stopColor="#7C3AED" stopOpacity={0} />
           </linearGradient>
         </defs>
         <m.XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--color-text-subtle)' }} interval="preserveStartEnd" />
         <m.YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickCount={4} tickFormatter={(v: number) => v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(0)}k` : `${v}`} />
         <m.Tooltip contentStyle={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-base)', borderRadius: 10, fontSize: 12, fontWeight: 700 }} formatter={(v: number) => [formatCurrency(v, 'R$'), 'Saldo']} />
-        <m.Area type="monotone" dataKey="saldo" stroke="#16a34a" strokeWidth={2.5} fill="url(#balanceGrad)" dot={false} connectNulls={false} activeDot={{ r: 5, fill: '#16a34a', stroke: 'white', strokeWidth: 2 }} />
+        <m.Area type="monotone" dataKey="saldo" stroke="#7C3AED" strokeWidth={2.5} fill="url(#balanceGrad)" dot={false} connectNulls={false} activeDot={{ r: 5, fill: '#7C3AED', stroke: 'white', strokeWidth: 2 }} />
       </m.AreaChart>
     </m.ResponsiveContainer>
   )
@@ -342,10 +342,10 @@ export default function OverviewPage() {
       <motion.div {...stagger(1)} className="p-5 md:p-6" style={{
         background: 'linear-gradient(145deg, #0f2b1a 0%, #0a1f12 40%, #071a0d 100%)',
         borderRadius: 22, position: 'relative', overflow: 'hidden',
-        border: '1px solid rgba(34,197,94,0.12)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px rgba(34,197,94,0.06), inset 0 1px 0 rgba(255,255,255,0.04)',
+        border: '1px solid rgba(139, 92, 246,0.12)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px rgba(139, 92, 246,0.06), inset 0 1px 0 rgba(255,255,255,0.04)',
       }}>
-        <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 70%)' }} />
+        <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139, 92, 246,0.08) 0%, transparent 70%)' }} />
 
         <div className="flex items-center justify-between" style={{ marginBottom: 16, position: 'relative' }}>
           <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
@@ -365,9 +365,9 @@ export default function OverviewPage() {
               </div>
               <div className="flex items-center gap-1" style={{ marginTop: 8 }}>
                 {heroBalance >= 0
-                  ? <TrendingUp size={13} color="#86efac" />
+                  ? <TrendingUp size={13} color="#C4B5FD" />
                   : <TrendingDown size={13} color="#fca5a5" />}
-                <span style={{ fontSize: 13, color: heroBalance >= 0 ? '#86efac' : '#fca5a5', fontWeight: 600 }}>
+                <span style={{ fontSize: 13, color: heroBalance >= 0 ? '#C4B5FD' : '#fca5a5', fontWeight: 600 }}>
                   vs mês anterior
                 </span>
               </div>
@@ -381,7 +381,7 @@ export default function OverviewPage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1px 1fr', background: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px 16px', position: 'relative' }}>
           <div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Receitas</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#bbf7d0', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#DDD6FE', fontVariantNumeric: 'tabular-nums' }}>
               {showValues ? formatCurrency(heroIncome, currency) : '••••'}
             </div>
           </div>
@@ -528,7 +528,7 @@ export default function OverviewPage() {
             {activeGoals.slice(0, 4).map(goal => {
               const pct = Math.min(100, (Number(goal.current_amount || 0) / Number(goal.target_amount)) * 100);
               const obj = OBJECTIVES.find(o => o.key === goal.objective_type);
-              const barColor = pct >= 75 ? '#16a34a' : pct >= 40 ? '#f59e0b' : '#ef4444';
+              const barColor = pct >= 75 ? '#7C3AED' : pct >= 40 ? '#f59e0b' : '#ef4444';
               const emoji = obj?.emoji || getGoalEmoji(goal.name);
               return (
                 <motion.div key={goal.id} whileTap={{ scale: 0.97 }} onClick={() => navigate('/app/goals')}

@@ -134,7 +134,7 @@ export default function BudgetPage() {
     if (pct >= 100) return '#dc2626';
     if (pct >= 80) return '#f97316';
     if (pct >= 50) return '#d97706';
-    return '#16a34a';
+    return '#7C3AED';
   };
 
   const getCatEmoji = (cat: string) => {
@@ -163,7 +163,7 @@ export default function BudgetPage() {
               <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
             </button>
           </div>
-          <button onClick={openSetup} className="px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: '#16a34a' }}>
+          <button onClick={openSetup} className="px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: '#7C3AED' }}>
             Configurar Orçamento
           </button>
         </div>
@@ -172,8 +172,8 @@ export default function BudgetPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             { label: 'Orçamento Total', value: formatCurrency(totalBudget), Icon: DollarSign, iconBg: '#eff6ff', iconColor: '#2563eb', valColor: '#2563eb' },
-            { label: 'Total Gasto', value: formatCurrency(totalSpent), Icon: TrendingUp, iconBg: totalSpent > totalBudget ? '#fee2e2' : '#f0fdf4', iconColor: totalSpent > totalBudget ? '#dc2626' : '#16a34a', valColor: totalSpent > totalBudget ? '#dc2626' : '#16a34a' },
-            { label: 'Disponível', value: formatCurrency(Math.max(0, totalBudget - totalSpent)), Icon: PieChart, iconBg: '#f0fdf4', iconColor: '#16a34a', valColor: '#16a34a' },
+            { label: 'Total Gasto', value: formatCurrency(totalSpent), Icon: TrendingUp, iconBg: totalSpent > totalBudget ? '#fee2e2' : '#F5F3FF', iconColor: totalSpent > totalBudget ? '#dc2626' : '#7C3AED', valColor: totalSpent > totalBudget ? '#dc2626' : '#7C3AED' },
+            { label: 'Disponível', value: formatCurrency(Math.max(0, totalBudget - totalSpent)), Icon: PieChart, iconBg: '#F5F3FF', iconColor: '#7C3AED', valColor: '#7C3AED' },
             { label: 'No Limite', value: String(overBudgetCount), Icon: AlertCircle, iconBg: overBudgetCount > 0 ? '#fee2e2' : 'var(--bg-elevated)', iconColor: overBudgetCount > 0 ? '#dc2626' : '#64748b', valColor: overBudgetCount > 0 ? '#dc2626' : 'var(--text-primary)' },
           ].map((s, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
@@ -201,7 +201,7 @@ export default function BudgetPage() {
                     <span className="text-sm font-extrabold" style={{ color: 'var(--text-primary)' }}>{b.category}</span>
                   </div>
                   <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{
-                    background: b.pct >= 100 ? '#fee2e2' : b.pct >= 80 ? '#fff7ed' : b.pct >= 50 ? '#fffbeb' : '#f0fdf4',
+                    background: b.pct >= 100 ? '#fee2e2' : b.pct >= 80 ? '#fff7ed' : b.pct >= 50 ? '#fffbeb' : '#F5F3FF',
                     color: getBarColor(b.pct),
                   }}>{b.pct.toFixed(0)}%</span>
                 </div>
@@ -213,7 +213,7 @@ export default function BudgetPage() {
                     transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
                     className="h-full rounded-full" style={{ background: getBarColor(b.pct) }} />
                 </div>
-                <p className="text-xs font-semibold mt-2" style={{ color: b.pct >= 100 ? '#dc2626' : b.pct >= 80 ? '#d97706' : '#16a34a' }}>
+                <p className="text-xs font-semibold mt-2" style={{ color: b.pct >= 100 ? '#dc2626' : b.pct >= 80 ? '#d97706' : '#7C3AED' }}>
                   {b.pct >= 100 ? `🚨 Limite ultrapassado em ${formatCurrency(b.spent - Number(b.limit_amount))}` :
                    b.pct >= 80 ? `⚠️ Atenção: ${formatCurrency(Number(b.limit_amount) - b.spent)} restantes` :
                    `${formatCurrency(Number(b.limit_amount) - b.spent)} disponíveis`}
@@ -223,7 +223,7 @@ export default function BudgetPage() {
           </div>
         ) : (
           <div className="text-center py-16 rounded-2xl" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <PieChart className="w-12 h-12 mx-auto mb-3" style={{ color: '#86efac' }} />
+            <PieChart className="w-12 h-12 mx-auto mb-3" style={{ color: '#C4B5FD' }} />
             <p className="text-lg font-extrabold" style={{ color: 'var(--text-primary)' }}>Nenhum orçamento definido</p>
             <p className="text-sm mt-1 max-w-xs mx-auto" style={{ color: 'var(--text-secondary)' }}>Configure limites para cada categoria e controle seus gastos.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-4">
@@ -233,7 +233,7 @@ export default function BudgetPage() {
               <button onClick={handleUseAverage} className="px-4 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1.5px solid var(--border-default)', color: 'var(--text-primary)', background: 'var(--bg-surface)' }}>
                 📊 Usar média histórica
               </button>
-              <button onClick={openSetup} className="px-5 py-2.5 rounded-lg text-sm font-bold text-white" style={{ background: '#16a34a' }}>
+              <button onClick={openSetup} className="px-5 py-2.5 rounded-lg text-sm font-bold text-white" style={{ background: '#7C3AED' }}>
                 ✏️ Configurar manualmente
               </button>
             </div>
@@ -254,7 +254,7 @@ export default function BudgetPage() {
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-bold" style={{ color: '#dc2626' }}>{formatCurrency(u.amount)} gasto</span>
                     <button onClick={() => { setBudgetInputs(prev => ({ ...prev, [u.category]: '' })); setShowSetup(true); }}
-                      className="text-xs font-bold px-3 py-1 rounded-lg" style={{ color: '#16a34a', border: '1px solid #d4edda' }}>
+                      className="text-xs font-bold px-3 py-1 rounded-lg" style={{ color: '#7C3AED', border: '1px solid #d4edda' }}>
                       Definir limite →
                     </button>
                   </div>
@@ -275,10 +275,10 @@ export default function BudgetPage() {
                   <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 12, fill: 'var(--text-secondary)' }} />
                   <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 8 }} />
                   <Legend />
-                  <Bar dataKey="Orçamento" fill="#86efac" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="Orçamento" fill="#C4B5FD" radius={[0, 4, 4, 0]} />
                   <Bar dataKey="Gasto" radius={[0, 4, 4, 0]}>
                     {chartData.map((entry, idx) => (
-                      <Cell key={idx} fill={entry.Gasto > entry.Orçamento ? '#dc2626' : '#16a34a'} />
+                      <Cell key={idx} fill={entry.Gasto > entry.Orçamento ? '#dc2626' : '#7C3AED'} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -316,7 +316,7 @@ export default function BudgetPage() {
                     </div>
                   ))}
                 </div>
-                <button onClick={handleSaveBudgets} className="w-full mt-4 py-2.5 rounded-lg text-sm font-bold text-white" style={{ background: '#16a34a' }}>
+                <button onClick={handleSaveBudgets} className="w-full mt-4 py-2.5 rounded-lg text-sm font-bold text-white" style={{ background: '#7C3AED' }}>
                   Salvar Orçamento
                 </button>
               </motion.div>

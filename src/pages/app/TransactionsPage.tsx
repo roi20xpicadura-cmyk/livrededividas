@@ -186,7 +186,7 @@ export default function TransactionsPage() {
               display: 'flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px',
               background: 'var(--color-green-600)', border: 'none', borderRadius: 10,
               color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(22,163,74,0.3)',
+              boxShadow: '0 2px 8px rgba(124, 58, 237,0.3)',
             }}>
             <Plus style={{ width: 14, height: 14 }} /> Novo
           </motion.button>
@@ -211,9 +211,9 @@ export default function TransactionsPage() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
           {[
-            { label: 'Receitas', value: totals.inc, color: '#16a34a', prefix: '' },
+            { label: 'Receitas', value: totals.inc, color: '#7C3AED', prefix: '' },
             { label: 'Despesas', value: totals.exp, color: '#dc2626', prefix: '' },
-            { label: 'Saldo', value: Math.abs(balance), color: balance >= 0 ? '#16a34a' : '#dc2626', prefix: balance < 0 ? '-' : '' },
+            { label: 'Saldo', value: Math.abs(balance), color: balance >= 0 ? '#7C3AED' : '#dc2626', prefix: balance < 0 ? '-' : '' },
           ].map((s, i) => (
             <div key={i} style={{ padding: '0 12px', borderLeft: i > 0 ? '0.5px solid var(--color-border-weak)' : 'none' }}>
               <div style={{
@@ -241,7 +241,7 @@ export default function TransactionsPage() {
             onClick={() => { setFilter(f.id); setPage(1); }}
             style={{
               height: 32, padding: '0 14px', borderRadius: 99,
-              border: `1.5px solid ${filter === f.id ? '#16a34a' : 'var(--color-border-base)'}`,
+              border: `1.5px solid ${filter === f.id ? '#7C3AED' : 'var(--color-border-base)'}`,
               background: filter === f.id ? 'var(--color-success-bg)' : 'var(--color-bg-surface)',
               fontSize: 13, fontWeight: filter === f.id ? 700 : 500,
               color: filter === f.id ? 'var(--color-success-text)' : 'var(--color-text-muted)',
@@ -296,7 +296,7 @@ export default function TransactionsPage() {
                 height: 44, padding: '0 24px', background: 'var(--color-green-600)',
                 border: 'none', borderRadius: 12, color: 'white',
                 fontSize: 14, fontWeight: 800, cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(22,163,74,0.3)',
+                boxShadow: '0 4px 14px rgba(124, 58, 237,0.3)',
               }}>
               + Novo lançamento
             </motion.button>
@@ -328,7 +328,7 @@ export default function TransactionsPage() {
                   </span>
                   <span style={{
                     fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)',
-                    color: dayTotal >= 0 ? '#16a34a' : '#dc2626',
+                    color: dayTotal >= 0 ? '#7C3AED' : '#dc2626',
                   }}>
                     {dayTotal >= 0 ? '+' : ''}R$ {formatBRL(dayTotal)}
                   </span>
@@ -405,7 +405,7 @@ export default function TransactionsPage() {
                         <div style={{
                           fontSize: 15, fontWeight: 800, fontFamily: 'var(--font-mono)',
                           letterSpacing: '-0.02em',
-                          color: tx.type === 'income' ? '#16a34a' : 'var(--color-text-strong)',
+                          color: tx.type === 'income' ? '#7C3AED' : 'var(--color-text-strong)',
                           flexShrink: 0,
                         }}>
                           {tx.type === 'income' ? '+' : '-'}R$ {formatBRL(Number(tx.amount))}
