@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X, Loader2, CheckCircle2, MessageSquare, Trash2, RotateCcw, ArrowUp, ChevronLeft, ChevronRight, ArrowDown, ArrowUpIcon, Target, CreditCard } from 'lucide-react';
+import {
+  Sparkles, X, Loader2, CheckCircle2, MessageSquare, Trash2, RotateCcw,
+  ArrowUp, ChevronLeft, ChevronRight, ArrowDown, ArrowUpIcon, Target,
+  CreditCard, Send, Clock, Bot, Lock
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -9,9 +13,9 @@ type Msg = { role: 'user' | 'assistant'; content: string; ts: Date; actions?: st
 type Conversation = { id: string; title: string; updated_at: string };
 
 const QUICK_QUESTIONS = [
-  { icon: '📊', q: 'Como estão minhas finanças?', sub: 'Resumo completo do mês atual', bg: '#eff6ff' },
-  { icon: '🎯', q: 'Estou no caminho da minha meta?', sub: 'Análise de progresso e prazo', bg: '#f5f3ff' },
-  { icon: '💡', q: 'Onde posso economizar?', sub: 'Identificar gastos desnecessários', bg: '#fffbeb' },
+  { icon: '📊', q: 'Como estão minhas finanças?', sub: 'Resumo completo do mês atual', gradient: 'linear-gradient(135deg, #dbeafe, #eff6ff)' },
+  { icon: '🎯', q: 'Estou no caminho da minha meta?', sub: 'Análise de progresso e prazo', gradient: 'linear-gradient(135deg, #fce7f3, #fdf2f8)' },
+  { icon: '💡', q: 'Onde posso economizar?', sub: 'Identificar gastos desnecessários', gradient: 'linear-gradient(135deg, #fef3c7, #fffbeb)' },
 ];
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
@@ -20,25 +24,45 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 function TypingIndicator() {
   return (
     <motion.div initial={{ opacity: 0, y: 12, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }} className="flex items-start gap-2">
-      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-        style={{ background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))' }}>
-        <Sparkles className="w-3 h-3 text-white" />
+      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }} className="flex items-start gap-2.5">
+      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+        style={{ background: 'linear-gradient(135deg, #16a34a, #059669)', boxShadow: '0 2px 8px rgba(22,163,74,0.3)' }}>
+        <Sparkles className="w-3.5 h-3.5 text-white" />
       </div>
-      <div className="rounded-[4px_14px_14px_14px] px-4 py-3"
-        style={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-weak)', boxShadow: 'var(--shadow-xs)' }}>
-        <div className="flex items-center gap-1">
+      <div className="rounded-2xl rounded-tl-sm px-4 py-3"
+        style={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-weak)', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
+        <div className="flex items-center gap-1.5">
           {[0, 1, 2].map(i => (
-            <motion.div key={i} className="w-[7px] h-[7px] rounded-full"
-              style={{ background: 'var(--color-text-subtle)' }}
-              animate={{ y: [0, -8, 0] }}
-              transition={{ repeat: Infinity, duration: 0.9, delay: i * 0.15, ease: 'easeInOut' }} />
+            <motion.div key={i} className="w-[6px] h-[6px] rounded-full"
+              style={{ background: 'var(--color-green-500)' }}
+              animate={{ y: [0, -6, 0], opacity: [0.4, 1, 0.4] }}
+              transition={{ repeat: Infinity, duration: 1, delay: i * 0.15, ease: 'easeInOut' }} />
           ))}
         </div>
       </div>
     </motion.div>
   );
 }
+
+/* ─── Markdown Components ─── */
+const markdownComponents = {
+  strong: ({ children }: any) => <strong style={{ fontWeight: 800, color: 'var(--color-text-strong)' }}>{children}</strong>,
+  p: ({ children }: any) => <p style={{ margin: 0, marginBottom: 6 }}>{children}</p>,
+  ul: ({ children }: any) => <ul style={{ margin: '6px 0', paddingLeft: 0, listStyle: 'none' }}>{children}</ul>,
+  li: ({ children }: any) => (
+    <li style={{ display: 'flex', gap: 8, marginBottom: 5 }}>
+      <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--color-green-500)', flexShrink: 0, marginTop: 8 }} />
+      <span style={{ lineHeight: 1.6 }}>{children}</span>
+    </li>
+  ),
+  code: ({ children }: any) => (
+    <code style={{
+      background: 'var(--color-bg-sunken)', borderRadius: 6,
+      padding: '2px 6px', fontFamily: 'var(--font-mono)', fontSize: 13,
+    }}>{children}</code>
+  ),
+  h3: ({ children }: any) => <h3 style={{ fontSize: 14, fontWeight: 800, margin: '8px 0 4px', color: 'var(--color-text-strong)' }}>{children}</h3>,
+};
 
 /* ─── Message Bubble ─── */
 function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
@@ -47,63 +71,51 @@ function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12, scale: 0.96 }}
+      initial={{ opacity: 0, y: 12, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.12), ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.12), ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className={`flex ${isUser ? 'justify-end' : 'items-end gap-2'}`}>
+      <div className={`flex ${isUser ? 'justify-end' : 'items-start gap-2.5'}`}>
         {!isUser && (
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))' }}>
-            <Sparkles className="w-3 h-3 text-white" />
+          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+            style={{ background: 'linear-gradient(135deg, #16a34a, #059669)', boxShadow: '0 2px 8px rgba(22,163,74,0.25)' }}>
+            <Sparkles className="w-3.5 h-3.5 text-white" />
           </div>
         )}
-        <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`} style={{ maxWidth: isUser ? '78%' : '86%' }}>
-          <div className={`px-3.5 py-2.5 text-[14px] leading-[1.6] ${
-            isUser ? 'rounded-[18px_4px_18px_18px] text-white' : 'rounded-[4px_18px_18px_18px]'
+        <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`} style={{ maxWidth: isUser ? '80%' : '85%' }}>
+          <div className={`px-4 py-3 text-[14px] leading-[1.65] ${
+            isUser ? 'rounded-2xl rounded-tr-sm' : 'rounded-2xl rounded-tl-sm'
           }`} style={isUser ? {
-            background: '#16a34a',
-            boxShadow: '0 2px 6px rgba(22,163,74,0.2)',
+            background: 'linear-gradient(135deg, #16a34a, #15803d)',
+            color: 'white',
+            boxShadow: '0 2px 12px rgba(22,163,74,0.25)',
           } : {
             background: 'var(--color-bg-surface)',
             border: '1px solid var(--color-border-weak)',
             color: 'var(--color-text-base)',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
           }}>
             {isUser ? msg.content : (
               <div className="ai-markdown-content">
-                <ReactMarkdown components={{
-                  strong: ({ children }) => <strong style={{ fontWeight: 800, color: 'var(--color-text-strong)' }}>{children}</strong>,
-                  p: ({ children }) => <p style={{ margin: 0, marginBottom: 8 }}>{children}</p>,
-                  ul: ({ children }) => <ul style={{ margin: '4px 0', paddingLeft: 0, listStyle: 'none' }}>{children}</ul>,
-                  li: ({ children }) => (
-                    <li style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-green-600)', flexShrink: 0, marginTop: 8 }} />
-                      <span>{children}</span>
-                    </li>
-                  ),
-                  code: ({ children }) => (
-                    <code style={{
-                      background: 'var(--color-bg-sunken)', borderRadius: 6,
-                      padding: '2px 6px', fontFamily: 'var(--font-mono)', fontSize: 13,
-                    }}>{children}</code>
-                  ),
-                }}>{msg.content}</ReactMarkdown>
+                <ReactMarkdown components={markdownComponents}>{msg.content}</ReactMarkdown>
               </div>
             )}
           </div>
-          <span className="text-[10px] mt-1 px-1" style={{ color: 'var(--color-text-subtle)' }}>{timeStr}</span>
+          <div className="flex items-center gap-1 mt-1 px-1">
+            <Clock className="w-[9px] h-[9px]" style={{ color: 'var(--color-text-subtle)', opacity: 0.6 }} />
+            <span className="text-[10px]" style={{ color: 'var(--color-text-subtle)', opacity: 0.6 }}>{timeStr}</span>
+          </div>
         </div>
       </div>
 
       {msg.actions && msg.actions.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="ml-9 mt-1.5 space-y-1">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="ml-[42px] mt-1.5 space-y-1.5">
           {msg.actions.map((action, ai) => (
             <motion.div key={ai} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 + ai * 0.1 }}
-              className="flex items-start gap-2 rounded-lg px-3 py-2"
-              style={{ background: 'var(--color-success-bg)', border: '1px solid var(--color-success-border)' }}>
+              className="flex items-start gap-2 rounded-xl px-3 py-2.5"
+              style={{ background: 'var(--color-success-bg)', border: '1px solid hsl(142 71% 45% / 0.15)' }}>
               <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-green-600)' }} />
-              <span className="text-[12px] font-medium leading-snug" style={{ color: 'var(--color-success-text)' }}>{action}</span>
+              <span className="text-[12px] font-semibold leading-snug" style={{ color: 'var(--color-success-text)' }}>{action}</span>
             </motion.div>
           ))}
         </motion.div>
@@ -115,28 +127,18 @@ function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
 /* ─── Streaming Bubble ─── */
 function StreamingBubble({ content }: { content: string }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex items-end gap-2">
-      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-        style={{ background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))' }}>
-        <Sparkles className="w-3 h-3 text-white" />
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-2.5">
+      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+        style={{ background: 'linear-gradient(135deg, #16a34a, #059669)', boxShadow: '0 2px 8px rgba(22,163,74,0.25)' }}>
+        <Sparkles className="w-3.5 h-3.5 text-white" />
       </div>
-      <div className="rounded-[4px_18px_18px_18px] px-3.5 py-2.5 text-[14px] leading-[1.7]"
-        style={{ maxWidth: '86%', background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-weak)', color: 'var(--color-text-base)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+      <div className="rounded-2xl rounded-tl-sm px-4 py-3 text-[14px] leading-[1.65]"
+        style={{ maxWidth: '85%', background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-weak)', color: 'var(--color-text-base)', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
         <div className="ai-markdown-content">
-          <ReactMarkdown components={{
-            strong: ({ children }) => <strong style={{ fontWeight: 800, color: 'var(--color-text-strong)' }}>{children}</strong>,
-            p: ({ children }) => <p style={{ margin: 0, marginBottom: 8 }}>{children}</p>,
-            ul: ({ children }) => <ul style={{ margin: '4px 0', paddingLeft: 0, listStyle: 'none' }}>{children}</ul>,
-            li: ({ children }) => (
-              <li style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-green-600)', flexShrink: 0, marginTop: 8 }} />
-                <span>{children}</span>
-              </li>
-            ),
-          }}>{content}</ReactMarkdown>
-          <motion.span className="inline-block w-[3px] h-4 rounded-sm ml-0.5 align-middle"
-            style={{ background: 'var(--color-green-600)' }}
-            animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.6 }} />
+          <ReactMarkdown components={markdownComponents}>{content}</ReactMarkdown>
+          <motion.span className="inline-block w-[2px] h-[16px] rounded-full ml-0.5 align-middle"
+            style={{ background: 'var(--color-green-500)' }}
+            animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.5 }} />
         </div>
       </div>
     </motion.div>
@@ -145,77 +147,92 @@ function StreamingBubble({ content }: { content: string }) {
 
 /* ─── Welcome Screen ─── */
 function WelcomeScreen({ onSend }: { onSend: (text: string) => void }) {
-  const greeting = new Date().getHours() < 12 ? 'Bom dia' : new Date().getHours() < 18 ? 'Boa tarde' : 'Boa noite';
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
 
   const actions = [
-    { label: 'Lançar despesa', msg: 'Quero adicionar uma despesa', icon: ArrowDown, bg: '#fef2f2', color: '#dc2626' },
-    { label: 'Lançar receita', msg: 'Quero adicionar uma receita', icon: ArrowUpIcon, bg: '#f0fdf4', color: '#16a34a' },
-    { label: 'Nova meta', msg: 'Quero criar uma nova meta financeira', icon: Target, bg: '#f5f3ff', color: '#7c3aed' },
-    { label: 'Novo cartão', msg: 'Quero adicionar um cartão de crédito', icon: CreditCard, bg: '#eff6ff', color: '#2563eb' },
+    { label: 'Lançar despesa', msg: 'Quero adicionar uma despesa', icon: ArrowDown, gradient: 'linear-gradient(135deg, #fef2f2, #fff1f2)', color: '#dc2626', iconBg: 'hsl(0 72% 51% / 0.08)' },
+    { label: 'Lançar receita', msg: 'Quero adicionar uma receita', icon: ArrowUpIcon, gradient: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)', color: '#16a34a', iconBg: 'hsl(142 71% 45% / 0.08)' },
+    { label: 'Nova meta', msg: 'Quero criar uma nova meta financeira', icon: Target, gradient: 'linear-gradient(135deg, #f5f3ff, #ede9fe)', color: '#7c3aed', iconBg: 'hsl(263 70% 50% / 0.08)' },
+    { label: 'Novo cartão', msg: 'Quero adicionar um cartão de crédito', icon: CreditCard, gradient: 'linear-gradient(135deg, #eff6ff, #dbeafe)', color: '#2563eb', iconBg: 'hsl(217 91% 60% / 0.08)' },
   ];
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
-      className="flex flex-col p-4 gap-3" style={{ background: 'var(--color-bg-base)' }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
+      className="flex flex-col p-5 gap-4">
 
       {/* Greeting card */}
-      <div className="rounded-[14px] px-4 py-3.5"
-        style={{ background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)', border: '1px solid #bbf7d0' }}>
-        <p className="text-[16px] font-extrabold" style={{ color: '#0f172a' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        className="rounded-2xl px-5 py-4 relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', border: '1px solid hsl(142 71% 45% / 0.15)' }}>
+        <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(22,163,74,0.06)' }} />
+        <div style={{ position: 'absolute', bottom: -10, left: '40%', width: 60, height: 60, borderRadius: '50%', background: 'rgba(22,163,74,0.04)' }} />
+        <p className="text-[17px] font-black relative" style={{ color: 'var(--color-text-strong)' }}>
           {greeting}! 👋
         </p>
-        <p className="text-[13px] mt-0.5" style={{ color: '#166534' }}>
+        <p className="text-[13px] mt-1 relative" style={{ color: 'hsl(142 64% 24%)', lineHeight: 1.5 }}>
           Pergunte qualquer coisa — eu tenho acesso a todos os seus dados.
         </p>
-      </div>
+      </motion.div>
 
       {/* Quick questions */}
-      <p className="text-[10px] font-bold uppercase mt-1" style={{ color: 'var(--color-text-subtle)', letterSpacing: '1px' }}>
-        Perguntas rápidas
-      </p>
-      <div className="flex flex-col gap-2">
-        {QUICK_QUESTIONS.map((item, i) => (
-          <motion.button key={i}
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.05 }}
-            whileHover={{ x: 3, borderColor: '#86efac' }} whileTap={{ scale: 0.98 }}
-            onClick={() => onSend(item.q)}
-            className="flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-left transition-all"
-            style={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-weak)' }}>
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: item.bg }}>
-              <span className="text-[14px]">{item.icon}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold" style={{ color: 'var(--color-text-strong)' }}>{item.q}</p>
-              <p className="text-[11px]" style={{ color: 'var(--color-text-subtle)' }}>{item.sub}</p>
-            </div>
-            <ChevronRight className="w-[13px] h-[13px] flex-shrink-0" style={{ color: 'var(--color-text-subtle)' }} />
-          </motion.button>
-        ))}
+      <div>
+        <p className="text-[10px] font-extrabold uppercase mb-2.5 px-1" style={{ color: 'var(--color-text-subtle)', letterSpacing: '1.2px' }}>
+          Perguntas rápidas
+        </p>
+        <div className="flex flex-col gap-2">
+          {QUICK_QUESTIONS.map((item, i) => (
+            <motion.button key={i}
+              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 + i * 0.06 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => onSend(item.q)}
+              className="flex items-center gap-3 rounded-2xl px-4 py-3.5 text-left group"
+              style={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-weak)', transition: 'border-color 0.2s, box-shadow 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(142 71% 45% / 0.3)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(22,163,74,0.08)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border-weak)'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: item.gradient }}>
+                <span className="text-[18px]">{item.icon}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-bold" style={{ color: 'var(--color-text-strong)' }}>{item.q}</p>
+                <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>{item.sub}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 flex-shrink-0 transition-transform group-hover:translate-x-0.5" style={{ color: 'var(--color-text-subtle)' }} />
+            </motion.button>
+          ))}
+        </div>
       </div>
 
       {/* Quick actions */}
-      <p className="text-[10px] font-bold uppercase mt-1" style={{ color: 'var(--color-text-subtle)', letterSpacing: '1px' }}>
-        Ações rápidas
-      </p>
-      <div className="grid grid-cols-2 gap-2">
-        {actions.map((action, i) => {
-          const Icon = action.icon;
-          return (
-            <motion.button key={i}
-              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.25 + i * 0.04 }}
-              whileHover={{ borderColor: '#86efac', background: '#f0fdf4' }} whileTap={{ scale: 0.96 }}
-              onClick={() => onSend(action.msg)}
-              className="flex flex-col items-center gap-1.5 rounded-xl py-3 px-2.5 transition-all"
-              style={{ background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)' }}>
-              <div className="w-8 h-8 rounded-[9px] flex items-center justify-center"
-                style={{ background: action.bg }}>
-                <Icon className="w-4 h-4" style={{ color: action.color }} />
-              </div>
-              <span className="text-[12px] font-bold" style={{ color: 'var(--color-text-base)' }}>{action.label}</span>
-            </motion.button>
-          );
-        })}
+      <div>
+        <p className="text-[10px] font-extrabold uppercase mb-2.5 px-1" style={{ color: 'var(--color-text-subtle)', letterSpacing: '1.2px' }}>
+          Ações rápidas
+        </p>
+        <div className="grid grid-cols-2 gap-2.5">
+          {actions.map((action, i) => {
+            const Icon = action.icon;
+            return (
+              <motion.button key={i}
+                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.25 + i * 0.05 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => onSend(action.msg)}
+                className="flex flex-col items-center gap-2 rounded-2xl py-4 px-3 transition-all"
+                style={{ background: action.gradient, border: '1px solid var(--color-border-weak)' }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.06)'; }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: action.iconBg, backdropFilter: 'blur(4px)' }}>
+                  <Icon className="w-[18px] h-[18px]" style={{ color: action.color }} />
+                </div>
+                <span className="text-[12px] font-bold" style={{ color: 'var(--color-text-base)' }}>{action.label}</span>
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
     </motion.div>
   );
@@ -292,14 +309,6 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
   };
 
   const startNewChat = () => { setActiveConvoId(null); setMessages([]); setShowHistory(false); };
-
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const diff = Date.now() - d.getTime();
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}min atrás`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h atrás`;
-    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-  };
 
   const send = useCallback(async (text: string) => {
     if (!text.trim() || loading) return;
@@ -401,7 +410,7 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
   const handleTextareaInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
     const t = e.currentTarget;
     t.style.height = 'auto';
-    t.style.height = Math.min(t.scrollHeight, 80) + 'px';
+    t.style.height = Math.min(t.scrollHeight, 100) + 'px';
   };
 
   const drawerVariants = isMobile
@@ -414,7 +423,7 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
         <>
           {!isMobile && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[500]" style={{ background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(4px)' }}
+              className="fixed inset-0 z-[500]" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(6px)' }}
               onClick={onClose} />
           )}
 
@@ -427,55 +436,58 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
             style={{
               background: 'var(--color-bg-base)',
               borderLeft: isMobile ? 'none' : '1px solid var(--color-border-weak)',
+              boxShadow: isMobile ? 'none' : '-8px 0 30px rgba(0,0,0,0.08)',
             }}
           >
-            {/* ─── Header (56px compact) ─── */}
-            <div className="flex items-center gap-2.5 px-4 shrink-0"
+            {/* ─── Header ─── */}
+            <div className="flex items-center gap-3 px-4 shrink-0"
               style={{
-                height: 56,
+                height: 64,
                 background: 'var(--color-bg-surface)',
                 borderBottom: '1px solid var(--color-border-weak)',
                 paddingTop: isMobile ? 'env(safe-area-inset-top)' : 0,
-                minHeight: isMobile ? 'calc(56px + env(safe-area-inset-top))' : 56,
+                minHeight: isMobile ? 'calc(64px + env(safe-area-inset-top))' : 64,
               }}>
-              {/* Avatar 36px */}
+              {/* Avatar */}
               <div className="relative flex-shrink-0">
-                <div className="w-9 h-9 rounded-[10px] flex items-center justify-center"
-                  style={{ background: 'linear-gradient(135deg, #16a34a, #0d9488)' }}>
-                  <Sparkles className="w-4 h-4 text-white" />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, #16a34a, #059669)', boxShadow: '0 2px 10px rgba(22,163,74,0.3)' }}>
+                  <Sparkles className="w-[18px] h-[18px] text-white" />
                 </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full"
-                  style={{ background: '#22c55e', border: '1.5px solid var(--color-bg-surface)', animation: 'pulse-green 2s ease infinite' }} />
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full flex items-center justify-center"
+                  style={{ background: 'var(--color-bg-surface)', padding: 2 }}>
+                  <div className="w-full h-full rounded-full" style={{ background: '#22c55e' }} />
+                </div>
               </div>
 
-              {/* Name single line */}
+              {/* Name */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[15px] font-extrabold" style={{ color: 'var(--color-text-strong)' }}>FinDash IA</span>
-                  <span className="text-[13px]" style={{ color: 'var(--color-text-subtle)' }}>·</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[16px] font-black" style={{ color: 'var(--color-text-strong)', letterSpacing: '-0.3px' }}>FinDash IA</span>
+                  <span style={{ fontSize: 11, color: 'var(--color-text-subtle)' }}>·</span>
                   <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#16a34a' }} />
-                    <span className="text-[13px] font-semibold" style={{ color: '#16a34a' }}>Online</span>
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#22c55e', boxShadow: '0 0 6px #22c55e' }} />
+                    <span className="text-[12px] font-bold" style={{ color: '#16a34a' }}>Online</span>
                   </div>
                 </div>
-                <p className="text-[11px] truncate" style={{ color: 'var(--color-text-subtle)' }}>Assistente financeira pessoal</p>
+                <p className="text-[11px] truncate mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>Assistente financeira pessoal</p>
               </div>
 
-              {/* 2 buttons only */}
-              <div className="flex items-center gap-1.5">
-                <button onClick={startNewChat}
-                  className="w-9 h-9 rounded-[9px] flex items-center justify-center transition-colors"
+              {/* Buttons */}
+              <div className="flex items-center gap-2">
+                <motion.button whileTap={{ scale: 0.9 }} onClick={startNewChat}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
                   title="Nova conversa"
                   style={{ background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)' }}>
-                  <RotateCcw className="w-[15px] h-[15px]" style={{ color: 'var(--color-text-muted)' }} />
-                </button>
-                <button onClick={onClose}
-                  className="w-9 h-9 rounded-[9px] flex items-center justify-center transition-colors"
+                  <RotateCcw className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+                </motion.button>
+                <motion.button whileTap={{ scale: 0.9 }} onClick={onClose}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
                   style={{ background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)' }}>
                   {isMobile
-                    ? <ChevronLeft className="w-[15px] h-[15px]" style={{ color: 'var(--color-text-muted)' }} />
-                    : <X className="w-[15px] h-[15px]" style={{ color: 'var(--color-text-muted)' }} />}
-                </button>
+                    ? <ChevronLeft className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+                    : <X className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />}
+                </motion.button>
               </div>
             </div>
 
@@ -488,16 +500,16 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
               {messages.length === 0 && !loading && !streamingText ? (
                 <WelcomeScreen onSend={send} />
               ) : (
-                <div className="flex flex-col gap-2.5 p-4">
+                <div className="flex flex-col gap-3 p-4">
                   {messages.map((m, i) => <MessageBubble key={i} msg={m} index={i} />)}
 
                   {streamActions.length > 0 && (
-                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="ml-9 space-y-1">
+                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="ml-[42px] space-y-1.5">
                       {streamActions.map((action, ai) => (
-                        <div key={ai} className="flex items-start gap-2 rounded-lg px-3 py-2"
-                          style={{ background: 'var(--color-success-bg)', border: '1px solid var(--color-success-border)' }}>
+                        <div key={ai} className="flex items-start gap-2 rounded-xl px-3 py-2.5"
+                          style={{ background: 'var(--color-success-bg)', border: '1px solid hsl(142 71% 45% / 0.15)' }}>
                           <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-green-600)' }} />
-                          <span className="text-[12px] font-medium leading-snug" style={{ color: 'var(--color-success-text)' }}>{action}</span>
+                          <span className="text-[12px] font-semibold leading-snug" style={{ color: 'var(--color-success-text)' }}>{action}</span>
                         </div>
                       ))}
                     </motion.div>
@@ -514,13 +526,14 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
             <div className="shrink-0" style={{
               background: 'var(--color-bg-surface)',
               borderTop: '1px solid var(--color-border-weak)',
-              padding: '10px 16px',
-              paddingBottom: isMobile ? 'calc(10px + env(safe-area-inset-bottom))' : '10px',
+              padding: '12px 16px',
+              paddingBottom: isMobile ? 'calc(12px + env(safe-area-inset-bottom))' : '12px',
             }}>
-              <div className="flex items-center gap-2 rounded-[14px] px-3 py-2.5 transition-all ai-chat-input-wrapper"
+              <div className="flex items-end gap-2.5 rounded-2xl px-4 py-3 transition-all"
                 style={{
                   background: 'var(--color-bg-sunken)',
                   border: '1.5px solid var(--color-border-base)',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
                 }}>
                 <textarea
                   ref={textareaRef}
@@ -536,18 +549,18 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
                   style={{
                     fontSize: isMobile ? '16px' : '15px',
                     color: 'var(--color-text-base)',
-                    maxHeight: 80,
+                    maxHeight: 100,
                     fontFamily: 'inherit',
                   }}
                 />
                 <motion.button
-                  whileTap={hasText && !loading ? { scale: 0.88 } : undefined}
+                  whileTap={hasText && !loading ? { scale: 0.85 } : undefined}
                   onClick={() => send(input)}
                   disabled={!hasText || loading}
-                  className="w-[30px] h-[30px] rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all"
                   style={{
-                    background: loading ? 'var(--color-border-weak)' : hasText ? '#16a34a' : 'transparent',
-                    boxShadow: hasText && !loading ? '0 2px 8px rgba(22,163,74,0.25)' : 'none',
+                    background: loading ? 'var(--color-border-weak)' : hasText ? 'linear-gradient(135deg, #16a34a, #15803d)' : 'transparent',
+                    boxShadow: hasText && !loading ? '0 2px 10px rgba(22,163,74,0.3)' : 'none',
                     cursor: hasText && !loading ? 'pointer' : 'default',
                   }}
                 >
@@ -558,9 +571,12 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
                   )}
                 </motion.button>
               </div>
-              <p className="text-center mt-1.5" style={{ fontSize: 10, color: 'var(--color-text-subtle)' }}>
-                Powered by Claude · Dados privados 🔒
-              </p>
+              <div className="flex items-center justify-center gap-1.5 mt-2">
+                <Lock className="w-[9px] h-[9px]" style={{ color: 'var(--color-text-subtle)', opacity: 0.5 }} />
+                <p style={{ fontSize: 10, color: 'var(--color-text-subtle)', opacity: 0.5 }}>
+                  Dados criptografados · Privacidade garantida
+                </p>
+              </div>
             </div>
           </motion.div>
         </>
