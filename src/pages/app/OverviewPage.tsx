@@ -306,6 +306,9 @@ export default function OverviewPage() {
         )}
       </motion.div>
 
+      {/* SMART ALERTS */}
+      <SmartAlertsWidget />
+
       {/* 3. QUICK STATS — 2x2 */}
       <div className="grid grid-cols-2 gap-2">
         {statCards.map((s, i) => (
