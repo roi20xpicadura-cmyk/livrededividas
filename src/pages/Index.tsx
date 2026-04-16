@@ -1,21 +1,21 @@
 import { useState } from "react";
-import { useFinDashData } from "@/hooks/useFinDashData";
-import Header from "@/components/findash/Header";
-import PeriodBar from "@/components/findash/PeriodBar";
-import TabBar from "@/components/findash/TabBar";
-import OverviewTab from "@/components/findash/tabs/OverviewTab";
-import TransactionsTab from "@/components/findash/tabs/TransactionsTab";
-import GoalsTab from "@/components/findash/tabs/GoalsTab";
-import CashFlowTab from "@/components/findash/tabs/CashFlowTab";
-import DRETab from "@/components/findash/tabs/DRETab";
-import CardsTab from "@/components/findash/tabs/CardsTab";
-import InvestmentsTab from "@/components/findash/tabs/InvestmentsTab";
-import ChartsTab from "@/components/findash/tabs/ChartsTab";
-import ExportTab from "@/components/findash/tabs/ExportTab";
+import { useKoraFinanceData } from "@/hooks/useKoraFinanceData";
+import Header from "@/components/kora/Header";
+import PeriodBar from "@/components/kora/PeriodBar";
+import TabBar from "@/components/kora/TabBar";
+import OverviewTab from "@/components/kora/tabs/OverviewTab";
+import TransactionsTab from "@/components/kora/tabs/TransactionsTab";
+import GoalsTab from "@/components/kora/tabs/GoalsTab";
+import CashFlowTab from "@/components/kora/tabs/CashFlowTab";
+import DRETab from "@/components/kora/tabs/DRETab";
+import CardsTab from "@/components/kora/tabs/CardsTab";
+import InvestmentsTab from "@/components/kora/tabs/InvestmentsTab";
+import ChartsTab from "@/components/kora/tabs/ChartsTab";
+import ExportTab from "@/components/kora/tabs/ExportTab";
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState(0);
-  const fd = useFinDashData();
+  const fd = useKoraFinanceData();
   const hasData = fd.data.transactions.length > 0 || fd.data.goals.length > 0;
 
   return (

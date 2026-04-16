@@ -515,7 +515,7 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
               {/* Name */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-text-strong)', letterSpacing: '-0.4px' }}>FinDash IA</span>
+                  <span style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-text-strong)', letterSpacing: '-0.4px' }}>KoraFinance IA</span>
                   <div className="flex items-center gap-1 px-2 py-0.5 rounded-full"
                     style={{ background: 'var(--color-green-50)', border: '1px solid var(--color-green-200)' }}>
                     <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#22c55e' }} />
@@ -596,7 +596,7 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
                   onKeyDown={e => {
                     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input); }
                   }}
-                  placeholder="Converse com a FinDash IA..."
+                  placeholder="Converse com a KoraFinance IA..."
                   rows={1}
                   className="flex-1 bg-transparent border-none outline-none resize-none leading-[1.5]"
                   style={{

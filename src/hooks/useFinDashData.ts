@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { AppData, Transaction, Goal, CreditCard, Investment, Config } from "@/types/findash";
+import { AppData, Transaction, Goal, CreditCard, Investment, Config } from "@/types/kora";
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, isWithinInterval, parseISO, format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-const STORAGE_KEY = "findash_v4";
+const STORAGE_KEY = "kora_v4";
 
 const defaultCfg: Config = {
-  name: "FinDash Pro",
+  name: "KoraFinance",
   currency: "R$",
   period: "Mês",
   pStart: format(startOfMonth(new Date()), "yyyy-MM-dd"),
@@ -45,7 +45,7 @@ function getPeriodRange(period: string, pStart: string, pEnd: string): [Date, Da
   }
 }
 
-export function useFinDashData() {
+export function useKoraFinanceData() {
   const [data, setData] = useState<AppData>(loadData);
 
   useEffect(() => {

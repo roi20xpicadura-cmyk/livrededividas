@@ -115,7 +115,7 @@ export default function SettingsPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `findash_meus_dados_${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `kora_meus_dados_${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success('Seus dados foram exportados com sucesso');
@@ -261,7 +261,7 @@ export default function SettingsPage() {
                     setPushEnabled(granted);
                     if (granted) {
                       toast.success('Notificações ativadas!');
-                      sendLocalNotification('FinDash Pro', '🎉 Notificações ativadas com sucesso!');
+                      sendLocalNotification('KoraFinance', '🎉 Notificações ativadas com sucesso!');
                     } else {
                       toast.error('Permissão negada. Ative nas configurações do navegador.');
                     }

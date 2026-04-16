@@ -1,8 +1,8 @@
-import { useFinDashData } from "@/hooks/useFinDashData";
-import InvestmentsTab from "@/components/findash/tabs/InvestmentsTab";
+import { useKoraFinanceData } from "@/hooks/useKoraFinanceData";
+import InvestmentsTab from "@/components/kora/tabs/InvestmentsTab";
 
 export default function InvestmentsPage() {
-  const fd = useFinDashData();
+  const fd = useKoraFinanceData();
   return (
     <div className="space-y-4">
       <InvestmentsTab

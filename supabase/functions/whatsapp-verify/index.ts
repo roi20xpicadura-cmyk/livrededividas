@@ -83,7 +83,7 @@ serve(async (req) => {
         sendResult = await sendWhatsAppTemplate(
           cleanPhone,
           config.fromNumber,
-          "findash_verification_code", // Template SID or name
+          "kora_verification_code", // Template SID or name
           { "1": verificationCode }
         );
       } else {
@@ -91,7 +91,7 @@ serve(async (req) => {
         sendResult = await sendWhatsApp(
           cleanPhone,
           config.fromNumber,
-          `🔐 *FinDash Pro — Verificação*\n\nSeu código: *${verificationCode}*\n\nVálido por 10 minutos.`
+          `🔐 *KoraFinance — Verificação*\n\nSeu código: *${verificationCode}*\n\nVálido por 10 minutos.`
         );
       }
 
@@ -143,14 +143,14 @@ serve(async (req) => {
         welcomeResult = await sendWhatsAppTemplate(
           conn.phone_number,
           config.fromNumber,
-          "findash_welcome",
+          "kora_welcome",
           { "1": name }
         );
       } else {
         welcomeResult = await sendWhatsApp(
           conn.phone_number,
           config.fromNumber,
-          `✅ *WhatsApp conectado ao FinDash Pro!*\n\nOlá, ${name}! Agora gerencie finanças por aqui.\n\n*Exemplos:*\n💸 "gastei 50 no mercado"\n💰 "recebi 3000 de salário"\n📊 "como estão minhas finanças?"\n🎯 "progresso da minha meta"\n\nPode começar! 🚀`
+          `✅ *WhatsApp conectado ao KoraFinance!*\n\nOlá, ${name}! Agora gerencie finanças por aqui.\n\n*Exemplos:*\n💸 "gastei 50 no mercado"\n💰 "recebi 3000 de salário"\n📊 "como estão minhas finanças?"\n🎯 "progresso da minha meta"\n\nPode começar! 🚀`
         );
       }
 

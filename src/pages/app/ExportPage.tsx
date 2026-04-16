@@ -80,7 +80,7 @@ export function ExportPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `findash-lancamentos-${format(targetDate, 'yyyy-MM')}.csv`;
+    a.download = `kora-lancamentos-${format(targetDate, 'yyyy-MM')}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success('CSV exportado!');
@@ -91,7 +91,7 @@ export function ExportPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `findash-backup-${format(targetDate, 'yyyy-MM')}.json`;
+    a.download = `kora-backup-${format(targetDate, 'yyyy-MM')}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success('JSON exportado!');

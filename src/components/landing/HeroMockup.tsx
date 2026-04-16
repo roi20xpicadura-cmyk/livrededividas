@@ -12,7 +12,7 @@ export default function HeroMockup() {
         </div>
         <div className="flex-1 flex justify-center">
           <div className="px-4 py-1 rounded-md bg-[#f1f5f9] text-[10px] text-muted font-medium">
-            app.findashpro.com.br
+            app.korafinance.com.br
           </div>
         </div>
       </div>
@@ -25,7 +25,7 @@ export default function HeroMockup() {
             <div className="w-6 h-6 rounded-md bg-primary-foreground/20 flex items-center justify-center">
               <BarChart3 className="w-3.5 h-3.5 text-primary-foreground" />
             </div>
-            <span className="text-[11px] font-bold text-primary-foreground">FinDash Pro</span>
+            <span className="text-[11px] font-bold text-primary-foreground">KoraFinance</span>
           </div>
           {[
             { icon: Home, label: 'Visão Geral', active: true },

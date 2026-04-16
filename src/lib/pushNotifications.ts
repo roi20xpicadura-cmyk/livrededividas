@@ -35,7 +35,7 @@ export function sendLocalNotification(title: string, body: string, url = '/app')
     body,
     icon: '/icon-192.png',
     badge: '/icon-192.png',
-    tag: 'findash-local',
+    tag: 'kora-local',
   });
 
   notification.onclick = () => {

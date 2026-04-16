@@ -33,7 +33,7 @@ function resolveTheme(theme: Theme): 'light' | 'dark' {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [theme, setThemeState] = useState<Theme>(() => {
-    const stored = localStorage.getItem('findash-theme');
+    const stored = localStorage.getItem('kora-theme');
     return (stored as Theme) || 'light';
   });
 
@@ -52,7 +52,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       .then(({ data }) => {
         if (data?.theme && ['light', 'dark', 'system'].includes(data.theme)) {
           setThemeState(data.theme as Theme);
-          localStorage.setItem('findash-theme', data.theme);
+          localStorage.setItem('kora-theme', data.theme);
         }
       });
   }, [user]);
@@ -74,7 +74,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Cross-tab sync
   useEffect(() => {
     const handler = (e: StorageEvent) => {
-      if (e.key === 'findash-theme' && e.newValue) {
+      if (e.key === 'kora-theme' && e.newValue) {
         setThemeState(e.newValue as Theme);
       }
     };
@@ -84,7 +84,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t);
-    localStorage.setItem('findash-theme', t);
+    localStorage.setItem('kora-theme', t);
     if (user) {
       supabase.from('user_config').update({ theme: t } as any).eq('user_id', user.id);
     }

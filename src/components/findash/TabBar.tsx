@@ -1,4 +1,4 @@
-import { TAB_NAMES } from "@/types/findash";
+import { TAB_NAMES } from "@/types/kora";
 import { LayoutDashboard, Receipt, Target, TrendingUp, FileText, CreditCard, PiggyBank, BarChart3, Download } from "lucide-react";
 
 const ICONS = [LayoutDashboard, Receipt, Target, TrendingUp, FileText, CreditCard, PiggyBank, BarChart3, Download];

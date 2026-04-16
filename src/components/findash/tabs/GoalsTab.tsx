@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Goal } from "@/types/findash";
+import { Goal } from "@/types/kora";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { Plus, X, Check, Target } from "lucide-react";
 import { motion } from "framer-motion";

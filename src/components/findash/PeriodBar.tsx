@@ -1,5 +1,5 @@
-import { PERIODS } from "@/types/findash";
-import { Config } from "@/types/findash";
+import { PERIODS } from "@/types/kora";
+import { Config } from "@/types/kora";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, startOfDay, endOfDay, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
