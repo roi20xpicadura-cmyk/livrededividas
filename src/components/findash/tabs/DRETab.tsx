@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Transaction } from "@/types/kora";
+import { Transaction } from "@/types/findash";
 import { motion } from "framer-motion";
 
 interface Props {

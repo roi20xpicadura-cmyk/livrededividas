@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Transaction, INCOME_CATEGORIES, EXPENSE_CATEGORIES } from "@/types/kora";
+import { Transaction, INCOME_CATEGORIES, EXPENSE_CATEGORIES } from "@/types/findash";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Plus, X, Search } from "lucide-react";

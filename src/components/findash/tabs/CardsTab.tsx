@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CreditCard as CreditCardType } from "@/types/kora";
+import { CreditCard as CreditCardType } from "@/types/findash";
 import { Plus, X, CreditCard as CreditCardIcon } from "lucide-react";
 import { motion } from "framer-motion";
 

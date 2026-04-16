@@ -1,4 +1,4 @@
-import { Transaction, Goal, CreditCard, Investment, Config } from "@/types/kora";
+import { Transaction, Goal, CreditCard, Investment, Config } from "@/types/findash";
 import { format, parseISO } from "date-fns";
 import { Download, FileText, Table } from "lucide-react";
 import { motion } from "framer-motion";

@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Investment, INVESTMENT_TYPES } from "@/types/kora";
+import { Investment, INVESTMENT_TYPES } from "@/types/findash";
 import { format, parseISO } from "date-fns";
 import { Plus, X, TrendingUp, TrendingDown } from "lucide-react";
 import { motion } from "framer-motion";

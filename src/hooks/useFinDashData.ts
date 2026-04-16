@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { AppData, Transaction, Goal, CreditCard, Investment, Config } from "@/types/kora";
+import { AppData, Transaction, Goal, CreditCard, Investment, Config } from "@/types/findash";
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, isWithinInterval, parseISO, format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -45,7 +45,7 @@ function getPeriodRange(period: string, pStart: string, pEnd: string): [Date, Da
   }
 }
 
-export function useKoraFinanceData() {
+export function useFinDashData() {
   const [data, setData] = useState<AppData>(loadData);
 
   useEffect(() => {

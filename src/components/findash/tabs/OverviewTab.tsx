@@ -1,4 +1,4 @@
-import { Transaction } from "@/types/kora";
+import { Transaction } from "@/types/findash";
 import { motion } from "framer-motion";
 import { TrendingUp, Landmark, Percent, BarChart3, Receipt, CalendarDays, ArrowRight } from "lucide-react";
 import { format, parseISO } from "date-fns";
