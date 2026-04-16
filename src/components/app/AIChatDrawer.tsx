@@ -484,9 +484,9 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
 
             {/* ─── Messages / Welcome ─── */}
             <div className="flex-1 overflow-y-auto ai-chat-messages" style={{
-              background: 'var(--color-bg-base)',
+              background: '#0a0d0a',
               scrollbarWidth: 'thin',
-              scrollbarColor: 'var(--color-border-base) transparent',
+              scrollbarColor: 'rgba(255,255,255,0.08) transparent',
             }}>
               {messages.length === 0 && !loading && !streamingText ? (
                 <WelcomeScreen onSend={send} />
@@ -515,16 +515,15 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
 
             {/* ─── Input Bar ─── */}
             <div className="shrink-0" style={{
-              background: 'var(--color-bg-surface)',
-              borderTop: '1px solid var(--color-border-weak)',
+              background: 'rgba(10,13,10,0.95)',
+              borderTop: '1px solid rgba(255,255,255,0.06)',
               padding: '12px 16px',
               paddingBottom: isMobile ? 'calc(12px + env(safe-area-inset-bottom))' : '12px',
             }}>
               <div className="flex items-end gap-2.5 rounded-2xl px-4 py-3 transition-all"
                 style={{
-                  background: 'var(--color-bg-sunken)',
-                  border: '1.5px solid var(--color-border-base)',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1.5px solid rgba(255,255,255,0.08)',
                 }}>
                 <textarea
                   ref={textareaRef}
