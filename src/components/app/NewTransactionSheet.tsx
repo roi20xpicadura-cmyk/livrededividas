@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import BottomSheet from './BottomSheet';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCategories } from '@/lib/objectives';
+import { getCategoriesByProfile } from '@/lib/objectives';
 
 interface Props {
   open: boolean;
@@ -14,42 +13,44 @@ interface Props {
   onSuccess?: () => void;
   profileType: string;
   initialType?: 'income' | 'expense';
+  /** When set, locks origin to this value and hides the origin picker. */
+  forceOrigin?: 'personal' | 'business';
 }
 
-export default function NewTransactionSheet({ open, onClose, onSuccess, profileType, initialType = 'expense' }: Props) {
+export default function NewTransactionSheet({ open, onClose, onSuccess, profileType, initialType = 'expense', forceOrigin }: Props) {
   const { user } = useAuth();
   const [type, setType] = useState<'income' | 'expense'>(initialType);
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [origin, setOrigin] = useState<'personal' | 'business'>(profileType === 'business' ? 'business' : 'personal');
+  const initialOrigin: 'personal' | 'business' =
+    forceOrigin ?? (profileType === 'business' ? 'business' : 'personal');
+  const [origin, setOrigin] = useState<'personal' | 'business'>(initialOrigin);
   const [recurring, setRecurring] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const amountRef = useRef<HTMLInputElement>(null);
 
-  const cats = useMemo(() => getCategories(profileType, type), [profileType, type]);
-  const flatCats = useMemo(() => {
-    if (Array.isArray(cats) && typeof cats[0] === 'string') return cats as string[];
-    return (cats as { group: string; items: string[] }[]).flatMap(g => g.items);
-  }, [cats]);
+  const effectiveProfile: 'personal' | 'business' = forceOrigin ?? origin;
+  const cats = useMemo(() => getCategoriesByProfile(type, effectiveProfile), [type, effectiveProfile]);
 
   useEffect(() => {
     if (open) {
       setType(initialType);
-      setOrigin(profileType === 'business' ? 'business' : 'personal');
+      setOrigin(forceOrigin ?? (profileType === 'business' ? 'business' : 'personal'));
       setTimeout(() => amountRef.current?.focus(), 350);
     }
-  }, [open, initialType, profileType]);
+  }, [open, initialType, profileType, forceOrigin]);
 
-  useEffect(() => { setCategory(''); }, [type]);
+  useEffect(() => { setCategory(''); }, [type, effectiveProfile]);
 
   const canSubmit = !!amount && parseFloat(amount) > 0 && !!description.trim();
 
   const handleSubmit = async () => {
     if (!canSubmit || !user) return;
     setSubmitting(true);
-    const finalOrigin = profileType === 'both' ? origin : (profileType === 'business' ? 'business' : 'personal');
+    const finalOrigin =
+      forceOrigin ?? (profileType === 'both' ? origin : (profileType === 'business' ? 'business' : 'personal'));
     const { error } = await supabase.from('transactions').insert({
       user_id: user.id,
       date,
@@ -88,6 +89,15 @@ export default function NewTransactionSheet({ open, onClose, onSuccess, profileT
   const accent = type === 'expense' ? '#dc2626' : '#7C3AED';
   const accentBg = type === 'expense' ? 'rgba(220,38,38,0.2)' : 'rgba(124, 58, 237,0.2)';
 
+  // Profile badge colors
+  const isPersonal = effectiveProfile === 'personal';
+  const badgeBg = isPersonal ? 'rgba(124,58,237,0.12)' : 'rgba(37,99,235,0.12)';
+  const badgeBorder = isPersonal ? 'rgba(124,58,237,0.25)' : 'rgba(37,99,235,0.25)';
+  const badgeColor = isPersonal ? '#7C3AED' : '#2563eb';
+
+  // Show profile badge whenever the sheet is locked to a profile (force) OR profile is 'both' and user picked one
+  const showProfileBadge = !!forceOrigin || profileType === 'both';
+
   const labelStyle: React.CSSProperties = {
     fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)',
     textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6,
@@ -100,9 +110,39 @@ export default function NewTransactionSheet({ open, onClose, onSuccess, profileT
     color: 'var(--color-text-base)', outline: 'none',
   };
 
+  const placeholderText = type === 'expense'
+    ? (effectiveProfile === 'business'
+        ? 'Ex: Fornecedor, Marketing, Aluguel...'
+        : 'Ex: Supermercado, Academia, Netflix...')
+    : (effectiveProfile === 'business'
+        ? 'Ex: Venda, Serviço prestado...'
+        : 'Ex: Salário, Freelance, Bônus...');
+
+  const submitLabel = submitting
+    ? 'Salvando...'
+    : type === 'expense'
+      ? `💸 Registrar despesa ${effectiveProfile === 'business' ? 'do negócio' : 'pessoal'}`
+      : `💰 Registrar receita ${effectiveProfile === 'business' ? 'do negócio' : 'pessoal'}`;
+
   return (
     <BottomSheet open={open} onClose={onClose}>
       <div style={{ padding: '4px 0 16px' }}>
+        {/* Profile badge */}
+        {showProfileBadge && (
+          <div style={{ display: 'flex', marginBottom: 14 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: badgeBg, border: `1px solid ${badgeBorder}`,
+              borderRadius: 99, padding: '4px 12px',
+            }}>
+              <span style={{ fontSize: 12 }}>{isPersonal ? '🏠' : '💼'}</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: badgeColor, letterSpacing: '0.02em' }}>
+                {isPersonal ? 'Lançamento Pessoal' : 'Lançamento Negócio'}
+              </span>
+            </span>
+          </div>
+        )}
+
         {/* Type toggle */}
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 18,
@@ -154,32 +194,50 @@ export default function NewTransactionSheet({ open, onClose, onSuccess, profileT
           <input
             value={description}
             onChange={e => setDescription(e.target.value)}
-            placeholder={type === 'expense' ? 'Ex: Supermercado, Uber, iFood...' : 'Ex: Salário, Freelance, Venda...'}
+            placeholder={placeholderText}
             style={{ ...inputBase, height: 48, fontSize: 15 }}
           />
         </div>
 
-        {/* Category + Date */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-          <div>
-            <label style={labelStyle}>Categoria</label>
-            <div style={{ position: 'relative' }}>
-              <select value={category} onChange={e => setCategory(e.target.value)}
-                style={{ ...inputBase, paddingRight: 32, appearance: 'none' }}>
-                <option value="">Selecione...</option>
-                {flatCats.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <ChevronDown style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
-            </div>
-          </div>
-          <div>
-            <label style={labelStyle}>Data</label>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inputBase} />
+        {/* Category grid (profile-aware) */}
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Categoria</label>
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6,
+            maxHeight: 220, overflowY: 'auto', paddingRight: 2,
+          }}>
+            {cats.map(c => {
+              const selected = category === c.label;
+              return (
+                <button key={c.label} type="button" onClick={() => setCategory(c.label)}
+                  style={{
+                    padding: '10px 4px',
+                    background: selected ? 'rgba(124,58,237,0.18)' : 'var(--color-bg-sunken)',
+                    border: `1px solid ${selected ? 'rgba(124,58,237,0.45)' : 'var(--color-border-weak)'}`,
+                    borderRadius: 10, cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                    transition: 'all 120ms',
+                  }}>
+                  <span style={{ fontSize: 20, lineHeight: 1 }}>{c.emoji}</span>
+                  <span style={{
+                    fontSize: 9, fontWeight: 700,
+                    color: selected ? '#7C3AED' : 'var(--color-text-muted)',
+                    textAlign: 'center', lineHeight: 1.25,
+                  }}>{c.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Origin (only for 'both') */}
-        {profileType === 'both' && (
+        {/* Date */}
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Data</label>
+          <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inputBase} />
+        </div>
+
+        {/* Origin picker — only when 'both' AND not forced by route */}
+        {profileType === 'both' && !forceOrigin && (
           <div style={{ marginBottom: 12 }}>
             <label style={labelStyle}>Origem</label>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -239,7 +297,7 @@ export default function NewTransactionSheet({ open, onClose, onSuccess, profileT
             boxShadow: canSubmit ? `0 4px 14px ${type === 'expense' ? 'rgba(220,38,38,0.3)' : 'rgba(124, 58, 237,0.3)'}` : 'none',
             transition: 'all 200ms',
           }}>
-          {submitting ? 'Salvando...' : type === 'expense' ? '💸 Registrar despesa' : '💰 Registrar receita'}
+          {submitLabel}
         </motion.button>
       </div>
     </BottomSheet>
