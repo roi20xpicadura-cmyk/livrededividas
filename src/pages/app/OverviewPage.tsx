@@ -6,12 +6,12 @@ import { formatCurrency } from '@/lib/plans';
 import { OBJECTIVES } from '@/lib/objectives';
 import { calculateFinancialScore, getScoreColor, getScoreLevel, ScoreData } from '@/lib/financialScore';
 import {
-  TrendingUp, TrendingDown, Eye, EyeOff, ChevronDown,
+  TrendingUp, TrendingDown, Eye, EyeOff, ChevronDown, Check,
   ArrowRight, PlusCircle, ReceiptText, Target, Shield, Flame, PiggyBank,
-  DollarSign, Percent, Hash, Zap, BarChart2
+  DollarSign, Percent, Hash, Zap, BarChart2, Calendar as CalendarIcon
 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { format, parseISO, startOfMonth, endOfMonth, subDays, subMonths, differenceInDays, eachDayOfInterval } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
+import { format, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
 import PredictiveWidget from '@/components/dashboard/PredictiveWidget';
@@ -25,7 +25,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const LazyChart = lazy(() => import('recharts').then(m => ({
   default: ({ data }: { data: any[] }) => (
     <m.ResponsiveContainer width="100%" height="100%">
-      <m.AreaChart data={data} margin={{ top: 5, right: 0, left: -30, bottom: 0 }}>
+      <m.AreaChart data={data} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
         <defs>
           <linearGradient id="balanceGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#16a34a" stopOpacity={0.2} />
@@ -33,9 +33,9 @@ const LazyChart = lazy(() => import('recharts').then(m => ({
           </linearGradient>
         </defs>
         <m.XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--color-text-subtle)' }} interval="preserveStartEnd" />
-        <m.YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickCount={4} tickFormatter={(v: number) => v >= 1000000 ? `R$${(v/1000000).toFixed(1)}M` : v >= 1000 ? `R$${(v/1000).toFixed(0)}k` : v > 0 ? `R$${v}` : 'R$0'} />
+        <m.YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickCount={4} tickFormatter={(v: number) => v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(0)}k` : `${v}`} />
         <m.Tooltip contentStyle={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-base)', borderRadius: 10, fontSize: 12, fontWeight: 700 }} formatter={(v: number) => [formatCurrency(v, 'R$'), 'Saldo']} />
-        <m.Area type="monotone" dataKey="saldo" stroke="#16a34a" strokeWidth={2.5} fill="url(#balanceGrad)" dot={false} activeDot={{ r: 5, fill: '#16a34a', stroke: 'white', strokeWidth: 2 }} />
+        <m.Area type="monotone" dataKey="saldo" stroke="#16a34a" strokeWidth={2.5} fill="url(#balanceGrad)" dot={false} connectNulls={false} activeDot={{ r: 5, fill: '#16a34a', stroke: 'white', strokeWidth: 2 }} />
       </m.AreaChart>
     </m.ResponsiveContainer>
   )
@@ -65,20 +65,114 @@ function AnimatedCurrency({ value, currency }: { value: number; currency: string
   return <>{formatCurrency(v, currency)}</>;
 }
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  'Salário': '💼', 'Freelance': '💻', 'Vendas': '📦', 'Investimentos': '📈',
+  'Renda Extra': '💵', 'Aluguel Recebido': '🏠', 'Dividendos': '💰',
+  'Supermercado': '🛒', 'Alimentação': '🍽️', 'Delivery': '🛵', 'Restaurante': '🍴',
+  'Transporte': '🚗', 'Combustível': '⛽', 'Uber/Taxi': '🚕',
+  'Moradia': '🏠', 'Aluguel': '🏘️', 'Contas': '💡',
+  'Saúde': '❤️', 'Farmácia': '💊', 'Academia': '🏋️',
+  'Educação': '📚', 'Cursos': '🎓',
+  'Lazer': '🎮', 'Streaming': '📺', 'Assinaturas': '📱',
+  'Financeiro': '💳', 'Investimento': '📊', 'Poupança': '🐷', 'Dívidas': '⚠️',
+  'Vestuário': '👕', 'Beleza': '💄', 'Pets': '🐾', 'Tecnologia': '💻',
+  'Seguros': '🛡️', 'Outros': '💸',
+};
+
 function getCategoryEmoji(cat: string): string {
-  const map: Record<string, string> = {
-    'Alimentação': '🍽️', 'Transporte': '🚗', 'Moradia': '🏠', 'Saúde': '❤️',
-    'Educação': '📚', 'Lazer': '🎮', 'Salário': '💼', 'Freelance': '💻',
-    'Investimentos': '📈', 'Renda Extra': '💵', 'Vendas': '💰',
-    'Vestuário': '👕', 'Assinaturas': '📱', 'Delivery': '🛵',
-    'Supermercado': '🛒', 'Beleza': '💄', 'Pets': '🐾', 'Tecnologia': '💻',
-    'Dívidas': '💳', 'Investir': '📊', 'Poupança': '🐷', 'Seguros': '🛡️',
-    'Outros': '💸',
-  };
-  return map[cat] || '💸';
+  return CATEGORY_EMOJI[cat] || '💸';
+}
+
+function getGoalEmoji(name: string): string {
+  const n = name.toLowerCase();
+  if (/emergência|emergencia|reserva/.test(n)) return '🛡️';
+  if (/viagem|férias|ferias|trip/.test(n)) return '✈️';
+  if (/casa|apartamento|imóvel|imovel/.test(n)) return '🏠';
+  if (/carro|veículo|veiculo/.test(n)) return '🚗';
+  if (/casamento|wedding/.test(n)) return '💍';
+  if (/faculdade|universidade|estudo/.test(n)) return '🎓';
+  if (/dívida|divida|cartão|cartao/.test(n)) return '💳';
+  if (/negócio|negocio|empresa/.test(n)) return '💼';
+  if (/aposentadoria|pensão/.test(n)) return '👴';
+  if (/computador|notebook|celular|tech/.test(n)) return '💻';
+  return '🎯';
+}
+
+function formatCompact(v: number): string {
+  if (v >= 1000000) return `${(v/1000000).toFixed(1)}M`;
+  if (v >= 1000) return `${(v/1000).toFixed(1)}k`;
+  return v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 const stagger = (i: number) => ({ initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] as const, delay: i * 0.06 } });
+
+/* ── Period Selector ─────────────── */
+function PeriodSelector({ period, onPeriodChange }: { period: { month: number; year: number }; onPeriodChange: (m: number, y: number) => void }) {
+  const [open, setOpen] = useState(false);
+  const label = new Date(period.year, period.month)
+    .toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+    .replace(/^\w/, c => c.toUpperCase());
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5"
+        style={{
+          height: 30, padding: '0 12px', borderRadius: 99,
+          background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-base)',
+          fontSize: 12, fontWeight: 700, color: 'var(--color-text-muted)', cursor: 'pointer',
+        }}
+      >
+        <CalendarIcon size={12} style={{ color: 'var(--color-text-subtle)' }} />
+        {label}
+        <ChevronDown size={11} style={{ color: 'var(--color-text-subtle)' }} />
+      </motion.button>
+      <AnimatePresence>
+        {open && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: 6, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 4, scale: 0.97 }}
+              transition={{ duration: 0.15 }}
+              className="absolute z-50"
+              style={{
+                top: 36, right: 0, minWidth: 200,
+                background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-base)',
+                borderRadius: 14, padding: 8, boxShadow: 'var(--shadow-lg)',
+              }}
+            >
+              {Array.from({ length: 6 }, (_, i) => {
+                const d = new Date();
+                d.setMonth(d.getMonth() - i);
+                const isActive = d.getMonth() === period.month && d.getFullYear() === period.year;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => { onPeriodChange(d.getMonth(), d.getFullYear()); setOpen(false); }}
+                    className="w-full flex items-center justify-between"
+                    style={{
+                      padding: '9px 12px', borderRadius: 9, border: 'none',
+                      background: isActive ? 'var(--color-success-bg)' : 'transparent',
+                      color: isActive ? 'var(--color-success-text)' : 'var(--color-text-muted)',
+                      fontSize: 13, fontWeight: isActive ? 700 : 500, textAlign: 'left', cursor: 'pointer',
+                    }}
+                  >
+                    {d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase())}
+                    {isActive && <Check size={13} style={{ color: 'var(--color-success-text)' }} />}
+                  </button>
+                );
+              })}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 /* ── main ────────────────────────── */
 export default function OverviewPage() {
@@ -88,36 +182,52 @@ export default function OverviewPage() {
   const isMobile = useIsMobile();
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [allTransactions, setAllTransactions] = useState<any[]>([]);
   const [investments, setInvestments] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
   const [cards, setCards] = useState<any[]>([]);
   const [debts, setDebts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showValues, setShowValues] = useState(true);
+  const [period, setPeriod] = useState({ month: new Date().getMonth(), year: new Date().getFullYear() });
   const currency = config?.currency || 'R$';
   const profileType = config?.profile_type || 'personal';
   const showPersonal = profileType === 'personal' || profileType === 'both';
   const showBusiness = profileType === 'business' || profileType === 'both';
 
-  useEffect(() => {
+  const fetchData = (month: number, year: number) => {
     if (!user) return;
-    const start = format(startOfMonth(new Date()), 'yyyy-MM-dd');
-    const end = format(endOfMonth(new Date()), 'yyyy-MM-dd');
+    const periodDate = new Date(year, month);
+    const start = format(startOfMonth(periodDate), 'yyyy-MM-dd');
+    const end = format(endOfMonth(periodDate), 'yyyy-MM-dd');
+    // Also fetch last 6 months for chart
+    const chartStart = format(startOfMonth(subMonths(periodDate, 5)), 'yyyy-MM-dd');
     Promise.all([
       supabase.from('transactions').select('*').eq('user_id', user.id).gte('date', start).lte('date', end).is('deleted_at', null).order('date', { ascending: false }),
+      supabase.from('transactions').select('*').eq('user_id', user.id).gte('date', chartStart).lte('date', end).is('deleted_at', null),
       supabase.from('investments').select('*').eq('user_id', user.id),
       supabase.from('goals').select('*').eq('user_id', user.id).is('deleted_at', null),
       supabase.from('credit_cards').select('*').eq('user_id', user.id),
       supabase.from('debts').select('*').eq('user_id', user.id).eq('status', 'active'),
-    ]).then(([txRes, invRes, goalRes, cardRes, debtRes]) => {
+    ]).then(([txRes, allTxRes, invRes, goalRes, cardRes, debtRes]) => {
       setTransactions(txRes.data || []);
+      setAllTransactions(allTxRes.data || []);
       setInvestments(invRes.data || []);
       setGoals(goalRes.data || []);
       setCards(cardRes.data || []);
       setDebts(debtRes.data || []);
       setLoading(false);
     });
-  }, [user]);
+  };
+
+  useEffect(() => {
+    fetchData(period.month, period.year);
+  }, [user, period.month, period.year]);
+
+  const handlePeriodChange = (month: number, year: number) => {
+    setLoading(true);
+    setPeriod({ month, year });
+  };
 
   const stats = useMemo(() => {
     const income = transactions.filter(t => t.type === 'income');
@@ -150,30 +260,31 @@ export default function OverviewPage() {
   }, [stats, cards, goals, debts, investments, transactions]);
 
   const chartData = useMemo(() => {
-    const end = new Date();
-    const start = subMonths(end, 5);
-    const months: { date: string; saldo: number }[] = [];
-    let d = startOfMonth(start);
-    while (d <= end) {
+    const periodDate = new Date(period.year, period.month);
+    const months: { date: string; saldo: number | null }[] = [];
+    let prevBalance = 0;
+    for (let i = 5; i >= 0; i--) {
+      const d = subMonths(periodDate, i);
       const mStart = format(startOfMonth(d), 'yyyy-MM-dd');
       const mEnd = format(endOfMonth(d), 'yyyy-MM-dd');
-      const monthTxs = transactions.filter(t => t.date >= mStart && t.date <= mEnd);
-      const bal = monthTxs.reduce((s, t) => s + (t.type === 'income' ? 1 : -1) * Number(t.amount), 0);
-      months.push({ date: format(d, 'MMM', { locale: ptBR }), saldo: bal });
-      d = subMonths(d, -1);
-      d = startOfMonth(d);
+      const monthTxs = allTransactions.filter(t => t.date >= mStart && t.date <= mEnd);
+      if (monthTxs.length > 0) {
+        const bal = monthTxs.reduce((s, t) => s + (t.type === 'income' ? 1 : -1) * Number(t.amount), 0);
+        prevBalance = bal;
+        months.push({ date: format(d, 'MMM', { locale: ptBR }), saldo: bal });
+      } else {
+        months.push({ date: format(d, 'MMM', { locale: ptBR }), saldo: prevBalance > 0 ? prevBalance : null });
+      }
     }
     return months;
-  }, [transactions]);
+  }, [allTransactions, period]);
 
   if (loading) return <DashSkeleton />;
 
-  // Greeting
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
   const firstName = profile?.full_name?.split(' ')[0] || '';
 
-  // Determine which balance to show
   const heroBalance = profileType === 'personal' ? stats.netBalance
     : profileType === 'business' ? stats.bizProfit
     : stats.netBalance;
@@ -185,7 +296,7 @@ export default function OverviewPage() {
   const savedAmount = Math.max(0, stats.netBalance);
   const streak = config?.streak_days || 0;
 
-  // Stats cards
+  // Profile-aware stat cards
   const statCards = showPersonal && !showBusiness ? [
     { label: 'Score', value: scoreResult.total, suffix: '/1000', icon: Shield, color: 'var(--color-green-600)', bg: 'var(--color-success-bg)' },
     { label: 'Metas ativas', value: activeGoals.length, suffix: '', icon: Target, color: '#7c3aed', bg: 'hsl(263 90% 51% / 0.12)' },
@@ -204,16 +315,11 @@ export default function OverviewPage() {
   ];
 
   const recent = transactions.slice(0, 5);
-
-  // Predictive widget: only show if there's a real prediction concern
-  const showPredictive = true; // Always show, widget handles its own visibility
-
-  // Score lowest criteria for compact display
   const sortedCriteria = [...scoreResult.criteria].sort((a, b) => (a.points / a.max) - (b.points / b.max)).slice(0, 3);
 
   return (
     <div className="space-y-3 pb-4">
-      {/* 1. GREETING */}
+      {/* 1. GREETING + PERIOD SELECTOR */}
       <motion.div {...stagger(0)} className="flex items-center justify-between" style={{ padding: isMobile ? '4px 0' : '0' }}>
         <div>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 2 }}>
@@ -223,12 +329,11 @@ export default function OverviewPage() {
             {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
           </p>
         </div>
+        <PeriodSelector period={period} onPeriodChange={handlePeriodChange} />
       </motion.div>
 
       {/* WELCOME CHECKLIST */}
       <WelcomeChecklist />
-
-      {/* WHATSAPP PROMO */}
 
       {/* WHATSAPP PROMO */}
       <WhatsAppPromoWidget />
@@ -241,7 +346,6 @@ export default function OverviewPage() {
         boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px rgba(34,197,94,0.06), inset 0 1px 0 rgba(255,255,255,0.04)',
       }}>
         <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 70%)' }} />
-        <div style={{ position: 'absolute', bottom: -30, left: '20%', width: 140, height: 140, borderRadius: '50%', background: 'radial-gradient(circle, rgba(34,197,94,0.05) 0%, transparent 70%)' }} />
 
         <div className="flex items-center justify-between" style={{ marginBottom: 16, position: 'relative' }}>
           <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
@@ -273,6 +377,7 @@ export default function OverviewPage() {
           )}
         </div>
 
+        {/* Receitas / Despesas — always show */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1px 1fr', background: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px 16px', position: 'relative' }}>
           <div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Receitas</div>
@@ -289,7 +394,7 @@ export default function OverviewPage() {
           </div>
         </div>
 
-        {/* Both: show secondary card inline */}
+        {/* PESSOAL / NEGÓCIO rows — only for 'both' */}
         {profileType === 'both' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
             <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 14px' }}>
@@ -339,20 +444,23 @@ export default function OverviewPage() {
         <AIInsightsWidget onOpenChat={() => setAiChatOpen(true)} />
       </motion.div>
 
-      {/* 4. PREDICTIVE AI */}
+      {/* PREDICTIVE AI */}
       <PredictiveWidget />
 
-      {/* 5. SCORE CARD — personal only, compact */}
+      {/* SCORE CARD — personal only, compact */}
       {showPersonal && (
         <motion.div {...stagger(7)} className="card-glow" style={{ padding: '16px 20px' }}>
           <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
             <div className="flex items-center gap-1.5" style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               <Shield size={14} color="var(--color-green-600)" /> Score Financeiro
             </div>
+            <button onClick={() => navigate('/app/achievements')} style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-green-600)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              Detalhes →
+            </button>
           </div>
 
           <div className="flex items-center gap-4" style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 48, fontWeight: 900, color: getScoreColor(scoreResult.total), letterSpacing: '-2px', lineHeight: 1 }}>
+            <div style={{ fontSize: 48, fontWeight: 900, color: getScoreColor(scoreResult.total), letterSpacing: '-2px', lineHeight: 1, fontFamily: 'var(--font-mono)' }}>
               {showValues ? Math.round(scoreResult.total) : '•••'}
             </div>
             <div>
@@ -365,7 +473,7 @@ export default function OverviewPage() {
               </div>
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ height: 8, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden' }}>
+              <div style={{ height: 6, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden' }}>
                 <motion.div initial={{ width: 0 }} animate={{ width: `${(scoreResult.total / 1000) * 100}%` }}
                   transition={{ duration: 1.2, ease: 'easeOut' }}
                   style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${getScoreColor(scoreResult.total)}, #22c55e)` }} />
@@ -373,19 +481,21 @@ export default function OverviewPage() {
             </div>
           </div>
 
-          {sortedCriteria.map(c => (
-            <div key={c.label} className="flex items-center gap-2.5" style={{ marginBottom: 8 }}>
-              <span style={{ fontSize: 12, color: 'var(--color-text-muted)', flex: 1, fontWeight: 500 }}>{c.label}</span>
-              <div style={{ width: 80, height: 6, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{ width: `${Math.max((c.points / c.max) * 100, c.points > 0 ? 5 : 0)}%`, height: '100%', borderRadius: 99, minWidth: c.points > 0 ? 4 : 0, background: c.points / c.max > 0.6 ? 'var(--color-green-500)' : c.points / c.max > 0.3 ? '#f59e0b' : '#ef4444' }} />
+          <div style={{ paddingTop: 12, borderTop: '0.5px solid var(--color-border-weak)' }}>
+            {sortedCriteria.map(c => (
+              <div key={c.label} className="flex items-center gap-2.5" style={{ marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: 'var(--color-text-muted)', flex: 1, fontWeight: 500 }}>{c.label}</span>
+                <div style={{ width: 80, height: 4, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{ width: `${Math.max((c.points / c.max) * 100, c.points > 0 ? 5 : 0)}%`, height: '100%', borderRadius: 99, minWidth: c.points > 0 ? 4 : 0, background: c.points / c.max > 0.6 ? 'var(--color-green-500)' : c.points / c.max > 0.3 ? '#f59e0b' : '#ef4444' }} />
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', minWidth: 32, textAlign: 'right' }}>{c.points}/{c.max}</span>
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', minWidth: 32, textAlign: 'right' }}>{c.points}/{c.max}</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </motion.div>
       )}
 
-      {/* 6. CHART */}
+      {/* CHART */}
       <motion.div {...stagger(8)} className="card-glow" style={{ padding: '16px 20px' }}>
         <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
           <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-base)' }}>Evolução do saldo</span>
@@ -405,7 +515,7 @@ export default function OverviewPage() {
         </div>
       </motion.div>
 
-      {/* 7. GOALS PREVIEW — personal only */}
+      {/* GOALS PREVIEW — personal only */}
       {showPersonal && (
         <motion.div {...stagger(9)}>
           <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
@@ -419,19 +529,25 @@ export default function OverviewPage() {
               const pct = Math.min(100, (Number(goal.current_amount || 0) / Number(goal.target_amount)) * 100);
               const obj = OBJECTIVES.find(o => o.key === goal.objective_type);
               const barColor = pct >= 75 ? '#16a34a' : pct >= 40 ? '#f59e0b' : '#ef4444';
+              const emoji = obj?.emoji || getGoalEmoji(goal.name);
               return (
                 <motion.div key={goal.id} whileTap={{ scale: 0.97 }} onClick={() => navigate('/app/goals')}
-                  style={{ flexShrink: 0, width: 150, background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 14, padding: 14, cursor: 'pointer' }}>
-                  <div style={{ fontSize: 22, marginBottom: 8, lineHeight: 1 }}>{obj?.emoji || '🎯'}</div>
+                  style={{ flexShrink: 0, width: 155, background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 14, padding: 14, cursor: 'pointer' }}>
+                  <div style={{ fontSize: 24, marginBottom: 10, lineHeight: 1 }}>{emoji}</div>
                   <div style={{
-                    fontSize: 12, fontWeight: 700, color: 'var(--color-text-base)', marginBottom: 10, lineHeight: 1.4,
+                    fontSize: 12, fontWeight: 700, color: 'var(--color-text-base)', marginBottom: 4, lineHeight: 1.4,
                     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden', minHeight: 33,
                   }}>{goal.name}</div>
-                  <div style={{ height: 4, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden', marginBottom: 6 }}>
+                  {/* Current / Target */}
+                  <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginBottom: 8, fontFamily: 'var(--font-mono)', fontWeight: 500 }}>
+                    R$ {formatCompact(Number(goal.current_amount || 0))}
+                    <span style={{ color: 'var(--color-text-disabled)' }}> / R$ {formatCompact(Number(goal.target_amount))}</span>
+                  </div>
+                  <div style={{ height: 4, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden', marginBottom: 5 }}>
                     <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, ease: 'easeOut' }}
                       style={{ height: '100%', borderRadius: 99, background: barColor }} />
                   </div>
-                  <span style={{ fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 600 }}>{pct.toFixed(0)}%</span>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: barColor }}>{pct.toFixed(0)}%</span>
                 </motion.div>
               );
             })}
@@ -446,7 +562,7 @@ export default function OverviewPage() {
         </motion.div>
       )}
 
-      {/* 8. RECENT TRANSACTIONS */}
+      {/* RECENT TRANSACTIONS */}
       <motion.div {...stagger(10)}>
         <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
           <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text-strong)' }}>Lançamentos recentes</span>
@@ -457,7 +573,7 @@ export default function OverviewPage() {
         <div className="card-glow" style={{ overflow: 'hidden' }}>
           {recent.length === 0 ? (
             <div style={{ padding: '32px 16px', textAlign: 'center', fontSize: 13, color: 'var(--color-text-subtle)' }}>
-              Nenhum lançamento ainda.
+              Nenhum lançamento neste período.
               <br />
               <button onClick={() => navigate('/app/transactions')} style={{ color: 'var(--color-green-600)', background: 'none', border: 'none', fontWeight: 700, cursor: 'pointer', marginTop: 8, fontSize: 13 }}>
                 + Adicionar primeiro lançamento

@@ -12,6 +12,7 @@ const MetricsSection = lazy(() => import('@/components/landing/MetricsSection'))
 const FeaturesSection = lazy(() => import('@/components/landing/FeaturesSection'));
 const UseCasesSection = lazy(() => import('@/components/landing/UseCasesSection'));
 const HowItWorks = lazy(() => import('@/components/landing/HowItWorks'));
+const ComparisonSection = lazy(() => import('@/components/landing/ComparisonSection'));
 const PricingSection = lazy(() => import('@/components/landing/PricingSection'));
 const TestimonialsSection = lazy(() => import('@/components/landing/TestimonialsSection'));
 const FAQSection = lazy(() => import('@/components/landing/FAQSection'));
@@ -38,6 +39,7 @@ export default function LandingPage() {
         <FeaturesSection />
         <UseCasesSection />
         <HowItWorks />
+        <ComparisonSection />
         <TestimonialsSection />
         <PricingSection />
         <FAQSection />

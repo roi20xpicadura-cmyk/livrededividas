@@ -1,36 +1,91 @@
 import { motion } from 'framer-motion';
-import { UserPlus, Settings, BarChart3 } from 'lucide-react';
+import { UserPlus, Settings2, Sparkles } from 'lucide-react';
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const steps = [
-  { num: '1', icon: UserPlus, title: 'Crie sua conta', desc: 'Em 30 segundos, sem cartão de crédito.', preview: 'Formulário de cadastro simples e rápido' },
-  { num: '2', icon: Settings, title: 'Configure seu perfil', desc: 'Diga o que quer alcançar. A IA personaliza tudo.', preview: 'Onboarding com objetivos financeiros' },
-  { num: '3', icon: BarChart3, title: 'Comece a controlar', desc: 'Seu painel completo, pronto para usar.', preview: 'Dashboard com gráficos e metas' },
+  {
+    number: '01',
+    icon: UserPlus,
+    title: 'Crie sua conta grátis',
+    description: 'Em menos de 1 minuto. Sem cartão de crédito.',
+    color: '#16a34a',
+  },
+  {
+    number: '02',
+    icon: Settings2,
+    title: 'Configure seu perfil',
+    description: 'Pessoal, negócio ou os dois. FinDash Pro se adapta.',
+    color: '#7c3aed',
+  },
+  {
+    number: '03',
+    icon: Sparkles,
+    title: 'IA analisa suas finanças',
+    description: 'Insights personalizados desde o primeiro lançamento.',
+    color: '#0891b2',
+  },
 ];
 
 export default function HowItWorks() {
   return (
-    <section className="py-20 md:py-28 px-4 bg-[#f8fafc]">
-      <div className="max-w-[1200px] mx-auto">
+    <section className="py-20 md:py-28 px-4" style={{ background: '#f8fafc' }}>
+      <div className="max-w-[1000px] mx-auto">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-          <h2 className="text-[clamp(28px,4vw,48px)] font-[900] text-[#0f172a] tracking-[-2px]">Simples de começar.</h2>
-          <p className="text-[18px] text-[#64748b] mt-2">Em 3 minutos você já tem o painel completo.</p>
+          <h2 className="text-[clamp(28px,4vw,48px)] font-black tracking-[-2px]" style={{ color: '#0f172a' }}>Simples de começar.</h2>
+          <p className="text-[18px] mt-2" style={{ color: '#64748b' }}>Em 3 minutos você já tem o painel completo.</p>
         </motion.div>
 
-        <div className="relative grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-6">
-          <div className="hidden md:block absolute top-[24px] left-[calc(16.66%+24px)] right-[calc(16.66%+24px)] border-t-2 border-dashed border-[#bbf7d0] z-0" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {steps.map((step, i) => (
-            <motion.div key={step.num} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15, duration: 0.5, ease }} className="relative z-10 text-center">
-              <div className="w-12 h-12 rounded-full bg-[#16a34a] text-white text-[20px] font-[900] flex items-center justify-center mx-auto">{step.num}</div>
-              <h3 className="text-[20px] font-[800] text-[#0f172a] mt-5 mb-2">{step.title}</h3>
-              <p className="text-[15px] text-[#64748b] leading-[1.7] mb-6">{step.desc}</p>
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6 h-[140px] flex items-center justify-center">
-                <div className="flex flex-col items-center gap-2 text-[#94a3b8]">
-                  <step.icon className="w-8 h-8" />
-                  <span className="text-[12px]">{step.preview}</span>
-                </div>
+            <motion.div
+              key={step.number}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.15, duration: 0.5, ease }}
+              className="relative bg-white rounded-[20px] p-7 md:p-8"
+              style={{
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+              }}
+            >
+              {/* Large number watermark */}
+              <div
+                className="absolute top-4 right-5 select-none pointer-events-none"
+                style={{
+                  fontSize: 72,
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  color: step.color,
+                  opacity: 0.06,
+                  letterSpacing: '-4px',
+                }}
+              >
+                {step.number}
               </div>
+
+              {/* Icon */}
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
+                style={{ background: step.color + '14' }}
+              >
+                <step.icon style={{ width: 22, height: 22, color: step.color }} />
+              </div>
+
+              <h3 className="text-[18px] font-extrabold mb-2" style={{ color: '#0f172a' }}>
+                {step.title}
+              </h3>
+              <p className="text-[14px] leading-relaxed" style={{ color: '#64748b' }}>
+                {step.description}
+              </p>
+
+              {/* Arrow connector on desktop */}
+              {i < steps.length - 1 && (
+                <div className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white items-center justify-center" style={{ border: '1px solid #e2e8f0', boxShadow: '0 2px 6px rgba(0,0,0,0.06)' }}>
+                  <span style={{ fontSize: 14, color: '#94a3b8' }}>→</span>
+                </div>
+              )}
             </motion.div>
           ))}
         </div>

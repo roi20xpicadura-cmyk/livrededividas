@@ -30,7 +30,7 @@ const ALL_NAV_ITEMS = [
   { label: 'Integrações', path: '/app/integrations', icon: Plug, profiles: ['personal', 'business', 'both'] },
   { label: 'Simulador', path: '/app/simulator', icon: FlaskConical, profiles: ['personal', 'business', 'both'], badge: 'NOVO' },
   { label: 'Previsões', path: '/app/predictions', icon: Building2, profiles: ['personal', 'business', 'both'] },
-  { label: 'Exportar', path: '/app/export', icon: Download, profiles: ['personal', 'business', 'both'] },
+  
 ];
 
 const ACCOUNT_ITEMS = [
