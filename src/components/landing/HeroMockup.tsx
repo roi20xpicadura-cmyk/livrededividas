@@ -1,4 +1,5 @@
 import { BarChart3, Target, CreditCard, TrendingUp, Home } from 'lucide-react';
+import logo from '@/assets/korafinance-logo.png';
 
 export default function HeroMockup() {
   return (
@@ -21,11 +22,8 @@ export default function HeroMockup() {
       <div className="flex h-[280px] md:h-[340px]">
         {/* Sidebar */}
         <div className="hidden sm:flex w-[140px] md:w-[160px] bg-primary flex-col p-3 gap-1">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-6 h-6 rounded-md bg-primary-foreground/20 flex items-center justify-center">
-              <BarChart3 className="w-3.5 h-3.5 text-primary-foreground" />
-            </div>
-            <span className="text-[11px] font-bold text-primary-foreground">KoraFinance</span>
+          <div className="flex items-center mb-4 bg-white/95 rounded-md px-2 py-1">
+            <img src={logo} alt="KoraFinance" className="h-5 w-auto object-contain" />
           </div>
           {[
             { icon: Home, label: 'Visão Geral', active: true },
