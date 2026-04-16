@@ -1,16 +1,11 @@
-import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import ImportModal from '@/components/app/ImportModal';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
-import { formatCurrency, PLAN_LIMITS, PlanType } from '@/lib/plans';
-import { getCategories } from '@/lib/objectives';
-import {
-  TrendingUp, TrendingDown, Scale, Receipt, PlusCircle, ArrowUp, ArrowDown,
-  Search, X, ChevronDown, ChevronLeft, ChevronRight, Trash2, Pencil, Download,
-  Upload, ReceiptText, Plus, NotepadText, Check
-} from 'lucide-react';
-import { format, parseISO, startOfMonth, endOfMonth } from 'date-fns';
+import ImportModal from '@/components/app/ImportModal';
+import NewTransactionSheet from '@/components/app/NewTransactionSheet';
+import { Plus, Search, X, Trash2, Upload } from 'lucide-react';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -21,710 +16,466 @@ type Tx = {
   user_id: string; created_at: string | null;
 };
 
+const ITEMS_PER_PAGE = 20;
+
+const CATEGORY_EMOJI: Record<string, string> = {
+  // expense
+  'Supermercado': '🛒', 'Alimentação': '🍽️', 'Delivery': '🛵',
+  'Transporte': '🚌', 'Combustível': '⛽', 'Uber/Taxi': '🚕',
+  'Moradia': '🏠', 'Aluguel': '🏡', 'Contas': '🧾',
+  'Saúde': '❤️', 'Farmácia': '💊', 'Academia': '🏋️',
+  'Educação': '📚', 'Cursos': '🎓',
+  'Lazer': '🎉', 'Streaming': '🎬', 'Assinaturas': '🔁',
+  'Vestuário': '👕', 'Roupas': '👕', 'Beleza': '💄',
+  'Financeiro': '💼', 'Cartão': '💳', 'Cartão de Crédito': '💳', 'Dívidas': '💸',
+  'Pets': '🐾', 'Outros': '✨', 'Outro': '✨',
+  // business expense
+  'Marketing': '📢', 'Fornecedor': '📦', 'Folha de Pagamento': '👥',
+  'Software': '💻', 'Impostos': '🏛️', 'Equipamentos': '🖥️', 'Logística': '🚚',
+  // income
+  'Salário': '💰', 'Freelance': '💼', 'Vendas': '🛍️',
+  'Aluguel Recebido': '🏘️', 'Investimentos': '📈',
+  'Dividendos': '💵', 'Bônus': '🎁', 'Renda Extra': '✨',
+  'Presente': '🎁', 'Reembolso': '↩️',
+  'Serviços': '🛠️', 'Consultoria': '🧠', 'Parceria': '🤝',
+};
+
+function getCategoryEmoji(cat: string) {
+  return CATEGORY_EMOJI[cat] || '✨';
+}
+
+function formatBRL(n: number) {
+  return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatCompact(n: number) {
+  const abs = Math.abs(n);
+  if (abs >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + 'M';
+  if (abs >= 1000) return (n / 1000).toFixed(1).replace('.0', '') + 'k';
+  return abs.toFixed(0);
+}
+
 export default function TransactionsPage() {
   const { user } = useAuth();
-  const { profile, config } = useProfile();
-  const plan = (profile?.plan || 'free') as PlanType;
-  const limits = PLAN_LIMITS[plan];
+  const { config } = useProfile();
   const profileType = config?.profile_type || 'personal';
+  const showOriginFilter = profileType === 'both';
 
   const [txs, setTxs] = useState<Tx[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Form state
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [desc, setDesc] = useState('');
-  const [val, setVal] = useState('');
-  const [type, setType] = useState<'income' | 'expense'>('income');
-  const [origin, setOrigin] = useState<'business' | 'personal'>(profileType === 'personal' ? 'personal' : 'business');
-  const [cat, setCat] = useState('');
-  const [showNotes, setShowNotes] = useState(false);
-  const [notes, setNotes] = useState('');
-  const [isRecurring, setIsRecurring] = useState(false);
-  const [recurFreq, setRecurFreq] = useState('month');
-  const [submitting, setSubmitting] = useState(false);
-  const [successFlash, setSuccessFlash] = useState(false);
-
-  // Filter state
-  const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
-  const [filterOrigin, setFilterOrigin] = useState<'all' | 'business' | 'personal'>('all');
+  const [filter, setFilter] = useState<'all' | 'income' | 'expense' | 'personal' | 'business'>('all');
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'highest' | 'lowest' | 'az'>('newest');
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
-
-  // Table state
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDesc, setEditDesc] = useState('');
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
-
-  // Category breakdown
-  const [showCatBreakdown, setShowCatBreakdown] = useState(false);
-
-  // Import modal
+  const [showSheet, setShowSheet] = useState(false);
   const [showImport, setShowImport] = useState(false);
-
-  const descRef = useRef<HTMLInputElement>(null);
-  const formRef = useRef<HTMLDivElement>(null);
-
-  const cats = useMemo(() => getCategories(profileType, type), [profileType, type]);
-  const flatCats = useMemo(() => {
-    if (Array.isArray(cats) && typeof cats[0] === 'string') return cats as string[];
-    return (cats as { group: string; items: string[] }[]).flatMap(g => g.items);
-  }, [cats]);
+  const [openActionsId, setOpenActionsId] = useState<string | null>(null);
 
   const fetchTxs = useCallback(async () => {
     if (!user) return;
     const start = format(startOfMonth(new Date()), 'yyyy-MM-dd');
     const end = format(endOfMonth(new Date()), 'yyyy-MM-dd');
-    const { data } = await supabase.from('transactions').select('*').eq('user_id', user.id).gte('date', start).lte('date', end).order('date', { ascending: false });
+    const { data } = await supabase.from('transactions').select('*')
+      .eq('user_id', user.id).gte('date', start).lte('date', end)
+      .order('date', { ascending: false });
     setTxs((data || []) as Tx[]);
     setLoading(false);
   }, [user]);
 
   useEffect(() => { fetchTxs(); }, [fetchTxs]);
 
-  // Filtered + sorted
+  // Filtering
   const filtered = useMemo(() => {
-    let r = txs
-      .filter(t => filterType === 'all' || t.type === filterType)
-      .filter(t => filterOrigin === 'all' || t.origin === filterOrigin)
-      .filter(t => !search || t.description.toLowerCase().includes(search.toLowerCase()) || t.category.toLowerCase().includes(search.toLowerCase()));
-    switch (sortBy) {
-      case 'oldest': r = [...r].sort((a, b) => a.date.localeCompare(b.date)); break;
-      case 'highest': r = [...r].sort((a, b) => Number(b.amount) - Number(a.amount)); break;
-      case 'lowest': r = [...r].sort((a, b) => Number(a.amount) - Number(b.amount)); break;
-      case 'az': r = [...r].sort((a, b) => a.description.localeCompare(b.description)); break;
-      default: r = [...r].sort((a, b) => b.date.localeCompare(a.date));
-    }
-    return r;
-  }, [txs, filterType, filterOrigin, search, sortBy]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
-  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+    return txs
+      .filter(t => {
+        if (filter === 'all') return true;
+        if (filter === 'income' || filter === 'expense') return t.type === filter;
+        if (filter === 'personal' || filter === 'business') return t.origin === filter;
+        return true;
+      })
+      .filter(t => !search ||
+        t.description.toLowerCase().includes(search.toLowerCase()) ||
+        t.category.toLowerCase().includes(search.toLowerCase()))
+      .sort((a, b) => b.date.localeCompare(a.date) || (b.created_at || '').localeCompare(a.created_at || ''));
+  }, [txs, filter, search]);
 
   const totals = useMemo(() => {
     const inc = filtered.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
     const exp = filtered.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
-    const incCount = filtered.filter(t => t.type === 'income').length;
-    const expCount = filtered.filter(t => t.type === 'expense').length;
-    return { inc, exp, net: inc - exp, incCount, expCount, total: filtered.length };
+    return { inc, exp, count: filtered.length };
   }, [filtered]);
 
-  // Category breakdown data
-  const catBreakdown = useMemo(() => {
-    const map: Record<string, { amount: number; type: string }> = {};
-    filtered.forEach(t => {
-      if (!map[t.category]) map[t.category] = { amount: 0, type: t.type };
-      map[t.category].amount += Number(t.amount);
-    });
-    return Object.entries(map)
-      .map(([name, { amount, type: tp }]) => ({ name, amount, type: tp }))
-      .sort((a, b) => b.amount - a.amount);
-  }, [filtered]);
+  const paginated = filtered.slice(0, page * ITEMS_PER_PAGE);
+  const hasMore = paginated.length < filtered.length;
 
-  const handleAdd = async () => {
-    const v = parseFloat(val);
-    if (!date || !desc.trim() || isNaN(v) || v <= 0 || !cat) { toast.error('Preencha todos os campos'); return; }
-    if (limits.transactions_per_month !== Infinity && txs.length >= limits.transactions_per_month) {
-      toast.error(`Limite de ${limits.transactions_per_month} lançamentos atingido. Faça upgrade!`); return;
-    }
-    setSubmitting(true);
-    const { error } = await supabase.from('transactions').insert({
-      user_id: user!.id, date, description: desc.trim(), amount: v, type, origin, category: cat,
-      notes: notes.trim() || null,
+  // Group by date
+  const grouped = useMemo(() => {
+    const map: Record<string, Tx[]> = {};
+    paginated.forEach(tx => {
+      if (!map[tx.date]) map[tx.date] = [];
+      map[tx.date].push(tx);
     });
-    setSubmitting(false);
-    if (error) { toast.error(error.message); return; }
-    setSuccessFlash(true);
-    setTimeout(() => setSuccessFlash(false), 1500);
-    setDesc(''); setVal(''); setCat(''); setNotes(''); setShowNotes(false);
-    setDate(format(new Date(), 'yyyy-MM-dd'));
-    fetchTxs();
-    setTimeout(() => descRef.current?.focus(), 100);
-  };
+    return Object.entries(map).sort((a, b) => b[0].localeCompare(a[0]));
+  }, [paginated]);
 
-  const handleRemove = async (id: string) => {
+  const handleDelete = async (id: string) => {
     await supabase.from('transactions').delete().eq('id', id);
     toast.success('Removido');
-    setDeletingId(null);
+    setOpenActionsId(null);
     fetchTxs();
   };
 
-  const handleBulkDelete = async () => {
-    const ids = Array.from(selected);
-    if (!ids.length) return;
-    for (const id of ids) {
-      await supabase.from('transactions').delete().eq('id', id);
+  // Filters available
+  const filters = useMemo(() => {
+    const base = [
+      { id: 'all' as const, label: 'Todos' },
+      { id: 'income' as const, label: 'Receitas' },
+      { id: 'expense' as const, label: 'Despesas' },
+    ];
+    if (showOriginFilter) {
+      return [...base,
+        { id: 'personal' as const, label: '🏠 Pessoal' },
+        { id: 'business' as const, label: '💼 Negócio' },
+      ];
     }
-    toast.success(`${ids.length} lançamento(s) removido(s)`);
-    setSelected(new Set());
-    fetchTxs();
-  };
+    return base;
+  }, [showOriginFilter]);
 
-  const handleInlineEdit = async (id: string) => {
-    if (!editDesc.trim()) { setEditingId(null); return; }
-    await supabase.from('transactions').update({ description: editDesc.trim() }).eq('id', id);
-    setEditingId(null);
-    fetchTxs();
-  };
-
-  const toggleSelect = (id: string) => {
-    setSelected(prev => {
-      const n = new Set(prev);
-      n.has(id) ? n.delete(id) : n.add(id);
-      return n;
-    });
-  };
-
-  const toggleSelectAll = () => {
-    if (selected.size === paginated.length) setSelected(new Set());
-    else setSelected(new Set(paginated.map(t => t.id)));
-  };
-
-  const clearFilters = () => {
-    setFilterType('all'); setFilterOrigin('all'); setSearch(''); setSortBy('newest');
-  };
-  const hasActiveFilters = filterType !== 'all' || filterOrigin !== 'all' || search || sortBy !== 'newest';
-
-  const scrollToForm = (t: 'income' | 'expense') => {
-    setType(t); setCat('');
-    formRef.current?.scrollIntoView({ behavior: 'smooth' });
-    setTimeout(() => descRef.current?.focus(), 300);
-  };
-
-
-
-
-  const renderCategorySelect = () => {
-    if (Array.isArray(cats) && typeof cats[0] === 'string') {
-      return (
-        <div className="relative">
-          <select value={cat} onChange={e => setCat(e.target.value)}
-            className="w-full h-[38px] md:h-[42px] px-2.5 pr-7 text-[12px] md:text-[13px] font-semibold rounded-lg border border-border bg-card appearance-none focus:border-[#16a34a] focus:outline-none transition-colors">
-            <option value="">Selecione...</option>
-            {(cats as string[]).map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-        </div>
-      );
+  // Reset filter if user switches profile type and current filter no longer applies
+  useEffect(() => {
+    if (!showOriginFilter && (filter === 'personal' || filter === 'business')) {
+      setFilter('all');
     }
+  }, [showOriginFilter, filter]);
+
+  const periodLabel = format(new Date(), "MMMM yyyy", { locale: ptBR });
+  const balance = totals.inc - totals.exp;
+
+  if (loading) {
     return (
-      <div className="relative">
-        <select value={cat} onChange={e => setCat(e.target.value)}
-          className="w-full h-[38px] md:h-[42px] px-2.5 pr-7 text-[12px] md:text-[13px] font-semibold rounded-lg border border-border bg-card appearance-none focus:border-[#16a34a] focus:outline-none transition-colors">
-          <option value="">Selecione...</option>
-          {(cats as { group: string; items: string[] }[]).map(g => (
-            <optgroup key={g.group} label={g.group}>
-              {g.items.map(c => <option key={c} value={c}>{c}</option>)}
-            </optgroup>
-          ))}
-        </select>
-        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+      <div style={{ padding: 24 }}>
+        <div style={{ height: 96, borderRadius: 16, background: 'var(--color-bg-sunken)', animation: 'pulse 2s infinite' }} />
       </div>
     );
-  };
-
-  const sortLabels: Record<string, string> = {
-    newest: 'Mais recente', oldest: 'Mais antigo', highest: 'Maior valor', lowest: 'Menor valor', az: 'A → Z',
-  };
-
-  if (loading) return <div className="p-7"><div className="h-96 rounded-2xl bg-white/60 animate-pulse" /></div>;
-
-  const limitPct = limits.transactions_per_month !== Infinity ? (txs.length / limits.transactions_per_month) * 100 : 0;
+  }
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
-      <div className="px-3 py-3 md:px-7 md:py-5 flex flex-col gap-3 md:gap-5 max-w-[1400px] mx-auto">
+    <div style={{ minHeight: '100vh', background: 'var(--color-bg-base)', paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
+      {/* Page header */}
+      <div style={{ padding: '14px 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text-strong)', letterSpacing: '-0.03em', lineHeight: 1 }}>
+            Lançamentos
+          </h1>
+          <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 3, textTransform: 'capitalize' }}>
+            {periodLabel}
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={() => setShowImport(true)}
+            style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: 'var(--color-bg-surface)',
+              border: '1px solid var(--color-border-base)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: 'var(--color-text-muted)',
+            }}>
+            <Upload style={{ width: 15, height: 15 }} />
+          </motion.button>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={() => setShowSheet(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px',
+              background: 'var(--color-green-600)', border: 'none', borderRadius: 10,
+              color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(22,163,74,0.3)',
+            }}>
+            <Plus style={{ width: 14, height: 14 }} /> Novo
+          </motion.button>
+        </div>
+      </div>
 
-        {/* ── 1. STATS STRIP ── */}
-        {/* Mobile: compact 2x2 grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+      {/* Summary */}
+      <div style={{
+        margin: '12px 16px',
+        background: 'var(--color-bg-surface)',
+        borderRadius: 16, padding: '14px 18px',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+        border: '1px solid var(--color-border-weak)',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-strong)', textTransform: 'capitalize' }}>
+            {periodLabel}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+            {totals.count} lançamento{totals.count !== 1 ? 's' : ''}
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
           {[
-            { label: 'Receitas', value: totals.inc, color: '#16a34a', bg: '#dcfce7', icon: TrendingUp, sub: `${totals.incCount} receitas`, valColor: '#16a34a' },
-            { label: 'Despesas', value: totals.exp, color: '#dc2626', bg: '#fee2e2', icon: TrendingDown, sub: `${totals.expCount} despesas`, valColor: '#dc2626' },
-            { label: 'Saldo', value: totals.net, color: '#2563eb', bg: '#eff6ff', icon: Scale, sub: 'Resultado líquido', valColor: totals.net >= 0 ? '#16a34a' : '#dc2626' },
+            { label: 'Receitas', value: totals.inc, color: '#16a34a', prefix: '' },
+            { label: 'Despesas', value: totals.exp, color: '#dc2626', prefix: '' },
+            { label: 'Saldo', value: Math.abs(balance), color: balance >= 0 ? '#16a34a' : '#dc2626', prefix: balance < 0 ? '-' : '' },
           ].map((s, i) => (
-            <div key={i} className="flex items-center gap-2 md:gap-3.5 bg-card border border-border rounded-xl p-2.5 md:p-4 hover:border-[#86efac] transition-colors duration-200">
-              <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: s.bg }}>
-                <s.icon className="w-3.5 h-3.5 md:w-[18px] md:h-[18px]" style={{ color: s.color }} />
+            <div key={i} style={{ padding: '0 12px', borderLeft: i > 0 ? '0.5px solid var(--color-border-weak)' : 'none' }}>
+              <div style={{
+                fontSize: 10, fontWeight: 600, color: 'var(--color-text-muted)',
+                textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4,
+              }}>
+                {s.label}
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wide truncate">{s.label}</p>
-                <p className="text-[13px] md:text-[20px] font-black truncate leading-tight" style={{ color: s.valColor }}>{formatCurrency(s.value)}</p>
-                <p className="text-[10px] md:text-[11px] text-muted-foreground hidden md:block">{s.sub}</p>
+              <div style={{
+                fontSize: 15, fontWeight: 800, fontFamily: 'var(--font-mono)',
+                color: s.color, letterSpacing: '-0.02em',
+              }}>
+                {s.prefix}R$ {formatCompact(s.value)}
               </div>
             </div>
           ))}
-          {/* Card 4: count */}
-          <div className="flex items-center gap-2 md:gap-3.5 bg-card border border-border rounded-xl p-2.5 md:p-4 hover:border-[#86efac] transition-colors duration-200">
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0 bg-muted/30">
-              <Receipt className="w-3.5 h-3.5 md:w-[18px] md:h-[18px] text-muted-foreground" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wide">Lançamentos</p>
-              <p className="text-[13px] md:text-[20px] font-black text-foreground leading-tight">{txs.length}</p>
-              {limits.transactions_per_month !== Infinity ? (
-                <div>
-                  <p className="text-[10px] md:text-[11px] text-muted-foreground">{txs.length}/{limits.transactions_per_month}</p>
-                  <div className="mt-0.5 h-[3px] rounded-full bg-muted/30 overflow-hidden">
-                    <div className="h-full rounded-full transition-all duration-500" style={{
-                      width: `${Math.min(limitPct, 100)}%`,
-                      background: limitPct > 90 ? '#dc2626' : limitPct > 80 ? '#f59e0b' : '#16a34a'
-                    }} />
-                  </div>
-                </div>
-              ) : (
-                <p className="text-[10px] md:text-[11px] text-[#16a34a] font-semibold">Ilimitados ✓</p>
-              )}
-            </div>
-          </div>
         </div>
+      </div>
 
-        {/* ── 2. ADD TRANSACTION CARD ── */}
-        <div ref={formRef} className="bg-card border border-border rounded-xl md:rounded-2xl overflow-hidden">
-          {/* Header */}
-          <div className={`flex items-center justify-between px-3 md:px-5 py-2.5 md:py-4 border-b border-border/50 transition-colors duration-200 ${type === 'income' ? 'bg-secondary' : 'bg-[#fef2f2]'}`}>
-            <div className="flex items-center gap-2">
-              <PlusCircle className="w-4 h-4 text-[#16a34a]" />
-              <span className="text-[13px] md:text-sm font-extrabold text-foreground">Novo Lançamento</span>
-              <button onClick={() => setShowImport(true)} className="flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground border border-border rounded-md hover:border-[#16a34a] hover:text-[#16a34a] transition-colors">
-                <Upload className="w-3 h-3" /> Importar
-              </button>
-            </div>
-            <div className="flex gap-1.5">
-              {(['income', 'expense'] as const).map(t => (
-                <button key={t} onClick={() => { setType(t); setCat(''); }}
-                  className={`flex items-center gap-1 px-2.5 md:px-4 py-1.5 md:py-[7px] rounded-lg text-[12px] md:text-[13px] font-extrabold border-2 transition-all duration-200 cursor-pointer ${
-                    type === t
-                      ? t === 'income' ? 'bg-[#dcfce7] text-[#166534] border-[#16a34a]' : 'bg-[#fee2e2] text-[#991b1b] border-[#dc2626]'
-                      : 'bg-background text-muted-foreground border-border'
-                  }`}>
-                  {t === 'income' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                  <span className="hidden md:inline">{t === 'income' ? 'Receita' : 'Despesa'}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* Filter chips */}
+      <div style={{ padding: '0 16px', display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}
+        className="hide-scrollbar">
+        {filters.map(f => (
+          <motion.button key={f.id} whileTap={{ scale: 0.95 }}
+            onClick={() => { setFilter(f.id); setPage(1); }}
+            style={{
+              height: 32, padding: '0 14px', borderRadius: 99,
+              border: `1.5px solid ${filter === f.id ? '#16a34a' : 'var(--color-border-base)'}`,
+              background: filter === f.id ? 'var(--color-success-bg)' : 'var(--color-bg-surface)',
+              fontSize: 13, fontWeight: filter === f.id ? 700 : 500,
+              color: filter === f.id ? 'var(--color-success-text)' : 'var(--color-text-muted)',
+              cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+              transition: 'all 150ms',
+            }}>
+            {f.label}
+          </motion.button>
+        ))}
+      </div>
 
-          {/* Form body */}
-          <div className="p-3 md:p-5" onKeyDown={e => { if (e.key === 'Enter' && !submitting) handleAdd(); }}>
-            {/* Row 1: Date + Description */}
-            <div className="grid grid-cols-5 gap-2 md:gap-3 mb-2.5 md:mb-3">
-              <div className="col-span-2">
-                <label className="block text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Data</label>
-                <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                  className="w-full h-[38px] md:h-[42px] px-2 text-[12px] md:text-[13px] font-semibold rounded-lg border border-border focus:border-[#16a34a] focus:outline-none transition-colors" />
-              </div>
-              <div className="col-span-3">
-                <label className="block text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Descrição</label>
-                <input ref={descRef} value={desc} onChange={e => setDesc(e.target.value)} placeholder="Ex: Supermercado"
-                  className="w-full h-[38px] md:h-[42px] px-2.5 text-[12px] md:text-[13px] font-semibold rounded-lg border border-border focus:border-[#16a34a] focus:outline-none transition-colors" />
-              </div>
-            </div>
-
-            {/* Row 2: Value + Category */}
-            <div className="grid grid-cols-2 gap-2 md:gap-3 mb-2.5 md:mb-3">
-              <div>
-                <label className="block text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Valor</label>
-                <div className="relative">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-muted-foreground">R$</span>
-                  <input type="text" inputMode="decimal" pattern="[0-9.,]*" value={val} onChange={e => setVal(e.target.value)} placeholder="0,00"
-                    className="w-full h-[38px] md:h-[42px] pl-[26px] pr-2 text-[12px] md:text-[13px] font-semibold rounded-lg border border-border focus:border-[#16a34a] focus:outline-none transition-colors" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Categoria</label>
-                {renderCategorySelect()}
-              </div>
-            </div>
-
-            {/* Row 3: Origin + Recurring */}
-            <div className="grid grid-cols-2 gap-2 md:gap-3 mb-2.5 md:mb-3">
-              <div>
-                <label className="block text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Origem</label>
-                <div className="flex gap-1">
-                  {(['personal', 'business'] as const).map(o => (
-                    <button key={o} onClick={() => setOrigin(o)}
-                      className={`flex-1 px-1 py-[7px] rounded-lg text-[11px] font-bold border transition-all duration-200 ${
-                        origin === o
-                          ? o === 'personal' ? 'bg-[#eff6ff] text-[#1d4ed8] border-[#bfdbfe]' : 'bg-secondary text-[#166534] border-[#d4edda]'
-                          : 'bg-card text-muted-foreground border-border'
-                      }`}>
-                      {o === 'personal' ? '🏠 Pessoal' : '💼 Negócio'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Recorrente?</label>
-                <div className="flex items-center gap-2 h-[38px] md:h-[42px]">
-                  <button onClick={() => setIsRecurring(!isRecurring)}
-                    className={`relative w-9 h-5 rounded-full transition-colors duration-200 shrink-0 ${isRecurring ? 'bg-[#16a34a]' : 'bg-[#e2e8f0]'}`}>
-                    <span className={`absolute top-0.5 w-4 h-4 bg-card rounded-full shadow transition-transform duration-200 ${isRecurring ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
-                  </button>
-                  <AnimatePresence>
-                    {isRecurring && (
-                      <motion.select initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
-                        value={recurFreq} onChange={e => setRecurFreq(e.target.value)}
-                        className="h-7 px-1.5 text-[11px] font-semibold rounded-md border border-border focus:outline-none">
-                        <option value="week">Semana</option>
-                        <option value="month">Mês</option>
-                        <option value="year">Ano</option>
-                      </motion.select>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
-            </div>
-
-            {/* Notes */}
-            <AnimatePresence>
-              {!showNotes ? (
-                <button onClick={() => setShowNotes(true)} className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-[#16a34a] transition-colors mb-2">
-                  <Plus className="w-3 h-3" /> Adicionar nota
-                </button>
-              ) : (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="mb-2">
-                  <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Observações..."
-                    className="w-full px-2.5 py-2 text-[12px] rounded-lg border border-border focus:border-[#16a34a] focus:outline-none resize-none transition-colors" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Submit */}
-            <div className="flex items-center justify-between">
-              <button onClick={() => { setDesc(''); setVal(''); setCat(''); setNotes(''); setShowNotes(false); }}
-                className="text-[11px] text-muted-foreground hover:text-[#dc2626] transition-colors">Limpar</button>
-              <button onClick={handleAdd} disabled={submitting}
-                className={`flex items-center justify-center gap-1.5 px-4 md:px-5 py-2 md:py-2.5 rounded-lg text-[12px] md:text-[13px] font-extrabold text-white transition-all duration-200 active:scale-[0.97] ${
-                  successFlash ? 'bg-[#16a34a]' : 'bg-[#16a34a] hover:bg-[#14532d]'
-                } disabled:opacity-50`}>
-                {submitting ? (
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : successFlash ? (
-                  <><Check className="w-3.5 h-3.5" /> Adicionado!</>
-                ) : (
-                  <><Plus className="w-3 h-3" /> Adicionar</>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* ── 3. FILTER BAR ── */}
-        <div className="bg-card border border-border rounded-xl p-2.5 md:p-3 flex flex-col md:flex-row md:items-center gap-2">
-          <div className="flex items-center gap-1.5 flex-wrap flex-1">
-            {([['all', 'Todos'], ['income', 'Receitas'], ['expense', 'Despesas']] as const).map(([v, l]) => (
-              <button key={v} onClick={() => { setFilterType(v); setPage(1); }}
-                className={`px-2.5 md:px-3.5 py-1.5 rounded-full text-[11px] md:text-[12px] font-bold border-[1.5px] transition-all duration-200 ${
-                  filterType === v
-                    ? v === 'income' ? 'bg-[#dcfce7] border-[#16a34a] text-[#166534]' : v === 'expense' ? 'bg-[#fee2e2] border-[#dc2626] text-[#991b1b]' : 'bg-secondary border-[#d4edda] text-[#166534]'
-                    : 'bg-card border-border text-muted-foreground'
-                }`}>{l}</button>
-            ))}
-            <div className="w-px h-4 bg-muted/30 hidden md:block" />
-            {([['all', 'Tudo'], ['personal', 'Pessoal'], ['business', 'Negócio']] as const).map(([v, l]) => (
-              <button key={v} onClick={() => { setFilterOrigin(v as any); setPage(1); }}
-                className={`px-2.5 md:px-3.5 py-1.5 rounded-full text-[11px] md:text-[12px] font-bold border-[1.5px] transition-all duration-200 ${
-                  filterOrigin === v ? 'bg-secondary border-[#d4edda] text-[#166534]' : 'bg-card border-border text-muted-foreground'
-                }`}>{l}</button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1 md:flex-none">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-              <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} placeholder="Buscar..."
-                className="w-full md:w-[180px] h-9 pl-8 pr-8 text-[13px] rounded-[9px] border-[1.5px] border-border bg-background focus:bg-card focus:border-[#16a34a] focus:outline-none transition-colors" />
-              {search && (
-                <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-[#dc2626]">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-            <div className="relative">
-              <button onClick={() => setShowSortDropdown(!showSortDropdown)}
-                className="flex items-center gap-1 px-2.5 py-2 text-[11px] md:text-[12px] font-semibold text-muted-foreground hover:text-[#16a34a] transition-colors whitespace-nowrap">
-                {sortLabels[sortBy]} <ChevronDown className="w-3 h-3" />
-              </button>
-              {showSortDropdown && (
-                <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg z-20 py-1 min-w-[140px]">
-                  {Object.entries(sortLabels).map(([k, l]) => (
-                    <button key={k} onClick={() => { setSortBy(k as any); setShowSortDropdown(false); }}
-                      className={`block w-full text-left px-3 py-1.5 text-[12px] hover:bg-secondary transition-colors ${sortBy === k ? 'font-bold text-[#16a34a]' : 'text-muted-foreground'}`}>{l}</button>
-                  ))}
-                </div>
-              )}
-            </div>
-            {hasActiveFilters && (
-              <button onClick={clearFilters} className="flex items-center gap-1 text-[11px] font-semibold text-[#dc2626] hover:underline whitespace-nowrap">
-                <X className="w-2.5 h-2.5" /> Limpar
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* ── 4. CATEGORY BREAKDOWN ── */}
-        {filtered.length > 0 && (
-          <div>
-            <button onClick={() => setShowCatBreakdown(!showCatBreakdown)}
-              className="flex items-center gap-1 text-[12px] font-bold text-[#16a34a] mb-2 hover:underline">
-              Ver resumo por categoria <ChevronDown className={`w-3 h-3 transition-transform ${showCatBreakdown ? 'rotate-180' : ''}`} />
-            </button>
-            <AnimatePresence>
-              {showCatBreakdown && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                  className="bg-card border-[1.5px] border-border rounded-xl p-4 md:p-5 overflow-hidden">
-                  <p className="text-[13px] font-bold text-foreground mb-4">Gastos por categoria</p>
-                  {catBreakdown.slice(0, 8).map((c, i) => {
-                    const maxVal = catBreakdown[0]?.amount || 1;
-                    return (
-                      <div key={c.name} className="flex items-center gap-2 md:gap-2.5 mb-2.5">
-                        <span className="text-[11px] md:text-[12px] font-semibold text-foreground min-w-[80px] md:min-w-[120px] truncate">{c.name}</span>
-                        <div className="flex-1 h-2 bg-muted/30 rounded-full overflow-hidden">
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${(c.amount / maxVal) * 100}%` }}
-                            transition={{ duration: 0.6, delay: i * 0.05 }}
-                            className={`h-full rounded-full ${c.type === 'income' ? 'bg-[#16a34a]' : 'bg-[#dc2626]'}`} />
-                        </div>
-                        <span className={`text-[11px] md:text-[12px] font-bold min-w-[70px] md:min-w-[80px] text-right ${c.type === 'income' ? 'text-[#16a34a]' : 'text-[#dc2626]'}`}>
-                          {formatCurrency(c.amount)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+      {/* Search */}
+      <div style={{
+        margin: '8px 16px', display: 'flex', alignItems: 'center', gap: 8,
+        background: 'var(--color-bg-surface)',
+        border: '1.5px solid var(--color-border-base)',
+        borderRadius: 12, padding: '0 14px', height: 40,
+      }}>
+        <Search style={{ width: 15, height: 15, color: 'var(--color-text-muted)' }} />
+        <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
+          placeholder="Buscar lançamentos..."
+          style={{
+            flex: 1, background: 'none', border: 'none', outline: 'none',
+            fontSize: 14, color: 'var(--color-text-base)',
+          }} />
+        {search && (
+          <button onClick={() => setSearch('')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+            <X style={{ width: 14, height: 14, color: 'var(--color-text-muted)' }} />
+          </button>
         )}
+      </div>
 
-        {/* ── 5. TRANSACTIONS LIST ── */}
-        {filtered.length === 0 ? (
-          /* Empty state */
-          <div className="bg-card border-[1.5px] border-border rounded-2xl flex flex-col items-center py-10 md:py-14 px-6 text-center gap-3.5">
-            <div className="w-[72px] h-[72px] md:w-[88px] md:h-[88px] rounded-full bg-secondary flex items-center justify-center">
-              <ReceiptText className="w-8 h-8 md:w-10 md:h-10 text-[#86efac]" />
-            </div>
-            <p className="text-[15px] md:text-[17px] font-extrabold text-foreground">Nenhum lançamento ainda</p>
-            <p className="text-[13px] md:text-sm text-muted-foreground max-w-[320px] leading-relaxed">
-              Adicione sua primeira receita ou despesa para começar.
-            </p>
-            <div className="flex gap-2.5 mt-2">
-              <button onClick={() => scrollToForm('income')}
-                className="px-4 py-2.5 rounded-[9px] text-[12px] md:text-[13px] font-extrabold bg-[#dcfce7] text-[#166534] border-[1.5px] border-[#d4edda] hover:brightness-95 transition-all">
-                + Receita
-              </button>
-              <button onClick={() => scrollToForm('expense')}
-                className="px-4 py-2.5 rounded-[9px] text-[12px] md:text-[13px] font-extrabold bg-[#fee2e2] text-[#991b1b] border-[1.5px] border-[#fecaca] hover:brightness-95 transition-all">
-                + Despesa
-              </button>
-            </div>
+      {/* List */}
+      {filtered.length === 0 ? (
+        <div style={{
+          margin: '24px 16px', padding: '40px 20px', textAlign: 'center',
+          background: 'var(--color-bg-surface)',
+          border: '1px dashed var(--color-border-base)',
+          borderRadius: 16,
+        }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text-strong)', marginBottom: 4 }}>
+            {search || filter !== 'all' ? 'Nenhum lançamento encontrado' : 'Nenhum lançamento ainda'}
           </div>
-        ) : (
-          <div className="bg-card border-[1.5px] border-border rounded-[14px] overflow-hidden">
-            {/* Bulk bar */}
-            <AnimatePresence>
-              {selected.size > 0 && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                  className="bg-[#14532d] px-4 md:px-5 py-2.5 flex items-center gap-2 md:gap-3 text-white overflow-hidden flex-wrap">
-                  <span className="text-[12px] md:text-[13px] font-semibold">{selected.size} selecionado(s)</span>
-                  <button onClick={handleBulkDelete}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] md:text-[12px] font-semibold bg-white/15 border border-white/30 hover:bg-[#dc2626] transition-colors">
-                    <Trash2 className="w-3 h-3" /> Excluir
-                  </button>
-                  <button onClick={() => setSelected(new Set())} className="ml-auto text-[11px] md:text-[12px] hover:underline">Cancelar</button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>
+            {search || filter !== 'all' ? 'Tente ajustar os filtros' : 'Adicione sua primeira receita ou despesa'}
+          </div>
+          {!search && filter === 'all' && (
+            <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowSheet(true)}
+              style={{
+                height: 44, padding: '0 24px', background: 'var(--color-green-600)',
+                border: 'none', borderRadius: 12, color: 'white',
+                fontSize: 14, fontWeight: 800, cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(22,163,74,0.3)',
+              }}>
+              + Novo lançamento
+            </motion.button>
+          )}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {grouped.map(([date, list]) => {
+            const dayTotal = list.reduce((s, tx) => tx.type === 'income' ? s + Number(tx.amount) : s - Number(tx.amount), 0);
+            const d = new Date(date + 'T00:00:00');
+            const today = new Date(); today.setHours(0,0,0,0);
+            const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+            let label: string;
+            if (d.getTime() === today.getTime()) label = 'Hoje';
+            else if (d.getTime() === yesterday.getTime()) label = 'Ontem';
+            else label = d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' });
 
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-[13px]">
-                <thead>
-                  <tr className="bg-background border-b-[1.5px] border-border/50">
-                    <th className="w-10 px-3 py-2.5">
-                      <input type="checkbox" checked={selected.size === paginated.length && paginated.length > 0} onChange={toggleSelectAll}
-                        className="w-4 h-4 rounded border-[1.5px] border-border accent-[#16a34a]" />
-                    </th>
-                    {['#', 'DATA', 'DESCRIÇÃO', 'CATEGORIA', 'ORIGEM', 'TIPO', 'VALOR', ''].map(h => (
-                      <th key={h} className={`px-4 py-2.5 text-[10px] uppercase font-bold text-muted-foreground tracking-[0.7px] ${h === 'VALOR' ? 'text-right' : 'text-left'}`}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
+            return (
+              <div key={date}>
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '10px 20px 6px',
+                }}>
+                  <span style={{
+                    fontSize: 12, fontWeight: 700, color: 'var(--color-text-muted)',
+                    textTransform: 'capitalize',
+                  }}>
+                    {label}
+                  </span>
+                  <span style={{
+                    fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)',
+                    color: dayTotal >= 0 ? '#16a34a' : '#dc2626',
+                  }}>
+                    {dayTotal >= 0 ? '+' : ''}R$ {formatBRL(dayTotal)}
+                  </span>
+                </div>
+                <div style={{
+                  background: 'var(--color-bg-surface)',
+                  borderRadius: 14, margin: '0 16px',
+                  overflow: 'hidden',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                  border: '1px solid var(--color-border-weak)',
+                }}>
                   <AnimatePresence>
-                    {paginated.map((tx, i) => {
-                      const isSelected = selected.has(tx.id);
-                      const isDeleting = deletingId === tx.id;
-                      return (
-                        <motion.tr key={tx.id}
-                          initial={{ opacity: 0, y: -16 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className={`border-b border-border/30 group transition-colors hover:bg-accent/50 border-l-[3px] ${tx.type === 'income' ? 'border-l-[#16a34a]' : 'border-l-[#dc2626]'}`}>
-                          <td className="px-3 py-2.5">
-                            <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(tx.id)}
-                              className="w-4 h-4 rounded border-[1.5px] border-border accent-[#16a34a]" />
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <span className="inline-flex items-center justify-center w-[26px] h-[22px] bg-background border border-border rounded-md text-[11px] font-extrabold text-muted-foreground">
-                              {(page - 1) * perPage + i + 1}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2.5 text-[12px] text-muted-foreground font-medium whitespace-nowrap">
-                            {format(parseISO(tx.date), 'dd MMM', { locale: ptBR })}
-                          </td>
-                          <td className="px-4 py-2.5">
-                            {editingId === tx.id ? (
-                              <input autoFocus value={editDesc} onChange={e => setEditDesc(e.target.value)}
-                                onBlur={() => handleInlineEdit(tx.id)} onKeyDown={e => { if (e.key === 'Enter') handleInlineEdit(tx.id); if (e.key === 'Escape') setEditingId(null); }}
-                                className="w-full px-2 py-1 text-[13px] font-bold rounded border border-[#16a34a] focus:outline-none" />
-                            ) : (
-                              <span onClick={() => { setEditingId(tx.id); setEditDesc(tx.description); }}
-                                className="text-[13px] font-bold text-foreground cursor-pointer hover:underline decoration-dotted inline-flex items-center gap-1.5">
-                                {tx.description}
-                                {tx.notes && <NotepadText className="w-3 h-3 text-muted-foreground" />}
+                    {list.map((tx, i) => (
+                      <motion.div key={tx.id} layout
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 8 }}
+                        onClick={() => setOpenActionsId(openActionsId === tx.id ? null : tx.id)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          padding: '12px 14px',
+                          borderBottom: i < list.length - 1 ? '0.5px solid var(--color-border-weak)' : 'none',
+                          cursor: 'pointer',
+                        }}>
+                        {/* Icon */}
+                        <div style={{
+                          width: 42, height: 42, borderRadius: 12,
+                          background: tx.type === 'income' ? 'var(--color-success-bg)' : 'var(--color-bg-sunken)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 20, flexShrink: 0,
+                        }}>
+                          {getCategoryEmoji(tx.category)}
+                        </div>
+
+                        {/* Description + meta */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontSize: 14, fontWeight: 600, color: 'var(--color-text-strong)',
+                            letterSpacing: '-0.01em',
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            marginBottom: 3, textTransform: 'capitalize',
+                          }}>
+                            {tx.description}
+                          </div>
+                          <div style={{
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            fontSize: 11, color: 'var(--color-text-muted)',
+                            flexWrap: 'wrap',
+                          }}>
+                            {tx.category && (
+                              <span style={{
+                                background: 'var(--color-bg-sunken)',
+                                padding: '1px 7px', borderRadius: 99,
+                                fontSize: 10, fontWeight: 600,
+                              }}>
+                                {tx.category}
                               </span>
                             )}
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border whitespace-nowrap ${
-                              tx.type === 'income' ? 'bg-[#dcfce7] text-[#166534] border-[#d4edda]' : 'bg-[#fee2e2] text-[#991b1b] border-[#fecaca]'
-                            }`}>{tx.category}</span>
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
-                              tx.origin === 'business' ? 'bg-secondary text-[#166534] border border-[#d4edda]' : 'bg-[#eff6ff] text-[#1d4ed8] border border-[#bfdbfe]'
-                            }`}>{tx.origin === 'business' ? 'Negócio' : 'Pessoal'}</span>
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <span className={`flex items-center gap-1 text-[12px] font-bold ${tx.type === 'income' ? 'text-[#16a34a]' : 'text-[#dc2626]'}`}>
-                              {tx.type === 'income' ? <ArrowUp className="w-2.5 h-2.5" /> : <ArrowDown className="w-2.5 h-2.5" />}
-                              {tx.type === 'income' ? 'Receita' : 'Despesa'}
-                            </span>
-                          </td>
-                          <td className={`px-4 py-2.5 text-right text-sm font-black tracking-tight ${tx.type === 'income' ? 'text-[#16a34a]' : 'text-[#dc2626]'}`}>
-                            {tx.type === 'expense' ? '−' : '+'}{formatCurrency(Number(tx.amount))}
-                          </td>
-                          <td className="px-4 py-2.5">
-                            {isDeleting ? (
-                              <div className="flex items-center gap-1.5 text-[11px] font-bold">
-                                <span className="text-[#dc2626]">Excluir?</span>
-                                <button onClick={() => handleRemove(tx.id)} className="text-[#dc2626] hover:underline">Sim</button>
-                                <button onClick={() => setDeletingId(null)} className="text-muted-foreground hover:underline">Não</button>
-                              </div>
-                            ) : (
-                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                                <button onClick={() => { setEditingId(tx.id); setEditDesc(tx.description); }}
-                                  className="w-7 h-7 flex items-center justify-center rounded-md bg-background border border-border hover:bg-secondary hover:text-[#16a34a] text-muted-foreground transition-colors">
-                                  <Pencil className="w-3 h-3" />
-                                </button>
-                                <button onClick={() => setDeletingId(tx.id)}
-                                  className="w-7 h-7 flex items-center justify-center rounded-md bg-background border border-border hover:bg-[#fef2f2] hover:text-[#dc2626] text-muted-foreground transition-colors">
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
-                              </div>
+                            {profileType === 'both' && tx.origin && (
+                              <>
+                                <span>·</span>
+                                <span style={{
+                                  fontSize: 10, fontWeight: 600,
+                                  color: tx.origin === 'personal' ? '#7c3aed' : '#2563eb',
+                                }}>
+                                  {tx.origin === 'personal' ? 'Pessoal' : 'Negócio'}
+                                </span>
+                              </>
                             )}
-                          </td>
-                        </motion.tr>
-                      );
-                    })}
-                  </AnimatePresence>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Card List */}
-            <div className="md:hidden divide-y divide-border/30">
-              {paginated.map((tx, i) => {
-                const isDeleting = deletingId === tx.id;
-                return (
-                  <div key={tx.id} className={`px-4 py-3 border-l-[3px] ${tx.type === 'income' ? 'border-l-[#16a34a]' : 'border-l-[#dc2626]'}`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[13px] font-bold text-foreground truncate">{tx.description}</p>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <span className="text-[11px] text-muted-foreground">{format(parseISO(tx.date), 'dd/MM/yy')}</span>
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            tx.type === 'income' ? 'bg-[#dcfce7] text-[#166534]' : 'bg-[#fee2e2] text-[#991b1b]'
-                          }`}>{tx.category}</span>
-                          <span className={`text-[10px] font-semibold ${tx.origin === 'business' ? 'text-[#166534]' : 'text-[#1d4ed8]'}`}>
-                            {tx.origin === 'business' ? 'Negócio' : 'Pessoal'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className={`text-[14px] font-black ${tx.type === 'income' ? 'text-[#16a34a]' : 'text-[#dc2626]'}`}>
-                          {tx.type === 'expense' ? '−' : '+'}{formatCurrency(Number(tx.amount))}
-                        </p>
-                        {isDeleting ? (
-                          <div className="flex items-center gap-1.5 mt-1 text-[11px] font-bold">
-                            <button onClick={() => handleRemove(tx.id)} className="text-[#dc2626]">Excluir</button>
-                            <button onClick={() => setDeletingId(null)} className="text-muted-foreground">Não</button>
                           </div>
-                        ) : (
-                          <button onClick={() => setDeletingId(tx.id)} className="mt-1 text-muted-foreground">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                        </div>
 
-            {/* Footer / pagination */}
-            <div className="flex flex-col md:flex-row items-center justify-between px-4 md:px-5 py-3 border-t-[1.5px] border-border/50 bg-background text-[12px] gap-2">
-              <span className="text-muted-foreground text-[11px] md:text-[12px]">
-                {Math.min((page - 1) * perPage + 1, filtered.length)}–{Math.min(page * perPage, filtered.length)} de {filtered.length}
-              </span>
-              <div className="flex items-center gap-1">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  className="w-8 h-8 flex items-center justify-center rounded-[7px] bg-card border-[1.5px] border-border disabled:opacity-40 hover:bg-secondary hover:border-[#d4edda] transition-colors">
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                </button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let p: number;
-                  if (totalPages <= 5) p = i + 1;
-                  else if (page <= 3) p = i + 1;
-                  else if (page >= totalPages - 2) p = totalPages - 4 + i;
-                  else p = page - 2 + i;
-                  return (
-                    <button key={p} onClick={() => setPage(p)}
-                      className={`w-8 h-8 flex items-center justify-center rounded-[7px] text-[13px] font-semibold transition-colors ${
-                        page === p ? 'bg-[#16a34a] text-white font-extrabold' : 'bg-card border-[1.5px] border-border text-muted-foreground hover:bg-secondary'
-                      }`}>{p}</button>
-                  );
-                })}
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="w-8 h-8 flex items-center justify-center rounded-[7px] bg-card border-[1.5px] border-border disabled:opacity-40 hover:bg-secondary hover:border-[#d4edda] transition-colors">
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <div className="hidden md:flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                Por página:
-                <select value={perPage} onChange={e => { setPerPage(Number(e.target.value)); setPage(1); }}
-                  className="h-7 px-1.5 text-[11px] rounded border border-border focus:outline-none">
-                  <option value={20}>20</option><option value={50}>50</option><option value={100}>100</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
+                        {/* Amount */}
+                        <div style={{
+                          fontSize: 15, fontWeight: 800, fontFamily: 'var(--font-mono)',
+                          letterSpacing: '-0.02em',
+                          color: tx.type === 'income' ? '#16a34a' : 'var(--color-text-strong)',
+                          flexShrink: 0,
+                        }}>
+                          {tx.type === 'income' ? '+' : '-'}R$ {formatBRL(Number(tx.amount))}
+                        </div>
 
-        {/* ── IMPORT MODAL ── */}
-        <ImportModal
-          open={showImport}
-          onClose={() => setShowImport(false)}
-          onSuccess={fetchTxs}
-          profileType={profileType}
-        />
-      </div>
+                        {/* Delete */}
+                        <AnimatePresence>
+                          {openActionsId === tx.id && (
+                            <motion.button
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.8 }}
+                              onClick={e => { e.stopPropagation(); handleDelete(tx.id); }}
+                              style={{
+                                width: 32, height: 32, borderRadius: 8,
+                                background: 'var(--color-danger-bg)',
+                                border: 'none', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0,
+                              }}>
+                              <Trash2 style={{ width: 14, height: 14, color: 'var(--color-danger-text)' }} />
+                            </motion.button>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Load more / total */}
+          {hasMore ? (
+            <div style={{ padding: '12px 16px' }}>
+              <motion.button whileTap={{ scale: 0.97 }} onClick={() => setPage(p => p + 1)}
+                style={{
+                  width: '100%', height: 44,
+                  background: 'var(--color-bg-surface)',
+                  border: '1px solid var(--color-border-base)',
+                  borderRadius: 12, fontSize: 13, fontWeight: 700,
+                  color: 'var(--color-text-muted)', cursor: 'pointer',
+                }}>
+                Ver mais lançamentos
+              </motion.button>
+            </div>
+          ) : (
+            <div style={{
+              textAlign: 'center', padding: 16,
+              fontSize: 12, color: 'var(--color-text-muted)',
+            }}>
+              {filtered.length} lançamento{filtered.length !== 1 ? 's' : ''} no total
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Sheets */}
+      <NewTransactionSheet
+        open={showSheet}
+        onClose={() => setShowSheet(false)}
+        onSuccess={fetchTxs}
+        profileType={profileType}
+      />
+      <ImportModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        onSuccess={fetchTxs}
+        profileType={profileType}
+      />
     </div>
   );
 }
