@@ -37,7 +37,7 @@ export default function SplashScreen() {
             transition={{ delay: 0.3, duration: 0.4 }}
             style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-text-strong)' }}
           >
-            FinDash Pro
+            KoraFinance
           </motion.span>
           <motion.span
             initial={{ opacity: 0, x: 10 }}

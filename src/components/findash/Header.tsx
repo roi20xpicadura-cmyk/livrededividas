@@ -17,7 +17,7 @@ export default function Header({ hasData, onReset }: HeaderProps) {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
             <span className="text-primary-foreground font-extrabold text-sm">K</span>
           </div>
-          <span className="text-[15px] font-bold text-foreground tracking-tight">FinDash Pro</span>
+          <span className="text-[15px] font-bold text-foreground tracking-tight">KoraFinance</span>
         </div>
         <div className="flex items-center gap-4">
           <span className="hidden md:block text-[13px] text-subtle capitalize">{today}</span>

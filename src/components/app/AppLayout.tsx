@@ -149,7 +149,7 @@ export default function AppLayout() {
             <div className="flex items-center justify-center flex-shrink-0" style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: 'var(--color-green-600)' }}>
               <BarChart3 className="text-white" style={{ width: 18, height: 18 }} />
             </div>
-            <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--color-text-strong)' }}>FinDash Pro</span>
+            <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--color-text-strong)' }}>KoraFinance</span>
             <span className="ml-auto" style={{ ...planBadgeStyle, fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 'var(--radius-md)', letterSpacing: '0.5px' }}>
               {planBadge}
             </span>
