@@ -12,10 +12,12 @@ import { useIsMobile } from '@/hooks/use-mobile';
 type Msg = { role: 'user' | 'assistant'; content: string; ts: Date; actions?: string[] };
 type Conversation = { id: string; title: string; updated_at: string };
 
-const QUICK_QUESTIONS = [
-  { icon: '📊', q: 'Como estão minhas finanças?', sub: 'Resumo completo do mês atual', gradient: 'linear-gradient(135deg, #dbeafe, #eff6ff)' },
-  { icon: '🎯', q: 'Estou no caminho da minha meta?', sub: 'Análise de progresso e prazo', gradient: 'linear-gradient(135deg, #fce7f3, #fdf2f8)' },
-  { icon: '💡', q: 'Onde posso economizar?', sub: 'Identificar gastos desnecessários', gradient: 'linear-gradient(135deg, #fef3c7, #fffbeb)' },
+const QUICK_CHIPS = [
+  { icon: '💳', label: 'Gastos do mês' , q: 'Como estão meus gastos este mês?' },
+  { icon: '🏦', label: 'Contas conectadas', q: 'Mostre minhas contas conectadas' },
+  { icon: '📊', label: 'Resumo financeiro', q: 'Faça um resumo completo das minhas finanças' },
+  { icon: '🎯', label: 'Minhas metas', q: 'Como estão minhas metas?' },
+  { icon: '💡', label: 'Onde economizar', q: 'Onde posso economizar?' },
 ];
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
