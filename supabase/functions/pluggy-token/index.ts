@@ -1,9 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 Deno.serve(async (req) => {
@@ -26,16 +24,13 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(
-      authHeader.replace("Bearer ", "")
-    );
-    if (claimsErr || !claimsData?.claims) {
+    const { data: { user }, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = claimsData.claims.sub;
 
     const clientId = Deno.env.get("PLUGGY_CLIENT_ID");
     const clientSecret = Deno.env.get("PLUGGY_CLIENT_SECRET");
@@ -66,7 +61,7 @@ Deno.serve(async (req) => {
         "X-API-KEY": apiKey,
       },
       body: JSON.stringify({
-        clientUserId: userId,
+        clientUserId: user.id,
         webhookUrl: `${Deno.env.get("SUPABASE_URL")}/functions/v1/pluggy-webhook`,
       }),
     });

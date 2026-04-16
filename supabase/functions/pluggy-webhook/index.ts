@@ -1,9 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 Deno.serve(async (req) => {
@@ -27,7 +25,7 @@ Deno.serve(async (req) => {
     });
 
     // If item was updated, trigger sync
-    if (payload.event === "item/updated") {
+    if (payload.event === "item/updated" || payload.event === "item/login_succeeded") {
       const { data: conn } = await supabase
         .from("bank_connections")
         .select("id, user_id")
@@ -35,7 +33,6 @@ Deno.serve(async (req) => {
         .single();
 
       if (conn) {
-        // Trigger sync via edge function
         await fetch(
           `${Deno.env.get("SUPABASE_URL")}/functions/v1/pluggy-sync`,
           {
