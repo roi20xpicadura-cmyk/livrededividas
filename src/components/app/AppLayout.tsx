@@ -1,11 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import OnboardingChat from '@/components/onboarding/OnboardingChat';
-import AIChatDrawer from '@/components/app/AIChatDrawer';
+// AIChatDrawer is a heavy component; lazy-load it so it only loads when opened.
+const AIChatDrawer = lazy(() => import('@/components/app/AIChatDrawer'));
 import OfflineBanner from '@/components/app/OfflineBanner';
 import QuickAddFAB from '@/components/app/QuickAddFAB';
 import icon from '@/assets/korafinance-icon.png';
@@ -600,7 +601,7 @@ export default function AppLayout() {
         aria-label="Assistente IA">
         <Sparkles style={{ width: 24, height: 24 }} />
       </button>
-      <AIChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} />
+      {chatOpen && <Suspense fallback={null}><AIChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} /></Suspense>}
     </div>
   );
 }

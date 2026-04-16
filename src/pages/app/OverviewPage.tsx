@@ -14,12 +14,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
-import PredictiveWidget from '@/components/dashboard/PredictiveWidget';
-import AIInsightsWidget from '@/components/dashboard/AIInsightsWidget';
-import WelcomeChecklist from '@/components/app/WelcomeChecklist';
-import AIChatDrawer from '@/components/app/AIChatDrawer';
-import WhatsAppPromoWidget from '@/components/app/WhatsAppPromoWidget';
-import SmartAlertsWidget from '@/components/dashboard/SmartAlertsWidget';
+// Heavy below-the-fold widgets are lazy-loaded so the dashboard hero paints fast.
+const PredictiveWidget = lazy(() => import('@/components/dashboard/PredictiveWidget'));
+const AIInsightsWidget = lazy(() => import('@/components/dashboard/AIInsightsWidget'));
+const WelcomeChecklist = lazy(() => import('@/components/app/WelcomeChecklist'));
+const AIChatDrawer = lazy(() => import('@/components/app/AIChatDrawer'));
+const WhatsAppPromoWidget = lazy(() => import('@/components/app/WhatsAppPromoWidget'));
+const SmartAlertsWidget = lazy(() => import('@/components/dashboard/SmartAlertsWidget'));
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const LazyChart = lazy(() => import('recharts').then(m => ({
@@ -333,10 +334,10 @@ export default function OverviewPage() {
       </motion.div>
 
       {/* WELCOME CHECKLIST */}
-      <WelcomeChecklist />
+      <Suspense fallback={null}><WelcomeChecklist /></Suspense>
 
       {/* WHATSAPP PROMO */}
-      <WhatsAppPromoWidget />
+      <Suspense fallback={null}><WhatsAppPromoWidget /></Suspense>
 
       {/* 2. HERO BALANCE CARD */}
       <motion.div {...stagger(1)} className="p-5 md:p-6" style={{
@@ -414,7 +415,7 @@ export default function OverviewPage() {
       </motion.div>
 
       {/* SMART ALERTS */}
-      <SmartAlertsWidget />
+      <Suspense fallback={null}><SmartAlertsWidget /></Suspense>
 
       {/* 3. QUICK STATS — 2x2 */}
       <div className="grid grid-cols-2 gap-2.5">
@@ -441,11 +442,11 @@ export default function OverviewPage() {
 
       {/* AI INSIGHTS */}
       <motion.div {...stagger(6)}>
-        <AIInsightsWidget onOpenChat={() => setAiChatOpen(true)} />
+        <Suspense fallback={null}><AIInsightsWidget onOpenChat={() => setAiChatOpen(true)} /></Suspense>
       </motion.div>
 
       {/* PREDICTIVE AI */}
-      <PredictiveWidget />
+      <Suspense fallback={null}><PredictiveWidget /></Suspense>
 
       {/* SCORE CARD — personal only, compact */}
       {showPersonal && (
@@ -608,7 +609,7 @@ export default function OverviewPage() {
           )}
         </div>
       </motion.div>
-      <AIChatDrawer open={aiChatOpen} onClose={() => setAiChatOpen(false)} />
+      {aiChatOpen && <Suspense fallback={null}><AIChatDrawer open={aiChatOpen} onClose={() => setAiChatOpen(false)} /></Suspense>}
     </div>
   );
 }
