@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { RotateCcw } from "lucide-react";
+import logo from "@/assets/korafinance-logo.png";
 
 interface HeaderProps {
   hasData: boolean;
