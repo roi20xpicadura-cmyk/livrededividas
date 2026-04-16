@@ -72,6 +72,13 @@ async function syncPendingTransactions() {
   clients.forEach(client => client.postMessage({ type: 'SYNC_COMPLETE' }));
 }
 
+// Allow page to trigger immediate activation of new SW
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // Push notifications
 self.addEventListener('push', e => {
   const data = e.data ? e.data.json() : {};
