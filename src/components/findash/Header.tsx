@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { RotateCcw } from "lucide-react";
+import icon from "@/assets/korafinance-icon.png";
 
 interface HeaderProps {
   hasData: boolean;
@@ -14,9 +15,7 @@ export default function Header({ hasData, onReset }: HeaderProps) {
     <header className="sticky top-0 z-50 glass border-b border-border/40 h-[56px] flex items-center px-5 md:px-8">
       <div className="flex items-center justify-between w-full max-w-[1400px] mx-auto">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
-            <span className="text-primary-foreground font-extrabold text-sm">K</span>
-          </div>
+          <img src={icon} alt="KoraFinance" className="w-8 h-8 rounded-lg object-cover shadow-sm" />
           <span className="text-[15px] font-bold text-foreground tracking-tight">KoraFinance</span>
         </div>
         <div className="flex items-center gap-4">

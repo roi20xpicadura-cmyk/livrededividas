@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { BarChart3, Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import icon from '@/assets/korafinance-icon.png';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -34,9 +35,7 @@ export default function Navbar() {
     >
       <div className="max-w-[1200px] mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#7C3AED] flex items-center justify-center">
-            <BarChart3 className="w-4 h-4 text-white" />
-          </div>
+          <img src={icon} alt="KoraFinance" className="w-7 h-7 rounded-lg object-cover" />
           <span className="text-[15px] font-[900] text-[#0f172a]">
             KoraFinance
           </span>
