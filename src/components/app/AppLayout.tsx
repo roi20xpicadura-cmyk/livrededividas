@@ -324,7 +324,7 @@ export default function AppLayout() {
           {/* Mobile: logo */}
           {isMobile && (
             <div className="flex items-center">
-              <img src={logo} alt="KoraFinance" style={{ height: 64, width: 'auto', objectFit: 'contain' }} />
+              <img src={logo} alt="KoraFinance" style={{ height: 22, width: 'auto', objectFit: 'contain' }} />
             </div>
           )}
 
