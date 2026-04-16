@@ -8,7 +8,6 @@ import OnboardingChat from '@/components/onboarding/OnboardingChat';
 import AIChatDrawer from '@/components/app/AIChatDrawer';
 import OfflineBanner from '@/components/app/OfflineBanner';
 import QuickAddFAB from '@/components/app/QuickAddFAB';
-import logo from '@/assets/korafinance-logo.png';
 import {
   LayoutDashboard, ArrowLeftRight, Target, TrendingUp, FileText,
   CreditCard, Briefcase, BarChart2, Download, Settings2, Crown,
@@ -147,7 +146,10 @@ export default function AppLayout() {
         {/* Logo */}
         <div style={{ padding: '20px 16px 0' }}>
           <div className="flex items-center" style={{ height: 44, gap: 10 }}>
-            <img src={logo} alt="KoraFinance" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
+            <div className="flex items-center justify-center flex-shrink-0" style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: 'var(--color-green-600)' }}>
+              <BarChart3 className="text-white" style={{ width: 18, height: 18 }} />
+            </div>
+            <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--color-text-strong)' }}>KoraFinance</span>
             <span className="ml-auto" style={{ ...planBadgeStyle, fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 'var(--radius-md)', letterSpacing: '0.5px' }}>
               {planBadge}
             </span>
@@ -323,8 +325,11 @@ export default function AppLayout() {
 
           {/* Mobile: logo */}
           {isMobile && (
-            <div className="flex items-center">
-              <img src={logo} alt="KoraFinance" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
+            <div className="flex items-center" style={{ gap: 6 }}>
+              <div className="flex items-center justify-center" style={{ width: 28, height: 28, borderRadius: 'var(--radius-sm)', background: 'var(--color-green-600)' }}>
+                <BarChart3 className="text-white" style={{ width: 15, height: 15 }} />
+              </div>
+              <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text-strong)' }}>KoraFinance</span>
             </div>
           )}
 
