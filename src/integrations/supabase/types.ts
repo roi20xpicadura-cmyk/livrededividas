@@ -1219,6 +1219,7 @@ export type Database = {
           id: string
           notes: string | null
           origin: string
+          source: string | null
           type: string
           user_id: string
         }
@@ -1233,6 +1234,7 @@ export type Database = {
           id?: string
           notes?: string | null
           origin: string
+          source?: string | null
           type: string
           user_id: string
         }
@@ -1247,6 +1249,7 @@ export type Database = {
           id?: string
           notes?: string | null
           origin?: string
+          source?: string | null
           type?: string
           user_id?: string
         }
@@ -1440,40 +1443,49 @@ export type Database = {
       whatsapp_messages: {
         Row: {
           action_taken: string | null
+          content: string | null
           created_at: string | null
           direction: string
           error: string | null
           id: string
           intent: string | null
           message: string
+          phone: string | null
           phone_number: string
           processed: boolean | null
+          role: string | null
           transaction_created_id: string | null
           user_id: string
         }
         Insert: {
           action_taken?: string | null
+          content?: string | null
           created_at?: string | null
           direction: string
           error?: string | null
           id?: string
           intent?: string | null
           message: string
+          phone?: string | null
           phone_number: string
           processed?: boolean | null
+          role?: string | null
           transaction_created_id?: string | null
           user_id: string
         }
         Update: {
           action_taken?: string | null
+          content?: string | null
           created_at?: string | null
           direction?: string
           error?: string | null
           id?: string
           intent?: string | null
           message?: string
+          phone?: string | null
           phone_number?: string
           processed?: boolean | null
+          role?: string | null
           transaction_created_id?: string | null
           user_id?: string
         }
