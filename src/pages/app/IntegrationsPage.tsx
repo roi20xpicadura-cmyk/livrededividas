@@ -149,7 +149,10 @@ export default function IntegrationsPage() {
         ))}
       </div>
 
-      {/* Connected strip */}
+      {/* Open Finance Section */}
+      <OpenFinanceSection />
+
+
       {connectedList.length > 0 && (
         <div style={{ marginBottom: 20 }}>
           <div className="flex items-center" style={{ gap: 8, marginBottom: 10 }}>
