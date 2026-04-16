@@ -227,8 +227,7 @@ export default function OverviewPage() {
       {/* WELCOME CHECKLIST */}
       <WelcomeChecklist />
 
-      {/* AI AGENTS */}
-      <AIAgentsWidget />
+      {/* WHATSAPP PROMO */}
 
       {/* WHATSAPP PROMO */}
       <WhatsAppPromoWidget />
