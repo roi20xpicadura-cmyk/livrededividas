@@ -149,10 +149,7 @@ export default function AppLayout() {
             <div className="flex items-center justify-center flex-shrink-0" style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: 'var(--color-green-600)' }}>
               <BarChart3 className="text-white" style={{ width: 18, height: 18 }} />
             </div>
-            <div className="flex items-center" style={{ gap: 2 }}>
-              <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--color-text-strong)' }}>KoraFinance</span>
-              <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--color-green-600)' }}>Pro</span>
-            </div>
+            <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--color-text-strong)' }}>KoraFinance</span>
             <span className="ml-auto" style={{ ...planBadgeStyle, fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 'var(--radius-md)', letterSpacing: '0.5px' }}>
               {planBadge}
             </span>
@@ -261,7 +258,7 @@ export default function AppLayout() {
               padding: 14,
             }}>
               <Crown style={{ width: 18, height: 18, color: 'var(--color-warning-solid)', marginBottom: 8 }} />
-              <p style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-green-800)' }}>Upgrade para Pro</p>
+              <p style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-green-800)' }}>Fazer Upgrade</p>
               <p style={{ fontSize: 11, color: 'var(--color-green-700)', lineHeight: 1.5 }}>Lançamentos ilimitados e muito mais.</p>
               <Link to="/app/billing" onClick={() => setSidebarOpen(false)}
                 className="block text-center transition-colors"

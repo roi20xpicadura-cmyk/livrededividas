@@ -244,7 +244,6 @@ export default function RegisterPage() {
               <BarChart3 className="text-white" style={{ width: 22, height: 22 }} />
             </div>
             <span style={{ fontSize: 20, fontWeight: 800, color: 'white' }}>KoraFinance</span>
-            <span style={{ fontSize: 20, fontWeight: 800, color: '#4ade80' }}>Pro</span>
           </div>
 
           <div>
@@ -275,7 +274,6 @@ export default function RegisterPage() {
               <BarChart3 className="text-white" style={{ width: 20, height: 20 }} />
             </div>
             <span style={{ fontSize: 18, fontWeight: 800, color: 'white' }}>KoraFinance</span>
-            <span style={{ fontSize: 18, fontWeight: 800, color: '#4ade80' }}>Pro</span>
           </div>
 
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}

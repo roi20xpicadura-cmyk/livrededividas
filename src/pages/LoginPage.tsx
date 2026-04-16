@@ -54,7 +54,6 @@ function DarkHeroSection({ variant = 'login' }: { variant?: 'login' | 'register'
             <BarChart3 className="text-white" style={{ width: 20, height: 20 }} />
           </div>
           <span style={{ fontSize: 18, fontWeight: 800, color: 'white' }}>KoraFinance</span>
-          <span style={{ fontSize: 18, fontWeight: 800, color: '#4ade80' }}>Pro</span>
         </div>
 
         {/* Headline */}
@@ -135,7 +134,6 @@ function DesktopLeftPanel() {
             <BarChart3 className="text-white" style={{ width: 22, height: 22 }} />
           </div>
           <span style={{ fontSize: 20, fontWeight: 800, color: 'white' }}>KoraFinance</span>
-          <span style={{ fontSize: 20, fontWeight: 800, color: '#4ade80' }}>Pro</span>
         </div>
 
         {/* Middle content */}
