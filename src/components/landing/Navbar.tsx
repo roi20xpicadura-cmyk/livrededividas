@@ -77,26 +77,43 @@ export default function Navbar() {
 
       <AnimatePresence>
         {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 top-16 bg-white z-40 flex flex-col items-center justify-center gap-8 md:hidden"
-          >
-            {navLinks.map(l => (
-              <a key={l.label} href={l.href} onClick={() => setMobileOpen(false)} className="text-lg font-semibold text-[#0f172a]">
-                {l.label}
-              </a>
-            ))}
-            <Link to="/login" onClick={() => setMobileOpen(false)} className="text-lg font-semibold text-[#64748b]">Entrar</Link>
-            <Link
-              to="/register"
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setMobileOpen(false)}
-              className="px-8 py-3.5 rounded-[12px] bg-[#7C3AED] text-white font-bold text-base inline-flex items-center gap-2"
+              className="fixed inset-0 top-16 z-[90] md:hidden"
+              style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(2px)' }}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="fixed inset-x-0 top-16 z-[110] flex flex-col items-center justify-center gap-8 md:hidden"
+              style={{
+                background: '#FFFFFF',
+                paddingTop: '48px',
+                paddingBottom: '48px',
+                borderBottom: '1px solid rgba(0,0,0,0.06)',
+                boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+              }}
             >
-              Começar grátis <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
+              {navLinks.map(l => (
+                <a key={l.label} href={l.href} onClick={() => setMobileOpen(false)} className="text-lg font-semibold text-[#0f172a]">
+                  {l.label}
+                </a>
+              ))}
+              <Link to="/login" onClick={() => setMobileOpen(false)} className="text-lg font-semibold text-[#64748b]">Entrar</Link>
+              <Link
+                to="/register"
+                onClick={() => setMobileOpen(false)}
+                className="px-8 py-3.5 rounded-[12px] bg-[#7C3AED] text-white font-bold text-base inline-flex items-center gap-2"
+              >
+                Começar grátis <ArrowRight className="w-4 h-4" />
+              </Link>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </nav>
