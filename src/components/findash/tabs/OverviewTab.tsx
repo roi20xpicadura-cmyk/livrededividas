@@ -42,7 +42,7 @@ export default function OverviewTab({ filteredTx, stats, currency, onGoToTransac
         animate={{ opacity: 1, y: 0 }}
         className="relative overflow-hidden rounded-2xl p-6 md:p-8"
         style={{
-          background: 'linear-gradient(135deg, #0D1412 0%, #14322A 50%, #0D1412 100%)',
+          background: '#1A0D35',
         }}
       >
         {/* Subtle green glow */}

@@ -340,19 +340,19 @@ export default function OverviewPage() {
 
       {/* 2. HERO BALANCE CARD */}
       <motion.div {...stagger(1)} className="p-5 md:p-6" style={{
-        background: 'linear-gradient(145deg, #0f2b1a 0%, #0a1f12 40%, #071a0d 100%)',
+        background: '#1A0D35',
         borderRadius: 22, position: 'relative', overflow: 'hidden',
-        border: '1px solid rgba(139, 92, 246,0.12)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px rgba(139, 92, 246,0.06), inset 0 1px 0 rgba(255,255,255,0.04)',
+        border: '1.5px solid rgba(167, 139, 250, 0.20)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)',
       }}>
-        <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139, 92, 246,0.08) 0%, transparent 70%)' }} />
+        <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124, 58, 237, 0.18) 0%, transparent 70%)' }} />
 
         <div className="flex items-center justify-between" style={{ marginBottom: 16, position: 'relative' }}>
           <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
             {heroLabel}
           </span>
           <motion.button whileTap={{ scale: 0.88 }} onClick={() => setShowValues(!showValues)}
-            style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             {showValues ? <Eye size={15} color="rgba(255,255,255,0.8)" /> : <EyeOff size={15} color="rgba(255,255,255,0.8)" />}
           </motion.button>
         </div>
@@ -365,9 +365,9 @@ export default function OverviewPage() {
               </div>
               <div className="flex items-center gap-1" style={{ marginTop: 8 }}>
                 {heroBalance >= 0
-                  ? <TrendingUp size={13} color="#C4B5FD" />
+                  ? <TrendingUp size={13} color="#A78BFA" />
                   : <TrendingDown size={13} color="#fca5a5" />}
-                <span style={{ fontSize: 13, color: heroBalance >= 0 ? '#C4B5FD' : '#fca5a5', fontWeight: 600 }}>
+                <span style={{ fontSize: 13, color: heroBalance >= 0 ? '#A78BFA' : '#fca5a5', fontWeight: 600 }}>
                   vs mês anterior
                 </span>
               </div>
@@ -378,7 +378,7 @@ export default function OverviewPage() {
         </div>
 
         {/* Receitas / Despesas — always show */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1px 1fr', background: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px 16px', position: 'relative' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1px 1fr', background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: '12px 16px', position: 'relative' }}>
           <div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Receitas</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: '#DDD6FE', fontVariantNumeric: 'tabular-nums' }}>
@@ -397,13 +397,13 @@ export default function OverviewPage() {
         {/* PESSOAL / NEGÓCIO rows — only for 'both' */}
         {profileType === 'both' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
-            <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 14px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 14px' }}>
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase' }}>🏠 Pessoal</div>
               <div style={{ fontSize: 15, fontWeight: 800, color: 'white', marginTop: 2 }}>
                 {showValues ? formatCurrency(stats.personalBalance, currency) : '••••'}
               </div>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 14px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 14px' }}>
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase' }}>💼 Negócio</div>
               <div style={{ fontSize: 15, fontWeight: 800, color: 'white', marginTop: 2 }}>
                 {showValues ? formatCurrency(stats.bizProfit, currency) : '••••'}
