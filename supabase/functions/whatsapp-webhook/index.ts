@@ -402,9 +402,63 @@ Registrar tudo? Responda *SIM* para confirmar ou *NÃO* para cancelar.`;
   }
 }
 
+// ─── FREQUENCY CONTROL ──────────────────────────────
+// Brasil = UTC-3. 8h-21h BR = 11h-24h UTC.
+function isWithinBrazilDaytime(): boolean {
+  const utcHour = new Date().getUTCHours();
+  // 8h BR = 11 UTC; 22h BR = 1 UTC (dia seguinte)
+  // Permitido: 8h-21h59 BR → 11h UTC até 0h59 UTC
+  return utcHour >= 11 || utcHour < 1;
+}
+
+async function canSendProactive(
+  userId: string,
+  category: string | null = null,
+): Promise<{ allowed: boolean; reason?: string }> {
+  if (!isWithinBrazilDaytime()) {
+    return { allowed: false, reason: "outside-daytime" };
+  }
+
+  const { data: conn } = await supabase
+    .from("whatsapp_connections")
+    .select("active, last_notification_at, last_notification_category")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (!conn || conn.active === false) {
+    return { allowed: false, reason: "inactive" };
+  }
+
+  if (conn.last_notification_at) {
+    const last = new Date(conn.last_notification_at).getTime();
+    const diffH = (Date.now() - last) / (1000 * 60 * 60);
+    if (diffH < 2) return { allowed: false, reason: "throttled-2h" };
+
+    // Mesma categoria no mesmo dia → bloqueia
+    if (category && conn.last_notification_category === category) {
+      const sameDay =
+        new Date(conn.last_notification_at).toISOString().slice(0, 10) ===
+        new Date().toISOString().slice(0, 10);
+      if (sameDay) return { allowed: false, reason: "same-category-today" };
+    }
+  }
+
+  return { allowed: true };
+}
+
+async function markNotificationSent(userId: string, category: string | null = null) {
+  await supabase
+    .from("whatsapp_connections")
+    .update({
+      last_notification_at: new Date().toISOString(),
+      last_notification_category: category,
+    })
+    .eq("user_id", userId);
+}
+
 // ─── IMPROVEMENT 4: PROACTIVE BUDGET ALERTS ─────────
 async function checkAndAlertBudget(
-  _userId: string,
+  userId: string,
   phone: string,
   category: string,
   userName: string,
@@ -414,7 +468,6 @@ async function checkAndAlertBudget(
   const budget = ctx.budgets.find((b: any) => b.category === category);
   if (!budget) return;
 
-  // recompute with newly added amount
   const newSpent = budget.spent + addedAmount;
   const newPct = Math.round((newSpent / budget.limit) * 100);
 
@@ -440,10 +493,17 @@ Tenta segurar os gastos nessa categoria! 💪`;
 Fique de olho! 👀`;
   }
 
-  if (alertMsg) {
-    await new Promise((r) => setTimeout(r, 1500));
-    await sendWhatsApp(phone, alertMsg);
+  if (!alertMsg) return;
+
+  const check = await canSendProactive(userId, category);
+  if (!check.allowed) {
+    console.log(`[BUDGET ALERT skipped] user=${userId} reason=${check.reason}`);
+    return;
   }
+
+  await new Promise((r) => setTimeout(r, 1500));
+  const ok = await sendWhatsApp(phone, alertMsg);
+  if (ok) await markNotificationSent(userId, category);
 }
 
 // ─── IMPROVEMENT 5: MAIN HANDLER ────────────────────
