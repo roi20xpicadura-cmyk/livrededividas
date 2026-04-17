@@ -95,7 +95,7 @@ const PAGE_TITLES: Record<string, string> = {
 export default function AppLayout() {
   const { user, signOut } = useAuth();
   const { profile, config, loading, refetch } = useProfile();
-  const { theme, cycleTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme, cycleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -429,6 +429,22 @@ export default function AppLayout() {
           )}
 
           <div className="ml-auto flex items-center" style={{ gap: 8 }}>
+            <button
+              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              aria-label={resolvedTheme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+              className="flex items-center justify-center transition-all duration-150"
+              style={{
+                width: 36, height: 36, borderRadius: 'var(--radius-md)',
+                background: 'transparent', border: '1px solid var(--color-border-base)',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-bg-sunken)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              {resolvedTheme === 'dark'
+                ? <Sun style={{ width: 16, height: 16, color: '#fbbf24' }} />
+                : <Moon style={{ width: 16, height: 16, color: 'var(--color-text-muted)' }} />}
+            </button>
+
             <button aria-label="Notificações"
               className="flex items-center justify-center transition-all duration-150"
               style={{
