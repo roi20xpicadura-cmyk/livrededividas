@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable';
-import { BarChart3, Check, AlertCircle } from 'lucide-react';
+import { Check, AlertCircle } from 'lucide-react';
+import koraIcon from '@/assets/korafinance-icon.png';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { haptic } from '@/lib/haptics';
@@ -279,9 +280,7 @@ export default function RegisterPage() {
 
         <div className="relative z-10 flex flex-col justify-between h-full">
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center" style={{ width: 42, height: 42, background: '#7C3AED', borderRadius: 12, boxShadow: '0 4px 14px rgba(124, 58, 237,0.4)' }}>
-              <BarChart3 className="text-white" style={{ width: 22, height: 22 }} />
-            </div>
+            <img src={koraIcon} alt="KoraFinance" style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover', boxShadow: '0 4px 14px rgba(124, 58, 237,0.4)' }} />
             <span style={{ fontSize: 20, fontWeight: 800, color: 'white' }}>KoraFinance</span>
           </div>
 
@@ -309,9 +308,7 @@ export default function RegisterPage() {
 
         <div className="relative z-10" style={{ padding: '48px 28px 56px' }}>
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center" style={{ width: 38, height: 38, background: '#7C3AED', borderRadius: 11, boxShadow: '0 4px 14px rgba(124, 58, 237,0.4)' }}>
-              <BarChart3 className="text-white" style={{ width: 20, height: 20 }} />
-            </div>
+            <img src={koraIcon} alt="KoraFinance" style={{ width: 38, height: 38, borderRadius: 11, objectFit: 'cover', boxShadow: '0 4px 14px rgba(124, 58, 237,0.4)' }} />
             <span style={{ fontSize: 18, fontWeight: 800, color: 'white' }}>KoraFinance</span>
           </div>
 

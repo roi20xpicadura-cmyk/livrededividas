@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3 } from 'lucide-react';
+import koraIcon from '@/assets/korafinance-icon.png';
 import { toast } from 'sonner';
 
 export default function ResetPasswordPage() {
@@ -42,9 +42,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen flex items-center justify-center p-6 bg-background">
       <div className="w-full max-w-sm">
         <div className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <BarChart3 className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <img src={koraIcon} alt="KoraFinance" className="w-8 h-8 rounded-lg object-cover" />
           <span className="font-black text-foreground">KoraFinance</span>
         </div>
 
