@@ -13,6 +13,7 @@ import { AnimatePresence } from "framer-motion";
 import SplashScreen from "@/components/app/SplashScreen";
 import SWUpdateBanner from "@/components/app/SWUpdateBanner";
 import LogoLoader from "@/components/app/LogoLoader";
+import Paywall from "@/components/app/Paywall";
 import { useProfile } from "@/hooks/useProfile";
 
 // Lazy-loaded routes
@@ -156,23 +157,56 @@ const App = () => {
                     <Route index element={<OverviewPage />} />
                     <Route path="transactions" element={<TransactionsRouter />} />
                     <Route path="transactions/personal" element={<TransactionsPage profile="personal" />} />
-                    <Route path="transactions/business" element={<TransactionsPage profile="business" />} />
+                    
                     <Route path="goals" element={<GoalsPage />} />
-                    <Route path="debts" element={<DebtsPage />} />
-                    <Route path="budget" element={<BudgetPage />} />
+                    <Route path="debts" element={
+                      <Paywall feature="debts" requiredPlan="pro" title="Gestão de Dívidas" description="Organize, priorize e quite suas dívidas com estratégias inteligentes (Snowball / Avalanche).">
+                        <DebtsPage />
+                      </Paywall>
+                    } />
+                    <Route path="budget" element={
+                      <Paywall feature="budget" requiredPlan="pro" title="Orçamentos" description="Crie orçamentos por categoria e receba alertas antes de estourar.">
+                        <BudgetPage />
+                      </Paywall>
+                    } />
                     <Route path="cards" element={<CardsPage />} />
-                    <Route path="export" element={<Suspense fallback={<PageSkeleton />}><ExportPage /></Suspense>} />
+                    <Route path="export" element={
+                      <Paywall feature="export" requiredPlan="pro" title="Exportar dados" description="Exporte seus dados em PDF, Excel e CSV a qualquer momento.">
+                        <Suspense fallback={<PageSkeleton />}><ExportPage /></Suspense>
+                      </Paywall>
+                    } />
                     <Route path="settings" element={<SettingsPage />} />
                     <Route path="settings/security" element={<SecuritySettingsPage />} />
                     <Route path="billing" element={<BillingPage />} />
                     <Route path="integrations" element={<IntegrationsPage />} />
                     <Route path="achievements" element={<AchievementsPage />} />
                     <Route path="referral" element={<ReferralPage />} />
-                    <Route path="simulator" element={<SimulatorPage />} />
-                    <Route path="predictions" element={<PredictionsPage />} />
-                    <Route path="charts" element={<ChartsPage />} />
+                    <Route path="simulator" element={
+                      <Paywall feature="simulator" requiredPlan="pro" title="Simulador Financeiro" description="Teste cenários de receita, despesa e investimentos antes de tomar decisões.">
+                        <SimulatorPage />
+                      </Paywall>
+                    } />
+                    <Route path="predictions" element={
+                      <Paywall feature="kora_ia" requiredPlan="pro" title="Previsões com IA" description="Veja projeções inteligentes do seu fluxo de caixa para os próximos meses.">
+                        <PredictionsPage />
+                      </Paywall>
+                    } />
+                    <Route path="charts" element={
+                      <Paywall feature="advanced_charts" requiredPlan="pro" title="Gráficos avançados" description="Analise tendências e padrões com gráficos detalhados.">
+                        <ChartsPage />
+                      </Paywall>
+                    } />
                     <Route path="investments" element={<InvestmentsPage />} />
-                    <Route path="dre" element={<DREPage />} />
+                    <Route path="dre" element={
+                      <Paywall feature="dre" requiredPlan="business" title="DRE Empresarial" description="Demonstrativo de Resultado completo para empresas e MEIs.">
+                        <DREPage />
+                      </Paywall>
+                    } />
+                    <Route path="transactions/business" element={
+                      <Paywall feature="business_transactions" requiredPlan="business" title="Lançamentos Negócio" description="Separe finanças pessoais e empresariais em um único painel.">
+                        <TransactionsPage profile="business" />
+                      </Paywall>
+                    } />
                   </Route>
 
                   {/* Admin routes */}

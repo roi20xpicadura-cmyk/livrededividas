@@ -1,44 +1,120 @@
-export const PLAN_LIMITS = {
+export type Plan = 'free' | 'pro' | 'business';
+
+export const PLANS = {
   free: {
-    transactions_per_month: 50,
-    goals: 2,
-    cards: 1,
-    investments: 2,
-    dre: false,
-    export: false,
-    advanced_charts: false,
-    budget: false,
-    ai_chat: false,
-    recurring: false,
+    name: 'Free',
+    price: 0,
+    color: '#6B7280',
+    limits: {
+      transactions_per_month: 50,
+      goals: 2,
+      budgets: 3,
+      cards: 1,
+      investments: 2,
+    },
+    features: {
+      dashboard_basic: true,
+      open_finance: true,
+      kora_ia: false,
+      whatsapp_ia: false,
+      debts: false,
+      simulator: false,
+      monthly_report: false,
+      whatsapp_notifications: false,
+      business_transactions: false,
+      dre: false,
+      advanced_reports: false,
+      advanced_charts: false,
+      budget: false,
+      export: false,
+      recurring: false,
+      ai_chat: false,
+      priority_support: false,
+    },
   },
   pro: {
-    transactions_per_month: Infinity,
-    goals: Infinity,
-    cards: Infinity,
-    investments: Infinity,
-    dre: true,
-    export: true,
-    advanced_charts: true,
-    budget: true,
-    ai_chat: true,
-    recurring: true,
+    name: 'Pro',
+    price: 29,
+    color: '#7C3AED',
+    limits: {
+      transactions_per_month: Infinity,
+      goals: Infinity,
+      budgets: Infinity,
+      cards: Infinity,
+      investments: Infinity,
+    },
+    features: {
+      dashboard_basic: true,
+      open_finance: true,
+      kora_ia: true,
+      whatsapp_ia: true,
+      debts: true,
+      simulator: true,
+      monthly_report: true,
+      whatsapp_notifications: true,
+      business_transactions: false,
+      dre: false,
+      advanced_reports: false,
+      advanced_charts: true,
+      budget: true,
+      export: true,
+      recurring: true,
+      ai_chat: true,
+      priority_support: false,
+    },
   },
   business: {
-    transactions_per_month: Infinity,
-    goals: Infinity,
-    cards: Infinity,
-    investments: Infinity,
-    dre: true,
-    export: true,
-    advanced_charts: true,
-    budget: true,
-    ai_chat: true,
-    recurring: true,
-    multi_company: true,
+    name: 'Business',
+    price: 59,
+    color: '#2563EB',
+    limits: {
+      transactions_per_month: Infinity,
+      goals: Infinity,
+      budgets: Infinity,
+      cards: Infinity,
+      investments: Infinity,
+    },
+    features: {
+      dashboard_basic: true,
+      open_finance: true,
+      kora_ia: true,
+      whatsapp_ia: true,
+      debts: true,
+      simulator: true,
+      monthly_report: true,
+      whatsapp_notifications: true,
+      business_transactions: true,
+      dre: true,
+      advanced_reports: true,
+      advanced_charts: true,
+      budget: true,
+      export: true,
+      recurring: true,
+      ai_chat: true,
+      priority_support: true,
+    },
   },
 } as const;
 
-export type PlanType = keyof typeof PLAN_LIMITS;
+export type FeatureKey = keyof typeof PLANS.free.features;
+export type LimitKey = keyof typeof PLANS.free.limits;
+
+export function hasFeature(plan: Plan, feature: FeatureKey): boolean {
+  return PLANS[plan]?.features[feature] ?? false;
+}
+
+export function getLimit(plan: Plan, limit: LimitKey): number {
+  return PLANS[plan]?.limits[limit] ?? 0;
+}
+
+// Backwards-compat (older imports)
+export const PLAN_LIMITS = {
+  free: { ...PLANS.free.limits, ...PLANS.free.features },
+  pro: { ...PLANS.pro.limits, ...PLANS.pro.features },
+  business: { ...PLANS.business.limits, ...PLANS.business.features },
+} as const;
+
+export type PlanType = Plan;
 
 export function formatCurrency(val: number, currency = 'R$') {
   const trimmed = currency.trim();
