@@ -94,14 +94,14 @@ export default function SecuritySettingsPage() {
         {/* What we collect */}
         <Card title="O que coletamos">
           {collected.map((item, i) => (
-            <Row key={i} item={item} badge={{ text: 'Sim', color: '#7C3AED', bg: '#F5F3FF' }} last={i === collected.length - 1} />
+            <Row key={i} item={item} badge={{ text: 'Sim', color: 'var(--color-green-600)', bg: 'var(--color-green-50)' }} last={i === collected.length - 1} />
           ))}
         </Card>
 
         {/* What we NEVER collect */}
         <Card title="O que NUNCA coletamos">
           {neverCollected.map((item, i) => (
-            <Row key={i} item={item} badge={{ text: 'Nunca', color: '#dc2626', bg: '#fef2f2' }} last={i === neverCollected.length - 1} />
+            <Row key={i} item={item} badge={{ text: 'Nunca', color: 'var(--color-danger-solid)', bg: 'var(--color-danger-bg)' }} last={i === neverCollected.length - 1} />
           ))}
         </Card>
 
