@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomSheet from '@/components/app/BottomSheet';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +10,7 @@ import {
   Plus, ChevronDown, ChevronRight, Zap, Pencil, Check, Trash2,
   MoreVertical, Pause, Play, AlertTriangle, DollarSign, Sparkles, Calculator,
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 /* ─── Types ─── */
 interface Debt {
