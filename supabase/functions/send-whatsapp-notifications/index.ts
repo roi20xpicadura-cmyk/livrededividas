@@ -248,6 +248,12 @@ _KoraFinance 🐨_`;
   return null;
 }
 
+// Brasil = UTC-3. Envio permitido 8h-21h BR = 11h UTC até 0h59 UTC.
+function isWithinBrazilDaytime(): boolean {
+  const utcHour = new Date().getUTCHours();
+  return utcHour >= 11 || utcHour < 1;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -255,9 +261,17 @@ serve(async (req) => {
 
   console.log('🔔 Running WhatsApp notifications...');
 
+  if (!isWithinBrazilDaytime()) {
+    console.log('⏰ Outside daytime window (8h-21h BR). Skipping.');
+    return new Response(
+      JSON.stringify({ success: true, sent: 0, skipped: 0, reason: 'outside-daytime' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
+
   const { data: connections } = await supabase
     .from('whatsapp_connections')
-    .select('user_id, phone_number')
+    .select('user_id, phone_number, last_notification_at')
     .eq('verified', true)
     .eq('active', true)
     .not('phone_number', 'is', null);
@@ -269,11 +283,26 @@ serve(async (req) => {
     );
   }
 
+  const todayStr = new Date().toISOString().slice(0, 10);
   let sent = 0;
   let skipped = 0;
 
   for (const conn of connections) {
     try {
+      // Throttle: máx 1 mensagem proativa a cada 2h E no máximo 1/dia (cron)
+      if (conn.last_notification_at) {
+        const last = new Date(conn.last_notification_at);
+        const diffH = (Date.now() - last.getTime()) / (1000 * 60 * 60);
+        if (diffH < 2) {
+          skipped++;
+          continue;
+        }
+        if (last.toISOString().slice(0, 10) === todayStr) {
+          skipped++;
+          continue;
+        }
+      }
+
       const data = await getUserData(conn.user_id);
       const message = decideNotification(data);
 
@@ -283,7 +312,16 @@ serve(async (req) => {
       }
 
       const ok = await sendWhatsApp(conn.phone_number, message);
-      if (ok) sent++;
+      if (ok) {
+        sent++;
+        await supabase
+          .from('whatsapp_connections')
+          .update({
+            last_notification_at: new Date().toISOString(),
+            last_notification_category: 'daily',
+          })
+          .eq('user_id', conn.user_id);
+      }
 
       await new Promise(r => setTimeout(r, 500));
     } catch (err) {
