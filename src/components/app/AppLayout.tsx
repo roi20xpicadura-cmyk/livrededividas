@@ -582,18 +582,20 @@ export default function AppLayout() {
         {showMoreDrawer && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
               className="fixed inset-0 z-50 md:hidden"
-              style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }}
+              style={{ background: 'rgba(0,0,0,0.5)' }}
               onClick={() => setShowMoreDrawer(false)} />
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
               className="fixed bottom-0 left-0 right-0 z-50 md:hidden overflow-y-auto pb-safe"
               style={{
                 background: 'var(--color-bg-surface)',
                 borderRadius: '24px 24px 0 0',
                 maxHeight: '70vh',
                 padding: '0 20px 20px',
+                willChange: 'transform',
               }}>
               {/* Handle + Close */}
               <div className="sticky top-0 z-10 flex items-center justify-between" style={{ paddingTop: 12, paddingBottom: 12, background: 'var(--color-bg-surface)' }}>
