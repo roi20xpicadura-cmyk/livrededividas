@@ -430,13 +430,29 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
       const { error } = await supabase.from('transactions').insert(rows);
       if (error) throw error;
 
-      await supabase.from('integrations').insert({
-        user_id: userId, platform: integration.id,
-        platform_display_name: integration.name,
-        method: 'ofx_import', status: 'active' as any,
-        last_sync_at: new Date().toISOString(),
-        total_imported: newTxs.length,
-      });
+      // Upsert integration row (avoid creating duplicate rows on each import)
+      const { data: existingInteg } = await supabase
+        .from('integrations')
+        .select('id, total_imported')
+        .eq('user_id', userId)
+        .eq('platform', integration.id)
+        .maybeSingle();
+
+      if (existingInteg) {
+        await supabase.from('integrations').update({
+          status: 'active' as any,
+          last_sync_at: new Date().toISOString(),
+          total_imported: (existingInteg.total_imported || 0) + newTxs.length,
+        }).eq('id', existingInteg.id);
+      } else {
+        await supabase.from('integrations').insert({
+          user_id: userId, platform: integration.id,
+          platform_display_name: integration.name,
+          method: 'ofx_import', status: 'active' as any,
+          last_sync_at: new Date().toISOString(),
+          total_imported: newTxs.length,
+        });
+      }
 
       haptic.success();
       toast.success(`${newTxs.length} transações importadas! 🎉`);
