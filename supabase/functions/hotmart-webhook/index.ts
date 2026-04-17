@@ -13,14 +13,34 @@ const supabase = createClient(
 
 // Map Hotmart product/offer codes → internal plan
 // Configure HOTMART_PRO_OFFER e HOTMART_BUSINESS_OFFER nos secrets
+// Hardcoded fallbacks (safety net se secrets não estiverem setados corretamente)
+const HARDCODED_PRO_OFFERS = ['p5itoui4'];
+const HARDCODED_BUSINESS_OFFERS = ['ir7ki0tu'];
+
 function resolvePlan(offerCode: string | undefined, productName: string | undefined): 'pro' | 'business' | null {
-  const proOffer = Deno.env.get('HOTMART_PRO_OFFER') || '';
-  const businessOffer = Deno.env.get('HOTMART_BUSINESS_OFFER') || '';
-  if (offerCode && proOffer && offerCode === proOffer) return 'pro';
-  if (offerCode && businessOffer && offerCode === businessOffer) return 'business';
+  const proOffer = (Deno.env.get('HOTMART_PRO_OFFER') || '').trim();
+  const businessOffer = (Deno.env.get('HOTMART_BUSINESS_OFFER') || '').trim();
+  const code = (offerCode || '').trim();
+
+  console.log('resolvePlan inputs', {
+    receivedOfferCode: code,
+    proOfferEnv: proOffer,
+    businessOfferEnv: businessOffer,
+    productName,
+  });
+
+  if (code) {
+    if (proOffer && code === proOffer) return 'pro';
+    if (businessOffer && code === businessOffer) return 'business';
+    if (HARDCODED_PRO_OFFERS.includes(code)) return 'pro';
+    if (HARDCODED_BUSINESS_OFFERS.includes(code)) return 'business';
+  }
+
   const name = (productName || '').toLowerCase();
   if (name.includes('business')) return 'business';
   if (name.includes('pro')) return 'pro';
+  // Fallback final: se vem do produto Kora Finance e tem offer code, assume Pro
+  if (code && name.includes('kor')) return 'pro';
   return null;
 }
 
