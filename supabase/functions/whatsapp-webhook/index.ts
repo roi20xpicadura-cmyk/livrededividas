@@ -264,7 +264,10 @@ async function saveContext(
 }
 
 // ─── SAVE TRANSACTION + BUDGET CHECK ────────────────
-async function executeTransaction(userId: string, tx: any): Promise<{ ok: boolean; budgetWarning?: string }> {
+async function executeTransaction(
+  userId: string,
+  tx: any,
+): Promise<{ ok: boolean; budgetWarning?: string; balance?: number }> {
   const category = detectCategory(tx.description || "", tx.category);
   const monthYear = new Date().toISOString().slice(0, 7);
 
@@ -284,6 +287,21 @@ async function executeTransaction(userId: string, tx: any): Promise<{ ok: boolea
     return { ok: false };
   }
 
+  // Compute current month balance
+  const monthStart = `${monthYear}-01`;
+  const { data: monthTxs } = await supabase
+    .from("transactions")
+    .select("type, amount, category")
+    .eq("user_id", userId)
+    .is("deleted_at", null)
+    .gte("date", monthStart);
+
+  let balance = 0;
+  for (const t of monthTxs || []) {
+    const a = Number(t.amount);
+    balance += t.type === "income" ? a : -a;
+  }
+
   // Budget check (only for expenses)
   let budgetWarning: string | undefined;
   if (tx.type === "expense") {
@@ -296,17 +314,9 @@ async function executeTransaction(userId: string, tx: any): Promise<{ ok: boolea
       .maybeSingle();
 
     if (budget?.limit_amount) {
-      const monthStart = `${monthYear}-01`;
-      const { data: spent } = await supabase
-        .from("transactions")
-        .select("amount")
-        .eq("user_id", userId)
-        .eq("type", "expense")
-        .eq("category", category)
-        .is("deleted_at", null)
-        .gte("date", monthStart);
-
-      const total = (spent || []).reduce((s: number, t: any) => s + Number(t.amount), 0);
+      const total = (monthTxs || [])
+        .filter((t: any) => t.type === "expense" && t.category === category)
+        .reduce((s: number, t: any) => s + Number(t.amount), 0);
       const limit = Number(budget.limit_amount);
       const pct = (total / limit) * 100;
 
@@ -318,7 +328,33 @@ async function executeTransaction(userId: string, tx: any): Promise<{ ok: boolea
     }
   }
 
-  return { ok: true, budgetWarning };
+  return { ok: true, budgetWarning, balance };
+}
+
+function buildTransactionReply(
+  tx: { type: string; amount: number; description: string; category: string },
+  balance: number,
+  budgetWarning?: string,
+) {
+  const today = new Date().toLocaleDateString("pt-BR");
+  if (tx.type === "expense") {
+    return `✅ *Despesa registrada!*
+
+💸 *${fmt(tx.amount)}* — ${tx.category}
+📝 ${tx.description}
+📅 ${today}
+💰 Saldo do mês: *${fmt(balance)}*${budgetWarning ? `\n\n${budgetWarning}` : ""}
+
+_Registrado pela Kora IA 🐨_`;
+  }
+  return `✅ *Receita registrada!*
+
+💰 *${fmt(tx.amount)}* — ${tx.category}
+📝 ${tx.description}
+📅 ${today}
+💰 Saldo do mês: *${fmt(balance)}*
+
+_Registrado pela Kora IA 🐨_ 🎉`;
 }
 
 // ─── MESSAGE LOG ────────────────────────────────────
@@ -386,14 +422,20 @@ serve(async (req) => {
 
     // Unlinked
     if (!userId) {
-      const reply = `Olá! 👋 Sou a *Kora IA* do KoraFinance 🐨
+      const reply = `👋 Olá! Sou a *Kora IA* do KoraFinance 🐨
 
-Para registrar gastos, conecte seu número:
-1️⃣ Acesse *korafinance.app*
+Para registrar seus gastos aqui, conecte seu número:
+
+1️⃣ Acesse *korafinance.com.br*
 2️⃣ Configurações → WhatsApp
 3️⃣ Informe este número
 
-Depois mande: _"gastei 50 no mercado"_ ✅`;
+Depois é só mandar:
+💸 _"gastei 50 no mercado"_
+💰 _"recebi 3000 de salário"_
+📷 _Foto do cupom fiscal_
+
+Registro tudo automaticamente! ✅`;
       await sendMessage(phone, reply);
       await saveMessage(null, phone, "assistant", reply);
       return new Response("OK", { status: 200 });
@@ -456,7 +498,7 @@ ${result.establishment ? `🏪 ${result.establishment}\n` : ""}💵 Total: ${fmt
     if (result.action === "confirm" && ctx.pending) {
       const r = await executeTransaction(userId, ctx.pending);
       reply = r.ok
-        ? `✅ Confirmado e salvo!\n\n💸 ${ctx.pending.description} — ${fmt(ctx.pending.amount)}${r.budgetWarning ? "\n\n" + r.budgetWarning : ""}`
+        ? buildTransactionReply(ctx.pending, r.balance ?? 0, r.budgetWarning)
         : "❌ Erro ao salvar. Tente novamente.";
       newPending = null;
       lastIntent = "confirm";
@@ -483,11 +525,11 @@ Responda *SIM* para salvar ou *NÃO* para cancelar.`;
       } else {
         const r = await executeTransaction(userId, { ...result, category });
         reply = r.ok
-          ? `${result.type === "expense" ? "💸" : "💰"} *${result.type === "expense" ? "Despesa" : "Receita"} salva!*
-
-📝 ${result.description}
-💵 ${fmt(result.amount)}
-🏷️ ${category}${r.budgetWarning ? "\n\n" + r.budgetWarning : ""}`
+          ? buildTransactionReply(
+              { type: result.type, amount: Number(result.amount), description: result.description, category },
+              r.balance ?? 0,
+              r.budgetWarning,
+            )
           : "❌ Erro ao salvar. Tente novamente.";
         lastIntent = "transaction";
       }
