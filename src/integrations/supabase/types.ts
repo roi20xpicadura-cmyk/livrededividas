@@ -1337,7 +1337,6 @@ export type Database = {
           notifications_enabled: boolean | null
           onboarding_completed: boolean | null
           onboarding_step: number | null
-          pluggy_connect_token: string | null
           profile_type: string | null
           project_name: string | null
           referral_code: string | null
@@ -1363,7 +1362,6 @@ export type Database = {
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
-          pluggy_connect_token?: string | null
           profile_type?: string | null
           project_name?: string | null
           referral_code?: string | null
@@ -1389,7 +1387,6 @@ export type Database = {
           notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
-          pluggy_connect_token?: string | null
           profile_type?: string | null
           project_name?: string | null
           referral_code?: string | null
@@ -1418,6 +1415,24 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_secrets: {
+        Row: {
+          pluggy_connect_token: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          pluggy_connect_token?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          pluggy_connect_token?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

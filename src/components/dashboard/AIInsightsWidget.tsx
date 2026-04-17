@@ -252,7 +252,7 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <AnimatePresence>
+                <AnimatePresence mode="popLayout" initial={false}>
                   {activeAlerts.slice(0, 4).map((alert) => {
                     const sType = severityToType(alert.severity);
                     const style = typeStyles[sType] || typeStyles.info;

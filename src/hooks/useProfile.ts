@@ -3,6 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+// NOTE: Realtime listener removido por motivo de segurança — a tabela `profiles`
+// não está mais publicada no canal Realtime (qualquer usuário autenticado podia
+// escutar mudanças de outros usuários). Substituído por polling leve (30s) para
+// detectar ativação de plano via webhook Hotmart.
+
 interface Profile {
   id: string;
   full_name: string | null;
@@ -56,47 +61,39 @@ export function useProfile() {
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
-  // Realtime listener for plan changes (Hotmart webhook → instant unlock)
+  // Polling para detectar ativação de plano (substitui o Realtime que foi
+  // removido por segurança). Roda a cada 30s só enquanto o plano for 'free'.
   useEffect(() => {
     if (!user) return;
+    if (profile && profile.plan !== 'free') return;
 
-    const topicPrefix = `profile-${user.id}`;
-    supabase
-      .getChannels()
-      .filter((existingChannel) => existingChannel.topic.startsWith(`realtime:${topicPrefix}`))
-      .forEach((existingChannel) => {
-        void supabase.removeChannel(existingChannel);
-      });
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-    const channel = supabase.channel(`${topicPrefix}-${crypto.randomUUID()}`);
+      if (!data) return;
+      const newProfile = data as Profile;
+      const oldPlan = previousPlanRef.current;
+      const newPlan = newProfile.plan;
 
-    channel
-      .on(
-        'postgres_changes' as any,
-        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
-        (payload: any) => {
-          const newProfile = payload.new as Profile;
-          const oldPlan = previousPlanRef.current;
-          const newPlan = newProfile.plan;
-          setProfile(newProfile);
-
-          if (newPlan !== oldPlan && newPlan !== 'free' && oldPlan === 'free') {
-            const planName = newPlan === 'pro' ? 'Pro' : newPlan === 'business' ? 'Business' : newPlan;
-            toast.success(`🎉 Bem-vindo ao plano ${planName}!`, {
-              description: 'Todos os benefícios já estão liberados para você!',
-              duration: 6000,
-            });
-          }
-
-          previousPlanRef.current = newPlan;
+      if (newPlan !== oldPlan) {
+        setProfile(newProfile);
+        if (newPlan !== 'free' && oldPlan === 'free') {
+          const planName = newPlan === 'pro' ? 'Pro' : newPlan === 'business' ? 'Business' : newPlan;
+          toast.success(`🎉 Bem-vindo ao plano ${planName}!`, {
+            description: 'Todos os benefícios já estão liberados para você!',
+            duration: 6000,
+          });
         }
-      )
-      .subscribe();
+        previousPlanRef.current = newPlan;
+      }
+    }, 30_000);
 
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [user]);
+    return () => clearInterval(interval);
+  }, [user, profile?.plan]);
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return;
