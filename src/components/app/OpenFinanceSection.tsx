@@ -324,20 +324,20 @@ export default function OpenFinanceSection() {
       {/* Pending import banner */}
       {pendingCount > 0 && (
         <div style={{
-          background: '#fffbeb', border: '1px solid #fde68a',
+          background: 'var(--color-warning-bg)', border: '1px solid var(--color-warning-border)',
           borderRadius: 12, padding: '12px 16px', marginBottom: 16,
         }}>
           <div className="flex items-center" style={{ gap: 8 }}>
-            <AlertCircle style={{ width: 16, height: 16, color: '#d97706' }} />
+            <AlertCircle style={{ width: 16, height: 16, color: 'var(--color-warning-solid)' }} />
             <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: '#92400e' }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-warning-text)' }}>
                 {pendingCount} transações aguardando importação
               </p>
-              <p style={{ fontSize: 11, color: '#b45309' }}>
+              <p style={{ fontSize: 11, color: 'var(--color-warning-text)', opacity: 0.85 }}>
                 Vá em Lançamentos para revisar e importar
               </p>
             </div>
-            <ChevronRight style={{ width: 14, height: 14, color: '#d97706' }} />
+            <ChevronRight style={{ width: 14, height: 14, color: 'var(--color-warning-solid)' }} />
           </div>
         </div>
       )}

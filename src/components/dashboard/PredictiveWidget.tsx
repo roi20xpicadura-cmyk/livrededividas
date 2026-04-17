@@ -68,8 +68,8 @@ export default function PredictiveWidget() {
 
   const colors = {
     danger: { bg: 'var(--color-danger-bg)', border: 'var(--color-danger-border)', text: 'var(--color-danger-text)', badge: 'var(--color-danger-solid)' },
-    warning: { bg: '#fffbeb', border: '#fde68a', text: '#92400e', badge: '#d97706' },
-    good: { bg: 'var(--color-success-bg)', border: 'var(--color-success-border)', text: 'var(--color-success-text)', badge: '#7C3AED' },
+    warning: { bg: 'var(--color-warning-bg)', border: 'var(--color-warning-border)', text: 'var(--color-warning-text)', badge: 'var(--color-warning-solid)' },
+    good: { bg: 'var(--color-success-bg)', border: 'var(--color-success-border)', text: 'var(--color-success-text)', badge: 'var(--color-green-600)' },
   }[status];
 
   return (
