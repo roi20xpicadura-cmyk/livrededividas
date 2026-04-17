@@ -429,20 +429,6 @@ export default function AppLayout() {
           )}
 
           <div className="ml-auto flex items-center" style={{ gap: 8 }}>
-            <button onClick={cycleTheme} aria-label={`Tema: ${theme}`}
-              className="flex items-center justify-center transition-all duration-150"
-              style={{
-                width: 36, height: 36, borderRadius: 'var(--radius-md)',
-                background: 'transparent', border: '1px solid var(--color-border-base)',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-bg-sunken)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-            >
-              {theme === 'dark' ? <Sun style={{ width: 16, height: 16, color: '#fbbf24' }} /> :
-               theme === 'system' ? <Monitor style={{ width: 16, height: 16, color: 'var(--color-text-muted)' }} /> :
-               <Moon style={{ width: 16, height: 16, color: 'var(--color-text-muted)' }} />}
-            </button>
-
             <button aria-label="Notificações"
               className="flex items-center justify-center transition-all duration-150"
               style={{
