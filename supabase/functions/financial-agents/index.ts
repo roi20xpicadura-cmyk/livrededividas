@@ -57,13 +57,24 @@ Deno.serve(async (req) => {
     if (targetUserId) {
       userIds = [targetUserId];
     } else {
-      // Cron: process all active users (last activity within 30 days)
+      // Cron: process active users (last activity within 30 days) WITH fallback to all users
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const { data: configs } = await supabase
+      const cutoff = thirtyDaysAgo.toISOString().split("T")[0];
+      const { data: activeConfigs } = await supabase
         .from("user_config")
         .select("user_id")
-        .gte("last_activity_date", thirtyDaysAgo.toISOString().split("T")[0]);
+        .gte("last_activity_date", cutoff);
+      let configs = activeConfigs;
+      // Fallback: se ninguém tem last_activity_date setada, processa todos
+      if (!configs || configs.length === 0) {
+        const { data: allConfigs } = await supabase
+          .from("user_config")
+          .select("user_id")
+          .range(0, 9999);
+        configs = allConfigs;
+        console.log(`⚠️ No active users found, falling back to all users (${configs?.length || 0})`);
+      }
       userIds = configs?.map((c) => c.user_id) || [];
     }
 

@@ -66,10 +66,17 @@ async function sendWhatsApp(phone: string, message: string) {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
-  // Verify HOTTOK security token
+  // Verify HOTTOK security token (OBRIGATÓRIO)
   const expectedHottok = Deno.env.get('HOTMART_HOTTOK');
   const sentHottok = req.headers.get('x-hotmart-hottok');
-  if (expectedHottok && sentHottok !== expectedHottok) {
+  if (!expectedHottok) {
+    console.error('🚨 HOTMART_HOTTOK secret not configured — rejecting all requests');
+    return new Response(JSON.stringify({ error: 'webhook not configured' }), {
+      status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  if (sentHottok !== expectedHottok) {
+    console.warn('🚨 invalid hottok received');
     return new Response(JSON.stringify({ error: 'invalid hottok' }), {
       status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -97,17 +104,26 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Find user by email via auth admin
-  const { data: usersList, error: listErr } = await supabase.auth.admin.listUsers();
-  if (listErr) {
-    console.error('list users error', listErr);
-    return new Response(JSON.stringify({ error: 'user lookup failed' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+  // Find user by email via auth admin (PAGINADO — suporta milhares de usuários)
+  const targetEmail = buyerEmail.toLowerCase();
+  let authUser: any = null;
+  let totalScanned = 0;
+  const perPage = 1000;
+  for (let page = 1; page <= 50; page++) {
+    const { data: usersList, error: listErr } = await supabase.auth.admin.listUsers({ page, perPage });
+    if (listErr) {
+      console.error('list users error', listErr);
+      return new Response(JSON.stringify({ error: 'user lookup failed' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    totalScanned += usersList.users.length;
+    const found = usersList.users.find(u => (u.email || '').toLowerCase() === targetEmail);
+    if (found) { authUser = found; break; }
+    if (usersList.users.length < perPage) break; // última página
   }
-  const authUser = usersList.users.find(u => (u.email || '').toLowerCase() === buyerEmail.toLowerCase());
   if (!authUser) {
-    console.warn('user not found for email', buyerEmail, 'total users:', usersList.users.length);
+    console.warn('user not found for email', buyerEmail, 'total scanned:', totalScanned);
     return new Response(JSON.stringify({ ok: true, skipped: 'user not found', email: buyerEmail }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
