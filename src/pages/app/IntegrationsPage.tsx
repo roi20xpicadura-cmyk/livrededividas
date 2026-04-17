@@ -299,10 +299,29 @@ export default function IntegrationsPage() {
               <div style={{ marginTop: 12 }}>
                 {isConnected ? (
                   <div className="flex" style={{ gap: 6 }}>
-                    <button style={{ flex: 1, height: 34, borderRadius: 'var(--radius-lg)', fontSize: 11, fontWeight: 700, background: 'var(--color-bg-sunken)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border-weak)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                    <button
+                      onClick={async () => {
+                        haptic.light();
+                        await supabase.from('integrations')
+                          .update({ last_sync_at: new Date().toISOString() })
+                          .eq('user_id', user!.id).eq('platform', integ.id);
+                        queryClient.invalidateQueries({ queryKey: ['integrations'] });
+                        toast.success(`${integ.name} marcado como sincronizado`);
+                      }}
+                      style={{ flex: 1, height: 34, borderRadius: 'var(--radius-lg)', fontSize: 11, fontWeight: 700, background: 'var(--color-bg-sunken)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border-weak)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                       <RefreshCw style={{ width: 12, height: 12 }} />Sync
                     </button>
-                    <button style={{ width: 34, height: 34, borderRadius: 'var(--radius-lg)', background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <button
+                      onClick={async () => {
+                        if (!confirm(`Desconectar ${integ.name}?`)) return;
+                        haptic.medium();
+                        await supabase.from('integrations').delete()
+                          .eq('user_id', user!.id).eq('platform', integ.id);
+                        queryClient.invalidateQueries({ queryKey: ['integrations'] });
+                        toast.success(`${integ.name} desconectado`);
+                      }}
+                      title="Desconectar"
+                      style={{ width: 34, height: 34, borderRadius: 'var(--radius-lg)', background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Settings2 style={{ width: 13, height: 13, color: 'var(--color-text-subtle)' }} />
                     </button>
                   </div>
@@ -373,7 +392,7 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
   const [dragOver, setDragOver] = useState(false);
 
   const isOFX = integration.method === 'ofx_import';
-  const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webhook-${integration.id}/${userId}`;
+  const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/platform-webhook/${integration.id}/${userId}`;
 
   const handleFile = useCallback(async (file: File) => {
     const text = await file.text();
@@ -411,13 +430,29 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
       const { error } = await supabase.from('transactions').insert(rows);
       if (error) throw error;
 
-      await supabase.from('integrations').insert({
-        user_id: userId, platform: integration.id,
-        platform_display_name: integration.name,
-        method: 'ofx_import', status: 'active' as any,
-        last_sync_at: new Date().toISOString(),
-        total_imported: newTxs.length,
-      });
+      // Upsert integration row (avoid creating duplicate rows on each import)
+      const { data: existingInteg } = await supabase
+        .from('integrations')
+        .select('id, total_imported')
+        .eq('user_id', userId)
+        .eq('platform', integration.id)
+        .maybeSingle();
+
+      if (existingInteg) {
+        await supabase.from('integrations').update({
+          status: 'active' as any,
+          last_sync_at: new Date().toISOString(),
+          total_imported: (existingInteg.total_imported || 0) + newTxs.length,
+        }).eq('id', existingInteg.id);
+      } else {
+        await supabase.from('integrations').insert({
+          user_id: userId, platform: integration.id,
+          platform_display_name: integration.name,
+          method: 'ofx_import', status: 'active' as any,
+          last_sync_at: new Date().toISOString(),
+          total_imported: newTxs.length,
+        });
+      }
 
       haptic.success();
       toast.success(`${newTxs.length} transações importadas! 🎉`);
