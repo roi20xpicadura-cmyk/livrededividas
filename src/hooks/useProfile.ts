@@ -59,12 +59,12 @@ export function useProfile() {
   // Realtime listener for plan changes (Hotmart webhook → instant unlock)
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel(`profile-${user.id}`)
+    const channel = supabase.channel(`profile-${user.id}`);
+    channel
       .on(
-        'postgres_changes',
+        'postgres_changes' as any,
         { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
-        (payload) => {
+        (payload: any) => {
           const newProfile = payload.new as Profile;
           const oldPlan = previousPlanRef.current;
           const newPlan = newProfile.plan;
