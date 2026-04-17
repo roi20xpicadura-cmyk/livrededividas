@@ -110,6 +110,21 @@ export default function WhatsAppSettings() {
     setLoading(false);
   }
 
+  async function toggleActive(newVal: boolean) {
+    if (!connection) return;
+    setConnection({ ...connection, active: newVal });
+    const { error } = await supabase
+      .from('whatsapp_connections')
+      .update({ active: newVal })
+      .eq('user_id', user!.id);
+    if (error) {
+      setConnection({ ...connection, active: !newVal });
+      toast.error('Erro ao atualizar preferência');
+    } else {
+      toast.success(newVal ? 'Notificações ativadas 🔔' : 'Notificações pausadas 🔕');
+    }
+  }
+
   async function disconnect() {
     setLoading(true);
     await supabase.functions.invoke('whatsapp-verify', {
@@ -180,6 +195,29 @@ export default function WhatsAppSettings() {
                 {connection.total_messages || 0} mensagens trocadas
                 {connection.last_message_at && ` · Última: ${new Date(connection.last_message_at).toLocaleDateString('pt-BR')}`}
               </p>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-xl" style={{ background: 'var(--color-bg-sunken)', border: '0.5px solid var(--color-border-weak)' }}>
+              <div className="flex-1 min-w-0 pr-3">
+                <p className="text-[13px] font-bold" style={{ color: 'var(--color-text-strong)' }}>
+                  🔔 Notificações automáticas
+                </p>
+                <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                  Lembretes de dívidas, alertas e resumos diários
+                </p>
+              </div>
+              <button
+                onClick={() => toggleActive(!connection.active)}
+                role="switch"
+                aria-checked={connection.active}
+                className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors"
+                style={{ background: connection.active ? 'hsl(var(--primary))' : 'var(--color-border-base)' }}
+              >
+                <span
+                  className="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform"
+                  style={{ transform: connection.active ? 'translateX(22px)' : 'translateX(2px)' }}
+                />
+              </button>
             </div>
 
             <div>
