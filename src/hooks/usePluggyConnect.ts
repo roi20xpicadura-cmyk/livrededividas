@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface PluggyConnectOptions {
-  onSuccess?: (itemId: string) => void;
+  onSuccess?: (itemId?: string) => void;
   onError?: (error: string) => void;
 }
 
