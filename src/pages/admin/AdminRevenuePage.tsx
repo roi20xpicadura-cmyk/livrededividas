@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 
 const PLAN_PRICES: Record<string, number> = {
   free: 0,
-  pro: 29.9,
+  pro: 19.9,
   premium: 49.9,
 };
 
