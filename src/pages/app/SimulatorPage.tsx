@@ -356,19 +356,6 @@ export default function SimulatorPage() {
         }
       `}</style>
 
-      {/* Page title */}
-      <div>
-        <h1 style={{
-          color: C.textStrong, fontSize: 22, fontWeight: 900,
-          letterSpacing: '-0.5px', marginBottom: 4,
-        }}>
-          Simulador "E se...?" 🔮
-        </h1>
-        <p style={{ color: C.textSubtle, fontSize: 13 }}>
-          Simule cenários sem afetar seus dados reais
-        </p>
-      </div>
-
       {/* Sandbox banner */}
       <div style={{
         background: C.violetSofter,
