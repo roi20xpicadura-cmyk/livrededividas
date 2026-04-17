@@ -589,13 +589,13 @@ export default function AppLayout() {
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-              style={{ willChange: 'transform' }}
               className="fixed bottom-0 left-0 right-0 z-50 md:hidden overflow-y-auto pb-safe"
               style={{
                 background: 'var(--color-bg-surface)',
                 borderRadius: '24px 24px 0 0',
                 maxHeight: '70vh',
                 padding: '0 20px 20px',
+                willChange: 'transform',
               }}>
               {/* Handle + Close */}
               <div className="sticky top-0 z-10 flex items-center justify-between" style={{ paddingTop: 12, paddingBottom: 12, background: 'var(--color-bg-surface)' }}>
