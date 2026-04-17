@@ -8,7 +8,7 @@ const features = [
   { icon: Key, title: 'Autenticação Segura', desc: 'Senhas nunca são armazenadas em texto puro. Utilizamos bcrypt com salt para hash seguro. Suporte a autenticação Google OAuth.' },
   { icon: HardDrive, title: 'Backups Diários', desc: 'Seus dados são copiados automaticamente todos os dias e armazenados de forma criptografada em múltiplas localizações.' },
   { icon: AlertTriangle, title: 'Monitoramento 24/7', desc: 'Nossos sistemas detectam e bloqueiam automaticamente tentativas de acesso suspeitas, IPs maliciosos e ataques de força bruta.' },
-  { icon: CreditCard, title: 'Pagamentos via Stripe', desc: 'Não armazenamos dados de cartão de crédito. Todos os pagamentos são processados pelo Stripe, certificado PCI DSS nível 1.' },
+  { icon: CreditCard, title: 'Pagamentos via Hotmart', desc: 'Não armazenamos dados de cartão de crédito. Todos os pagamentos são processados pela Hotmart, plataforma com certificação PCI DSS e padrões internacionais de segurança.' },
 ];
 
 export default function SegurancaPage() {

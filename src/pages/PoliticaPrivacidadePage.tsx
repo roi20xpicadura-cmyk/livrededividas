@@ -28,7 +28,7 @@ export default function PoliticaPrivacidadePage() {
           <li><strong>2.1 Dados de cadastro:</strong> nome completo, e-mail, senha (criptografada), data de criação da conta.</li>
           <li><strong>2.2 Dados de uso:</strong> lançamentos financeiros, metas, dívidas, cartões e investimentos inseridos pelo usuário.</li>
           <li><strong>2.3 Dados técnicos:</strong> endereço IP, tipo de navegador, sistema operacional, páginas visitadas, tempo de sessão.</li>
-          <li><strong>2.4 Dados de pagamento:</strong> processados diretamente pelo Stripe — não armazenamos dados de cartão de crédito.</li>
+          <li><strong>2.4 Dados de pagamento:</strong> processados diretamente pela Hotmart — não armazenamos dados de cartão de crédito.</li>
           <li><strong>2.5 Cookies:</strong> conforme nossa <a href="/politica-de-cookies" className="underline" style={{ color: 'var(--color-green-600)' }}>Política de Cookies</a>.</li>
         </ul>
       </section>
@@ -59,7 +59,7 @@ export default function PoliticaPrivacidadePage() {
         <p className="legal-p">Compartilhamos dados apenas com:</p>
         <ul className="legal-ul">
           <li><strong>Supabase</strong> (infraestrutura de banco de dados — EUA)</li>
-          <li><strong>Stripe</strong> (processamento de pagamentos — EUA)</li>
+          <li><strong>Hotmart</strong> (processamento de pagamentos — Brasil/Holanda)</li>
           <li><strong>Resend</strong> (envio de e-mails transacionais)</li>
           <li><strong>Anthropic</strong> (análises de IA — dados anonimizados)</li>
         </ul>
@@ -74,7 +74,7 @@ export default function PoliticaPrivacidadePage() {
         <ul className="legal-ul">
           <li>Mantemos seus dados enquanto sua conta estiver ativa.</li>
           <li>Após exclusão da conta: dados excluídos em até 30 dias, exceto quando exigida retenção legal (até 5 anos).</li>
-          <li>Dados de pagamento: retidos pelo Stripe conforme exigências regulatórias.</li>
+          <li>Dados de pagamento: retidos pela Hotmart conforme exigências regulatórias.</li>
         </ul>
       </section>
       <section id="direitos" className="mb-10">

@@ -40,7 +40,7 @@ export default function TermosDeUsoPage() {
         <h2 className="legal-h2">4. Planos e Pagamentos</h2>
         <ul className="legal-ul">
           <li>4.1 O KoraFinance oferece planos gratuito (Free), Pro e Business.</li>
-          <li>4.2 Os planos pagos são cobrados mensalmente ou anualmente via Stripe.</li>
+          <li>4.2 Os planos pagos são cobrados mensalmente ou anualmente via Hotmart.</li>
           <li>4.3 O cancelamento pode ser feito a qualquer momento sem multa, com acesso mantido até o fim do período pago.</li>
           <li>4.4 Não realizamos reembolsos parciais de períodos já pagos, exceto quando exigido por lei.</li>
           <li>4.5 Os preços podem ser alterados com aviso prévio de 30 dias por e-mail.</li>
