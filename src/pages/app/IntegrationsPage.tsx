@@ -373,7 +373,7 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
   const [dragOver, setDragOver] = useState(false);
 
   const isOFX = integration.method === 'ofx_import';
-  const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webhook-${integration.id}/${userId}`;
+  const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/platform-webhook/${integration.id}/${userId}`;
 
   const handleFile = useCallback(async (file: File) => {
     const text = await file.text();
