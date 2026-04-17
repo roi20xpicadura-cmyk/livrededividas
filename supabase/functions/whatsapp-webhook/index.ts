@@ -422,14 +422,20 @@ serve(async (req) => {
 
     // Unlinked
     if (!userId) {
-      const reply = `Olá! 👋 Sou a *Kora IA* do KoraFinance 🐨
+      const reply = `👋 Olá! Sou a *Kora IA* do KoraFinance 🐨
 
-Para registrar gastos, conecte seu número:
-1️⃣ Acesse *korafinance.app*
+Para registrar seus gastos aqui, conecte seu número:
+
+1️⃣ Acesse *korafinance.com.br*
 2️⃣ Configurações → WhatsApp
 3️⃣ Informe este número
 
-Depois mande: _"gastei 50 no mercado"_ ✅`;
+Depois é só mandar:
+💸 _"gastei 50 no mercado"_
+💰 _"recebi 3000 de salário"_
+📷 _Foto do cupom fiscal_
+
+Registro tudo automaticamente! ✅`;
       await sendMessage(phone, reply);
       await saveMessage(null, phone, "assistant", reply);
       return new Response("OK", { status: 200 });
