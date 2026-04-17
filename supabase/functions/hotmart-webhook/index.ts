@@ -13,14 +13,34 @@ const supabase = createClient(
 
 // Map Hotmart product/offer codes → internal plan
 // Configure HOTMART_PRO_OFFER e HOTMART_BUSINESS_OFFER nos secrets
+// Hardcoded fallbacks (safety net se secrets não estiverem setados corretamente)
+const HARDCODED_PRO_OFFERS = ['p5itoui4'];
+const HARDCODED_BUSINESS_OFFERS = ['ir7ki0tu'];
+
 function resolvePlan(offerCode: string | undefined, productName: string | undefined): 'pro' | 'business' | null {
-  const proOffer = Deno.env.get('HOTMART_PRO_OFFER') || '';
-  const businessOffer = Deno.env.get('HOTMART_BUSINESS_OFFER') || '';
-  if (offerCode && proOffer && offerCode === proOffer) return 'pro';
-  if (offerCode && businessOffer && offerCode === businessOffer) return 'business';
+  const proOffer = (Deno.env.get('HOTMART_PRO_OFFER') || '').trim();
+  const businessOffer = (Deno.env.get('HOTMART_BUSINESS_OFFER') || '').trim();
+  const code = (offerCode || '').trim();
+
+  console.log('resolvePlan inputs', {
+    receivedOfferCode: code,
+    proOfferEnv: proOffer,
+    businessOfferEnv: businessOffer,
+    productName,
+  });
+
+  if (code) {
+    if (proOffer && code === proOffer) return 'pro';
+    if (businessOffer && code === businessOffer) return 'business';
+    if (HARDCODED_PRO_OFFERS.includes(code)) return 'pro';
+    if (HARDCODED_BUSINESS_OFFERS.includes(code)) return 'business';
+  }
+
   const name = (productName || '').toLowerCase();
   if (name.includes('business')) return 'business';
   if (name.includes('pro')) return 'pro';
+  // Fallback final: se vem do produto Kora Finance e tem offer code, assume Pro
+  if (code && name.includes('kor')) return 'pro';
   return null;
 }
 
@@ -87,13 +107,14 @@ Deno.serve(async (req) => {
   }
   const authUser = usersList.users.find(u => (u.email || '').toLowerCase() === buyerEmail.toLowerCase());
   if (!authUser) {
-    console.warn('user not found for email', buyerEmail);
-    return new Response(JSON.stringify({ ok: true, skipped: 'user not found' }), {
+    console.warn('user not found for email', buyerEmail, 'total users:', usersList.users.length);
+    return new Response(JSON.stringify({ ok: true, skipped: 'user not found', email: buyerEmail }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
   const userId = authUser.id;
+  console.log('user found', { userId, email: authUser.email });
   const isApproved = ['PURCHASE_APPROVED', 'PURCHASE_COMPLETE'].includes(event);
   const isCancelled = ['PURCHASE_REFUNDED', 'PURCHASE_CHARGEBACK', 'PURCHASE_CANCELED', 'SUBSCRIPTION_CANCELLATION'].includes(event);
 
@@ -101,18 +122,20 @@ Deno.serve(async (req) => {
     const newPlan = resolvePlan(offerCode, productName);
     if (!newPlan) {
       console.warn('could not resolve plan', { offerCode, productName });
-      return new Response(JSON.stringify({ ok: true, skipped: 'unknown plan' }), {
+      return new Response(JSON.stringify({ ok: true, skipped: 'unknown plan', offerCode, productName }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + 1);
 
+    console.log('updating plan', { userId, newPlan, expiresAt: expiresAt.toISOString() });
     const { error: upErr } = await supabase
       .from('profiles')
       .update({ plan: newPlan, plan_expires_at: expiresAt.toISOString() } as any)
       .eq('id', userId);
     if (upErr) console.error('plan update error', upErr);
+    else console.log('✅ plan updated successfully', { userId, newPlan });
 
     // WhatsApp notification (optional)
     const { data: waConn } = await supabase
