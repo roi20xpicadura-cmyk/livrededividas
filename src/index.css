@@ -657,3 +657,97 @@
   background: var(--color-bg-sunken);
   color: var(--color-text-strong);
 }
+
+/* ───────────────────────── Admin panel — forced dark theme ───────────────────────── */
+.admin-shell,
+.admin-shell * {
+  border-color: rgba(167, 139, 250, 0.1);
+}
+
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell h4 {
+  color: #FFFFFF;
+}
+
+/* shadcn Card */
+.admin-shell [class*="rounded-lg"][class*="border"][class*="bg-card"],
+.admin-shell .bg-card {
+  background: #110820 !important;
+  border-color: rgba(167, 139, 250, 0.1) !important;
+  color: #FFFFFF !important;
+}
+
+/* Muted text → secondary white */
+.admin-shell .text-muted-foreground {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Foreground text */
+.admin-shell .text-foreground {
+  color: #FFFFFF !important;
+}
+
+/* Tables */
+.admin-shell table {
+  color: #FFFFFF;
+}
+.admin-shell thead th {
+  color: rgba(255, 255, 255, 0.25) !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.admin-shell tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+.admin-shell tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+.admin-shell tbody td {
+  color: #FFFFFF;
+}
+
+/* Inputs / textareas */
+.admin-shell input,
+.admin-shell textarea {
+  background: #1A0D35 !important;
+  border-color: rgba(167, 139, 250, 0.2) !important;
+  color: #FFFFFF !important;
+}
+.admin-shell input::placeholder,
+.admin-shell textarea::placeholder {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Buttons - default & outline */
+.admin-shell button[class*="bg-primary"]:not([class*="bg-primary/"]) {
+  background: #7C3AED !important;
+  color: #FFFFFF !important;
+}
+.admin-shell button[class*="border-input"],
+.admin-shell button[class*="variant-outline"],
+.admin-shell button.border {
+  background: rgba(124, 58, 237, 0.1) !important;
+  border-color: rgba(167, 139, 250, 0.2) !important;
+  color: #A78BFA !important;
+}
+.admin-shell button:disabled {
+  opacity: 0.4;
+}
+
+/* Badges */
+.admin-shell [class*="bg-secondary"] {
+  background: rgba(167, 139, 250, 0.12) !important;
+  color: #A78BFA !important;
+}
+
+/* Code blocks */
+.admin-shell code {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #A78BFA !important;
+}
+
+/* Sonner toasts inside admin keep their own theme — no override */
