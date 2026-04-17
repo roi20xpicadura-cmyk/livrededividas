@@ -66,12 +66,13 @@ const markdownComponents = {
 };
 
 /* ─── Message Bubble ─── */
-function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
+const MessageBubble = forwardRef<HTMLDivElement, { msg: Msg; index: number }>(({ msg, index }, ref) => {
   const isUser = msg.role === 'user';
   const timeStr = msg.ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, y: 12, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.12), ease: [0.16, 1, 0.3, 1] }}
@@ -123,7 +124,8 @@ function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
       )}
     </motion.div>
   );
-}
+});
+MessageBubble.displayName = 'MessageBubble';
 
 /* ─── Streaming Bubble ─── */
 function StreamingBubble({ content }: { content: string }) {
