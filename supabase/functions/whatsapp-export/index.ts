@@ -87,45 +87,137 @@ function buildCSV(txs: any[]): string {
   return "\uFEFF" + header + rows; // BOM for Excel UTF-8
 }
 
+// Brand palette (KoraFinance green)
+const BRAND: [number, number, number] = [22, 163, 74];
+const BRAND_DARK: [number, number, number] = [21, 128, 61];
+const BRAND_LIGHT: [number, number, number] = [220, 252, 231];
+
+function drawKoraLogo(doc: any, x: number, y: number) {
+  // Rounded square badge with stylized "K"
+  doc.setFillColor(...BRAND);
+  doc.roundedRect(x, y, 12, 12, 2.5, 2.5, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("K", x + 6, y + 8.4, { align: "center" });
+  doc.setFont("helvetica", "normal");
+}
+
 function buildPDF(name: string, periodLabel: string, txs: any[]): Uint8Array {
   const doc = new jsPDF();
   const income = txs.filter(t => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
   const expenses = txs.filter(t => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
   const balance = income - expenses;
 
-  // Header
+  // ── Header band ──
+  doc.setFillColor(...BRAND);
+  doc.rect(0, 0, 210, 32, "F");
+  drawKoraLogo(doc, 14, 10);
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
-  doc.setTextColor(124, 58, 237);
-  doc.text("KoraFinance", 14, 18);
-  doc.setFontSize(11);
-  doc.setTextColor(100);
-  doc.text(`Relatório Financeiro — ${periodLabel}`, 14, 25);
-  doc.text(`Cliente: ${name}`, 14, 31);
-  doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, 14, 37);
-
-  // Summary box
-  doc.setDrawColor(230);
-  doc.setFillColor(245, 243, 255);
-  doc.rect(14, 43, 182, 22, "FD");
+  doc.text("KoraFinance", 30, 17);
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.setTextColor(60);
-  doc.text(`Receitas: ${fmt(income)}`, 18, 51);
-  doc.text(`Despesas: ${fmt(expenses)}`, 18, 57);
-  doc.text(`Saldo: ${fmt(balance)}`, 18, 63);
-  doc.text(`Total: ${txs.length} lançamentos`, 130, 51);
+  doc.text(`Relatório Financeiro — ${periodLabel}`, 30, 24);
+  doc.setFontSize(8);
+  doc.text(`Cliente: ${name}  •  Gerado em ${new Date().toLocaleString("pt-BR")}`, 30, 29);
 
-  // Table header
-  let y = 75;
-  doc.setFillColor(124, 58, 237);
+  // ── Summary box ──
+  doc.setDrawColor(220);
+  doc.setFillColor(248, 250, 248);
+  doc.roundedRect(14, 38, 182, 22, 2, 2, "FD");
+  doc.setFontSize(9);
+  doc.setTextColor(110);
+  doc.text("RECEITAS", 20, 45);
+  doc.text("DESPESAS", 80, 45);
+  doc.text("SALDO", 140, 45);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(...BRAND);
+  doc.text(fmt(income), 20, 54);
+  doc.setTextColor(220, 38, 38);
+  doc.text(fmt(expenses), 80, 54);
+  doc.setTextColor(...(balance >= 0 ? BRAND : [220, 38, 38] as [number, number, number]));
+  doc.text(fmt(balance), 140, 54);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(120);
+  doc.text(`${txs.length} lançamento${txs.length !== 1 ? "s" : ""}`, 196, 58, { align: "right" });
+
+  // ── Top 5 categories bar chart (expenses) ──
+  let y = 68;
+  const catMap: Record<string, number> = {};
+  txs.filter(t => t.type === "expense").forEach(t => {
+    const c = t.category || "Outros";
+    catMap[c] = (catMap[c] || 0) + Number(t.amount);
+  });
+  const top5 = Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  if (top5.length > 0) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(60);
+    doc.text("Top 5 Categorias de Despesa", 14, y);
+    y += 5;
+
+    const chartX = 14;
+    const chartY = y;
+    const chartW = 182;
+    const rowH = 9;
+    const labelW = 50;
+    const valueW = 35;
+    const barAreaW = chartW - labelW - valueW - 6;
+    const maxVal = top5[0][1] || 1;
+
+    doc.setFillColor(252, 252, 252);
+    doc.setDrawColor(230);
+    doc.roundedRect(chartX, chartY, chartW, rowH * top5.length + 6, 2, 2, "FD");
+
+    top5.forEach(([cat, val], i) => {
+      const ry = chartY + 4 + i * rowH;
+      // Label
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(60);
+      const label = cat.length > 22 ? cat.slice(0, 20) + "…" : cat;
+      doc.text(label, chartX + 3, ry + 4);
+      // Bar background
+      doc.setFillColor(...BRAND_LIGHT);
+      doc.roundedRect(chartX + labelW, ry, barAreaW, 5, 1, 1, "F");
+      // Bar fill
+      const w = Math.max(1, (val / maxVal) * barAreaW);
+      doc.setFillColor(...(i === 0 ? BRAND_DARK : BRAND));
+      doc.roundedRect(chartX + labelW, ry, w, 5, 1, 1, "F");
+      // Value
+      doc.setTextColor(60);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(fmt(val), chartX + chartW - 3, ry + 4, { align: "right" });
+    });
+
+    y = chartY + rowH * top5.length + 12;
+  }
+
+  // ── Transactions table header ──
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(60);
+  doc.text("Lançamentos", 14, y);
+  y += 4;
+
+  doc.setFillColor(...BRAND);
   doc.setTextColor(255);
   doc.setFontSize(9);
-  doc.rect(14, y - 5, 182, 7, "F");
+  doc.rect(14, y, 182, 7, "F");
+  y += 5;
   doc.text("Data", 16, y);
   doc.text("Tipo", 36, y);
   doc.text("Categoria", 56, y);
   doc.text("Descrição", 96, y);
-  doc.text("Valor", 178, y, { align: "right" });
+  doc.text("Valor", 194, y, { align: "right" });
   y += 6;
+  doc.setFont("helvetica", "normal");
 
   doc.setTextColor(40);
   doc.setFontSize(8);
