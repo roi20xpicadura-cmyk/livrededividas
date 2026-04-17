@@ -157,7 +157,7 @@ const App = () => {
                     <Route index element={<OverviewPage />} />
                     <Route path="transactions" element={<TransactionsRouter />} />
                     <Route path="transactions/personal" element={<TransactionsPage profile="personal" />} />
-                    <Route path="transactions/business" element={<TransactionsPage profile="business" />} />
+                    
                     <Route path="goals" element={<GoalsPage />} />
                     <Route path="debts" element={
                       <Paywall feature="debts" requiredPlan="pro" title="Gestão de Dívidas" description="Organize, priorize e quite suas dívidas com estratégias inteligentes (Snowball / Avalanche).">
