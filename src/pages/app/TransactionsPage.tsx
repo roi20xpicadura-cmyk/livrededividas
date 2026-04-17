@@ -74,7 +74,14 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'income' | 'expense' | 'personal' | 'business'>('all');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
+
+  // Debounce search to prevent re-render storm and scroll-jump on every keystroke
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 200);
+    return () => clearTimeout(t);
+  }, [search]);
   const [showSheet, setShowSheet] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [openActionsId, setOpenActionsId] = useState<string | null>(null);
@@ -103,11 +110,11 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
         if (filter === 'personal' || filter === 'business') return t.origin === filter;
         return true;
       })
-      .filter(t => !search ||
-        t.description.toLowerCase().includes(search.toLowerCase()) ||
-        t.category.toLowerCase().includes(search.toLowerCase()))
+      .filter(t => !debouncedSearch ||
+        t.description.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        t.category.toLowerCase().includes(debouncedSearch.toLowerCase()))
       .sort((a, b) => b.date.localeCompare(a.date) || (b.created_at || '').localeCompare(a.created_at || ''));
-  }, [txs, filter, search]);
+  }, [txs, filter, debouncedSearch]);
 
   const totals = useMemo(() => {
     const inc = filtered.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
@@ -368,12 +375,8 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                   boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
                   border: '1px solid var(--color-border-weak)',
                 }}>
-                  <AnimatePresence>
-                    {list.map((tx, i) => (
-                      <motion.div key={tx.id} layout
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 8 }}
+                  {list.map((tx, i) => (
+                      <div key={tx.id}
                         onClick={() => setOpenActionsId(openActionsId === tx.id ? null : tx.id)}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 12,
