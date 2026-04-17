@@ -525,6 +525,7 @@ serve(async (req) => {
 
     const phone = (body.phone || "")
       .replace("@s.whatsapp.net", "")
+      .replace("@c.us", "")
       .replace(/\D/g, "");
     let text = body.text?.message?.trim();
     const image = body.image || body.imageMessage;
@@ -552,12 +553,34 @@ serve(async (req) => {
       }
     }
 
+    // Build phone variants to handle BR mobile 9-digit variation + with/without country code
+    // Z-API may send: 5581995693581 (13d), 558195693581 (12d, no 9), 81995693581 (no 55), etc.
+    const variants = new Set<string>([phone]);
+    // strip leading 55 if present
+    const noCC = phone.startsWith("55") ? phone.slice(2) : phone;
+    variants.add(noCC);
+    variants.add("55" + noCC);
+    // BR mobile: DDD (2) + [9]? + 8 digits  → toggle the leading 9
+    if (noCC.length === 11 && noCC[2] === "9") {
+      const without9 = noCC.slice(0, 2) + noCC.slice(3); // 10 digits
+      variants.add(without9);
+      variants.add("55" + without9);
+    } else if (noCC.length === 10) {
+      const with9 = noCC.slice(0, 2) + "9" + noCC.slice(2); // 11 digits
+      variants.add(with9);
+      variants.add("55" + with9);
+    }
+    const orFilter = Array.from(variants).map(v => `phone_number.eq.${v}`).join(",");
+    console.log("[WA LOOKUP] phone:", phone, "variants:", Array.from(variants).join("|"));
+
     const { data: conn } = await supabase
       .from("whatsapp_connections")
-      .select("user_id")
-      .or(`phone_number.eq.${phone},phone_number.eq.55${phone}`)
+      .select("user_id, phone_number")
+      .or(orFilter)
       .eq("verified", true)
       .maybeSingle();
+
+    console.log("[WA LOOKUP] result:", conn ? `found user=${conn.user_id} stored=${conn.phone_number}` : "NOT FOUND");
 
     if (!conn?.user_id) {
       await sendWhatsApp(phone,
