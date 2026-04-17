@@ -521,6 +521,8 @@ export default function LoginPage() {
             <AppleIcon />
             <span style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>Continuar com Apple</span>
           </motion.button>
+
+          <div className="flex items-center gap-3" style={{ margin: '18px 0' }}>
             <div className="flex-1" style={{ height: 1, background: '#f1f5f9' }} />
             <span style={{ fontSize: 12, color: '#94a3b8' }}>ou</span>
             <div className="flex-1" style={{ height: 1, background: '#f1f5f9' }} />
