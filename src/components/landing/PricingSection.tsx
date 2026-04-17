@@ -55,7 +55,7 @@ export default function PricingSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1, duration: 0.5, ease }}
-                className={`relative rounded-[16px] md:rounded-[20px] p-6 md:p-8 ${
+                className={`relative rounded-[16px] md:rounded-[20px] p-6 md:p-8 flex flex-col h-full ${
                   p.dark ? 'bg-[#0f172a] text-white'
                     : p.featured ? 'bg-white border-2 border-[#7C3AED] md:scale-[1.04]'
                     : 'bg-white border border-[#e2e8f0]'
