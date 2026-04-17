@@ -338,7 +338,21 @@ export default function LoginPage() {
         <span style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>Continuar com Google</span>
       </motion.button>
 
-      {/* Divider */}
+      {/* Apple button */}
+      <motion.button
+        onClick={handleApple}
+        whileTap={{ scale: 0.97 }}
+        className="hover:bg-[#f8fafc] hover:border-[#cbd5e1] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+        style={{
+          marginTop: 10, height: 52, width: '100%', background: 'white',
+          border: '1.5px solid #e2e8f0', borderRadius: 14,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+          cursor: 'pointer', transition: 'all 150ms',
+        }}
+      >
+        <AppleIcon />
+        <span style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>Continuar com Apple</span>
+      </motion.button>
       <div className="flex items-center gap-3" style={{ margin: '18px 0' }}>
         <div className="flex-1" style={{ height: 1, background: '#f1f5f9' }} />
         <span style={{ fontSize: 12, color: '#94a3b8' }}>ou</span>
@@ -501,7 +515,12 @@ export default function LoginPage() {
             <span style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>Continuar com Google</span>
           </motion.button>
 
-          <div className="flex items-center gap-3" style={{ margin: '18px 0' }}>
+          <motion.button onClick={handleApple} whileTap={{ scale: 0.97 }}
+            className="hover:bg-[#f8fafc] hover:border-[#cbd5e1] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+            style={{ marginTop: 10, height: 52, width: '100%', background: 'white', border: '1.5px solid #e2e8f0', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 150ms' }}>
+            <AppleIcon />
+            <span style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>Continuar com Apple</span>
+          </motion.button>
             <div className="flex-1" style={{ height: 1, background: '#f1f5f9' }} />
             <span style={{ fontSize: 12, color: '#94a3b8' }}>ou</span>
             <div className="flex-1" style={{ height: 1, background: '#f1f5f9' }} />
