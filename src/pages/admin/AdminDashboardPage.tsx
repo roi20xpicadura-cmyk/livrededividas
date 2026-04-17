@@ -95,6 +95,11 @@ export default function AdminDashboardPage() {
         })}
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SignupsChart />
+        <MRRChart />
+      </div>
+
       <Card className="p-5">
         <h2 className="text-base font-bold mb-4">Cadastros recentes</h2>
         <Table>
