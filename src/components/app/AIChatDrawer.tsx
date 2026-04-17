@@ -128,9 +128,9 @@ const MessageBubble = forwardRef<HTMLDivElement, { msg: Msg; index: number }>(({
 MessageBubble.displayName = 'MessageBubble';
 
 /* ─── Streaming Bubble ─── */
-function StreamingBubble({ content }: { content: string }) {
+const StreamingBubble = forwardRef<HTMLDivElement, { content: string }>(({ content }, ref) => {
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-2.5">
+    <motion.div ref={ref} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-2.5">
       <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
         style={{ background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))', boxShadow: '0 2px 8px rgba(124, 58, 237,0.25)' }}>
         <Sparkles className="w-3.5 h-3.5 text-white" />
@@ -146,7 +146,8 @@ function StreamingBubble({ content }: { content: string }) {
       </div>
     </motion.div>
   );
-}
+});
+StreamingBubble.displayName = 'StreamingBubble';
 
 /* ─── Welcome Screen — minimal dark ─── */
 function WelcomeScreen({ onSend, firstName }: {
