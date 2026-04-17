@@ -180,9 +180,13 @@ Ainda dá pra controlar! Fique de olho 👀
 _KoraFinance 🐨_`;
   }
 
-  // 4. INACTIVE USER
-  if (daysSinceLastTx >= 3 && daysSinceLastTx < 999) {
-    const msgs = [
+  // 4. INACTIVE USER (inclui usuários sem nenhuma transação)
+  if (daysSinceLastTx >= 3) {
+    const neverUsed = daysSinceLastTx === 999;
+    const msgs = neverUsed ? [
+      `👋 *Oi ${name}, bem-vindo(a) à Kora!*\n\nVocê ainda não registrou nenhum gasto. Bora começar?\n\nÉ só me mandar aqui:\n💸 _"gastei 30 no almoço"_\n💰 _"recebi 3000 de salário"_\n\nEu cuido do resto! 🐨\n\n_KoraFinance_`,
+      `🐨 *${name}, vamos começar?*\n\nSeu controle financeiro tá te esperando! Manda seu primeiro gasto aqui:\n💸 _"gastei X em Y"_\n\nEu registro tudo automaticamente ✨\n\n_KoraFinance_`,
+    ] : [
       `👋 *Oi ${name}, tudo bem?*\n\nFaz ${daysSinceLastTx} dias que você não registra nenhum gasto.\n\nNão esquece de anotar suas despesas! Manda aqui mesmo:\n💸 _"gastei X em Y"_\n\n_KoraFinance 🐨_`,
       `🐨 *${name}, a Kora sentiu sua falta!*\n\nVocê sumiu há ${daysSinceLastTx} dias...\n\nManda um gasto aqui que eu registro na hora! 😄\n💸 _"gastei X em Y"_\n\n_KoraFinance 🐨_`,
       `📊 *Ei ${name}!*\n\nSem registros há ${daysSinceLastTx} dias. Seu controle financeiro agradece quando você anota tudo! 💪\n\nManda aqui: _"gastei X em Y"_\n\n_KoraFinance 🐨_`,
