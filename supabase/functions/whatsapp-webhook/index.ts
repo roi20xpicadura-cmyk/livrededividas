@@ -1,9 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
-const AI_MODEL = "google/gemini-2.5-flash";
-const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+const ANTHROPIC_MODEL = "claude-sonnet-4-5";
+const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 
 const ZAPI_INSTANCE_ID = Deno.env.get("ZAPI_INSTANCE_ID")!;
 const ZAPI_TOKEN = Deno.env.get("ZAPI_TOKEN")!;
