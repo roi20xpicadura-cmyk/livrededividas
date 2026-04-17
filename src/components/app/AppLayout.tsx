@@ -602,13 +602,13 @@ export default function AppLayout() {
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="fixed inset-0 z-50 md:hidden"
+              className="fixed inset-0 z-[520] md:hidden"
               style={{ background: 'rgba(0,0,0,0.5)' }}
               onClick={() => setShowMoreDrawer(false)} />
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-              className="fixed bottom-0 left-0 right-0 z-50 md:hidden overflow-y-auto pb-safe"
+              className="fixed bottom-0 left-0 right-0 z-[521] md:hidden overflow-y-auto pb-safe"
               style={{
                 background: 'var(--color-bg-surface)',
                 borderRadius: '24px 24px 0 0',
@@ -620,7 +620,7 @@ export default function AppLayout() {
               <div className="sticky top-0 z-10 flex items-center justify-between" style={{ paddingTop: 12, paddingBottom: 12, background: 'var(--color-bg-surface)' }}>
                 <div style={{ width: 40, height: 4, background: 'var(--color-border-strong)', borderRadius: 99, position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: 12 }} />
                 <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-strong)', marginTop: 12 }}>Mais opções</span>
-                <button onClick={() => setShowMoreDrawer(false)} aria-label="Fechar" className="flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: 'var(--color-bg-sunken)', marginTop: 12 }}>
+                <button type="button" onClick={(e) => { e.stopPropagation(); setShowMoreDrawer(false); }} aria-label="Fechar" className="flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', background: 'var(--color-bg-sunken)', marginTop: 12 }}>
                   <X style={{ width: 18, height: 18, color: 'var(--color-text-muted)' }} />
                 </button>
               </div>
@@ -680,7 +680,7 @@ export default function AppLayout() {
 
       {/* ═══ AI CHAT ═══ */}
       <button onClick={() => setChatOpen(true)}
-        className={`fixed z-[499] flex items-center justify-center transition-all ${chatOpen ? 'hidden' : ''}`}
+        className={`fixed z-[499] flex items-center justify-center transition-all ${(chatOpen || showMoreDrawer) ? 'hidden' : ''}`}
         style={{
           bottom: isMobile ? 84 : 24, right: isMobile ? 16 : 20,
           width: 56, height: 56, borderRadius: 18,
