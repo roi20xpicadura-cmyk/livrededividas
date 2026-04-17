@@ -547,36 +547,34 @@ serve(async (req) => {
 
       messages.push({ role: "user", content: text });
 
-      const response = await fetch(AI_URL, {
+      const response = await fetch(ANTHROPIC_URL, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: AI_MODEL,
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...messages,
-          ],
+          model: ANTHROPIC_MODEL,
+          max_tokens: 600,
+          system: systemPrompt,
+          messages,
         }),
       });
 
       if (!response.ok) {
         const errBody = await response.text();
-        console.error("[AI] HTTP", response.status, errBody.slice(0, 500));
+        console.error("[Anthropic] HTTP", response.status, errBody.slice(0, 500));
         const fallback = response.status === 429
           ? `Tô recebendo muitas mensagens agora, ${ctx.name} 😅 Espera 1 minutinho e manda de novo!`
-          : response.status === 402
-          ? `Sem créditos de IA no momento, ${ctx.name}. Avisa o suporte! 🙏`
           : `Eita, ${ctx.name}! Tô com um probleminha pra pensar agora 🤯 Tenta de novo em alguns segundos.`;
         await sendWhatsApp(phone, fallback);
         return new Response("OK", { status: 200 });
       }
 
       const data = await response.json();
-      const aiText = (data.choices?.[0]?.message?.content || "").trim();
-      console.log("AI response:", aiText.slice(0, 300));
+      const aiText = (data.content?.[0]?.text || "").trim();
+      console.log("Claude response:", aiText.slice(0, 300));
 
       let finalReply = aiText;
 
