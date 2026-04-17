@@ -10,12 +10,17 @@ const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const CONFIRMATION_THRESHOLD = 500;
+// ─── HELPERS ────────────────────────────────────────
+function fmt(v: number): string {
+  return "R$ " + (v || 0).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 
-// ─── Z-API SEND ─────────────────────────────────────
-async function sendMessage(phone: string, text: string) {
+async function sendWhatsApp(phone: string, text: string) {
   const url = `https://api.z-api.io/instances/${ZAPI_INSTANCE_ID}/token/${ZAPI_TOKEN}/send-text`;
-  console.log("[Z-API SEND] →", phone, "| len:", text.length, "| instance:", ZAPI_INSTANCE_ID?.slice(0, 8));
+  console.log("[Z-API SEND] →", phone, "| len:", text.length);
   try {
     const res = await fetch(url, {
       method: "POST",
@@ -27,13 +32,12 @@ async function sendMessage(phone: string, text: string) {
     });
     const respText = await res.text();
     console.log("[Z-API SEND] status:", res.status, "| body:", respText.slice(0, 300));
-    if (!res.ok) console.error("[Z-API SEND] FAILED", res.status, respText);
   } catch (e) {
     console.error("[Z-API SEND] EXCEPTION", e);
   }
 }
 
-async function downloadImage(imageUrl: string): Promise<string> {
+async function downloadImageBase64(imageUrl: string): Promise<{ base64: string; mimeType: string }> {
   const response = await fetch(imageUrl, { headers: { "Client-Token": ZAPI_CLIENT_TOKEN } });
   const buffer = await response.arrayBuffer();
   const bytes = new Uint8Array(buffer);
@@ -42,514 +46,590 @@ async function downloadImage(imageUrl: string): Promise<string> {
   for (let i = 0; i < bytes.length; i += chunk) {
     binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
   }
-  return btoa(binary);
+  const contentType = response.headers.get("content-type") || "image/jpeg";
+  const mimeType = contentType.includes("png")
+    ? "image/png"
+    : contentType.includes("webp")
+    ? "image/webp"
+    : "image/jpeg";
+  return { base64: btoa(binary), mimeType };
 }
 
-function fmt(value: number): string {
-  return (value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-// ─── CATEGORY DETECTION ─────────────────────────────
-const CATEGORY_RULES: Array<{ keywords: RegExp; category: string }> = [
-  { keywords: /\b(mercado|supermercado|hortifruti|açougue|padaria|atacad)/i, category: "Supermercado" },
-  { keywords: /\b(ifood|rappi|delivery|lanche|pizza|hamb[uú]rg|restaurante|jantar|almoço|comida)/i, category: "Alimentação" },
-  { keywords: /\b(uber|99|t[áa]xi|combust[íi]vel|gasolina|[áa]lcool|estaciona|pedágio|[ôo]nibus|metr[ôo])/i, category: "Transporte" },
-  { keywords: /\b(luz|energia|[áa]gua|internet|telefone|celular|condom[íi]nio|aluguel|g[áa]s)/i, category: "Moradia" },
-  { keywords: /\b(farm[áa]cia|rem[ée]dio|m[ée]dico|consulta|exame|hospital|dentista|sa[úu]de)/i, category: "Saúde" },
-  { keywords: /\b(escola|faculdade|curso|livro|mensalidade|educa[çc][ãa]o)/i, category: "Educação" },
-  { keywords: /\b(cinema|netflix|spotify|show|bar|balada|lazer|jogo|game)/i, category: "Lazer" },
-  { keywords: /\b(roupa|cal[çc]ado|t[êe]nis|sapato|loja|shopping|compra)/i, category: "Vestuário" },
-  { keywords: /\b(sal[áa]rio|sal[áa]rios|pagamento|pix recebido|recebi)/i, category: "Salário" },
-  { keywords: /\b(venda|vendi|freela|freelance|servi[çc]o)/i, category: "Vendas" },
-];
-
-function detectCategory(description: string, fallback?: string): string {
-  for (const rule of CATEGORY_RULES) {
-    if (rule.keywords.test(description)) return rule.category;
-  }
-  return fallback || "Outros";
-}
-
-// ─── USER LOOKUP ────────────────────────────────────
-async function getUserByPhone(phone: string) {
-  const clean = phone.replace(/\D/g, "");
-  const { data } = await supabase
-    .from("whatsapp_connections")
-    .select("user_id")
-    .or(`phone_number.eq.${clean},phone_number.eq.55${clean}`)
-    .maybeSingle();
-  return data?.user_id || null;
-}
-
-// ─── LOAD FINANCIAL DATA ────────────────────────────
-async function loadFinancialData(userId: string) {
+// ─── IMPROVEMENT 1: FULL FINANCIAL CONTEXT ──────────
+async function loadUserContext(userId: string) {
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
-  const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+    .toISOString().split("T")[0];
 
-  const [txRes, debtsRes, goalsRes, budgetsRes, configRes] = await Promise.all([
-    supabase.from("transactions").select("type, amount, category, description, date")
-      .eq("user_id", userId).is("deleted_at", null).gte("date", monthStart).order("date", { ascending: false }),
-    supabase.from("debts").select("name, creditor, remaining_amount, min_payment, due_day, status")
-      .eq("user_id", userId).is("deleted_at", null).eq("status", "active"),
-    supabase.from("goals").select("name, target_amount, current_amount, deadline")
-      .eq("user_id", userId).is("deleted_at", null),
-    supabase.from("budgets").select("category, limit_amount").eq("user_id", userId).eq("month_year", monthYear),
-    supabase.from("user_config").select("financial_score, xp_points, level, streak_days").eq("user_id", userId).maybeSingle(),
+  const [txRes, debtRes, goalRes, budgetRes, profileRes, configRes] = await Promise.all([
+    supabase.from("transactions")
+      .select("type, amount, category, description, date")
+      .eq("user_id", userId)
+      .gte("date", firstDay)
+      .is("deleted_at", null)
+      .order("date", { ascending: false }),
+
+    supabase.from("debts")
+      .select("name, total_amount, remaining_amount, interest_rate, due_day, min_payment")
+      .eq("user_id", userId)
+      .eq("status", "active"),
+
+    supabase.from("goals")
+      .select("name, target_amount, current_amount, deadline")
+      .eq("user_id", userId)
+      .is("deleted_at", null),
+
+    supabase.from("budgets")
+      .select("category, limit_amount")
+      .eq("user_id", userId),
+
+    supabase.from("profiles")
+      .select("full_name")
+      .eq("id", userId)
+      .single(),
+
+    supabase.from("user_config")
+      .select("financial_score, profile_type")
+      .eq("user_id", userId)
+      .single(),
   ]);
 
   const txs = txRes.data || [];
-  const income = txs.filter((t: any) => t.type === "income").reduce((s: number, t: any) => s + Number(t.amount), 0);
-  const expense = txs.filter((t: any) => t.type === "expense").reduce((s: number, t: any) => s + Number(t.amount), 0);
+  const income = txs.filter((t: any) => t.type === "income")
+    .reduce((s: number, t: any) => s + Number(t.amount), 0);
+  const expenses = txs.filter((t: any) => t.type === "expense")
+    .reduce((s: number, t: any) => s + Number(t.amount), 0);
 
-  const byCategory: Record<string, number> = {};
-  for (const t of txs.filter((x: any) => x.type === "expense")) {
-    byCategory[t.category] = (byCategory[t.category] || 0) + Number(t.amount);
-  }
+  const catMap: Record<string, number> = {};
+  txs.filter((t: any) => t.type === "expense").forEach((t: any) => {
+    catMap[t.category] = (catMap[t.category] || 0) + Number(t.amount);
+  });
+
+  const budgets = (budgetRes.data || []).map((b: any) => {
+    const spent = catMap[b.category] || 0;
+    const pct = (spent / Number(b.limit_amount)) * 100;
+    return {
+      category: b.category,
+      limit: Number(b.limit_amount),
+      spent,
+      pct: Math.round(pct),
+      status: pct >= 100 ? "🚨 ESTOURADO" : pct >= 80 ? "⚠️ ATENÇÃO" : "✅ OK",
+    };
+  });
+
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const daysLeft = Math.max(1, lastDay.getDate() - now.getDate());
+  const dailyBudget = ((income - expenses) / daysLeft).toFixed(2);
 
   return {
-    monthYear,
+    name: profileRes.data?.full_name?.split(" ")[0] || "usuário",
+    score: configRes.data?.financial_score || 0,
+    profile: configRes.data?.profile_type || "personal",
     income,
-    expense,
-    balance: income - expense,
-    txCount: txs.length,
-    byCategory,
-    recentTxs: txs.slice(0, 10),
-    debts: debtsRes.data || [],
-    goals: goalsRes.data || [],
-    budgets: budgetsRes.data || [],
-    config: configRes.data || {},
+    expenses,
+    balance: income - expenses,
+    daysLeft,
+    dailyBudget,
+    recentTxs: txs.slice(0, 5),
+    categories: Object.entries(catMap)
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, val]) => ({ category: cat, amount: val })),
+    budgets,
+    debts: (debtRes.data || []).map((d: any) => ({
+      name: d.name,
+      remaining: Number(d.remaining_amount),
+      rate: Number(d.interest_rate || 0),
+      due_day: d.due_day,
+      min_payment: Number(d.min_payment || 0),
+    })),
+    goals: (goalRes.data || []).map((g: any) => ({
+      name: g.name,
+      current: Number(g.current_amount),
+      target: Number(g.target_amount),
+      deadline: g.deadline,
+      pct: Math.round((Number(g.current_amount) / Number(g.target_amount)) * 100),
+    })),
   };
 }
 
-// ─── SYSTEM PROMPT ──────────────────────────────────
-function buildSystemPrompt(fin: any, pendingConfirmation: any): string {
-  const monthLabel = new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+// ─── IMPROVEMENT 2: POWERFUL SYSTEM PROMPT ──────────
+function buildSystemPrompt(ctx: any): string {
+  const budgetAlerts = ctx.budgets
+    .filter((b: any) => b.pct >= 80)
+    .map((b: any) =>
+      `  ⚠️ ${b.category}: ${b.pct}% usado (${fmt(b.spent)} de ${fmt(b.limit)})`
+    ).join("\n") || "  ✅ Todos os orçamentos OK";
 
-  const catLines = Object.entries(fin.byCategory)
-    .sort((a: any, b: any) => b[1] - a[1])
-    .slice(0, 8)
-    .map(([c, v]: any) => `  - ${c}: ${fmt(v)}`)
-    .join("\n") || "  (sem despesas ainda)";
+  const debtInfo = ctx.debts.length > 0
+    ? ctx.debts.map((d: any) => {
+        const monthsToPayoff = d.min_payment > 0
+          ? Math.ceil(d.remaining / d.min_payment)
+          : null;
+        const months = monthsToPayoff ? `~${monthsToPayoff} meses para quitar` : "definir pagamento mínimo";
+        return `  • ${d.name}: ${fmt(d.remaining)} restantes | ${d.rate}% a.m. | ${months}`;
+      }).join("\n")
+    : "  ✅ Sem dívidas ativas";
 
-  const debtLines = fin.debts.slice(0, 5).map((d: any) =>
-    `  - ${d.name} (${d.creditor}): ${fmt(Number(d.remaining_amount))} restante`,
-  ).join("\n") || "  (nenhuma dívida ativa)";
+  const goalInfo = ctx.goals.length > 0
+    ? ctx.goals.map((g: any) => {
+        const deadline = g.deadline
+          ? `até ${new Date(g.deadline).toLocaleDateString("pt-BR")}`
+          : "sem prazo";
+        return `  • ${g.name}: ${g.pct}% (${fmt(g.current)} de ${fmt(g.target)}) — ${deadline}`;
+      }).join("\n")
+    : "  📭 Sem metas cadastradas";
 
-  const goalLines = fin.goals.slice(0, 5).map((g: any) => {
-    const pct = g.target_amount > 0 ? Math.round((Number(g.current_amount) / Number(g.target_amount)) * 100) : 0;
-    return `  - ${g.name}: ${fmt(Number(g.current_amount))} / ${fmt(Number(g.target_amount))} (${pct}%)`;
-  }).join("\n") || "  (nenhuma meta)";
+  const recentTxInfo = ctx.recentTxs.length > 0
+    ? ctx.recentTxs.map((t: any) =>
+        `  • ${t.date} | ${t.type === "expense" ? "💸" : "💰"} ${fmt(Number(t.amount))} — ${t.category} (${t.description})`
+      ).join("\n")
+    : "  📭 Sem lançamentos este mês";
 
-  const budgetLines = fin.budgets.map((b: any) => {
-    const used = fin.byCategory[b.category] || 0;
-    const pct = b.limit_amount > 0 ? Math.round((used / Number(b.limit_amount)) * 100) : 0;
-    return `  - ${b.category}: ${fmt(used)} / ${fmt(Number(b.limit_amount))} (${pct}%)`;
-  }).join("\n") || "  (sem orçamentos)";
+  return `Você é a Kora IA 🐨, assistente financeira pessoal do KoraFinance.
+Você está conversando com ${ctx.name} pelo WhatsApp.
 
-  const pending = pendingConfirmation
-    ? `\n⚠️ CONFIRMAÇÃO PENDENTE: usuário precisa confirmar transação de ${fmt(pendingConfirmation.amount)} (${pendingConfirmation.description}). Se ele responder SIM/sim/s/confirmar, retorne {"action":"confirm"}. Se NÃO/nao/n/cancelar, retorne {"action":"cancel"}.\n`
-    : "";
+━━━ DADOS FINANCEIROS DE ${ctx.name.toUpperCase()} — ${new Date().toLocaleDateString("pt-BR")} ━━━
 
-  return `Você é a Kora IA do KoraFinance 🐨, assistente financeira via WhatsApp.
+💰 SALDO DO MÊS: ${fmt(ctx.balance)} ${ctx.balance >= 0 ? "✅" : "⚠️ NEGATIVO"}
+  • Receitas: ${fmt(ctx.income)}
+  • Despesas: ${fmt(ctx.expenses)}
+  • Dias restantes no mês: ${ctx.daysLeft}
+  • Orçamento diário disponível: ${fmt(Number(ctx.dailyBudget))}
 
-📊 DADOS REAIS DO USUÁRIO (${monthLabel}):
-- Receitas do mês: ${fmt(fin.income)}
-- Despesas do mês: ${fmt(fin.expense)}
-- Saldo do mês: ${fmt(fin.balance)}
-- Transações no mês: ${fin.txCount}
-- Score financeiro: ${fin.config.financial_score ?? 0} | XP: ${fin.config.xp_points ?? 0} | Nível: ${fin.config.level ?? "iniciante"}
+📊 SCORE FINANCEIRO: ${ctx.score}/1000
 
-💸 GASTOS POR CATEGORIA:
-${catLines}
+💸 MAIORES GASTOS DO MÊS:
+${ctx.categories.slice(0, 5).map((c: any) => `  • ${c.category}: ${fmt(c.amount)}`).join("\n") || "  Nenhum gasto ainda"}
 
-🎯 METAS:
-${goalLines}
+🎯 ORÇAMENTOS:
+${budgetAlerts}
 
-💳 DÍVIDAS ATIVAS:
-${debtLines}
+📋 DÍVIDAS:
+${debtInfo}
 
-📋 ORÇAMENTOS:
-${budgetLines}
-${pending}
+🏆 METAS:
+${goalInfo}
 
-REGRAS — RETORNE APENAS JSON PURO, SEM MARKDOWN:
+📝 ÚLTIMOS LANÇAMENTOS:
+${recentTxInfo}
 
-1) Se for nova TRANSAÇÃO:
-{"action":"transaction","type":"expense"|"income","amount":number,"description":"...","category":"...","reply":"texto curto"}
+━━━ COMO AGIR ━━━
 
-2) Se for PERGUNTA sobre finanças (saldo, gastos, dívidas, metas):
-{"action":"answer","reply":"resposta usando os dados reais acima"}
+PERSONALIDADE:
+- Use sempre o nome "${ctx.name}" nas respostas
+- Tom amigável, direto e motivador
+- Emoji moderado (não exagere)
+- Respostas curtas para WhatsApp (máx 5 linhas)
+- Português brasileiro informal
 
-3) Se confirmar pendência: {"action":"confirm"}
-4) Se cancelar pendência: {"action":"cancel"}
-5) Conversa geral: {"action":"chat","reply":"..."}
+PARA REGISTRAR GASTO (gastei, paguei, comprei, saiu):
+Responda APENAS com JSON:
+{"action":"expense","amount":VALOR,"description":"descrição","category":"Categoria","confirm":VALOR>500}
+
+PARA REGISTRAR RECEITA (recebi, entrou, ganhei, depositou):
+Responda APENAS com JSON:
+{"action":"income","amount":VALOR,"description":"descrição","category":"Categoria","confirm":false}
+
+PARA PERGUNTAS FINANCEIRAS: responda com dados REAIS do contexto acima.
 
 Exemplos:
-- "gastei 50 no mercado" → {"action":"transaction","type":"expense","amount":50,"description":"Mercado","category":"Supermercado","reply":"💸 R$ 50 em Supermercado"}
-- "quanto gastei esse mês?" → {"action":"answer","reply":"Você gastou ${fmt(fin.expense)} este mês."}
-- "qual meu saldo?" → {"action":"answer","reply":"Seu saldo do mês é ${fmt(fin.balance)}."}
+- "quanto gastei?" → use dados reais de expenses
+- "quando vou quitar X?" → calcule com os dados de dívidas
+- "quanto posso gastar por dia?" → use dailyBudget
+- "como estão minhas metas?" → use dados de goals
+- "estou indo bem?" → analise balance, score, budgets
 
-IMPORTANTE: amount é número (não string). Sem \`\`\`json. Apenas o JSON.`;
+REGRAS:
+- NUNCA invente números — use SEMPRE os dados acima
+- Se não souber responder, diga que vai verificar no app
+- Para registros responda SOMENTE o JSON
+- Para perguntas responda em texto simples
+- Confirme gastos acima de R$500 antes de salvar`;
 }
 
-// ─── CALL CLAUDE ────────────────────────────────────
-async function callClaude(systemPrompt: string, history: any[], userMessage: string) {
-  const messages = [
-    ...history.slice(-6).map((m: any) => ({ role: m.role, content: m.content })),
-    { role: "user", content: userMessage },
-    { role: "assistant", content: "{" },
-  ];
+// ─── IMPROVEMENT 3: IMAGE PROCESSING ────────────────
+async function processImage(imageUrl: string, userName: string): Promise<{
+  transactions: any[];
+  reply: string;
+}> {
+  try {
+    const { base64, mimeType } = await downloadImageBase64(imageUrl);
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-5",
-      max_tokens: 800,
-      system: systemPrompt,
-      messages,
-    }),
-  });
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 2000,
+        system: `Você é a Kora IA do KoraFinance.
+Analise a imagem e extraia dados financeiros.
+A imagem pode ser: cupom fiscal, nota fiscal, comprovante, extrato ou print de app.
 
-  if (!response.ok) {
-    console.error("Claude error:", response.status, await response.text());
-    return { action: "chat", reply: "❌ Erro ao processar. Tente novamente." };
-  }
-
-  const data = await response.json();
-  let text = "{" + (data.content?.[0]?.text || "");
-  console.log("Claude raw:", text);
-
-  try { return JSON.parse(text); }
-  catch {
-    const match = text.match(/\{[\s\S]*\}/);
-    if (match) { try { return JSON.parse(match[0]); } catch { /* fall through */ } }
-    return { action: "chat", reply: "Não entendi. Pode reformular?" };
-  }
-}
-
-// ─── CONTEXT (history + pending) ────────────────────
-async function loadContext(userId: string) {
-  const { data } = await supabase
-    .from("whatsapp_context")
-    .select("messages, pending_confirmation, last_intent")
-    .eq("user_id", userId)
-    .maybeSingle();
-  return {
-    messages: (data?.messages as any[]) || [],
-    pending: data?.pending_confirmation as any || null,
-    lastIntent: data?.last_intent || null,
-  };
-}
-
-async function saveContext(
-  userId: string,
-  messages: any[],
-  pending: any | null,
-  lastIntent: string | null,
-) {
-  const trimmed = messages.slice(-6);
-  await supabase.from("whatsapp_context").upsert({
-    user_id: userId,
-    messages: trimmed,
-    pending_confirmation: pending,
-    last_intent: lastIntent,
-    updated_at: new Date().toISOString(),
-  }, { onConflict: "user_id" });
-}
-
-// ─── SAVE TRANSACTION + BUDGET CHECK ────────────────
-async function executeTransaction(
-  userId: string,
-  tx: any,
-): Promise<{ ok: boolean; budgetWarning?: string; balance?: number }> {
-  const category = detectCategory(tx.description || "", tx.category);
-  const monthYear = new Date().toISOString().slice(0, 7);
-
-  const { error } = await supabase.from("transactions").insert({
-    user_id: userId,
-    type: tx.type,
-    amount: tx.amount,
-    description: tx.description,
-    category,
-    date: new Date().toISOString().split("T")[0],
-    origin: "personal",
-    source: "whatsapp",
-  });
-
-  if (error) {
-    console.error("executeTransaction error:", error);
-    return { ok: false };
-  }
-
-  // Compute current month balance
-  const monthStart = `${monthYear}-01`;
-  const { data: monthTxs } = await supabase
-    .from("transactions")
-    .select("type, amount, category")
-    .eq("user_id", userId)
-    .is("deleted_at", null)
-    .gte("date", monthStart);
-
-  let balance = 0;
-  for (const t of monthTxs || []) {
-    const a = Number(t.amount);
-    balance += t.type === "income" ? a : -a;
-  }
-
-  // Budget check (only for expenses)
-  let budgetWarning: string | undefined;
-  if (tx.type === "expense") {
-    const { data: budget } = await supabase
-      .from("budgets")
-      .select("limit_amount")
-      .eq("user_id", userId)
-      .eq("category", category)
-      .eq("month_year", monthYear)
-      .maybeSingle();
-
-    if (budget?.limit_amount) {
-      const total = (monthTxs || [])
-        .filter((t: any) => t.type === "expense" && t.category === category)
-        .reduce((s: number, t: any) => s + Number(t.amount), 0);
-      const limit = Number(budget.limit_amount);
-      const pct = (total / limit) * 100;
-
-      if (pct >= 100) {
-        budgetWarning = `🚨 *Orçamento estourado!* ${category}: ${fmt(total)} de ${fmt(limit)} (${Math.round(pct)}%)`;
-      } else if (pct >= 80) {
-        budgetWarning = `⚠️ *Atenção:* ${category} já em ${Math.round(pct)}% do orçamento (${fmt(total)} de ${fmt(limit)})`;
-      }
+Responda APENAS com JSON válido:
+{
+  "found": true/false,
+  "establishment": "nome do estabelecimento",
+  "date": "data se visível",
+  "total": valor total como número,
+  "items": [
+    {
+      "description": "nome do item",
+      "amount": valor como número,
+      "category": "categoria",
+      "type": "expense"
     }
-  }
-
-  return { ok: true, budgetWarning, balance };
+  ],
+  "summary": "resumo amigável"
 }
 
-function buildTransactionReply(
-  tx: { type: string; amount: number; description: string; category: string },
-  balance: number,
-  budgetWarning?: string,
+Categorias: Supermercado, Alimentação, Delivery, Farmácia, Combustível, Transporte, Saúde, Lazer, Vestuário, Eletrônicos, Casa, Educação, Outros
+
+Se não encontrar dados:
+{"found": false, "summary": "Não consegui identificar dados financeiros"}`,
+        messages: [{
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: { type: "base64", media_type: mimeType, data: base64 },
+            },
+            { type: "text", text: "Analise esta imagem e extraia os dados financeiros." },
+          ],
+        }],
+      }),
+    });
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text || "{}";
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : "{}");
+
+    if (!parsed.found || !parsed.items?.length) {
+      return {
+        transactions: [],
+        reply: `Não consegui identificar dados financeiros nessa imagem, ${userName}. Tente descrever o gasto em texto: _"gastei X em Y"_ 😊`,
+      };
+    }
+
+    const itemsList = parsed.items
+      .map((item: any) => `  💸 ${item.description} — ${fmt(Number(item.amount))}`)
+      .join("\n");
+
+    const reply = `🧾 *Cupom encontrado!*${parsed.establishment ? `\n🏪 ${parsed.establishment}` : ""}
+
+${itemsList}
+
+💵 *Total: ${fmt(Number(parsed.total || 0))}*
+
+Registrar tudo? Responda *SIM* para confirmar ou *NÃO* para cancelar.`;
+
+    return { transactions: parsed.items, reply };
+  } catch (e) {
+    console.error("processImage error:", e);
+    return {
+      transactions: [],
+      reply: `Não consegui ler essa imagem, ${userName}. Tente uma foto mais nítida ou descreva o gasto em texto 📷`,
+    };
+  }
+}
+
+// ─── IMPROVEMENT 4: PROACTIVE BUDGET ALERTS ─────────
+async function checkAndAlertBudget(
+  _userId: string,
+  phone: string,
+  category: string,
+  userName: string,
+  ctx: any,
+  addedAmount: number,
 ) {
-  const today = new Date().toLocaleDateString("pt-BR");
-  if (tx.type === "expense") {
-    return `✅ *Despesa registrada!*
+  const budget = ctx.budgets.find((b: any) => b.category === category);
+  if (!budget) return;
 
-💸 *${fmt(tx.amount)}* — ${tx.category}
-📝 ${tx.description}
-📅 ${today}
-💰 Saldo do mês: *${fmt(balance)}*${budgetWarning ? `\n\n${budgetWarning}` : ""}
+  // recompute with newly added amount
+  const newSpent = budget.spent + addedAmount;
+  const newPct = Math.round((newSpent / budget.limit) * 100);
 
-_Registrado pela Kora IA 🐨_`;
+  let alertMsg: string | null = null;
+
+  if (newPct >= 100) {
+    alertMsg = `🚨 *Orçamento estourado, ${userName}!*
+
+📂 ${budget.category}
+💸 Gasto: ${fmt(newSpent)} (${newPct}%)
+🎯 Limite: ${fmt(budget.limit)}
+📊 Excedeu em ${fmt(newSpent - budget.limit)}
+
+Tenta segurar os gastos nessa categoria! 💪`;
+  } else if (newPct >= 80) {
+    alertMsg = `⚠️ *Atenção ao orçamento, ${userName}!*
+
+📂 ${budget.category}
+📊 ${newPct}% do limite usado
+💸 ${fmt(newSpent)} de ${fmt(budget.limit)}
+💡 Restam apenas ${fmt(budget.limit - newSpent)}
+
+Fique de olho! 👀`;
   }
-  return `✅ *Receita registrada!*
 
-💰 *${fmt(tx.amount)}* — ${tx.category}
-📝 ${tx.description}
-📅 ${today}
-💰 Saldo do mês: *${fmt(balance)}*
-
-_Registrado pela Kora IA 🐨_ 🎉`;
-}
-
-// ─── MESSAGE LOG ────────────────────────────────────
-async function saveMessage(userId: string | null, phone: string, role: "user" | "assistant", content: string) {
-  await supabase.from("whatsapp_messages").insert({
-    user_id: userId,
-    phone,
-    phone_number: phone,
-    role,
-    content,
-    direction: role === "user" ? "inbound" : "outbound",
-    message: content,
-  });
-}
-
-// ─── IMAGE PROCESSING (kept) ────────────────────────
-async function processImage(imageBase64: string, mimeType: string) {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-5",
-      max_tokens: 1500,
-      system: `Analise cupom/nota/comprovante e retorne APENAS JSON:
-{"is_transaction":true,"transactions":[{"type":"expense","amount":number,"description":"...","category":"..."}],"total":number,"establishment":"...","reply":"..."}
-Se não conseguir: {"is_transaction":false,"reply":"..."}`,
-      messages: [{
-        role: "user",
-        content: [
-          { type: "image", source: { type: "base64", media_type: mimeType, data: imageBase64 } },
-          { type: "text", text: "Extraia os dados financeiros." },
-        ],
-      }],
-    }),
-  });
-  const data = await response.json();
-  const text = data.content?.[0]?.text || "{}";
-  try { return JSON.parse(text); }
-  catch {
-    const m = text.match(/\{[\s\S]*\}/);
-    return m ? JSON.parse(m[0]) : { is_transaction: false, reply: "Não consegui ler a imagem." };
+  if (alertMsg) {
+    await new Promise((r) => setTimeout(r, 1500));
+    await sendWhatsApp(phone, alertMsg);
   }
 }
 
-// ─── MAIN ───────────────────────────────────────────
+// ─── IMPROVEMENT 5: MAIN HANDLER ────────────────────
 serve(async (req) => {
   if (req.method !== "POST") return new Response("OK", { status: 200 });
 
   try {
     const body = await req.json();
-    console.log("Z-API webhook:", JSON.stringify(body));
+    console.log("Z-API payload:", JSON.stringify(body).slice(0, 500));
 
-    const phone = (body?.phone || "").toString().replace("@s.whatsapp.net", "");
-    const text: string | undefined = body?.text?.message;
-    const image = body?.image;
-    const isGroup = body?.isGroup || false;
+    if (body.fromMe || body.isGroup) return new Response("OK", { status: 200 });
 
-    if (isGroup || body?.fromMe || !phone) return new Response("OK", { status: 200 });
+    const phone = (body.phone || "")
+      .replace("@s.whatsapp.net", "")
+      .replace(/\D/g, "");
+    const text = body.text?.message?.trim();
+    const image = body.image || body.imageMessage;
 
-    const userId = await getUserByPhone(phone);
+    if (!phone) return new Response("OK", { status: 200 });
 
-    // Unlinked
-    if (!userId) {
-      const reply = `👋 Olá! Sou a *Kora IA* do KoraFinance 🐨
+    const { data: conn } = await supabase
+      .from("whatsapp_connections")
+      .select("user_id")
+      .or(`phone_number.eq.${phone},phone_number.eq.55${phone}`)
+      .eq("verified", true)
+      .maybeSingle();
 
-Para registrar seus gastos aqui, conecte seu número:
-
-1️⃣ Acesse *korafinance.com.br*
-2️⃣ Configurações → WhatsApp
-3️⃣ Informe este número
-
-Depois é só mandar:
-💸 _"gastei 50 no mercado"_
-💰 _"recebi 3000 de salário"_
-📷 _Foto do cupom fiscal_
-
-Registro tudo automaticamente! ✅`;
-      await sendMessage(phone, reply);
-      await saveMessage(null, phone, "assistant", reply);
+    if (!conn?.user_id) {
+      await sendWhatsApp(phone,
+        `👋 Olá! Sou a *Kora IA* do KoraFinance 🐨\n\nPara usar o assistente, conecte seu número:\n\n1️⃣ Acesse *korafinance.app*\n2️⃣ Configurações → WhatsApp\n3️⃣ Informe este número\n\nDepois é só mandar:\n💸 _"gastei 50 no mercado"_\n📷 _Foto do cupom fiscal_`
+      );
       return new Response("OK", { status: 200 });
     }
 
-    // IMAGE flow (kept simple, with budget check)
-    if (image?.imageUrl || image?.url) {
-      const imageUrl = image.imageUrl || image.url;
-      const mimeType = image.mimeType || "image/jpeg";
-      await saveMessage(userId, phone, "user", "[imagem]");
+    const userId = conn.user_id;
+    const ctx = await loadUserContext(userId);
 
-      const imgB64 = await downloadImage(imageUrl);
-      const result = await processImage(imgB64, mimeType);
+    await supabase.from("whatsapp_messages").insert({
+      user_id: userId,
+      phone,
+      phone_number: phone,
+      direction: "inbound",
+      role: "user",
+      message: text || "[imagem]",
+      content: text || "[imagem]",
+      created_at: new Date().toISOString(),
+    });
 
-      let reply: string;
-      if (result.is_transaction && result.transactions?.length) {
+    const { data: history } = await supabase
+      .from("whatsapp_messages")
+      .select("role, content")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(8);
+
+    const { data: pending } = await supabase
+      .from("whatsapp_context")
+      .select("pending_confirmation, pending_transactions")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    // ── CONFIRMATION FLOW ──
+    if (pending?.pending_confirmation && text) {
+      const lower = text.toLowerCase().trim();
+
+      if (["sim", "s", "ok", "yes", "confirmar", "1"].includes(lower)) {
+        const transactions = (pending.pending_transactions as any[]) || [];
         let saved = 0;
-        const warnings: string[] = [];
-        for (const tx of result.transactions) {
-          if (tx.amount > 0) {
-            const r = await executeTransaction(userId, tx);
-            if (r.ok) {
-              saved++;
-              if (r.budgetWarning) warnings.push(r.budgetWarning);
+
+        for (const tx of transactions) {
+          const { error } = await supabase.from("transactions").insert({
+            user_id: userId,
+            type: tx.type || "expense",
+            amount: tx.amount,
+            description: tx.description,
+            category: tx.category,
+            date: new Date().toISOString().split("T")[0],
+            origin: "personal",
+            source: "whatsapp",
+          });
+          if (!error) saved++;
+        }
+
+        await supabase.from("whatsapp_context")
+          .update({ pending_confirmation: false, pending_transactions: null })
+          .eq("user_id", userId);
+
+        const total = transactions.reduce((s: number, t: any) => s + Number(t.amount), 0);
+        const reply = `✅ *${saved} lançamento${saved > 1 ? "s" : ""} salvo${saved > 1 ? "s" : ""}!*\n\n💵 Total: *${fmt(total)}*\n\nTudo registrado no KoraFinance, ${ctx.name}! 🐨`;
+
+        await sendWhatsApp(phone, reply);
+        await supabase.from("whatsapp_messages").insert({
+          user_id: userId, phone, phone_number: phone,
+          direction: "outbound", role: "assistant",
+          message: reply, content: reply,
+          created_at: new Date().toISOString(),
+        });
+
+        // Budget alerts grouped by category
+        const byCat: Record<string, number> = {};
+        for (const tx of transactions) {
+          if ((tx.type || "expense") === "expense") {
+            byCat[tx.category] = (byCat[tx.category] || 0) + Number(tx.amount);
+          }
+        }
+        for (const [cat, amt] of Object.entries(byCat)) {
+          await checkAndAlertBudget(userId, phone, cat, ctx.name, ctx, amt);
+        }
+
+        return new Response("OK", { status: 200 });
+      } else if (["não", "nao", "n", "no", "cancelar", "2"].includes(lower)) {
+        await supabase.from("whatsapp_context")
+          .update({ pending_confirmation: false, pending_transactions: null })
+          .eq("user_id", userId);
+
+        const reply = `❌ Cancelado! Como posso ajudar, ${ctx.name}?`;
+        await sendWhatsApp(phone, reply);
+        return new Response("OK", { status: 200 });
+      }
+    }
+
+    // ── IMAGE PROCESSING ──
+    if (image) {
+      const imageUrl = typeof image === "string"
+        ? image
+        : (image.imageUrl || image.url);
+
+      const { transactions, reply } = await processImage(imageUrl, ctx.name);
+
+      if (transactions.length > 0) {
+        await supabase.from("whatsapp_context").upsert({
+          user_id: userId,
+          pending_confirmation: true,
+          pending_transactions: transactions,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id" });
+      }
+
+      await sendWhatsApp(phone, reply);
+      await supabase.from("whatsapp_messages").insert({
+        user_id: userId, phone, phone_number: phone,
+        direction: "outbound", role: "assistant",
+        message: reply, content: reply,
+        created_at: new Date().toISOString(),
+      });
+      return new Response("OK", { status: 200 });
+    }
+
+    // ── TEXT PROCESSING ──
+    if (text) {
+      const systemPrompt = buildSystemPrompt(ctx);
+
+      const messages = (history?.reverse() || [])
+        .slice(-6)
+        .filter((m: any) => m.role && m.content)
+        .map((m: any) => ({
+          role: m.role === "assistant" ? "assistant" : "user",
+          content: m.content,
+        }));
+
+      messages.push({ role: "user", content: text });
+
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 600,
+          system: systemPrompt,
+          messages,
+        }),
+      });
+
+      const data = await response.json();
+      const aiText = data.content?.[0]?.text?.trim() || "";
+      console.log("Claude response:", aiText.slice(0, 300));
+
+      let finalReply = aiText;
+
+      try {
+        const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const action = JSON.parse(jsonMatch[0]);
+
+          if (action.action === "expense" || action.action === "income") {
+            const amount = parseFloat(action.amount);
+
+            if (action.confirm) {
+              await supabase.from("whatsapp_context").upsert({
+                user_id: userId,
+                pending_confirmation: true,
+                pending_transactions: [{
+                  type: action.action,
+                  amount,
+                  description: action.description,
+                  category: action.category,
+                }],
+                updated_at: new Date().toISOString(),
+              }, { onConflict: "user_id" });
+
+              const typeLabel = action.action === "expense" ? "💸 Despesa" : "💰 Receita";
+              finalReply = `⚠️ *Confirmar lançamento, ${ctx.name}?*\n\n${typeLabel}: *${fmt(amount)}*\n📝 ${action.description}\n📂 ${action.category}\n\nResponda *SIM* para confirmar ou *NÃO* para cancelar`;
+            } else {
+              const newBalance = action.action === "income"
+                ? ctx.balance + amount
+                : ctx.balance - amount;
+
+              const { error } = await supabase.from("transactions").insert({
+                user_id: userId,
+                type: action.action,
+                amount,
+                description: action.description,
+                category: action.category,
+                date: new Date().toISOString().split("T")[0],
+                origin: "personal",
+                source: "whatsapp",
+              });
+
+              if (!error) {
+                const typeEmoji = action.action === "expense" ? "💸" : "💰";
+                const typeLabel = action.action === "expense" ? "Despesa" : "Receita";
+                finalReply = `✅ *${typeLabel} registrada!*\n\n${typeEmoji} *${fmt(amount)}* — ${action.category}\n📝 ${action.description}\n📅 ${new Date().toLocaleDateString("pt-BR")}\n💰 Saldo: *${fmt(newBalance)}*\n\n_Kora IA 🐨_`;
+
+                if (action.action === "expense") {
+                  await checkAndAlertBudget(userId, phone, action.category, ctx.name, ctx, amount);
+                }
+              } else {
+                console.error("Insert tx error:", error);
+                finalReply = `❌ Erro ao salvar, ${ctx.name}. Tenta novamente!`;
+              }
             }
           }
         }
-        const lines = result.transactions.filter((t: any) => t.amount > 0)
-          .map((t: any) => `${t.type === "expense" ? "💸" : "💰"} ${t.description} — ${fmt(t.amount)}`).join("\n");
-        reply = `✅ *${saved} lançamento${saved > 1 ? "s" : ""} salvo${saved > 1 ? "s" : ""}!*
-
-${lines}
-
-${result.establishment ? `🏪 ${result.establishment}\n` : ""}💵 Total: ${fmt(result.total || 0)}${warnings.length ? "\n\n" + warnings.join("\n") : ""}`;
-      } else {
-        reply = result.reply || "Não consegui ler a imagem.";
+      } catch (_e) {
+        // Plain text reply, keep aiText as finalReply
       }
 
-      await sendMessage(phone, reply);
-      await saveMessage(userId, phone, "assistant", reply);
-      return new Response("OK", { status: 200 });
+      await sendWhatsApp(phone, finalReply);
+
+      await supabase.from("whatsapp_messages").insert({
+        user_id: userId, phone, phone_number: phone,
+        direction: "outbound", role: "assistant",
+        message: finalReply, content: finalReply,
+        created_at: new Date().toISOString(),
+      });
     }
 
-    // TEXT flow
-    if (!text) return new Response("OK", { status: 200 });
-
-    await saveMessage(userId, phone, "user", text);
-
-    const ctx = await loadContext(userId);
-    const fin = await loadFinancialData(userId);
-    const systemPrompt = buildSystemPrompt(fin, ctx.pending);
-
-    const result = await callClaude(systemPrompt, ctx.messages, text);
-
-    let reply = "";
-    let newPending = ctx.pending;
-    let lastIntent = ctx.lastIntent;
-
-    // CONFIRM pending
-    if (result.action === "confirm" && ctx.pending) {
-      const r = await executeTransaction(userId, ctx.pending);
-      reply = r.ok
-        ? buildTransactionReply(ctx.pending, r.balance ?? 0, r.budgetWarning)
-        : "❌ Erro ao salvar. Tente novamente.";
-      newPending = null;
-      lastIntent = "confirm";
-    }
-    // CANCEL pending
-    else if (result.action === "cancel" && ctx.pending) {
-      reply = "❌ Cancelado. Nada foi registrado.";
-      newPending = null;
-      lastIntent = "cancel";
-    }
-    // NEW TRANSACTION
-    else if (result.action === "transaction" && result.amount > 0) {
-      const category = detectCategory(result.description || "", result.category);
-      if (Number(result.amount) > CONFIRMATION_THRESHOLD) {
-        newPending = { type: result.type, amount: Number(result.amount), description: result.description, category };
-        lastIntent = "pending_confirmation";
-        reply = `⚠️ *Confirme essa transação:*
-
-${result.type === "expense" ? "💸 Despesa" : "💰 Receita"}: ${fmt(result.amount)}
-📝 ${result.description}
-🏷️ ${category}
-
-Responda *SIM* para salvar ou *NÃO* para cancelar.`;
-      } else {
-        const r = await executeTransaction(userId, { ...result, category });
-        reply = r.ok
-          ? buildTransactionReply(
-              { type: result.type, amount: Number(result.amount), description: result.description, category },
-              r.balance ?? 0,
-              r.budgetWarning,
-            )
-          : "❌ Erro ao salvar. Tente novamente.";
-        lastIntent = "transaction";
-      }
-    }
-    // ANSWER / CHAT
-    else {
-      reply = result.reply || "Não entendi. Pode reformular?";
-      lastIntent = result.action || "chat";
-    }
-
-    // Update history
-    const newMessages = [
-      ...ctx.messages,
-      { role: "user", content: text },
-      { role: "assistant", content: reply },
-    ];
-    await saveContext(userId, newMessages, newPending, lastIntent);
-
-    await sendMessage(phone, reply);
-    await saveMessage(userId, phone, "assistant", reply);
     return new Response("OK", { status: 200 });
   } catch (error) {
     console.error("Webhook error:", error);
