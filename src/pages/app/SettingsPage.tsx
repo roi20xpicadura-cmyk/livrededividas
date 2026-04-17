@@ -67,6 +67,52 @@ export default function SettingsPage() {
     setSaving(false);
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Selecione uma imagem');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Imagem deve ter no máximo 2MB');
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true, cacheControl: '3600' });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
+      const url = pub.publicUrl;
+      await updateProfile({ avatar_url: url });
+      setAvatarUrl(url);
+      toast.success('Foto de perfil atualizada!');
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao enviar foto');
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user) return;
+    setUploadingAvatar(true);
+    try {
+      await updateProfile({ avatar_url: null as any });
+      setAvatarUrl('');
+      toast.success('Foto removida');
+    } catch {
+      toast.error('Erro ao remover foto');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const handleSaveProfileType = async (val: string) => {
     setProfileType(val);
     await updateConfig({ profile_type: val } as any);
