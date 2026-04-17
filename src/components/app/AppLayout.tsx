@@ -129,6 +129,13 @@ export default function AppLayout() {
     }
   }, [loading, config]);
 
+  // Close overlays/menus on route change to avoid stuck dropdowns
+  useEffect(() => {
+    setShowUserMenu(false);
+    setShowMoreDrawer(false);
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
   const isActive = (path: string) => {
     if (path === '/app') return location.pathname === '/app';
     return location.pathname.startsWith(path);
