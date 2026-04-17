@@ -15,15 +15,22 @@ const CONFIRMATION_THRESHOLD = 500;
 // ─── Z-API SEND ─────────────────────────────────────
 async function sendMessage(phone: string, text: string) {
   const url = `https://api.z-api.io/instances/${ZAPI_INSTANCE_ID}/token/${ZAPI_TOKEN}/send-text`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Client-Token": ZAPI_CLIENT_TOKEN,
-    },
-    body: JSON.stringify({ phone, message: text }),
-  });
-  if (!res.ok) console.error("Z-API send-text error:", res.status, await res.text());
+  console.log("[Z-API SEND] →", phone, "| len:", text.length, "| instance:", ZAPI_INSTANCE_ID?.slice(0, 8));
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Client-Token": ZAPI_CLIENT_TOKEN,
+      },
+      body: JSON.stringify({ phone, message: text }),
+    });
+    const respText = await res.text();
+    console.log("[Z-API SEND] status:", res.status, "| body:", respText.slice(0, 300));
+    if (!res.ok) console.error("[Z-API SEND] FAILED", res.status, respText);
+  } catch (e) {
+    console.error("[Z-API SEND] EXCEPTION", e);
+  }
 }
 
 async function downloadImage(imageUrl: string): Promise<string> {
