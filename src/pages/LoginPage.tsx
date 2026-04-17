@@ -256,8 +256,16 @@ export default function LoginPage() {
     const { error: err } = await supabase.auth.signInWithPassword({ email, password });
     if (err) {
       setLoading(false);
-      setError('E-mail ou senha incorretos.');
       haptic.error();
+      const msg = (err.message || '').toLowerCase();
+      if (msg.includes('invalid login credentials') || msg.includes('invalid_credentials')) {
+        // Caso comum: conta criada via Google → não tem senha cadastrada
+        setError('E-mail ou senha incorretos. Se você se cadastrou com Google, use o botão "Continuar com Google" abaixo.');
+      } else if (msg.includes('email not confirmed')) {
+        setError('Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.');
+      } else {
+        setError('Não foi possível entrar. Tente novamente em instantes.');
+      }
       return;
     }
     setLoading(false);
