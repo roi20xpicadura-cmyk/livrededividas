@@ -233,6 +233,12 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const AppleIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="#0f172a">
+    <path d="M17.05 12.04c-.03-2.84 2.32-4.21 2.43-4.28-1.32-1.93-3.39-2.2-4.12-2.23-1.76-.18-3.43 1.03-4.32 1.03-.89 0-2.27-1-3.73-.98-1.92.03-3.69 1.12-4.68 2.83-1.99 3.46-.51 8.59 1.43 11.4.95 1.38 2.08 2.93 3.55 2.87 1.43-.06 1.97-.92 3.7-.92 1.72 0 2.21.92 3.72.89 1.54-.03 2.51-1.4 3.45-2.79 1.09-1.6 1.54-3.15 1.57-3.23-.03-.01-3.01-1.16-3.04-4.59zM14.27 3.61c.79-.96 1.32-2.29 1.17-3.61-1.13.05-2.5.75-3.31 1.7-.73.85-1.37 2.2-1.2 3.5 1.26.1 2.55-.64 3.34-1.59z"/>
+  </svg>
+);
+
 const inputStyle: React.CSSProperties = {
   height: 52, padding: '0 16px', border: '1.5px solid #e2e8f0',
   borderRadius: 14, fontSize: 16, color: '#0f172a', background: '#fafafa',
@@ -269,23 +275,25 @@ export default function LoginPage() {
     setTimeout(() => navigate('/app'), 800);
   };
 
-  const handleGoogle = async () => {
+  const handleOAuth = async (provider: 'google' | 'apple') => {
     haptic.light();
+    const label = provider === 'google' ? 'Google' : 'Apple';
     try {
-      const result = await lovable.auth.signInWithOAuth('google', {
+      const result = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: window.location.origin,
       });
       if (result?.error) {
-        toast.error('Não foi possível entrar com Google. Tente novamente.');
+        toast.error(`Não foi possível entrar com ${label}. Tente novamente.`);
         return;
       }
       if (result?.redirected) return;
-      // Tokens recebidos — sessão setada. Redireciona para o app.
       navigate('/app');
-    } catch (err) {
-      toast.error('Erro ao conectar com Google. Tente novamente.');
+    } catch {
+      toast.error(`Erro ao conectar com ${label}. Tente novamente.`);
     }
   };
+  const handleGoogle = () => handleOAuth('google');
+  const handleApple = () => handleOAuth('apple');
 
   const formContent = (
     <>
