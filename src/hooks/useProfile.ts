@@ -59,7 +59,17 @@ export function useProfile() {
   // Realtime listener for plan changes (Hotmart webhook → instant unlock)
   useEffect(() => {
     if (!user) return;
-    const channel = supabase.channel(`profile-${user.id}`);
+
+    const topicPrefix = `profile-${user.id}`;
+    supabase
+      .getChannels()
+      .filter((existingChannel) => existingChannel.topic.startsWith(`realtime:${topicPrefix}`))
+      .forEach((existingChannel) => {
+        void supabase.removeChannel(existingChannel);
+      });
+
+    const channel = supabase.channel(`${topicPrefix}-${crypto.randomUUID()}`);
+
     channel
       .on(
         'postgres_changes' as any,
@@ -69,6 +79,7 @@ export function useProfile() {
           const oldPlan = previousPlanRef.current;
           const newPlan = newProfile.plan;
           setProfile(newProfile);
+
           if (newPlan !== oldPlan && newPlan !== 'free' && oldPlan === 'free') {
             const planName = newPlan === 'pro' ? 'Pro' : newPlan === 'business' ? 'Business' : newPlan;
             toast.success(`🎉 Bem-vindo ao plano ${planName}!`, {
@@ -76,11 +87,15 @@ export function useProfile() {
               duration: 6000,
             });
           }
+
           previousPlanRef.current = newPlan;
         }
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const updateProfile = async (updates: Partial<Profile>) => {
