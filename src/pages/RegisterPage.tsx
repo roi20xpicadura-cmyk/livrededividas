@@ -119,7 +119,16 @@ export default function RegisterPage() {
 
       {/* Google button */}
       <motion.button
-        onClick={() => lovable.auth.signInWithOAuth('google', { redirect_uri: `${window.location.origin}/app` })}
+        onClick={async () => {
+          haptic.light();
+          try {
+            const result = await lovable.auth.signInWithOAuth('google', {
+              redirect_uri: window.location.origin,
+            });
+            if (result?.error) { toast.error('Não foi possível cadastrar com Google.'); return; }
+            if (result?.redirected) return;
+          } catch { toast.error('Erro ao conectar com Google.'); }
+        }}
         whileTap={{ scale: 0.97 }}
         className="hover:bg-[#f8fafc] hover:border-[#cbd5e1]"
         style={{ marginTop: 20, height: 52, width: '100%', background: 'white', border: '1.5px solid #e2e8f0', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', transition: 'all 150ms' }}>

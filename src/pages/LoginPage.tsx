@@ -271,7 +271,20 @@ export default function LoginPage() {
 
   const handleGoogle = async () => {
     haptic.light();
-    await lovable.auth.signInWithOAuth('google', { redirect_uri: `${window.location.origin}/app` });
+    try {
+      const result = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.origin,
+      });
+      if (result?.error) {
+        toast.error('Não foi possível entrar com Google. Tente novamente.');
+        return;
+      }
+      if (result?.redirected) return;
+      // Tokens recebidos — sessão setada. Redireciona para o app.
+      navigate('/app');
+    } catch (err) {
+      toast.error('Erro ao conectar com Google. Tente novamente.');
+    }
   };
 
   const formContent = (
