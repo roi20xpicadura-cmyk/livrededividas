@@ -1507,6 +1507,13 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_monthly_balances: {
+        Args: { p_user_id: string }
+        Returns: {
+          balance: number
+          month: string
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string

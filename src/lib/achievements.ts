@@ -1,40 +1,90 @@
 export interface Achievement {
-  key: string;
+  id: string;
   emoji: string;
   name: string;
-  desc: string;
+  description: string;
   xp: number;
+  category: 'inicio' | 'habito' | 'meta' | 'divida' | 'poupanca' | 'especial';
+  progress?: {
+    total: number;
+    label: string;
+  };
 }
 
 export const ACHIEVEMENTS: Achievement[] = [
-  { key: 'first_transaction', emoji: '🎯', name: 'Primeiro Passo', desc: 'Adicionou o primeiro lançamento', xp: 50 },
-  { key: 'first_goal', emoji: '🎪', name: 'Sonhador', desc: 'Criou a primeira meta', xp: 50 },
-  { key: 'first_card', emoji: '💳', name: 'Carteirinha', desc: 'Cadastrou o primeiro cartão', xp: 30 },
-  { key: 'first_investment', emoji: '📈', name: 'Investidor', desc: 'Adicionou o primeiro investimento', xp: 100 },
-  { key: 'streak_3', emoji: '🔥', name: 'Aquecendo', desc: '3 dias seguidos lançando', xp: 30 },
-  { key: 'streak_7', emoji: '⚡', name: 'Na Chama', desc: '7 dias seguidos', xp: 100 },
-  { key: 'streak_30', emoji: '🌟', name: 'Imparável', desc: '30 dias seguidos', xp: 500 },
-  { key: 'month_positive', emoji: '✅', name: 'Mês no Azul', desc: 'Fechou o mês com saldo positivo', xp: 150 },
-  { key: 'goal_achieved', emoji: '🏆', name: 'Conquistador', desc: 'Atingiu a primeira meta', xp: 300 },
-  { key: 'debt_paid', emoji: '🆓', name: 'Livre', desc: 'Quitou a primeira dívida', xp: 400 },
-  { key: 'saved_1k', emoji: '💰', name: 'Poupador', desc: 'Guardou R$ 1.000', xp: 200 },
-  { key: 'saved_10k', emoji: '💎', name: 'Reserva Sólida', desc: 'Guardou R$ 10.000', xp: 500 },
-  { key: 'zero_debt', emoji: '🕊️', name: 'Liberdade', desc: 'Zerou todas as dívidas', xp: 1000 },
-  { key: 'score_800', emoji: '⭐', name: 'Saúde Premium', desc: 'Score financeiro acima de 800', xp: 300 },
-  { key: 'budget_master', emoji: '🎓', name: 'Mestre do Orçamento', desc: 'Respeitou todos os limites por 3 meses', xp: 400 },
-  { key: 'transactions_50', emoji: '📊', name: 'Organizado', desc: '50 lançamentos registrados', xp: 100 },
-  { key: 'transactions_200', emoji: '📚', name: 'Disciplinado', desc: '200 lançamentos registrados', xp: 250 },
+  // ─── INÍCIO ──────────────────────────────────────
+  { id: 'first_launch', emoji: '🎯', name: 'Primeiro Passo', description: 'Registre seu primeiro lançamento no app.', xp: 50, category: 'inicio' },
+  { id: 'first_goal', emoji: '🏕️', name: 'Sonhador', description: 'Crie sua primeira meta financeira.', xp: 50, category: 'inicio' },
+  { id: 'first_budget', emoji: '📋', name: 'Carteirinha', description: 'Configure seu primeiro orçamento mensal.', xp: 30, category: 'inicio' },
+  { id: 'connect_whatsapp', emoji: '💬', name: 'Conectado', description: 'Conecte seu WhatsApp para registrar gastos pelo app.', xp: 80, category: 'inicio' },
+
+  // ─── HÁBITO ──────────────────────────────────────
+  { id: 'streak_3', emoji: '🔥', name: 'Aquecendo', description: 'Registre lançamentos por 3 dias consecutivos.', xp: 30, category: 'habito', progress: { total: 3, label: 'dias consecutivos' } },
+  { id: 'streak_7', emoji: '⚡', name: 'Na Chama', description: 'Registre lançamentos por 7 dias consecutivos.', xp: 100, category: 'habito', progress: { total: 7, label: 'dias consecutivos' } },
+  { id: 'streak_30', emoji: '🌟', name: 'Imparável', description: 'Registre lançamentos por 30 dias consecutivos.', xp: 500, category: 'habito', progress: { total: 30, label: 'dias consecutivos' } },
+  { id: 'launches_10', emoji: '📝', name: 'Organizador', description: 'Registre 10 lançamentos no total.', xp: 50, category: 'habito', progress: { total: 10, label: 'lançamentos' } },
+  { id: 'launches_100', emoji: '💪', name: 'Dedicado', description: 'Registre 100 lançamentos no total.', xp: 200, category: 'habito', progress: { total: 100, label: 'lançamentos' } },
+
+  // ─── METAS ───────────────────────────────────────
+  { id: 'positive_month', emoji: '✅', name: 'Mês no Azul', description: 'Termine o mês com saldo positivo.', xp: 150, category: 'meta' },
+  { id: 'positive_3months', emoji: '🏆', name: 'Conquistador', description: 'Termine 3 meses consecutivos com saldo positivo.', xp: 300, category: 'meta', progress: { total: 3, label: 'meses no azul' } },
+  { id: 'goal_complete', emoji: '🎊', name: 'Realizador', description: 'Conclua uma meta financeira 100%.', xp: 200, category: 'meta' },
+  { id: 'budget_respected', emoji: '🎓', name: 'Mestre do Orçamento', description: 'Respeite todos os orçamentos em um mês.', xp: 300, category: 'meta' },
+
+  // ─── POUPANÇA ────────────────────────────────────
+  { id: 'save_500', emoji: '💰', name: 'Poupador', description: 'Economize R$500 em um único mês.', xp: 200, category: 'poupanca' },
+  { id: 'save_5000', emoji: '💎', name: 'Reserva Sólida', description: 'Acumule R$5.000 em metas de poupança.', xp: 500, category: 'poupanca' },
+  { id: 'emergency_fund', emoji: '🕊️', name: 'Liberdade', description: 'Construa uma reserva de emergência de 3 meses.', xp: 1000, category: 'poupanca' },
+
+  // ─── DÍVIDAS ─────────────────────────────────────
+  { id: 'debt_paid', emoji: '🗡️', name: 'Caçador de Dívidas', description: 'Quite sua primeira dívida completamente.', xp: 300, category: 'divida' },
+  { id: 'debt_free', emoji: '🦋', name: 'Livre', description: 'Quite todas as suas dívidas ativas.', xp: 400, category: 'divida' },
+
+  // ─── ESPECIAL ────────────────────────────────────
+  { id: 'pro_subscriber', emoji: '⭐', name: 'Saúde Premium', description: 'Assine o plano Pro do KoraFinance.', xp: 300, category: 'especial' },
+  { id: 'whatsapp_10', emoji: '🤖', name: 'IA no Bolso', description: 'Registre 10 lançamentos pelo WhatsApp.', xp: 150, category: 'especial', progress: { total: 10, label: 'lançamentos via WPP' } },
+  { id: 'couple_connected', emoji: '👫', name: 'Dupla Financeira', description: 'Conecte-se ao modo casal.', xp: 200, category: 'especial' },
 ];
 
+export const CATEGORIES = {
+  inicio: { label: 'Início', emoji: '🚀' },
+  habito: { label: 'Hábito', emoji: '🔥' },
+  meta: { label: 'Metas', emoji: '🎯' },
+  divida: { label: 'Dívidas', emoji: '💳' },
+  poupanca: { label: 'Poupança', emoji: '💰' },
+  especial: { label: 'Especial', emoji: '⭐' },
+} as const;
+
+export interface Level {
+  name: string;
+  emoji: string;
+  min: number;
+  max: number;
+}
+
+export function getLevel(xp: number): Level {
+  if (xp >= 3000) return { name: 'Lenda', emoji: '👑', min: 3000, max: 9999 };
+  if (xp >= 1500) return { name: 'Expert', emoji: '💎', min: 1500, max: 3000 };
+  if (xp >= 800) return { name: 'Avançado', emoji: '🌟', min: 800, max: 1500 };
+  if (xp >= 400) return { name: 'Intermediário', emoji: '⚡', min: 400, max: 800 };
+  if (xp >= 200) return { name: 'Aprendiz', emoji: '🔥', min: 200, max: 400 };
+  return { name: 'Iniciante', emoji: '🌱', min: 0, max: 200 };
+}
+
+export function getNextLevelName(currentName: string): string {
+  const order = ['Iniciante', 'Aprendiz', 'Intermediário', 'Avançado', 'Expert', 'Lenda'];
+  const i = order.indexOf(currentName);
+  return i >= 0 && i < order.length - 1 ? order[i + 1] : '🏆';
+}
+
+// Legacy exports for backward compatibility with useAchievementChecker
 export const LEVELS = [
   { name: 'Iniciante', minXP: 0, color: '#94a3b8' },
   { name: 'Aprendiz', minXP: 200, color: '#22c55e' },
-  { name: 'Organizado', minXP: 500, color: '#7C3AED' },
-  { name: 'Controlado', minXP: 1000, color: '#2563eb' },
-  { name: 'Avançado', minXP: 2000, color: '#7c3aed' },
-  { name: 'Expert', minXP: 3500, color: '#d97706' },
-  { name: 'Mestre', minXP: 5000, color: '#dc2626' },
-  { name: 'Lenda Financeira', minXP: 8000, color: '#f59e0b' },
+  { name: 'Intermediário', minXP: 400, color: '#7C3AED' },
+  { name: 'Avançado', minXP: 800, color: '#2563eb' },
+  { name: 'Expert', minXP: 1500, color: '#d97706' },
+  { name: 'Lenda', minXP: 3000, color: '#dc2626' },
 ];
 
 export function getCurrentLevel(xp: number) {

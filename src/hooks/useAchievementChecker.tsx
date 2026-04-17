@@ -58,7 +58,7 @@ export function useAchievementChecker() {
           achievement_key: c.key,
         });
 
-        const achievement = ACHIEVEMENTS.find(a => a.key === c.key);
+        const achievement = ACHIEVEMENTS.find(a => a.id === c.key);
         if (achievement) {
           // Update XP
           const { data: cfg } = await supabase
@@ -85,7 +85,7 @@ export function useAchievementChecker() {
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-warning-solid)', letterSpacing: '1px', textTransform: 'uppercase' }}>Conquista desbloqueada!</p>
                 <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-text-strong)' }}>{achievement.name}</p>
-                <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{achievement.desc}</p>
+                <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{achievement.description}</p>
               </div>
               <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-warning-solid)', background: 'var(--color-warning-bg)', padding: '4px 10px', borderRadius: 'var(--radius-full)' }}>+{achievement.xp} XP</span>
             </div>
