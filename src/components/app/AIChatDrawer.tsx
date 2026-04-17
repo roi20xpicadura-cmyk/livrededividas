@@ -492,11 +492,11 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
               }}>
               <div className="relative flex-shrink-0">
                 <div className="w-9 h-9 rounded-[10px] flex items-center justify-center"
-                  style={{ background: '#7C3AED' }}>
+                  style={{ background: 'var(--color-green-600)' }}>
                   <Sparkles className="w-4 h-4 text-white" />
                 </div>
                 <div className="absolute -bottom-[1px] -right-[1px] w-[9px] h-[9px] rounded-full"
-                  style={{ background: '#22C55E', border: '2px solid #08080F' }} />
+                  style={{ background: 'var(--color-success-solid)', border: '2px solid var(--color-bg-surface)' }} />
               </div>
 
               <div className="flex-1 min-w-0">
