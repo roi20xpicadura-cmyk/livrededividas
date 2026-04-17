@@ -21,9 +21,9 @@ function formatCompact(v: number): string {
 }
 
 /* ─── Typing Indicator ─── */
-function TypingIndicator() {
+const TypingIndicator = forwardRef<HTMLDivElement>((_, ref) => {
   return (
-    <motion.div initial={{ opacity: 0, y: 12, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+    <motion.div ref={ref} initial={{ opacity: 0, y: 12, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }} className="flex items-start gap-2.5">
       <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
         style={{ background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))', boxShadow: '0 2px 8px rgba(124, 58, 237,0.3)' }}>
@@ -42,7 +42,8 @@ function TypingIndicator() {
       </div>
     </motion.div>
   );
-}
+});
+TypingIndicator.displayName = 'TypingIndicator';
 
 /* ─── Markdown Components ─── */
 const markdownComponents = {
