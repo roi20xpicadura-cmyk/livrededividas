@@ -556,11 +556,27 @@ serve(async (req) => {
         }),
       });
 
+      if (!response.ok) {
+        const errBody = await response.text();
+        console.error("[Claude] HTTP", response.status, errBody.slice(0, 500));
+        await sendWhatsApp(
+          phone,
+          `Eita, ${ctx.name}! Tô com um probleminha pra pensar agora 🤯 Tenta de novo em alguns segundos, beleza?`,
+        );
+        return new Response("OK", { status: 200 });
+      }
+
       const data = await response.json();
+      console.log("[Claude] raw:", JSON.stringify(data).slice(0, 500));
       const aiText = data.content?.[0]?.text?.trim() || "";
       console.log("Claude response:", aiText.slice(0, 300));
 
       let finalReply = aiText;
+
+      // Fallback: never send empty message to Z-API
+      if (!finalReply || finalReply.length === 0) {
+        finalReply = `Hmm, não consegui processar agora, ${ctx.name} 😅 Tenta reformular ou manda de novo em instantes!`;
+      }
 
       try {
         const jsonMatch = aiText.match(/\{[\s\S]*\}/);
