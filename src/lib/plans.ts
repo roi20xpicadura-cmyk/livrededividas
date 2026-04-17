@@ -65,7 +65,7 @@ export const PLANS = {
   },
   business: {
     name: 'Business',
-    price: 59,
+    price: 59.90,
     color: '#2563EB',
     limits: {
       transactions_per_month: Infinity,
