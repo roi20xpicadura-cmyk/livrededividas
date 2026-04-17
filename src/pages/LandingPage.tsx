@@ -123,13 +123,13 @@ export function PricingCards({ currentPlan, onUpgrade, compact }: { currentPlan?
               <div className={`${titleSize} font-semibold ${p.dark ? 'text-white/70' : 'text-[#64748b]'}`}>{p.name}</div>
               <div className="mt-2 mb-1">
                 <span className={`${priceSize} font-[900] ${p.dark ? 'text-white' : 'text-[#0f172a]'}`}>
-                  {price === 0 ? 'Grátis' : `R$ ${price}`}
+                  {price === 0 ? 'Grátis' : `R$ ${price.toFixed(2).replace('.', ',')}`}
                 </span>
                 {price > 0 && <span className={`text-[13px] md:text-[14px] ${p.dark ? 'text-white/50' : 'text-[#94a3b8]'}`}>/mês</span>}
               </div>
               {annual && price > 0 && (
                 <div className="text-[11px] text-[#7C3AED] font-semibold bg-[#F5F3FF] inline-block px-2 py-0.5 rounded-full mb-1">
-                  Economize R$ {(p.price - p.priceAnnual) * 12}/ano
+                  Economize R$ {((p.price - p.priceAnnual) * 12).toFixed(2).replace('.', ',')}/ano
                 </div>
               )}
               <p className={`text-[12px] md:text-[13px] mb-5 md:mb-6 ${p.dark ? 'text-white/50' : 'text-[#94a3b8]'}`}>{p.sub}</p>
