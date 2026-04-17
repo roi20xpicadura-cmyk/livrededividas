@@ -525,11 +525,11 @@ Responda *SIM* para salvar ou *NÃO* para cancelar.`;
       } else {
         const r = await executeTransaction(userId, { ...result, category });
         reply = r.ok
-          ? `${result.type === "expense" ? "💸" : "💰"} *${result.type === "expense" ? "Despesa" : "Receita"} salva!*
-
-📝 ${result.description}
-💵 ${fmt(result.amount)}
-🏷️ ${category}${r.budgetWarning ? "\n\n" + r.budgetWarning : ""}`
+          ? buildTransactionReply(
+              { type: result.type, amount: Number(result.amount), description: result.description, category },
+              r.balance ?? 0,
+              r.budgetWarning,
+            )
           : "❌ Erro ao salvar. Tente novamente.";
         lastIntent = "transaction";
       }
