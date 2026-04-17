@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, X, Loader2, CheckCircle2, RotateCcw,
@@ -21,9 +21,9 @@ function formatCompact(v: number): string {
 }
 
 /* ─── Typing Indicator ─── */
-function TypingIndicator() {
+const TypingIndicator = forwardRef<HTMLDivElement>((_, ref) => {
   return (
-    <motion.div initial={{ opacity: 0, y: 12, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+    <motion.div ref={ref} initial={{ opacity: 0, y: 12, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }} className="flex items-start gap-2.5">
       <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
         style={{ background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))', boxShadow: '0 2px 8px rgba(124, 58, 237,0.3)' }}>
@@ -42,7 +42,8 @@ function TypingIndicator() {
       </div>
     </motion.div>
   );
-}
+});
+TypingIndicator.displayName = 'TypingIndicator';
 
 /* ─── Markdown Components ─── */
 const markdownComponents = {
@@ -65,12 +66,13 @@ const markdownComponents = {
 };
 
 /* ─── Message Bubble ─── */
-function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
+const MessageBubble = forwardRef<HTMLDivElement, { msg: Msg; index: number }>(({ msg, index }, ref) => {
   const isUser = msg.role === 'user';
   const timeStr = msg.ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, y: 12, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.12), ease: [0.16, 1, 0.3, 1] }}
@@ -122,12 +124,13 @@ function MessageBubble({ msg, index }: { msg: Msg; index: number }) {
       )}
     </motion.div>
   );
-}
+});
+MessageBubble.displayName = 'MessageBubble';
 
 /* ─── Streaming Bubble ─── */
-function StreamingBubble({ content }: { content: string }) {
+const StreamingBubble = forwardRef<HTMLDivElement, { content: string }>(({ content }, ref) => {
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-2.5">
+    <motion.div ref={ref} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-2.5">
       <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
         style={{ background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-700))', boxShadow: '0 2px 8px rgba(124, 58, 237,0.25)' }}>
         <Sparkles className="w-3.5 h-3.5 text-white" />
@@ -143,7 +146,8 @@ function StreamingBubble({ content }: { content: string }) {
       </div>
     </motion.div>
   );
-}
+});
+StreamingBubble.displayName = 'StreamingBubble';
 
 /* ─── Welcome Screen — minimal dark ─── */
 function WelcomeScreen({ onSend, firstName }: {
