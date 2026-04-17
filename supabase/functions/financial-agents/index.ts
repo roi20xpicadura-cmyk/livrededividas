@@ -79,6 +79,7 @@ Deno.serve(async (req) => {
     // Save new alerts (upsert to avoid duplicates)
     if (allAlerts.length > 0) {
       const today = new Date().toISOString().split("T")[0];
+      const newlyCreatedAlerts: AgentAlert[] = [];
 
       for (const alert of allAlerts) {
         // Check if same alert already exists today
@@ -95,11 +96,12 @@ Deno.serve(async (req) => {
             ...alert,
             triggered_date: today,
           });
+          newlyCreatedAlerts.push(alert);
         }
       }
 
-      // Send WhatsApp alerts for critical/warning
-      for (const alert of allAlerts.filter((a) => a.severity !== "info")) {
+      // Send WhatsApp ONLY for newly-created critical/warning alerts (avoid spam)
+      for (const alert of newlyCreatedAlerts.filter((a) => a.severity !== "info")) {
         await sendWhatsAppAlert(alert);
       }
     }
