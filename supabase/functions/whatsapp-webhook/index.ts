@@ -498,7 +498,7 @@ ${result.establishment ? `🏪 ${result.establishment}\n` : ""}💵 Total: ${fmt
     if (result.action === "confirm" && ctx.pending) {
       const r = await executeTransaction(userId, ctx.pending);
       reply = r.ok
-        ? `✅ Confirmado e salvo!\n\n💸 ${ctx.pending.description} — ${fmt(ctx.pending.amount)}${r.budgetWarning ? "\n\n" + r.budgetWarning : ""}`
+        ? buildTransactionReply(ctx.pending, r.balance ?? 0, r.budgetWarning)
         : "❌ Erro ao salvar. Tente novamente.";
       newPending = null;
       lastIntent = "confirm";
