@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Users, Activity, MessageCircle, ArrowUpRight, Sparkles } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import SignupsChart from "@/components/admin/SignupsChart";
+import MRRChart from "@/components/admin/MRRChart";
 
 interface Stats {
   totalUsers: number;
