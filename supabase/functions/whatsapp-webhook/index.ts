@@ -58,6 +58,65 @@ async function downloadImageBase64(imageUrl: string): Promise<{ base64: string; 
   return { base64: btoa(binary), mimeType };
 }
 
+// ─── AUDIO TRANSCRIPTION via Lovable AI Gateway (Gemini) ──
+async function transcribeAudioWithGemini(audioUrl: string): Promise<string | null> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) {
+    console.error("[AUDIO] LOVABLE_API_KEY missing");
+    return null;
+  }
+
+  // Download audio from Z-API
+  const audioRes = await fetch(audioUrl, { headers: { "Client-Token": ZAPI_CLIENT_TOKEN } });
+  if (!audioRes.ok) {
+    console.error("[AUDIO] download failed:", audioRes.status);
+    return null;
+  }
+  const audioBuffer = await audioRes.arrayBuffer();
+  const audioBytes = new Uint8Array(audioBuffer);
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < audioBytes.length; i += chunk) {
+    binary += String.fromCharCode(...audioBytes.subarray(i, i + chunk));
+  }
+  const audioBase64 = btoa(binary);
+  const contentType = audioRes.headers.get("content-type") || "audio/ogg";
+  const mimeType = contentType.includes("mpeg") ? "audio/mpeg"
+    : contentType.includes("mp4") || contentType.includes("m4a") ? "audio/mp4"
+    : contentType.includes("wav") ? "audio/wav"
+    : "audio/ogg";
+
+  console.log("[AUDIO] downloaded", audioBytes.length, "bytes,", mimeType);
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [{
+        role: "user",
+        content: [
+          { type: "text", text: "Transcreva exatamente o que está sendo dito neste áudio em português brasileiro. Responda APENAS com a transcrição, sem comentários adicionais." },
+          { type: "input_audio", input_audio: { data: audioBase64, format: mimeType.split("/")[1] } },
+        ],
+      }],
+    }),
+  });
+
+  if (!response.ok) {
+    const errBody = await response.text();
+    console.error("[AUDIO] Gemini error:", response.status, errBody.slice(0, 500));
+    return null;
+  }
+
+  const data = await response.json();
+  const transcription = data.choices?.[0]?.message?.content?.trim();
+  return transcription || null;
+}
+
 // ─── IMPROVEMENT 1: FULL FINANCIAL CONTEXT ──────────
 async function loadUserContext(userId: string) {
   const now = new Date();
