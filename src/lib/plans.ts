@@ -96,6 +96,61 @@ export const PLANS = {
   },
 } as const;
 
+// ─── BENEFÍCIOS EXIBIDOS NA UI (single source of truth) ────────────
+// Lista os benefícios em linguagem amigável para mostrar nos cards de preço.
+// Mantenha sincronizado com `features` acima.
+export const PLAN_BENEFITS: Record<Plan, {
+  tagline: string;
+  items: { label: string; included: boolean }[];
+}> = {
+  free: {
+    tagline: 'Para começar a organizar suas finanças',
+    items: [
+      { label: 'Até 50 lançamentos por mês', included: true },
+      { label: 'Até 2 metas financeiras', included: true },
+      { label: '1 cartão de crédito', included: true },
+      { label: 'Até 2 investimentos', included: true },
+      { label: 'Dashboard com score financeiro', included: true },
+      { label: 'Open Finance (conexão com bancos)', included: true },
+      { label: 'App mobile (PWA)', included: true },
+      { label: 'Suporte por e-mail', included: true },
+      { label: 'Kora IA no app e WhatsApp', included: false },
+      { label: 'Controle de dívidas e simulador', included: false },
+      { label: 'Orçamentos e categorias', included: false },
+      { label: 'Exportação CSV / PDF', included: false },
+      { label: 'Relatório mensal automático', included: false },
+    ],
+  },
+  pro: {
+    tagline: 'Para quem leva a vida financeira a sério',
+    items: [
+      { label: 'Lançamentos ilimitados', included: true },
+      { label: 'Metas, cartões e investimentos ilimitados', included: true },
+      { label: 'Kora IA completa (app + WhatsApp)', included: true },
+      { label: 'Controle de dívidas e simulador', included: true },
+      { label: 'Orçamentos por categoria', included: true },
+      { label: 'Lançamentos recorrentes', included: true },
+      { label: 'Gráficos e previsões avançadas', included: true },
+      { label: 'Exportação CSV / PDF', included: true },
+      { label: 'Relatório mensal automático', included: true },
+      { label: 'Notificações inteligentes via WhatsApp', included: true },
+      { label: 'Open Finance ilimitado', included: true },
+    ],
+  },
+  business: {
+    tagline: 'Para empreendedores e pequenas empresas',
+    items: [
+      { label: 'Tudo do plano Pro', included: true },
+      { label: 'Separação de finanças PJ + PF', included: true },
+      { label: 'DRE completo automatizado', included: true },
+      { label: 'Relatórios avançados personalizados', included: true },
+      { label: 'Lançamentos marcados como business', included: true },
+      { label: 'Suporte prioritário', included: true },
+      { label: 'Onboarding personalizado', included: true },
+    ],
+  },
+};
+
 export type FeatureKey = keyof typeof PLANS.free.features;
 export type LimitKey = keyof typeof PLANS.free.limits;
 
