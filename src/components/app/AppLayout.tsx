@@ -196,9 +196,13 @@ export default function AppLayout() {
             }}
           >
             <div className="relative flex-shrink-0">
-              <div className="flex items-center justify-center" style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-900))' }}>
-                <span className="text-white" style={{ fontSize: 13, fontWeight: 800 }}>{initial}</span>
-              </div>
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="Avatar" style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover' }} />
+              ) : (
+                <div className="flex items-center justify-center" style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-900))' }}>
+                  <span className="text-white" style={{ fontSize: 13, fontWeight: 800 }}>{initial}</span>
+                </div>
+              )}
               <div className="absolute" style={{ bottom: 0, right: 0, width: 8, height: 8, borderRadius: '50%', background: '#22c55e', border: '2px solid var(--color-bg-sunken)' }} />
             </div>
             <div className="min-w-0 flex-1">
@@ -467,9 +471,13 @@ export default function AppLayout() {
             {/* User dropdown */}
             <div className="relative">
               <button onClick={() => setShowUserMenu(!showUserMenu)} aria-label="Menu do usuário"
-                className="flex items-center justify-center transition-all duration-150"
-                style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-green-600), var(--color-green-900))' }}>
-                <span className="text-white" style={{ fontSize: 13, fontWeight: 800 }}>{initial}</span>
+                className="flex items-center justify-center transition-all duration-150 overflow-hidden"
+                style={{ width: 36, height: 36, borderRadius: '50%', background: profile?.avatar_url ? 'transparent' : 'linear-gradient(135deg, var(--color-green-600), var(--color-green-900))' }}>
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <span className="text-white" style={{ fontSize: 13, fontWeight: 800 }}>{initial}</span>
+                )}
               </button>
 
               <AnimatePresence>
