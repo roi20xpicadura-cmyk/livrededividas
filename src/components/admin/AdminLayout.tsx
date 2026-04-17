@@ -1,6 +1,5 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
 import { LayoutDashboard, Users, MessageCircle, DollarSign, Bell, Settings, ArrowLeft } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const NAV = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin", end: true },
@@ -13,14 +12,35 @@ const NAV = [
 
 export default function AdminLayout() {
   return (
-    <div className="min-h-screen flex bg-background text-foreground">
-      <aside className="w-60 shrink-0 border-r border-border bg-card flex flex-col">
-        <div className="p-5 border-b border-border">
+    <div
+      className="admin-shell min-h-screen flex"
+      style={{ background: "#08080F", color: "#FFFFFF" }}
+    >
+      <aside
+        className="w-60 shrink-0 flex flex-col"
+        style={{
+          background: "#110820",
+          borderRight: "1px solid rgba(167,139,250,0.1)",
+        }}
+      >
+        <div
+          className="p-5"
+          style={{ borderBottom: "1px solid rgba(167,139,250,0.1)" }}
+        >
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-lg">🐨</div>
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
+              style={{ background: "rgba(124,58,237,0.15)" }}
+            >
+              🐨
+            </div>
             <div>
-              <div className="text-sm font-bold leading-tight">KoraFinance</div>
-              <div className="text-[11px] text-muted-foreground">Admin Panel</div>
+              <div className="text-sm font-bold leading-tight" style={{ color: "#FFFFFF" }}>
+                KoraFinance
+              </div>
+              <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>
+                Admin Panel
+              </div>
             </div>
           </div>
         </div>
@@ -33,14 +53,22 @@ export default function AdminLayout() {
                 key={item.path}
                 to={item.path}
                 end={item.end}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary/10 text-primary border border-primary/20"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent",
-                  )
-                }
+                style={({ isActive }) => ({
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "10px 12px",
+                  borderRadius: "10px",
+                  fontSize: "13px",
+                  fontWeight: isActive ? 700 : 500,
+                  textDecoration: "none",
+                  background: isActive ? "rgba(124,58,237,0.15)" : "transparent",
+                  color: isActive ? "#A78BFA" : "rgba(255,255,255,0.5)",
+                  border: isActive
+                    ? "1px solid rgba(124,58,237,0.2)"
+                    : "1px solid transparent",
+                  transition: "all 0.15s",
+                })}
               >
                 <Icon className="h-4 w-4" />
                 {item.label}
@@ -49,10 +77,14 @@ export default function AdminLayout() {
           })}
         </nav>
 
-        <div className="p-3 border-t border-border">
+        <div
+          className="p-3"
+          style={{ borderTop: "1px solid rgba(167,139,250,0.1)" }}
+        >
           <Link
             to="/app"
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors"
+            style={{ color: "rgba(255,255,255,0.4)" }}
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Voltar ao app
@@ -60,7 +92,10 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+      <main
+        className="flex-1 overflow-y-auto p-6 lg:p-8"
+        style={{ background: "#08080F", color: "#FFFFFF" }}
+      >
         <Outlet />
       </main>
     </div>
