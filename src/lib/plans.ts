@@ -34,7 +34,7 @@ export const PLANS = {
   },
   pro: {
     name: 'Pro',
-    price: 29,
+    price: 19.90,
     color: '#7C3AED',
     limits: {
       transactions_per_month: Infinity,
