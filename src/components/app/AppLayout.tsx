@@ -28,10 +28,10 @@ const ALL_NAV_ITEMS = [
   { label: 'Orçamento', path: '/app/budget', icon: CalendarDays, profiles: ['personal', 'business', 'both'] },
   { label: 'Metas', path: '/app/goals', icon: Target, profiles: ['personal', 'both'] },
   { label: 'Dívidas', path: '/app/debts', icon: AlertCircle, profiles: ['personal', 'both'] },
-  { label: 'Cartões', path: '/app/cards', icon: CreditCard, profiles: ['personal', 'business', 'both'] },
-  { label: 'Investimentos', path: '/app/investments', icon: TrendingUp, profiles: ['personal', 'business', 'both'] },
+  { label: 'Cartões', path: '/app/cards', icon: CreditCard, profiles: ['personal', 'business', 'both'], comingSoon: true },
+  { label: 'Investimentos', path: '/app/investments', icon: TrendingUp, profiles: ['personal', 'business', 'both'], comingSoon: true },
   { label: 'Gráficos', path: '/app/charts', icon: BarChart2, profiles: ['personal', 'business', 'both'] },
-  { label: 'DRE', path: '/app/dre', icon: FileText, profiles: ['business', 'both'] },
+  { label: 'DRE', path: '/app/dre', icon: FileText, profiles: ['business', 'both'], comingSoon: true },
   { label: 'Integrações', path: '/app/integrations', icon: Plug, profiles: ['personal', 'business', 'both'] },
   { label: 'Simulador', path: '/app/simulator', icon: FlaskConical, profiles: ['personal', 'business', 'both'], badge: 'NOVO' },
   { label: 'Previsões', path: '/app/predictions', icon: Building2, profiles: ['personal', 'business', 'both'] },
@@ -112,7 +112,9 @@ export default function AppLayout() {
   }, [user, location.pathname]);
 
   const profileType = config?.profile_type || 'personal';
-  const navItems = ALL_NAV_ITEMS.filter(item => item.profiles.includes(profileType));
+  const visibleNavItems = ALL_NAV_ITEMS.filter(item => item.profiles.includes(profileType));
+  const navItems = visibleNavItems.filter(item => !(item as any).comingSoon);
+  const comingSoonItems = visibleNavItems.filter(item => (item as any).comingSoon);
   const MOBILE_NAV =
     profileType === 'both' ? MOBILE_NAV_BOTH :
     profileType === 'business' ? MOBILE_NAV_BUSINESS :
