@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.send-whatsapp-notifications]
 verify_jwt = false
+
+[functions.hotmart-webhook]
+verify_jwt = false

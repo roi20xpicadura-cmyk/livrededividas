@@ -42,6 +42,7 @@ const AchievementsPage = lazy(() => import("./pages/app/AchievementsPage"));
 const ReferralPage = lazy(() => import("./pages/app/ReferralPage"));
 const SettingsPage = lazy(() => import("./pages/app/SettingsPage"));
 const BillingPage = lazy(() => import("./pages/app/BillingPage"));
+const PlanoSucessoPage = lazy(() => import("./pages/app/PlanoSucessoPage"));
 const IntegrationsPage = lazy(() => import("./pages/app/IntegrationsPage"));
 const SimulatorPage = lazy(() => import("./pages/app/SimulatorPage"));
 const PredictionsPage = lazy(() => import("./pages/app/PredictionsPage"));
@@ -178,6 +179,7 @@ const App = () => {
                     <Route path="settings" element={<SettingsPage />} />
                     <Route path="settings/security" element={<SecuritySettingsPage />} />
                     <Route path="billing" element={<BillingPage />} />
+                    <Route path="plano/sucesso" element={<PlanoSucessoPage />} />
                     <Route path="integrations" element={<IntegrationsPage />} />
                     <Route path="achievements" element={<AchievementsPage />} />
                     <Route path="referral" element={<ReferralPage />} />
