@@ -258,17 +258,18 @@ async function processImage(imageUrl: string, userName: string): Promise<{
   try {
     const { base64, mimeType } = await downloadImageBase64(imageUrl);
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch(AI_URL, {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 2000,
-        system: `Você é a Kora IA do KoraFinance.
+        model: AI_MODEL,
+        messages: [
+          {
+            role: "system",
+            content: `Você é a Kora IA do KoraFinance.
 Analise a imagem e extraia dados financeiros.
 A imagem pode ser: cupom fiscal, nota fiscal, comprovante, extrato ou print de app.
 
@@ -293,21 +294,26 @@ Categorias: Supermercado, Alimentação, Delivery, Farmácia, Combustível, Tran
 
 Se não encontrar dados:
 {"found": false, "summary": "Não consegui identificar dados financeiros"}`,
-        messages: [{
-          role: "user",
-          content: [
-            {
-              type: "image",
-              source: { type: "base64", media_type: mimeType, data: base64 },
-            },
-            { type: "text", text: "Analise esta imagem e extraia os dados financeiros." },
-          ],
-        }],
+          },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Analise esta imagem e extraia os dados financeiros." },
+              { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
+            ],
+          },
+        ],
       }),
     });
 
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.error("[AI Image] HTTP", response.status, errBody.slice(0, 500));
+      return { transactions: [], reply: `Não consegui ler essa imagem agora, ${userName}. Tenta de novo ou descreve em texto 📷` };
+    }
+
     const data = await response.json();
-    const text = data.content?.[0]?.text || "{}";
+    const text = data.choices?.[0]?.message?.content || "{}";
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : "{}");
 
