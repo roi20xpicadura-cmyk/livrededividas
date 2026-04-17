@@ -3,4 +3,4 @@ Allow: /
 Disallow: /app/
 Disallow: /api/
 
-Sitemap: https://findashpro.com.br/sitemap.xml
+Sitemap: https://korafinance.app/sitemap.xml
