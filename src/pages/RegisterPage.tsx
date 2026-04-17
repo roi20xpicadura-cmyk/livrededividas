@@ -72,6 +72,7 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setExistingOAuthEmail(false);
     if (password.length < 8) { setError('A senha deve ter pelo menos 8 caracteres'); haptic.error(); return; }
     if (!agreedTerms) { setError('Aceite os termos para continuar'); haptic.error(); return; }
 
@@ -91,10 +92,20 @@ export default function RegisterPage() {
       setLoading(false);
       const msg = err.message.includes('weak_password') || err.message.includes('weak')
         ? 'Essa senha é muito comum. Tente uma senha mais única.'
-        : err.message.includes('already registered')
+        : err.message.includes('already registered') || err.message.includes('already been registered')
         ? 'Este e-mail já está cadastrado. Tente fazer login.'
         : err.message;
       setError(msg);
+      haptic.error();
+      return;
+    }
+
+    // Supabase quirk: when email exists, signUp returns user with identities: []
+    // (no error, to prevent email enumeration). Detect and guide user.
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      setLoading(false);
+      setExistingOAuthEmail(true);
+      setError('Este e-mail já está cadastrado. Se você criou a conta com Google, use o botão abaixo.');
       haptic.error();
       return;
     }
