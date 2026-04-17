@@ -6,6 +6,7 @@ import SEO from '@/components/SEO';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, X } from 'lucide-react';
+import { PLAN_BENEFITS } from '@/lib/plans';
 
 // Lazy-load below-the-fold sections
 const MetricsSection = lazy(() => import('@/components/landing/MetricsSection'));
@@ -59,19 +60,19 @@ export function PricingCards({ currentPlan, onUpgrade }: { currentPlan?: string;
   const plans = [
     {
       name: 'Free', price: 0, priceAnnual: 0, badge: null,
-      features: ['Até 50 lançamentos/mês', '2 metas ativas', '1 cartão de crédito', '2 investimentos', 'Suporte por e-mail'],
-      excluded: ['DRE', 'Exportação', 'Gráficos avançados'],
+      features: PLAN_BENEFITS.free.items.filter(i => i.included).map(i => i.label),
+      excluded: PLAN_BENEFITS.free.items.filter(i => !i.included).map(i => i.label),
       cta: 'Começar grátis', href: '/register', dark: false,
     },
     {
       name: 'Pro', price: 29, priceAnnual: 23, badge: 'Mais popular',
-      features: ['Lançamentos ilimitados', 'Metas ilimitadas', 'Cartões ilimitados', 'Investimentos ilimitados', 'DRE completo', 'Exportação CSV + JSON', 'Gráficos avançados', 'Suporte prioritário'],
+      features: PLAN_BENEFITS.pro.items.filter(i => i.included).map(i => i.label),
       excluded: [],
       cta: 'Assinar Pro', href: '/register', dark: false,
     },
     {
       name: 'Business', price: 79, priceAnnual: 63, badge: null,
-      features: ['Tudo do Pro', 'Multi-empresa (até 3)', 'Relatórios personalizados', 'API access', 'Onboarding personalizado', 'Suporte via WhatsApp'],
+      features: PLAN_BENEFITS.business.items.filter(i => i.included).map(i => i.label),
       excluded: [],
       cta: 'Assinar Business', href: '/register', dark: true,
     },

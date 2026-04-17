@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, Shield } from 'lucide-react';
 import { useState } from 'react';
+import { PLAN_BENEFITS } from '@/lib/plans';
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -10,47 +11,18 @@ export default function PricingSection() {
 
   const plans = [
     {
-      name: 'Free', price: 0, priceAnnual: 0, sub: 'Para começar a organizar',
-      features: [
-        { label: '50 lançamentos/mês', included: true },
-        { label: '2 metas financeiras', included: true },
-        { label: '1 cartão de crédito', included: true },
-        { label: 'Score financeiro', included: true },
-        { label: 'Dashboard completo', included: true },
-        { label: 'App mobile (PWA)', included: true },
-        { label: 'IA Financeira', included: false },
-        { label: 'DRE automático', included: false },
-        { label: 'Integrações', included: false },
-      ],
+      name: 'Free', price: 0, priceAnnual: 0, sub: PLAN_BENEFITS.free.tagline,
+      features: PLAN_BENEFITS.free.items,
       cta: 'Começar grátis', featured: false, dark: false,
     },
     {
-      name: 'Pro', price: 29, priceAnnual: 23, sub: 'Para quem leva a sério',
-      features: [
-        { label: 'Lançamentos ilimitados', included: true },
-        { label: 'Metas ilimitadas', included: true },
-        { label: 'Cartões ilimitados', included: true },
-        { label: 'IA Financeira completa', included: true },
-        { label: 'DRE automático', included: true },
-        { label: 'Exportação CSV/PDF', included: true },
-        { label: 'Todas as integrações', included: true },
-        { label: 'Relatório mensal', included: true },
-        { label: 'Suporte prioritário', included: true },
-      ],
+      name: 'Pro', price: 29, priceAnnual: 23, sub: PLAN_BENEFITS.pro.tagline,
+      features: PLAN_BENEFITS.pro.items,
       cta: 'Assinar Pro →', featured: true, dark: false,
     },
     {
-      name: 'Business', price: 79, priceAnnual: 63, sub: 'Para empreendedores',
-      features: [
-        { label: 'Tudo do Pro', included: true },
-        { label: 'Múltiplas empresas', included: true },
-        { label: 'Usuários adicionais', included: true },
-        { label: 'API de webhooks', included: true },
-        { label: 'Relatórios personalizados', included: true },
-        { label: 'Suporte via WhatsApp', included: true },
-        { label: 'Onboarding guiado', included: true },
-        { label: 'SLA garantido 99.9%', included: true },
-      ],
+      name: 'Business', price: 79, priceAnnual: 63, sub: PLAN_BENEFITS.business.tagline,
+      features: PLAN_BENEFITS.business.items,
       cta: 'Assinar Business', featured: false, dark: true,
     },
   ];
