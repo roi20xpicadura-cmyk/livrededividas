@@ -674,7 +674,7 @@ export default function AppLayout() {
         aria-label="Assistente IA">
         <Sparkles style={{ width: 24, height: 24 }} />
       </button>
-      {chatOpen && <Suspense fallback={null}><AIChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} /></Suspense>}
+      <Suspense fallback={null}><AIChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} /></Suspense>
     </div>
   );
 }
