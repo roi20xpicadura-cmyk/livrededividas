@@ -14,10 +14,11 @@ import {
   LayoutDashboard, ArrowLeftRight, Target, TrendingUp, FileText,
   CreditCard, Briefcase, BarChart2, Download, Settings2, Crown,
   LogOut, Menu, X, Bell, ChevronRight, BarChart3, Home, MoreHorizontal, Sparkles,
-  AlertCircle, CalendarDays, Trophy, Gift, Sun, Moon, Monitor, Plus, Building2, Plug, FlaskConical
+  AlertCircle, CalendarDays, Trophy, Gift, Sun, Moon, Monitor, Plus, Building2, Plug, FlaskConical, Lock
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
 // Note: 'Lançamentos' is rendered specially per profile_type (see navItems memo below).
 const ALL_NAV_ITEMS = [
@@ -28,10 +29,10 @@ const ALL_NAV_ITEMS = [
   { label: 'Orçamento', path: '/app/budget', icon: CalendarDays, profiles: ['personal', 'business', 'both'] },
   { label: 'Metas', path: '/app/goals', icon: Target, profiles: ['personal', 'both'] },
   { label: 'Dívidas', path: '/app/debts', icon: AlertCircle, profiles: ['personal', 'both'] },
-  { label: 'Cartões', path: '/app/cards', icon: CreditCard, profiles: ['personal', 'business', 'both'] },
-  { label: 'Investimentos', path: '/app/investments', icon: TrendingUp, profiles: ['personal', 'business', 'both'] },
+  { label: 'Cartões', path: '/app/cards', icon: CreditCard, profiles: ['personal', 'business', 'both'], comingSoon: true },
+  { label: 'Investimentos', path: '/app/investments', icon: TrendingUp, profiles: ['personal', 'business', 'both'], comingSoon: true },
   { label: 'Gráficos', path: '/app/charts', icon: BarChart2, profiles: ['personal', 'business', 'both'] },
-  { label: 'DRE', path: '/app/dre', icon: FileText, profiles: ['business', 'both'] },
+  { label: 'DRE', path: '/app/dre', icon: FileText, profiles: ['business', 'both'], comingSoon: true },
   { label: 'Integrações', path: '/app/integrations', icon: Plug, profiles: ['personal', 'business', 'both'] },
   { label: 'Simulador', path: '/app/simulator', icon: FlaskConical, profiles: ['personal', 'business', 'both'], badge: 'NOVO' },
   { label: 'Previsões', path: '/app/predictions', icon: Building2, profiles: ['personal', 'business', 'both'] },
@@ -112,7 +113,9 @@ export default function AppLayout() {
   }, [user, location.pathname]);
 
   const profileType = config?.profile_type || 'personal';
-  const navItems = ALL_NAV_ITEMS.filter(item => item.profiles.includes(profileType));
+  const visibleNavItems = ALL_NAV_ITEMS.filter(item => item.profiles.includes(profileType));
+  const navItems = visibleNavItems.filter(item => !(item as any).comingSoon);
+  const comingSoonItems = visibleNavItems.filter(item => (item as any).comingSoon);
   const MOBILE_NAV =
     profileType === 'both' ? MOBILE_NAV_BOTH :
     profileType === 'business' ? MOBILE_NAV_BUSINESS :
@@ -251,6 +254,72 @@ export default function AppLayout() {
               </Link>
             );
           })}
+
+          {comingSoonItems.length > 0 && (
+            <>
+              <p
+                className="label-upper"
+                style={{
+                  padding: '14px 8px 4px',
+                  color: 'var(--color-text-subtle)',
+                  opacity: 0.6,
+                }}
+              >
+                EM BREVE
+              </p>
+              {comingSoonItems.map(item => (
+                <button
+                  key={item.path}
+                  type="button"
+                  onClick={() =>
+                    toast(`Módulo de ${item.label.toLowerCase()} chegando em breve! 🚀`)
+                  }
+                  className="flex items-center w-full text-left transition-all duration-150"
+                  style={{
+                    height: 38,
+                    padding: '0 10px',
+                    borderRadius: 'var(--radius-lg)',
+                    gap: 10,
+                    marginBottom: 1,
+                    background: 'transparent',
+                    opacity: 0.45,
+                    cursor: 'not-allowed',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.opacity = '0.65'; }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity = '0.45'; }}
+                >
+                  <div
+                    className="flex items-center justify-center flex-shrink-0"
+                    style={{ width: 22, height: 22, borderRadius: 'var(--radius-sm)' }}
+                  >
+                    <item.icon style={{ width: 16, height: 16, color: 'var(--color-text-muted)' }} />
+                  </div>
+                  <span
+                    className="flex-1"
+                    style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)' }}
+                  >
+                    {item.label}
+                  </span>
+                  <span
+                    className="flex items-center"
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 800,
+                      background: 'var(--color-bg-sunken)',
+                      color: 'var(--color-text-subtle)',
+                      padding: '2px 7px',
+                      borderRadius: 99,
+                      border: '1px solid var(--color-border-weak)',
+                      gap: 3,
+                    }}
+                  >
+                    <Lock style={{ width: 9, height: 9 }} />
+                    Em breve
+                  </span>
+                </button>
+              ))}
+            </>
+          )}
         </nav>
 
         {/* Bottom */}
