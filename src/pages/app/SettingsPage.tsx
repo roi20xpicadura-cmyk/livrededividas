@@ -658,32 +658,3 @@ function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   );
 }
 
-      {/* Delete confirmation modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4" style={{ background: 'var(--color-bg-overlay, rgba(0,0,0,0.5))' }}>
-          <div className="w-full max-w-md p-6 rounded-2xl" style={{ background: 'var(--color-bg-surface)' }}>
-            <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--color-text-strong)' }}>Tem certeza?</h3>
-            <p className="text-[14px] mb-1" style={{ color: 'var(--color-text-muted)' }}>Esta ação é irreversível.</p>
-            <p className="text-[14px] mb-1" style={{ color: 'var(--color-text-muted)' }}>Todos os seus dados serão excluídos em até 30 dias.</p>
-            <p className="text-[14px] mb-4" style={{ color: 'var(--color-text-muted)' }}>Você perderá acesso imediatamente.</p>
-            <label className="text-[12px] font-bold block mb-2" style={{ color: 'var(--color-text-base)' }}>
-              Digite <span className="text-destructive">EXCLUIR</span> para confirmar:
-            </label>
-            <input value={deleteConfirm} onChange={e => setDeleteConfirm(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-destructive bg-card text-sm mb-4 outline-none" placeholder="EXCLUIR" />
-            <div className="flex gap-3">
-              <button onClick={() => { setShowDeleteModal(false); setDeleteConfirm(''); }}
-                className="flex-1 px-4 py-2 rounded-lg text-[13px] font-semibold border" style={{ borderColor: 'var(--color-border-base)', color: 'var(--color-text-base)' }}>
-                Cancelar
-              </button>
-              <button onClick={handleDeleteAccount} disabled={deleteConfirm !== 'EXCLUIR'}
-                className="flex-1 px-4 py-2 rounded-lg text-[13px] font-bold text-white bg-destructive disabled:opacity-50">
-                Excluir minha conta
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
