@@ -150,11 +150,11 @@ const StreamingBubble = forwardRef<HTMLDivElement, { content: string }>(({ conte
 StreamingBubble.displayName = 'StreamingBubble';
 
 /* ─── Welcome Screen — minimal dark ─── */
-function WelcomeScreen({ onSend, firstName }: {
+const WelcomeScreen = forwardRef<HTMLDivElement, {
   onSend: (text: string) => void;
   firstName: string;
   financialData: { balance: number; score: number; totalDebt: number; topCategory: string | null };
-}) {
+}>(({ onSend, firstName }, ref) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
 
@@ -166,7 +166,7 @@ function WelcomeScreen({ onSend, firstName }: {
   ];
 
   return (
-    <div style={{
+    <div ref={ref} style={{
       flex: 1,
       display: 'flex',
       flexDirection: 'column',
@@ -243,7 +243,8 @@ function WelcomeScreen({ onSend, firstName }: {
       </div>
     </div>
   );
-}
+});
+WelcomeScreen.displayName = 'WelcomeScreen';
 
 /* ─── Main Drawer ─── */
 export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
