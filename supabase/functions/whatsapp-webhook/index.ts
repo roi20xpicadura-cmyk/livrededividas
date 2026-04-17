@@ -40,7 +40,7 @@ async function downloadImage(imageUrl: string): Promise<string> {
 }
 
 // ─── CLAUDE — TEXT ─────────────────────────────────
-async function processText(message: string, context: any) {
+async function processText(message: string, _context: any) {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -51,42 +51,73 @@ async function processText(message: string, context: any) {
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 1000,
-      system: `Você é a Kora IA, assistente financeira do KoraFinance.
-Analise a mensagem e extraia informações de transação financeira.
+      system: `Você é a Kora IA do KoraFinance, assistente financeira.
+Analise a mensagem e responda APENAS com JSON puro, sem texto adicional, sem markdown, sem explicações, sem blocos de código.
 
-Responda SOMENTE em JSON válido:
-{
-  "is_transaction": true/false,
-  "type": "expense" ou "income",
-  "amount": número,
-  "description": "descrição curta",
-  "category": "categoria",
-  "reply": "confirmação amigável em português"
-}
+EXEMPLOS de transações:
+- "gastei 50 no mercado" → despesa R$50
+- "gastei 50 reais no mercado" → despesa R$50
+- "paguei 120 de luz" → despesa R$120
+- "comprei remédio por 35" → despesa R$35
+- "recebi 3000 de salário" → receita R$3000
+- "vendi produto por 200" → receita R$200
 
-Categorias despesa: Supermercado, Alimentação, Delivery, Transporte, Combustível, Uber/Taxi, Moradia, Aluguel, Contas, Saúde, Farmácia, Academia, Educação, Cursos, Lazer, Streaming, Vestuário, Cartão de crédito, Dívidas, Pets, Outros
+Se for transação, retorne EXATAMENTE este JSON:
+{"is_transaction":true,"type":"expense","amount":50,"description":"Supermercado","category":"Supermercado","reply":"💸 Despesa de R$ 50,00 registrada!"}
 
-Categorias receita: Salário, Freelance, Vendas, Investimentos, Dividendos, Renda Extra, Outros
+Se for pergunta ou conversa, retorne EXATAMENTE este JSON:
+{"is_transaction":false,"reply":"sua resposta aqui"}
 
-Se NÃO for transação:
-{
-  "is_transaction": false,
-  "reply": "resposta útil em português como assistente financeiro"
-}
-
-Dados do usuário: ${JSON.stringify(context)}`,
-      messages: [{ role: "user", content: message }],
+IMPORTANTE:
+- Retorne APENAS o JSON, nada mais
+- Sem aspas extras, sem markdown, sem \`\`\`json
+- amount deve ser um número, não string
+- type deve ser "expense" para gastos e "income" para receitas`,
+      messages: [
+        { role: "user", content: message },
+        { role: "assistant", content: "{" },
+      ],
     }),
   });
 
   const data = await response.json();
-  const text = data.content?.[0]?.text || "{}";
+  let text = data.content?.[0]?.text || "";
+  text = "{" + text;
+  console.log("Claude raw response:", text);
+
   try {
     return JSON.parse(text);
   } catch {
-    const match = text.match(/\{[\s\S]*\}/);
-    if (match) return JSON.parse(match[0]);
-    return { is_transaction: false, reply: text };
+    const match = text.match(/\{[\s\S]*?\}/);
+    if (match) {
+      try {
+        return JSON.parse(match[0]);
+      } catch {
+        console.error("JSON parse failed:", text);
+      }
+    }
+
+    const lower = message.toLowerCase();
+    const hasExpense = /gast|pagu|comprei|compra|mercado|uber|ifood|farm[áa]cia|combust[íi]vel/.test(lower);
+    const hasIncome = /receb|sal[áa]rio|vendi|venda|receita/.test(lower);
+    const amountMatch = message.match(/\d+([.,]\d{1,2})?/);
+    const amount = amountMatch ? parseFloat(amountMatch[0].replace(",", ".")) : 0;
+
+    if (amount > 0 && (hasExpense || hasIncome)) {
+      return {
+        is_transaction: true,
+        type: hasIncome ? "income" : "expense",
+        amount,
+        description: message.slice(0, 50),
+        category: "Outros",
+        reply: `${hasIncome ? "💰 Receita" : "💸 Despesa"} de R$ ${amount.toFixed(2).replace(".", ",")} registrada!`,
+      };
+    }
+
+    return {
+      is_transaction: false,
+      reply: 'Não entendi. Pode descrever o gasto assim: "gastei 50 no mercado"?',
+    };
   }
 }
 
