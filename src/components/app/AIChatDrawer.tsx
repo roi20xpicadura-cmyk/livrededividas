@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, X, Loader2, CheckCircle2, RotateCcw,
