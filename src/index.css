@@ -659,95 +659,153 @@
 }
 
 /* ───────────────────────── Admin panel — forced dark theme ───────────────────────── */
-.admin-shell,
-.admin-shell * {
+.admin-shell.admin-dark,
+.admin-shell.admin-dark * {
   border-color: rgba(167, 139, 250, 0.1);
 }
 
-.admin-shell h1,
-.admin-shell h2,
-.admin-shell h3,
-.admin-shell h4 {
+.admin-shell.admin-dark h1,
+.admin-shell.admin-dark h2,
+.admin-shell.admin-dark h3,
+.admin-shell.admin-dark h4 {
   color: #FFFFFF;
 }
 
 /* shadcn Card */
-.admin-shell [class*="rounded-lg"][class*="border"][class*="bg-card"],
-.admin-shell .bg-card {
+.admin-shell.admin-dark [class*="rounded-lg"][class*="border"][class*="bg-card"],
+.admin-shell.admin-dark .bg-card {
   background: #110820 !important;
   border-color: rgba(167, 139, 250, 0.1) !important;
   color: #FFFFFF !important;
 }
 
 /* Muted text → secondary white */
-.admin-shell .text-muted-foreground {
+.admin-shell.admin-dark .text-muted-foreground {
   color: rgba(255, 255, 255, 0.4) !important;
 }
 
 /* Foreground text */
-.admin-shell .text-foreground {
+.admin-shell.admin-dark .text-foreground {
   color: #FFFFFF !important;
 }
 
 /* Tables */
-.admin-shell table {
+.admin-shell.admin-dark table {
   color: #FFFFFF;
 }
-.admin-shell thead th {
+.admin-shell.admin-dark thead th {
   color: rgba(255, 255, 255, 0.25) !important;
   font-weight: 700;
   text-transform: uppercase;
   font-size: 11px;
   letter-spacing: 0.04em;
 }
-.admin-shell tbody tr {
+.admin-shell.admin-dark tbody tr {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
-.admin-shell tbody tr:hover {
+.admin-shell.admin-dark tbody tr:hover {
   background: rgba(255, 255, 255, 0.02) !important;
 }
-.admin-shell tbody td {
+.admin-shell.admin-dark tbody td {
   color: #FFFFFF;
 }
 
 /* Inputs / textareas */
-.admin-shell input,
-.admin-shell textarea {
+.admin-shell.admin-dark input,
+.admin-shell.admin-dark textarea {
   background: #1A0D35 !important;
   border-color: rgba(167, 139, 250, 0.2) !important;
   color: #FFFFFF !important;
 }
-.admin-shell input::placeholder,
-.admin-shell textarea::placeholder {
+.admin-shell.admin-dark input::placeholder,
+.admin-shell.admin-dark textarea::placeholder {
   color: rgba(255, 255, 255, 0.3) !important;
 }
 
 /* Buttons - default & outline */
-.admin-shell button[class*="bg-primary"]:not([class*="bg-primary/"]) {
+.admin-shell.admin-dark button[class*="bg-primary"]:not([class*="bg-primary/"]) {
   background: #7C3AED !important;
   color: #FFFFFF !important;
 }
-.admin-shell button[class*="border-input"],
-.admin-shell button[class*="variant-outline"],
-.admin-shell button.border {
+.admin-shell.admin-dark button[class*="border-input"],
+.admin-shell.admin-dark button[class*="variant-outline"],
+.admin-shell.admin-dark button.border {
   background: rgba(124, 58, 237, 0.1) !important;
   border-color: rgba(167, 139, 250, 0.2) !important;
   color: #A78BFA !important;
 }
-.admin-shell button:disabled {
+.admin-shell.admin-dark button:disabled {
   opacity: 0.4;
 }
 
 /* Badges */
-.admin-shell [class*="bg-secondary"] {
+.admin-shell.admin-dark [class*="bg-secondary"] {
   background: rgba(167, 139, 250, 0.12) !important;
   color: #A78BFA !important;
 }
 
 /* Code blocks */
-.admin-shell code {
+.admin-shell.admin-dark code {
   background: rgba(255, 255, 255, 0.06) !important;
   color: #A78BFA !important;
 }
 
 /* Sonner toasts inside admin keep their own theme — no override */
+
+
+/* ───────────────────────── Admin panel — light theme ───────────────────────── */
+.admin-shell.admin-light .bg-card,
+.admin-shell.admin-light [class*="bg-card"] {
+  background: #FFFFFF !important;
+  border-color: rgba(124,58,237,0.12) !important;
+  color: #0F0820 !important;
+}
+.admin-shell.admin-light .text-muted-foreground {
+  color: rgba(15,8,32,0.55) !important;
+}
+.admin-shell.admin-light .text-foreground { color: #0F0820 !important; }
+.admin-shell.admin-light h1,
+.admin-shell.admin-light h2,
+.admin-shell.admin-light h3 { color: #0F0820; }
+.admin-shell.admin-light table { color: #0F0820; }
+.admin-shell.admin-light thead th {
+  color: rgba(15,8,32,0.45) !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.admin-shell.admin-light tbody tr {
+  border-bottom: 1px solid rgba(15,8,32,0.06) !important;
+}
+.admin-shell.admin-light tbody tr:hover {
+  background: rgba(124,58,237,0.04) !important;
+}
+.admin-shell.admin-light input,
+.admin-shell.admin-light textarea {
+  background: #F7F5FB !important;
+  border-color: rgba(124,58,237,0.2) !important;
+  color: #0F0820 !important;
+}
+.admin-shell.admin-light input::placeholder,
+.admin-shell.admin-light textarea::placeholder {
+  color: rgba(15,8,32,0.4) !important;
+}
+.admin-shell.admin-light button[class*="bg-primary"]:not([class*="bg-primary/"]) {
+  background: #7C3AED !important;
+  color: #FFFFFF !important;
+}
+.admin-shell.admin-light button[class*="border-input"],
+.admin-shell.admin-light button.border {
+  background: rgba(124,58,237,0.08) !important;
+  border-color: rgba(124,58,237,0.2) !important;
+  color: #6D28D9 !important;
+}
+.admin-shell.admin-light [class*="bg-secondary"] {
+  background: rgba(124,58,237,0.1) !important;
+  color: #6D28D9 !important;
+}
+.admin-shell.admin-light code {
+  background: rgba(124,58,237,0.08) !important;
+  color: #6D28D9 !important;
+}

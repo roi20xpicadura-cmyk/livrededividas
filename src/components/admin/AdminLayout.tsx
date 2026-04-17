@@ -1,5 +1,6 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { LayoutDashboard, Users, MessageCircle, DollarSign, Bell, Settings, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Users, MessageCircle, DollarSign, Bell, Settings, ArrowLeft, Sun, Moon } from "lucide-react";
+import { AdminThemeProvider, useAdminTheme } from "./AdminThemeContext";
 
 const NAV = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin", end: true },
@@ -10,35 +11,53 @@ const NAV = [
   { icon: Settings, label: "Configurações", path: "/admin/settings" },
 ];
 
-export default function AdminLayout() {
+const PALETTES = {
+  dark: {
+    bg: "#08080F",
+    sidebar: "#110820",
+    border: "rgba(167,139,250,0.1)",
+    text: "#FFFFFF",
+    textMuted: "rgba(255,255,255,0.4)",
+    navInactive: "rgba(255,255,255,0.5)",
+    iconBg: "rgba(124,58,237,0.15)",
+  },
+  light: {
+    bg: "#F7F5FB",
+    sidebar: "#FFFFFF",
+    border: "rgba(124,58,237,0.12)",
+    text: "#0F0820",
+    textMuted: "rgba(15,8,32,0.55)",
+    navInactive: "rgba(15,8,32,0.6)",
+    iconBg: "rgba(124,58,237,0.1)",
+  },
+} as const;
+
+function Shell() {
+  const { theme, toggle } = useAdminTheme();
+  const p = PALETTES[theme];
+
   return (
     <div
-      className="admin-shell min-h-screen flex"
-      style={{ background: "#08080F", color: "#FFFFFF" }}
+      className={`admin-shell admin-${theme} min-h-screen flex`}
+      style={{ background: p.bg, color: p.text }}
     >
       <aside
         className="w-60 shrink-0 flex flex-col"
-        style={{
-          background: "#110820",
-          borderRight: "1px solid rgba(167,139,250,0.1)",
-        }}
+        style={{ background: p.sidebar, borderRight: `1px solid ${p.border}` }}
       >
-        <div
-          className="p-5"
-          style={{ borderBottom: "1px solid rgba(167,139,250,0.1)" }}
-        >
+        <div className="p-5" style={{ borderBottom: `1px solid ${p.border}` }}>
           <div className="flex items-center gap-2">
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-              style={{ background: "rgba(124,58,237,0.15)" }}
+              style={{ background: p.iconBg }}
             >
               🐨
             </div>
             <div>
-              <div className="text-sm font-bold leading-tight" style={{ color: "#FFFFFF" }}>
+              <div className="text-sm font-bold leading-tight" style={{ color: p.text }}>
                 KoraFinance
               </div>
-              <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>
+              <div className="text-[11px]" style={{ color: p.textMuted }}>
                 Admin Panel
               </div>
             </div>
@@ -63,10 +82,8 @@ export default function AdminLayout() {
                   fontWeight: isActive ? 700 : 500,
                   textDecoration: "none",
                   background: isActive ? "rgba(124,58,237,0.15)" : "transparent",
-                  color: isActive ? "#A78BFA" : "rgba(255,255,255,0.5)",
-                  border: isActive
-                    ? "1px solid rgba(124,58,237,0.2)"
-                    : "1px solid transparent",
+                  color: isActive ? "#A78BFA" : p.navInactive,
+                  border: isActive ? "1px solid rgba(124,58,237,0.2)" : "1px solid transparent",
                   transition: "all 0.15s",
                 })}
               >
@@ -77,14 +94,20 @@ export default function AdminLayout() {
           })}
         </nav>
 
-        <div
-          className="p-3"
-          style={{ borderTop: "1px solid rgba(167,139,250,0.1)" }}
-        >
+        <div className="p-3 space-y-1" style={{ borderTop: `1px solid ${p.border}` }}>
+          <button
+            onClick={toggle}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+            style={{ color: p.textMuted, background: "transparent", border: "none", cursor: "pointer" }}
+            aria-label="Alternar tema"
+          >
+            {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+            {theme === "dark" ? "Tema claro" : "Tema escuro"}
+          </button>
           <Link
             to="/app"
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors"
-            style={{ color: "rgba(255,255,255,0.4)" }}
+            style={{ color: p.textMuted }}
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Voltar ao app
@@ -94,10 +117,18 @@ export default function AdminLayout() {
 
       <main
         className="flex-1 overflow-y-auto p-6 lg:p-8"
-        style={{ background: "#08080F", color: "#FFFFFF" }}
+        style={{ background: p.bg, color: p.text }}
       >
         <Outlet />
       </main>
     </div>
+  );
+}
+
+export default function AdminLayout() {
+  return (
+    <AdminThemeProvider>
+      <Shell />
+    </AdminThemeProvider>
   );
 }
