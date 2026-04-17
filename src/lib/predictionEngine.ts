@@ -1,5 +1,4 @@
-import { format, addDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { format, addDays, addMonths } from 'date-fns';
 
 export interface DayPrediction {
   date: string;
@@ -11,7 +10,7 @@ export interface DayPrediction {
 }
 
 export interface PredictedEvent {
-  type: 'recurring_expense' | 'recurring_income' | 'scheduled_bill' | 'historical_pattern';
+  type: 'recurring_expense' | 'recurring_income' | 'scheduled_bill' | 'historical_pattern' | 'card_installment';
   description: string;
   amount: number;
   probability: number;
@@ -32,17 +31,52 @@ function getDayName(day: number): string {
   return names[day] || '';
 }
 
+// Mediana — robusta a outliers (ignora aquele Pix de R$5k que destrói a média)
+function median(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+}
+
+// Remove outliers usando IQR (Interquartile Range) — descarta valores absurdos
+function removeOutliers(values: number[]): number[] {
+  if (values.length < 4) return values;
+  const sorted = [...values].sort((a, b) => a - b);
+  const q1 = sorted[Math.floor(sorted.length * 0.25)];
+  const q3 = sorted[Math.floor(sorted.length * 0.75)];
+  const iqr = q3 - q1;
+  const lower = q1 - 1.5 * iqr;
+  const upper = q3 + 1.5 * iqr;
+  return values.filter(v => v >= lower && v <= upper);
+}
+
 function analyzePatterns(transactions: any[]) {
-  const byDayOfWeek = Array(7).fill(0).map(() => ({ total: 0, count: 0 }));
+  // Agrupa gastos por dia da semana, mas usa MEDIANA dos valores diários (não média)
+  const expensesByDayOfWeek: number[][] = Array(7).fill(0).map(() => []);
+  const dailyTotals: Record<string, Record<number, number>> = {}; // date -> {dayOfWeek: total}
 
   transactions.filter(t => t.type === 'expense').forEach(t => {
-    const day = new Date(t.date + 'T12:00:00').getDay();
-    byDayOfWeek[day].total += Number(t.amount);
-    byDayOfWeek[day].count++;
+    const date = new Date(t.date + 'T12:00:00');
+    const day = date.getDay();
+    const key = t.date;
+    if (!dailyTotals[key]) dailyTotals[key] = { [day]: 0 };
+    dailyTotals[key][day] = (dailyTotals[key][day] || 0) + Number(t.amount);
   });
 
-  const avgByDayOfWeek = byDayOfWeek.map(d => d.count > 0 ? d.total / d.count : 0);
+  // Para cada dia da semana, coleta totais diários e calcula mediana
+  Object.values(dailyTotals).forEach(dayMap => {
+    Object.entries(dayMap).forEach(([day, total]) => {
+      expensesByDayOfWeek[Number(day)].push(total);
+    });
+  });
 
+  const medianByDayOfWeek = expensesByDayOfWeek.map(vals => {
+    const cleaned = removeOutliers(vals);
+    return median(cleaned);
+  });
+
+  // Detecta dias de salário
   const incomes = transactions.filter(t => t.type === 'income');
   const dayCount: Record<number, number> = {};
   incomes.forEach(t => {
@@ -53,19 +87,100 @@ function analyzePatterns(transactions: any[]) {
     .filter(([, count]) => count >= 2)
     .map(([day]) => Number(day));
 
+  // Renda mensal: usa mediana mensal (mais estável que média)
   const monthGroups: Record<string, number> = {};
   incomes.forEach(t => {
     const key = t.date.substring(0, 7);
     monthGroups[key] = (monthGroups[key] || 0) + Number(t.amount);
   });
   const monthVals = Object.values(monthGroups);
-  const avgMonthlySalary = monthVals.length > 0 ? monthVals.reduce((a, b) => a + b, 0) / monthVals.length : 0;
+  const medianMonthlySalary = median(removeOutliers(monthVals));
 
-  const weekdayAvg = (avgByDayOfWeek[1] + avgByDayOfWeek[2] + avgByDayOfWeek[3] + avgByDayOfWeek[4] + avgByDayOfWeek[5]) / 5;
-  const weekendAvg = (avgByDayOfWeek[0] + avgByDayOfWeek[6]) / 2;
-  const weekendMultiplier = weekdayAvg > 0 ? weekendAvg / weekdayAvg : 1.2;
+  const weekdayMedian = median([medianByDayOfWeek[1], medianByDayOfWeek[2], medianByDayOfWeek[3], medianByDayOfWeek[4], medianByDayOfWeek[5]]);
+  const weekendMedian = median([medianByDayOfWeek[0], medianByDayOfWeek[6]]);
+  const weekendMultiplier = weekdayMedian > 0 ? weekendMedian / weekdayMedian : 1.2;
 
-  return { avgByDayOfWeek, salaryDays, avgMonthlySalary, weekendMultiplier };
+  return { medianByDayOfWeek, salaryDays, medianMonthlySalary, weekendMultiplier };
+}
+
+/**
+ * Detecta compras parceladas a partir do histórico.
+ * Heurística: descrições parecidas (normalizadas) com mesmo valor recorrendo mensalmente.
+ * Retorna parcelas futuras esperadas (ainda não cobradas).
+ */
+function detectFutureInstallments(transactions: any[]): Array<{ date: string; amount: number; description: string; category: string }> {
+  const installments: Array<{ date: string; amount: number; description: string; category: string }> = [];
+  const cardExpenses = transactions.filter(t => t.type === 'expense' && t.card_id);
+
+  // Normaliza descrição: remove "1/12", "(2/6)", parcelas, números no final
+  const normalize = (desc: string) =>
+    desc.toLowerCase()
+      .replace(/\s*\(?\d+\s*\/\s*\d+\)?/g, '')
+      .replace(/\s*parc(ela)?\.?\s*\d+/gi, '')
+      .replace(/\s+\d+$/g, '')
+      .trim();
+
+  // Agrupa por (descrição normalizada + valor arredondado)
+  const groups: Record<string, any[]> = {};
+  cardExpenses.forEach(t => {
+    const key = `${normalize(t.description)}|${Math.round(Number(t.amount) * 100) / 100}`;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(t);
+  });
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  Object.entries(groups).forEach(([key, txs]) => {
+    if (txs.length < 2) return; // precisa de pelo menos 2 ocorrências
+
+    // Ordena por data
+    txs.sort((a, b) => a.date.localeCompare(b.date));
+    const dates = txs.map(t => new Date(t.date + 'T12:00:00'));
+
+    // Verifica se tem espaçamento mensal (~25-35 dias)
+    const intervals: number[] = [];
+    for (let i = 1; i < dates.length; i++) {
+      const days = Math.round((dates[i].getTime() - dates[i - 1].getTime()) / 86400000);
+      intervals.push(days);
+    }
+    const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+    if (avgInterval < 25 || avgInterval > 35) return; // não é mensal
+
+    // Tenta detectar total de parcelas a partir da descrição original (ex: "1/12")
+    let totalInstallments = 0;
+    for (const t of txs) {
+      const m = String(t.description).match(/(\d+)\s*\/\s*(\d+)/);
+      if (m) {
+        totalInstallments = Math.max(totalInstallments, Number(m[2]));
+        break;
+      }
+    }
+    // Fallback: se não detectou e tem 2+ ocorrências mensais, projeta mais 2 parcelas como provável
+    if (!totalInstallments) totalInstallments = txs.length + 2;
+
+    const remaining = totalInstallments - txs.length;
+    if (remaining <= 0) return;
+
+    const lastDate = dates[dates.length - 1];
+    const dayOfMonth = lastDate.getDate();
+    const sample = txs[0];
+    const cleanDesc = normalize(sample.description) || sample.description;
+
+    for (let i = 1; i <= Math.min(remaining, 12); i++) {
+      const next = addMonths(lastDate, i);
+      next.setDate(dayOfMonth);
+      if (next <= today) continue;
+      installments.push({
+        date: format(next, 'yyyy-MM-dd'),
+        amount: Number(sample.amount),
+        description: `${cleanDesc} (parcela ${txs.length + i}/${totalInstallments})`,
+        category: sample.category || 'Cartão',
+      });
+    }
+  });
+
+  return installments;
 }
 
 function isRecurringDue(rec: any, date: Date): boolean {
@@ -86,6 +201,14 @@ export function buildPrediction(
   const predictions: DayPrediction[] = [];
   let runningBalance = currentBalance;
   const patterns = analyzePatterns(transactions);
+  const futureInstallments = detectFutureInstallments(transactions);
+
+  // Indexa parcelas por data
+  const installmentsByDate: Record<string, typeof futureInstallments> = {};
+  futureInstallments.forEach(inst => {
+    if (!installmentsByDate[inst.date]) installmentsByDate[inst.date] = [];
+    installmentsByDate[inst.date].push(inst);
+  });
 
   for (let d = 1; d <= days; d++) {
     const date = addDays(new Date(), d);
@@ -109,16 +232,29 @@ export function buildPrediction(
       }
     }
 
-    const avgDaily = patterns.avgByDayOfWeek[dayOfWeek];
-    if (avgDaily > 0) {
+    // Parcelas futuras detectadas
+    const todayInstallments = installmentsByDate[dateStr] || [];
+    for (const inst of todayInstallments) {
+      dayEvents.push({
+        type: 'card_installment',
+        description: inst.description,
+        amount: -inst.amount,
+        probability: 0.92,
+        category: inst.category,
+      });
+      runningBalance -= inst.amount;
+    }
+
+    const medianDaily = patterns.medianByDayOfWeek[dayOfWeek];
+    if (medianDaily > 0) {
       const adj = dayOfWeek === 0 || dayOfWeek === 6 ? patterns.weekendMultiplier : 1.0;
-      const expected = avgDaily * adj;
+      const expected = medianDaily * adj;
       dayEvents.push({ type: 'historical_pattern', description: `Gastos típicos de ${getDayName(dayOfWeek)}`, amount: -expected, probability: 0.7, category: 'Variável' });
       runningBalance -= expected * 0.7;
     }
 
     if (patterns.salaryDays.includes(dayOfMonth)) {
-      const perDay = patterns.salaryDays.length > 0 ? patterns.avgMonthlySalary / patterns.salaryDays.length : patterns.avgMonthlySalary;
+      const perDay = patterns.salaryDays.length > 0 ? patterns.medianMonthlySalary / patterns.salaryDays.length : patterns.medianMonthlySalary;
       dayEvents.push({ type: 'recurring_income', description: 'Salário/renda prevista', amount: perDay, probability: 0.9, category: 'Salário' });
       runningBalance += perDay * 0.9;
     }
@@ -159,6 +295,21 @@ export function generateAlerts(predictions: DayPrediction[], monthlyExpenses: nu
       title: 'Saldo baixo previsto',
       description: `Seu saldo pode cair para R$ ${lowestBal.toFixed(0)} nos próximos dias. Fique atento.`,
     });
+  }
+
+  // Alerta específico de parcelas futuras concentradas
+  const installmentDays = predictions.filter(p => p.events.some(e => e.type === 'card_installment'));
+  if (installmentDays.length > 0) {
+    const totalInstallments = installmentDays.reduce((s, p) =>
+      s + p.events.filter(e => e.type === 'card_installment').reduce((a, e) => a + Math.abs(e.amount), 0), 0);
+    if (totalInstallments > 200) {
+      alerts.push({
+        type: 'info', icon: '💳',
+        title: `${installmentDays.length} parcelas futuras detectadas`,
+        description: `Identificamos R$ ${totalInstallments.toFixed(0)} em parcelas de cartão nos próximos meses.`,
+        actionLabel: 'Ver detalhes', actionPath: '/app/predictions',
+      });
+    }
   }
 
   // Check for expense clusters
