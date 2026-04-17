@@ -51,6 +51,16 @@ const DREPage = lazy(() => import("./pages/app/DREPage"));
 const SecuritySettingsPage = lazy(() => import("./pages/app/SecuritySettingsPage"));
 const PrivacidadePage = lazy(() => import("./pages/PrivacidadePage"));
 
+// Admin
+const AdminGuard = lazy(() => import("./components/admin/AdminGuard"));
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
+const AdminDashboardPage = lazy(() => import("./pages/admin/AdminDashboardPage"));
+const AdminUsersPage = lazy(() => import("./pages/admin/AdminUsersPage"));
+const AdminWhatsAppPage = lazy(() => import("./pages/admin/AdminWhatsAppPage"));
+const AdminRevenuePage = lazy(() => import("./pages/admin/AdminRevenuePage"));
+const AdminNotificationsPage = lazy(() => import("./pages/admin/AdminNotificationsPage"));
+const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
+
 // Optimized QueryClient with stale time and dedup
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -163,6 +173,16 @@ const App = () => {
                     <Route path="charts" element={<ChartsPage />} />
                     <Route path="investments" element={<InvestmentsPage />} />
                     <Route path="dre" element={<DREPage />} />
+                  </Route>
+
+                  {/* Admin routes */}
+                  <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
+                    <Route index element={<AdminDashboardPage />} />
+                    <Route path="users" element={<AdminUsersPage />} />
+                    <Route path="whatsapp" element={<AdminWhatsAppPage />} />
+                    <Route path="revenue" element={<AdminRevenuePage />} />
+                    <Route path="notifications" element={<AdminNotificationsPage />} />
+                    <Route path="settings" element={<AdminSettingsPage />} />
                   </Route>
 
                   <Route path="*" element={<NotFound />} />
