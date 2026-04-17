@@ -12,8 +12,9 @@ interface AdminUser {
   id: string;
   full_name: string | null;
   created_at: string;
-  whatsapp_connections?: { phone_number: string; verified: boolean; active: boolean; last_message_at: string | null }[];
-  user_config?: { profile_type: string | null; financial_score: number | null }[];
+  plan?: string | null;
+  whatsapp?: { phone_number: string; verified: boolean; active: boolean; last_message_at: string | null } | null;
+  config?: { profile_type: string | null; financial_score: number | null } | null;
 }
 
 export default function AdminUsersPage() {
@@ -27,21 +28,42 @@ export default function AdminUsersPage() {
 
   async function loadUsers() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(`
-        id,
-        full_name,
-        created_at,
-        whatsapp_connections ( phone_number, verified, active, last_message_at ),
-        user_config ( profile_type, financial_score )
-      `)
-      .order("created_at", { ascending: false })
-      .limit(100);
+    try {
+      const [profilesRes, waRes, cfgRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, full_name, created_at, plan")
+          .order("created_at", { ascending: false })
+          .limit(200),
+        supabase
+          .from("whatsapp_connections")
+          .select("user_id, phone_number, verified, active, last_message_at"),
+        supabase
+          .from("user_config")
+          .select("user_id, profile_type, financial_score"),
+      ]);
 
-    if (error) toast.error("Erro ao carregar usuários");
-    setUsers((data as any) || []);
-    setLoading(false);
+      if (profilesRes.error) throw profilesRes.error;
+
+      const waMap = new Map((waRes.data || []).map((w: any) => [w.user_id, w]));
+      const cfgMap = new Map((cfgRes.data || []).map((c: any) => [c.user_id, c]));
+
+      const merged: AdminUser[] = (profilesRes.data || []).map((p: any) => ({
+        id: p.id,
+        full_name: p.full_name,
+        created_at: p.created_at,
+        plan: p.plan,
+        whatsapp: waMap.get(p.id) || null,
+        config: cfgMap.get(p.id) || null,
+      }));
+
+      setUsers(merged);
+    } catch (e: any) {
+      console.error("Erro ao carregar usuários:", e);
+      toast.error("Erro ao carregar usuários: " + (e.message || "desconhecido"));
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function sendTestNotification(phone?: string) {
@@ -76,6 +98,7 @@ export default function AdminUsersPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
+              <TableHead>Plano</TableHead>
               <TableHead>Perfil</TableHead>
               <TableHead>WhatsApp</TableHead>
               <TableHead>Score</TableHead>
@@ -85,14 +108,19 @@ export default function AdminUsersPage() {
           </TableHeader>
           <TableBody>
             {loading && (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Carregando…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando…</TableCell></TableRow>
             )}
             {!loading && filtered.map((u) => {
-              const wa = u.whatsapp_connections?.[0];
-              const cfg = u.user_config?.[0];
+              const wa = u.whatsapp;
+              const cfg = u.config;
               return (
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.full_name || "Sem nome"}</TableCell>
+                  <TableCell>
+                    <Badge variant={u.plan && u.plan !== "free" ? "default" : "outline"}>
+                      {u.plan || "free"}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     <Badge variant="secondary">{cfg?.profile_type || "personal"}</Badge>
                   </TableCell>
@@ -121,7 +149,7 @@ export default function AdminUsersPage() {
               );
             })}
             {!loading && filtered.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum usuário encontrado</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum usuário encontrado</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
