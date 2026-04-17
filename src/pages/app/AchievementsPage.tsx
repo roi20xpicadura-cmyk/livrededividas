@@ -1,136 +1,204 @@
-import { useEffect, useState, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { ACHIEVEMENTS, LEVELS, getCurrentLevel, getXPToNextLevel, getNextLevel } from '@/lib/achievements';
-import { Trophy, Lock, Star } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { format } from 'date-fns';
+import { ACHIEVEMENTS, CATEGORIES, getNextLevelName } from '@/lib/achievements';
+import { useAchievements } from '@/hooks/useAchievements';
 
 export default function AchievementsPage() {
-  const { user } = useAuth();
-  const [unlocked, setUnlocked] = useState<Record<string, string>>({});
-  const [xp, setXp] = useState(0);
-  const [filter, setFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
+  const { unlocked, progress, totalXP, level, count, total } = useAchievements();
+  const [filter, setFilter] = useState<string>('todas');
 
-  useEffect(() => {
-    if (!user) return;
-    supabase.from('achievements').select('*').eq('user_id', user.id)
-      .then(({ data }) => {
-        const map: Record<string, string> = {};
-        (data || []).forEach((a: any) => { map[a.achievement_key] = a.unlocked_at; });
-        setUnlocked(map);
-      });
-    supabase.from('user_config').select('xp_points').eq('user_id', user.id).single()
-      .then(({ data }) => setXp(data?.xp_points || 0));
-  }, [user]);
+  const filters = useMemo(() => [
+    { id: 'todas', label: 'Todas' },
+    { id: 'unlocked', label: 'Desbloqueadas' },
+    { id: 'locked', label: 'Bloqueadas' },
+    ...Object.entries(CATEGORIES).map(([id, cat]) => ({ id, label: cat.label })),
+  ], []);
 
-  const level = getCurrentLevel(xp);
-  const nextLevel = getNextLevel(xp);
-  const xpToNext = getXPToNextLevel(xp);
-  const xpProgress = nextLevel ? ((xp - level.minXP) / (nextLevel.minXP - level.minXP)) * 100 : 100;
-  const unlockedCount = Object.keys(unlocked).length;
+  const filtered = useMemo(() => ACHIEVEMENTS.filter(a => {
+    if (filter === 'unlocked') return unlocked.includes(a.id);
+    if (filter === 'locked') return !unlocked.includes(a.id);
+    if (filter === 'todas') return true;
+    return a.category === filter;
+  }), [filter, unlocked]);
 
-  const filtered = useMemo(() => {
-    if (filter === 'unlocked') return ACHIEVEMENTS.filter(a => unlocked[a.key]);
-    if (filter === 'locked') return ACHIEVEMENTS.filter(a => !unlocked[a.key]);
-    return [...ACHIEVEMENTS].sort((a, b) => {
-      const aU = !!unlocked[a.key], bU = !!unlocked[b.key];
-      if (aU !== bU) return aU ? -1 : 1;
-      return 0;
-    });
-  }, [filter, unlocked]);
+  const levelPct = Math.max(0, Math.min(100, Math.round(((totalXP - level.min) / (level.max - level.min)) * 100)));
+  const nextLevelName = getNextLevelName(level.name);
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
-      <div className="px-4 py-5 md:p-7 pb-4 flex flex-col gap-4 md:gap-5 max-w-[1400px] mx-auto">
-        {/* Header stats */}
-        <div className="grid grid-cols-3 gap-2 md:gap-3">
-          <div className="p-3 md:p-4 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <p className="text-[9px] md:text-[10px] uppercase font-bold" style={{ color: 'var(--text-hint)' }}>Conquistas</p>
-            <p className="text-lg md:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{unlockedCount}/{ACHIEVEMENTS.length}</p>
-          </div>
-          <div className="p-3 md:p-4 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <p className="text-[9px] md:text-[10px] uppercase font-bold" style={{ color: 'var(--text-hint)' }}>Total XP</p>
-            <p className="text-lg md:text-2xl font-black" style={{ color: '#7C3AED' }}>{xp}</p>
-          </div>
-          <div className="p-3 md:p-4 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <p className="text-[9px] md:text-[10px] uppercase font-bold" style={{ color: 'var(--text-hint)' }}>Nível</p>
-            <p className="text-lg md:text-2xl font-black truncate" style={{ color: level.color }}>{level.name}</p>
-          </div>
-        </div>
+    <div style={{ background: '#08080F', minHeight: '100vh', paddingBottom: '100px' }}>
+      <div style={{ padding: '20px 20px 0', maxWidth: 900, margin: '0 auto' }}>
+        <h1 style={{ color: '#FFFFFF', fontSize: 22, fontWeight: 900, letterSpacing: '-0.5px', marginBottom: 20 }}>
+          Conquistas
+        </h1>
 
-        {/* Level progress */}
-        <div className="rounded-[14px] p-5" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Star className="w-5 h-5" style={{ color: level.color }} />
-              <span className="text-lg font-black" style={{ color: level.color }}>{level.name}</span>
+        {/* Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+          {[
+            { label: 'CONQUISTAS', value: `${count}/${total}`, color: '#A78BFA' },
+            { label: 'TOTAL XP', value: totalXP.toLocaleString('pt-BR'), color: '#F59E0B' },
+            { label: 'NÍVEL', value: level.name, color: '#4ADE80' },
+          ].map(stat => (
+            <div key={stat.label} style={{
+              background: '#110820',
+              border: '1px solid rgba(167,139,250,0.1)',
+              borderRadius: 12, padding: 12, textAlign: 'center',
+            }}>
+              <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+                {stat.label}
+              </div>
+              <div style={{ color: stat.color, fontSize: 16, fontWeight: 900, letterSpacing: '-0.3px' }}>
+                {stat.value}
+              </div>
             </div>
-            {nextLevel && <span className="text-xs font-bold" style={{ color: 'var(--text-hint)' }}>Faltam {xpToNext} XP para {nextLevel.name}</span>}
-          </div>
-          <div className="h-3 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
-            <motion.div initial={{ width: '0%' }} animate={{ width: `${xpProgress}%` }}
-              transition={{ duration: 1, ease: 'easeOut' }}
-              className="h-full rounded-full" style={{ background: level.color }} />
-          </div>
-          <div className="flex justify-between mt-1">
-            <span className="text-[11px] font-bold" style={{ color: 'var(--text-hint)' }}>{xp} XP</span>
-            {nextLevel && <span className="text-[11px] font-bold" style={{ color: 'var(--text-hint)' }}>{nextLevel.minXP} XP</span>}
-          </div>
-        </div>
-
-        {/* Filter tabs */}
-        <div className="flex gap-2">
-          {(['all', 'unlocked', 'locked'] as const).map(f => (
-            <button key={f} onClick={() => setFilter(f)}
-              className="px-4 py-2 rounded-lg text-xs font-bold transition-all"
-              style={{
-                background: filter === f ? '#F5F3FF' : 'var(--bg-surface)',
-                color: filter === f ? '#7C3AED' : 'var(--text-secondary)',
-                border: filter === f ? '1.5px solid #d4edda' : '1.5px solid var(--border-default)',
-              }}>
-              {f === 'all' ? 'Todas' : f === 'unlocked' ? 'Desbloqueadas' : 'Bloqueadas'}
-            </button>
           ))}
         </div>
 
-        {/* Achievements grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filtered.map((a, i) => {
-            const isUnlocked = !!unlocked[a.key];
+        {/* Level progress */}
+        <div style={{ background: '#110820', border: '1px solid rgba(167,139,250,0.1)', borderRadius: 14, padding: 16, marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 20 }}>{level.emoji}</span>
+              <div>
+                <div style={{ color: '#FFFFFF', fontWeight: 800, fontSize: 14 }}>{level.name}</div>
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>{totalXP} XP</div>
+              </div>
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, textAlign: 'right' }}>
+              Próximo nível<br />
+              <span style={{ color: '#A78BFA', fontWeight: 700 }}>{level.max} XP</span>
+            </div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 99, height: 8, overflow: 'hidden' }}>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${levelPct}%` }}
+              transition={{ duration: 1, ease: 'easeOut' }}
+              style={{ height: '100%', background: 'linear-gradient(90deg, #7C3AED, #A78BFA)', borderRadius: 99 }}
+            />
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10, marginTop: 6, textAlign: 'right' }}>
+            {levelPct}% para {nextLevelName}
+          </div>
+        </div>
+
+        {/* Filter chips */}
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, marginBottom: 16, scrollbarWidth: 'none' }}>
+          {filters.map(f => {
+            const active = filter === f.id;
             return (
-              <motion.div key={a.key} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                className="p-4 rounded-[14px] relative overflow-hidden"
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id)}
                 style={{
-                  background: isUnlocked ? 'var(--bg-surface)' : 'var(--bg-elevated)',
-                  border: `1.5px solid ${isUnlocked ? '#d4edda' : 'var(--border-default)'}`,
-                  filter: isUnlocked ? 'none' : 'grayscale(0.5)',
-                  opacity: isUnlocked ? 1 : 0.7,
-                }}>
-                {!isUnlocked && (
-                  <div className="absolute top-3 right-3">
-                    <Lock className="w-4 h-4" style={{ color: 'var(--text-hint)' }} />
-                  </div>
-                )}
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{a.emoji}</span>
-                  <div>
-                    <p className="text-sm font-extrabold" style={{ color: 'var(--text-primary)' }}>{a.name}</p>
-                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{isUnlocked ? a.desc : '???'}</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-3">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#F5F3FF', color: '#7C3AED' }}>+{a.xp} XP</span>
-                  {isUnlocked && unlocked[a.key] && (
-                    <span className="text-[10px]" style={{ color: 'var(--text-hint)' }}>
-                      {format(new Date(unlocked[a.key]), 'dd/MM/yyyy')}
-                    </span>
-                  )}
-                </div>
-              </motion.div>
+                  flexShrink: 0,
+                  padding: '6px 14px',
+                  borderRadius: 99,
+                  border: `1px solid ${active ? 'rgba(124,58,237,0.5)' : 'rgba(167,139,250,0.12)'}`,
+                  background: active ? 'rgba(124,58,237,0.15)' : 'transparent',
+                  color: active ? '#A78BFA' : 'rgba(255,255,255,0.4)',
+                  fontSize: 12,
+                  fontWeight: active ? 700 : 500,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {f.label}
+              </button>
             );
           })}
         </div>
+      </div>
+
+      {/* Cards */}
+      <div style={{ padding: '0 16px', maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {filtered.map((a, idx) => {
+          const isUnlocked = unlocked.includes(a.id);
+          const currentProg = progress[a.id] || 0;
+          const progPct = a.progress ? Math.min(100, Math.round((currentProg / a.progress.total) * 100)) : 0;
+
+          return (
+            <motion.div
+              key={a.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: Math.min(idx * 0.03, 0.3) }}
+              style={{
+                background: isUnlocked ? 'rgba(124,58,237,0.08)' : '#110820',
+                border: `1px solid ${isUnlocked ? 'rgba(124,58,237,0.25)' : 'rgba(167,139,250,0.08)'}`,
+                borderRadius: 16,
+                padding: 16,
+                opacity: isUnlocked ? 1 : 0.75,
+                boxShadow: isUnlocked ? '0 0 24px rgba(124,58,237,0.08)' : 'none',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                <div style={{
+                  width: 48, height: 48, borderRadius: 14,
+                  background: isUnlocked ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.05)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 24, flexShrink: 0,
+                  filter: isUnlocked ? 'none' : 'grayscale(1)',
+                }}>
+                  {a.emoji}
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 3 }}>
+                    <div style={{
+                      color: isUnlocked ? '#FFFFFF' : 'rgba(255,255,255,0.65)',
+                      fontWeight: 700, fontSize: 14,
+                    }}>
+                      {a.name}
+                    </div>
+                    <div style={{
+                      background: isUnlocked ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.06)',
+                      border: `1px solid ${isUnlocked ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                      borderRadius: 99, padding: '2px 8px', fontSize: 11, fontWeight: 700,
+                      color: isUnlocked ? '#F59E0B' : 'rgba(255,255,255,0.25)',
+                      flexShrink: 0,
+                    }}>
+                      +{a.xp} XP
+                    </div>
+                  </div>
+
+                  <div style={{
+                    color: 'rgba(255,255,255,0.4)', fontSize: 12, lineHeight: 1.5,
+                    marginBottom: a.progress && !isUnlocked ? 10 : 0,
+                  }}>
+                    {a.description}
+                  </div>
+
+                  {a.progress && !isUnlocked && (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+                          {currentProg} de {a.progress.total} {a.progress.label}
+                        </span>
+                        <span style={{ fontSize: 11, color: '#A78BFA', fontWeight: 700 }}>{progPct}%</span>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 99, height: 5, overflow: 'hidden' }}>
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progPct}%` }}
+                          transition={{ duration: 0.8, ease: 'easeOut' }}
+                          style={{ height: '100%', background: '#7C3AED', borderRadius: 99 }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {isUnlocked && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6 }}>
+                      <span style={{ color: '#4ADE80', fontSize: 11, fontWeight: 700 }}>
+                        ✓ Desbloqueada
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
