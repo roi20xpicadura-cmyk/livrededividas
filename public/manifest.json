@@ -21,6 +21,11 @@
     { "src": "/icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
+  "screenshots": [
+    { "src": "/screenshots/dashboard.png",    "sizes": "758x1668", "type": "image/png", "form_factor": "narrow", "label": "Dashboard com saldo, receitas e despesas" },
+    { "src": "/screenshots/predictions.png",  "sizes": "778x1654", "type": "image/png", "form_factor": "narrow", "label": "IA Preditiva — projeção de saldo" },
+    { "src": "/screenshots/integrations.png", "sizes": "764x1662", "type": "image/png", "form_factor": "narrow", "label": "Integrações com bancos via Open Finance" }
+  ],
   "shortcuts": [
     {
       "name": "Lançar gasto",
