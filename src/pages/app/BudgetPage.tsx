@@ -3,10 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { formatCurrency } from '@/lib/plans';
-import {
-  DollarSign, TrendingUp, AlertCircle, PieChart, Calendar,
-  PlusCircle, ChevronLeft, ChevronRight, ChevronDown
-} from 'lucide-react';
+import { DollarSign, TrendingUp, AlertCircle, PieChart } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,6 +12,25 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend
 import { PERSONAL_EXPENSE_CATS, BUSINESS_EXPENSE_CATS } from '@/lib/objectives';
 
 const ALL_EXPENSE_CATS = [...new Set([...PERSONAL_EXPENSE_CATS, ...BUSINESS_EXPENSE_CATS])];
+
+const C = {
+  violet: '#7C3AED',
+  violetSoft: '#F5F3FF',
+  violetBorder: '#DDD6FE',
+  violetText: '#5B21B6',
+  red: '#DC2626',
+  redSoft: '#FEE2E2',
+  green: '#16A34A',
+  greenSoft: '#DCFCE7',
+  amber: '#F59E0B',
+  amberSoft: '#FEF3C7',
+  textStrong: '#1A0D35',
+  textMuted: '#9CA3AF',
+  textBody: '#374151',
+  cardBorder: '#F0EEF8',
+  trackBg: '#F3F4F6',
+  white: '#FFFFFF',
+};
 
 export default function BudgetPage() {
   const { user } = useAuth();
@@ -69,6 +85,7 @@ export default function BudgetPage() {
   const totalBudget = budgets.reduce((s, b) => s + Number(b.limit_amount), 0);
   const totalSpent = Object.values(spentByCategory).reduce((s, v) => s + v, 0);
   const overBudgetCount = budgetCards.filter(b => b.pct >= 80).length;
+  const categoriesWithSpend = Object.keys(spentByCategory).length;
 
   const chartData = budgetCards.map(b => ({
     name: b.category.length > 10 ? b.category.slice(0, 10) + '…' : b.category,
@@ -130,11 +147,10 @@ export default function BudgetPage() {
     fetchData();
   };
 
-  const getBarColor = (pct: number) => {
-    if (pct >= 100) return '#dc2626';
-    if (pct >= 80) return '#f97316';
-    if (pct >= 50) return '#d97706';
-    return '#7C3AED';
+  const getProgressColor = (pct: number) => {
+    if (pct >= 100) return C.red;
+    if (pct >= 80) return C.amber;
+    return C.violet;
   };
 
   const getCatEmoji = (cat: string) => {
@@ -149,136 +165,218 @@ export default function BudgetPage() {
 
   if (loading) return <div className="p-7"><div className="h-96 rounded-2xl skeleton-shimmer" /></div>;
 
+  const kpis = [
+    { label: 'Orçamento Total', value: formatCurrency(totalBudget), Icon: DollarSign, iconBg: C.violetSoft, iconColor: C.violet, valColor: C.violet },
+    { label: 'Total Gasto', value: formatCurrency(totalSpent), Icon: TrendingUp, iconBg: C.redSoft, iconColor: C.red, valColor: C.red },
+    { label: 'Disponível', value: formatCurrency(Math.max(0, totalBudget - totalSpent)), Icon: PieChart, iconBg: C.greenSoft, iconColor: C.green, valColor: C.green },
+    { label: 'No Limite', value: String(overBudgetCount), Icon: AlertCircle, iconBg: C.amberSoft, iconColor: C.amber, valColor: C.amber },
+  ];
+
+  // Combine budgeted + unbudgeted into one unified category list
+  const allCategoryRows = [
+    ...budgetCards.map(b => ({
+      category: b.category,
+      spent: b.spent,
+      limit: Number(b.limit_amount),
+      hasLimit: true,
+      pct: b.pct,
+      id: b.id,
+    })),
+    ...unbud.map(u => ({
+      category: u.category,
+      spent: u.amount,
+      limit: 0,
+      hasLimit: false,
+      pct: 0,
+      id: `unbud-${u.category}`,
+    })),
+  ];
+
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
-      <div className="px-4 py-5 md:p-7 pb-4 flex flex-col gap-5 max-w-[1400px] mx-auto">
-        {/* Month selector */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setCurrentMonth(m => subMonths(m, 1))} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--bg-elevated)] transition-colors" style={{ border: '1px solid var(--border-default)' }}>
-              <ChevronLeft className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
-            </button>
-            <span className="text-base font-extrabold capitalize" style={{ color: 'var(--text-primary)' }}>{monthLabel}</span>
-            <button onClick={() => setCurrentMonth(m => addMonths(m, 1))} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--bg-elevated)] transition-colors" style={{ border: '1px solid var(--border-default)' }}>
-              <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
-            </button>
+    <div className="min-h-screen" style={{ background: '#FAFAFB' }}>
+      <div className="py-5 md:p-7 pb-4 flex flex-col gap-5 max-w-[1400px] mx-auto">
+        {/* Header row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              onClick={() => setCurrentMonth(m => subMonths(m, 1))}
+              style={{ width: 32, height: 32, borderRadius: '50%', background: C.violetSoft, border: 'none', color: C.violet, fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              aria-label="Mês anterior"
+            >‹</button>
+            <div style={{ color: C.textStrong, fontSize: 16, fontWeight: 800, textTransform: 'capitalize', minWidth: 110, textAlign: 'center' }}>
+              {monthLabel}
+            </div>
+            <button
+              onClick={() => setCurrentMonth(m => addMonths(m, 1))}
+              style={{ width: 32, height: 32, borderRadius: '50%', background: C.violetSoft, border: 'none', color: C.violet, fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              aria-label="Próximo mês"
+            >›</button>
           </div>
-          <button onClick={openSetup} className="px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: '#7C3AED' }}>
-            Configurar Orçamento
+          <button
+            onClick={openSetup}
+            style={{ background: C.violet, color: C.white, border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          >
+            + Configurar
           </button>
         </div>
 
-        {/* Stats strip */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {[
-            { label: 'Orçamento Total', value: formatCurrency(totalBudget), Icon: DollarSign, iconBg: '#eff6ff', iconColor: '#2563eb', valColor: '#2563eb' },
-            { label: 'Total Gasto', value: formatCurrency(totalSpent), Icon: TrendingUp, iconBg: totalSpent > totalBudget ? '#fee2e2' : '#F5F3FF', iconColor: totalSpent > totalBudget ? '#dc2626' : '#7C3AED', valColor: totalSpent > totalBudget ? '#dc2626' : '#7C3AED' },
-            { label: 'Disponível', value: formatCurrency(Math.max(0, totalBudget - totalSpent)), Icon: PieChart, iconBg: '#F5F3FF', iconColor: '#7C3AED', valColor: '#7C3AED' },
-            { label: 'No Limite', value: String(overBudgetCount), Icon: AlertCircle, iconBg: overBudgetCount > 0 ? '#fee2e2' : 'var(--bg-elevated)', iconColor: overBudgetCount > 0 ? '#dc2626' : '#64748b', valColor: overBudgetCount > 0 ? '#dc2626' : 'var(--text-primary)' },
-          ].map((s, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-              className="flex items-center gap-3.5 p-4 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-              <div className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: s.iconBg }}>
-                <s.Icon className="w-[18px] h-[18px]" style={{ color: s.iconColor }} />
+        {/* KPI cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 px-4">
+          {kpis.map((s, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.06 }}
+              style={{
+                background: C.white,
+                border: `1px solid ${C.cardBorder}`,
+                borderRadius: 16,
+                padding: 14,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              }}
+            >
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: s.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                <s.Icon style={{ width: 18, height: 18, color: s.iconColor }} />
               </div>
-              <div>
-                <p className="text-[10px] uppercase font-bold tracking-wide" style={{ color: 'var(--text-hint)' }}>{s.label}</p>
-                <p className="text-xl font-black" style={{ color: s.valColor }}>{s.value}</p>
-              </div>
+              <p style={{ color: C.textMuted, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{s.label}</p>
+              <p style={{ color: s.valColor, fontSize: 20, fontWeight: 900 }}>{s.value}</p>
             </motion.div>
           ))}
         </div>
 
-        {/* Budget cards */}
-        {budgetCards.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {budgetCards.map((b, i) => (
-              <motion.div key={b.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                className="p-[18px] rounded-[14px]" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{getCatEmoji(b.category)}</span>
-                    <span className="text-sm font-extrabold" style={{ color: 'var(--text-primary)' }}>{b.category}</span>
-                  </div>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{
-                    background: b.pct >= 100 ? '#fee2e2' : b.pct >= 80 ? '#fff7ed' : b.pct >= 50 ? '#fffbeb' : '#F5F3FF',
-                    color: getBarColor(b.pct),
-                  }}>{b.pct.toFixed(0)}%</span>
-                </div>
-                <p className="text-[12px] mt-1" style={{ color: 'var(--text-hint)' }}>
-                  {formatCurrency(b.spent)} / {formatCurrency(Number(b.limit_amount))}
-                </p>
-                <div className="mt-3 h-[10px] rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
-                  <motion.div initial={{ width: '0%' }} animate={{ width: `${Math.min(b.pct, 100)}%` }}
-                    transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
-                    className="h-full rounded-full" style={{ background: getBarColor(b.pct) }} />
-                </div>
-                <p className="text-xs font-semibold mt-2" style={{ color: b.pct >= 100 ? '#dc2626' : b.pct >= 80 ? '#d97706' : '#7C3AED' }}>
-                  {b.pct >= 100 ? `🚨 Limite ultrapassado em ${formatCurrency(b.spent - Number(b.limit_amount))}` :
-                   b.pct >= 80 ? `⚠️ Atenção: ${formatCurrency(Number(b.limit_amount) - b.spent)} restantes` :
-                   `${formatCurrency(Number(b.limit_amount) - b.spent)} disponíveis`}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16 rounded-2xl" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <PieChart className="w-12 h-12 mx-auto mb-3" style={{ color: '#C4B5FD' }} />
-            <p className="text-lg font-extrabold" style={{ color: 'var(--text-primary)' }}>Nenhum orçamento definido</p>
-            <p className="text-sm mt-1 max-w-xs mx-auto" style={{ color: 'var(--text-secondary)' }}>Configure limites para cada categoria e controle seus gastos.</p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-4">
-              <button onClick={handleCopyPrevMonth} className="px-4 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1.5px solid var(--border-default)', color: 'var(--text-primary)', background: 'var(--bg-surface)' }}>
-                📋 Copiar do mês anterior
+        {/* Empty state OR category list */}
+        {budgetCards.length === 0 && unbud.length === 0 ? (
+          <div style={{ margin: '0 16px', background: C.white, border: `1px solid ${C.cardBorder}`, borderRadius: 20, padding: '32px 20px', textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <div style={{ width: 64, height: 64, borderRadius: 20, background: C.violetSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}>
+              🎯
+            </div>
+            <h3 style={{ color: C.textStrong, fontSize: 17, fontWeight: 800, marginBottom: 8 }}>
+              Nenhum orçamento definido
+            </h3>
+            <p style={{ color: C.textMuted, fontSize: 13, lineHeight: 1.6, marginBottom: 24 }}>
+              Configure limites para cada categoria e controle seus gastos mensais.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+              <button
+                onClick={handleCopyPrevMonth}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#F9F8FF', border: '1px solid #EDE9FE', borderRadius: 12, cursor: 'pointer', textAlign: 'left', width: '100%' }}
+              >
+                <span style={{ fontSize: 18 }}>📋</span>
+                <span style={{ color: C.violetText, fontSize: 14, fontWeight: 600 }}>Copiar do mês anterior</span>
               </button>
-              <button onClick={handleUseAverage} className="px-4 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1.5px solid var(--border-default)', color: 'var(--text-primary)', background: 'var(--bg-surface)' }}>
-                📊 Usar média histórica
-              </button>
-              <button onClick={openSetup} className="px-5 py-2.5 rounded-lg text-sm font-bold text-white" style={{ background: '#7C3AED' }}>
-                ✏️ Configurar manualmente
+              <button
+                onClick={handleUseAverage}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#F9F8FF', border: '1px solid #EDE9FE', borderRadius: 12, cursor: 'pointer', textAlign: 'left', width: '100%' }}
+              >
+                <span style={{ fontSize: 18 }}>📊</span>
+                <span style={{ color: C.violetText, fontSize: 14, fontWeight: 600 }}>Usar média histórica</span>
               </button>
             </div>
+            <button
+              onClick={openSetup}
+              style={{ width: '100%', height: 48, background: C.violet, border: 'none', borderRadius: 12, color: C.white, fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            >
+              ✏️ Configurar manualmente
+            </button>
           </div>
-        )}
+        ) : (
+          <div className="px-4">
+            {/* Section title */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: 12 }}>
+              <div style={{ color: C.textStrong, fontSize: 15, fontWeight: 800 }}>Categorias</div>
+              <div style={{ color: C.textMuted, fontSize: 12 }}>{categoriesWithSpend} com gastos</div>
+            </div>
 
-        {/* Unbudgeted */}
-        {unbud.length > 0 && (
-          <div className="rounded-[14px] p-5" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <h3 className="text-sm font-extrabold mb-3" style={{ color: 'var(--text-primary)' }}>Sem orçamento definido</h3>
-            <div className="space-y-2">
-              {unbud.map(u => (
-                <div key={u.category} className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
-                  <div className="flex items-center gap-2">
-                    <span>{getCatEmoji(u.category)}</span>
-                    <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{u.category}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold" style={{ color: '#dc2626' }}>{formatCurrency(u.amount)} gasto</span>
-                    <button onClick={() => { setBudgetInputs(prev => ({ ...prev, [u.category]: '' })); setShowSetup(true); }}
-                      className="text-xs font-bold px-3 py-1 rounded-lg" style={{ color: '#7C3AED', border: '1px solid #d4edda' }}>
-                      Definir limite →
-                    </button>
-                  </div>
-                </div>
-              ))}
+            {/* Category rows */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              {allCategoryRows.map((row, i) => {
+                const overspent = row.hasLimit && row.spent > row.limit;
+                const pct = row.hasLimit ? Math.min((row.spent / row.limit) * 100, 100) : 0;
+                return (
+                  <motion.div
+                    key={row.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(i * 0.04, 0.3) }}
+                    style={{
+                      background: C.white,
+                      border: `1px solid ${C.cardBorder}`,
+                      borderRadius: 14,
+                      padding: '14px 16px',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: row.hasLimit ? 10 : 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: C.violetSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                          {getCatEmoji(row.category)}
+                        </div>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ color: C.textStrong, fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {row.category}
+                          </div>
+                          {row.hasLimit ? (
+                            <div style={{ color: overspent ? C.red : C.textMuted, fontSize: 11 }}>
+                              {formatCurrency(row.spent)} de {formatCurrency(row.limit)}
+                            </div>
+                          ) : (
+                            <div style={{ color: C.red, fontSize: 11, fontWeight: 600 }}>
+                              {formatCurrency(row.spent)} gasto · sem limite
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {row.hasLimit ? (
+                        <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 8 }}>
+                          <div style={{ color: overspent ? C.red : C.violet, fontSize: 15, fontWeight: 800 }}>
+                            {formatCurrency(row.limit)}
+                          </div>
+                          <div style={{ fontSize: 10, color: overspent ? C.red : C.textMuted, fontWeight: 600 }}>
+                            {overspent ? '⚠️ Estourado' : 'limite'}
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => { setBudgetInputs(prev => ({ ...prev, [row.category]: '' })); setShowSetup(true); }}
+                          style={{ background: C.violetSoft, border: `1px solid ${C.violetBorder}`, borderRadius: 8, padding: '6px 12px', color: C.violet, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 8 }}
+                        >
+                          + Definir limite
+                        </button>
+                      )}
+                    </div>
+                    {row.hasLimit && (
+                      <div style={{ background: C.trackBg, borderRadius: 99, height: 6, overflow: 'hidden' }}>
+                        <motion.div
+                          initial={{ width: '0%' }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.7, ease: 'easeOut', delay: 0.2 }}
+                          style={{ height: '100%', background: getProgressColor(row.pct), borderRadius: 99 }}
+                        />
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         )}
 
         {/* Chart */}
         {chartData.length > 0 && (
-          <div className="rounded-[14px] p-6" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
-            <h3 className="text-[15px] font-extrabold mb-4" style={{ color: 'var(--text-primary)' }}>Orçamento vs Real</h3>
-            <div className="h-[300px]">
+          <div className="mx-4" style={{ background: C.white, border: `1px solid ${C.cardBorder}`, borderRadius: 16, padding: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <h3 style={{ color: C.textStrong, fontSize: 15, fontWeight: 800, marginBottom: 16 }}>Orçamento vs Real</h3>
+            <div style={{ height: 300 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 20 }}>
-                  <XAxis type="number" tickFormatter={(v: number) => `R$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} tick={{ fontSize: 11, fill: 'var(--text-hint)' }} />
-                  <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 12, fill: 'var(--text-secondary)' }} />
-                  <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 8 }} />
+                  <XAxis type="number" tickFormatter={(v: number) => `R$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} tick={{ fontSize: 11, fill: C.textMuted }} />
+                  <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 12, fill: C.textBody }} />
+                  <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={{ background: C.white, border: `1px solid ${C.cardBorder}`, borderRadius: 8 }} />
                   <Legend />
                   <Bar dataKey="Orçamento" fill="#C4B5FD" radius={[0, 4, 4, 0]} />
                   <Bar dataKey="Gasto" radius={[0, 4, 4, 0]}>
                     {chartData.map((entry, idx) => (
-                      <Cell key={idx} fill={entry.Gasto > entry.Orçamento ? '#dc2626' : '#7C3AED'} />
+                      <Cell key={idx} fill={entry.Gasto > entry.Orçamento ? C.red : C.violet} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -295,28 +393,27 @@ export default function BudgetPage() {
                 className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50" onClick={() => setShowSetup(false)} />
               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                 className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[520px] md:max-h-[80vh] z-50 rounded-2xl overflow-y-auto p-6"
-                style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)' }}>
+                style={{ background: C.white, border: `1px solid ${C.cardBorder}`, boxShadow: '0 10px 40px rgba(0,0,0,0.12)' }}>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-extrabold" style={{ color: 'var(--text-primary)' }}>Configurar Orçamento — {monthLabel}</h3>
-                  <button onClick={() => setShowSetup(false)} className="text-lg" style={{ color: 'var(--text-hint)' }}>✕</button>
+                  <h3 style={{ color: C.textStrong, fontSize: 16, fontWeight: 800, textTransform: 'capitalize' }}>Configurar Orçamento — {monthLabel}</h3>
+                  <button onClick={() => setShowSetup(false)} style={{ color: C.textMuted, fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
                 </div>
                 <div className="space-y-2">
                   {ALL_EXPENSE_CATS.map(cat => (
                     <div key={cat} className="flex items-center gap-3">
                       <span className="text-lg w-6">{getCatEmoji(cat)}</span>
-                      <span className="text-sm font-semibold flex-1" style={{ color: 'var(--text-primary)' }}>{cat}</span>
+                      <span style={{ color: C.textStrong, fontSize: 14, fontWeight: 600, flex: 1 }}>{cat}</span>
                       <div className="relative w-32">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold" style={{ color: 'var(--text-hint)' }}>R$</span>
+                        <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, fontWeight: 600, color: C.textMuted }}>R$</span>
                         <input type="text" inputMode="decimal" pattern="[0-9.,]*" placeholder="0,00"
                           value={budgetInputs[cat] || ''}
                           onChange={e => setBudgetInputs(prev => ({ ...prev, [cat]: e.target.value }))}
-                          className="w-full h-9 pl-8 pr-2 text-sm font-semibold rounded-lg outline-none"
-                          style={{ background: 'var(--bg-input)', border: '1.5px solid var(--border-default)', color: 'var(--text-primary)' }} />
+                          style={{ width: '100%', height: 36, paddingLeft: 32, paddingRight: 8, fontSize: 14, fontWeight: 600, borderRadius: 8, outline: 'none', background: C.white, border: `1.5px solid ${C.cardBorder}`, color: C.textStrong }} />
                       </div>
                     </div>
                   ))}
                 </div>
-                <button onClick={handleSaveBudgets} className="w-full mt-4 py-2.5 rounded-lg text-sm font-bold text-white" style={{ background: '#7C3AED' }}>
+                <button onClick={handleSaveBudgets} style={{ width: '100%', marginTop: 16, padding: '10px', borderRadius: 10, fontSize: 14, fontWeight: 800, color: C.white, background: C.violet, border: 'none', cursor: 'pointer' }}>
                   Salvar Orçamento
                 </button>
               </motion.div>
