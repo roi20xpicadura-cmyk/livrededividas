@@ -1,8 +1,16 @@
 // supabase/functions/_shared/kora-categories.ts
 //
-// Listas de categorias válidas — espelhadas de src/lib/objectives.ts.
-// Mantenha em sync manualmente: Edge functions Deno não conseguem importar
-// de src/. Se adicionar categoria nova no frontend, atualize aqui.
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║ ⚠️  WARNING: mantém em sync com src/lib/objectives.ts                ║
+// ║                                                                      ║
+// ║ Qualquer categoria nova, renomeada ou removida PRECISA ser atualizada║
+// ║ nos DOIS arquivos. Edge functions Deno não conseguem importar de     ║
+// ║ src/ (bundler diferente), por isso duplicamos as listas.             ║
+// ║                                                                      ║
+// ║ Divergência silenciosa aqui causa bug invisível: LLM propõe categoria║
+// ║ que o frontend não reconhece (aparece como "categoria estranha") ou  ║
+// ║ normalizeCategory() mapeia sempre pra "Outros".                      ║
+// ╚══════════════════════════════════════════════════════════════════════╝
 //
 // Uso:
 //   - kora-tools injeta a lista no system prompt pra IA propor só categorias reais
