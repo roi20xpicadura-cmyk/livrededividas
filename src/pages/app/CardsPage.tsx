@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -201,9 +201,7 @@ export default function CardsPage() {
 
   const formRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { fetchData(); }, [user]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     const [cRes, bRes] = await Promise.all([
@@ -213,7 +211,9 @@ export default function CardsPage() {
     setCards((cRes.data ?? []).map(c => ({ ...c, credit_limit: Number(c.credit_limit), used_amount: Number(c.used_amount) })) as Card[]);
     setBills((bRes.data ?? []).map(b => ({ ...b, total_amount: Number(b.total_amount) })) as Bill[]);
     setLoading(false);
-  };
+  }, [user]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const totalLimit = cards.reduce((s, c) => s + c.credit_limit, 0);
   const totalUsed = cards.reduce((s, c) => s + c.used_amount, 0);

@@ -23,6 +23,9 @@ export function useCountUp(end: number, duration = 1000, delay = 0) {
     }, delay);
 
     return () => { clearTimeout(timer); cancelAnimationFrame(animFrame); };
+    // `count` is intentionally excluded: it's only read as the starting value
+    // for the next animation; including it would restart animation on every frame.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [end, duration, delay]);
 
   return count;

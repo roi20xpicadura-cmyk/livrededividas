@@ -93,6 +93,9 @@ export function useProfile() {
     }, 30_000);
 
     return () => clearInterval(interval);
+    // Only depends on user and current plan — tracking whole `profile` would
+    // reset the polling interval on every profile field change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, profile?.plan]);
 
   const updateProfile = async (updates: Partial<Profile>) => {

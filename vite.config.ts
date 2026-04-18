@@ -21,6 +21,9 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: 'es2020',
     cssCodeSplit: true,
+    // recharts (~500KB) and html2canvas (PDF export, ~200KB) are lazily loaded
+    // and intentionally kept as separate vendor chunks.
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         manualChunks: {

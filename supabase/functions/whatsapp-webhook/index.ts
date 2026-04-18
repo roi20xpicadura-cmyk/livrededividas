@@ -514,14 +514,49 @@ Fique de olho! 👀`;
 }
 
 // ─── IMPROVEMENT 5: MAIN HANDLER ────────────────────
+// Simple in-memory dedup cache (webhook instances are ephemeral on Supabase
+// Edge; cache survives only for the instance lifetime, which is enough to
+// swallow the usual few-second Z-API retry window).
+const recentMessages = new Map<string, number>();
+const DEDUP_WINDOW_MS = 60_000;
+
+function isDuplicate(messageId: string | undefined): boolean {
+  if (!messageId) return false;
+  const now = Date.now();
+  // Purge stale entries
+  for (const [id, ts] of recentMessages) {
+    if (now - ts > DEDUP_WINDOW_MS) recentMessages.delete(id);
+  }
+  if (recentMessages.has(messageId)) return true;
+  recentMessages.set(messageId, now);
+  return false;
+}
+
 serve(async (req) => {
   if (req.method !== "POST") return new Response("OK", { status: 200 });
+
+  // Authenticate the webhook: Z-API sends the same Client-Token we configured
+  // in their dashboard. Reject anything that doesn't match.
+  const sentToken = req.headers.get("client-token");
+  if (!ZAPI_CLIENT_TOKEN || sentToken !== ZAPI_CLIENT_TOKEN) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const body = await req.json();
     console.log("Z-API payload:", JSON.stringify(body).slice(0, 500));
 
     if (body.fromMe || body.isGroup) return new Response("OK", { status: 200 });
+
+    // Dedup: Z-API occasionally retries webhook delivery within seconds.
+    const messageId = body.messageId || body.id || body.key?.id;
+    if (isDuplicate(messageId)) {
+      console.log("[DEDUP] ignoring repeated messageId:", messageId);
+      return new Response("OK", { status: 200 });
+    }
 
     const phone = (body.phone || "")
       .replace("@s.whatsapp.net", "")

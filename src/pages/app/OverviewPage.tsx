@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef, lazy, Suspense } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -204,7 +204,7 @@ export default function OverviewPage() {
   const showPersonal = profileType === 'personal' || profileType === 'both';
   const showBusiness = profileType === 'business' || profileType === 'both';
 
-  const fetchData = (month: number, year: number) => {
+  const fetchData = useCallback((month: number, year: number) => {
     if (!user) return;
     const periodDate = new Date(year, month);
     const start = format(startOfMonth(periodDate), 'yyyy-MM-dd');
@@ -227,11 +227,19 @@ export default function OverviewPage() {
       setDebts(debtRes.data || []);
       setLoading(false);
     });
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchData(period.month, period.year);
-  }, [user, period.month, period.year]);
+  }, [fetchData, period.month, period.year]);
+
+  // Refetch when any part of the app emits a transaction-change event
+  // (QuickAddFAB, NewTransactionSheet, delete handlers).
+  useEffect(() => {
+    const handler = () => fetchData(period.month, period.year);
+    window.addEventListener('kora:transaction-changed', handler);
+    return () => window.removeEventListener('kora:transaction-changed', handler);
+  }, [fetchData, period.month, period.year]);
 
   const handlePeriodChange = (month: number, year: number) => {
     setLoading(true);

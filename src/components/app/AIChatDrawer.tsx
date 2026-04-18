@@ -427,6 +427,10 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
     }
     setLoading(false);
     setStreamingText('');
+    // `createConversation` and `saveMessage` are stable in practice (they only
+    // read `user` via supabase each call); including them would recreate `send`
+    // on every message and break auto-scroll.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, messages, activeConvoId]);
 
   const hasText = input.trim().length > 0;

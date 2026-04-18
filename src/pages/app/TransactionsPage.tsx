@@ -136,7 +136,11 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
   }, [paginated]);
 
   const handleDelete = async (id: string) => {
-    await supabase.from('transactions').delete().eq('id', id);
+    await supabase
+      .from('transactions')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id);
+    window.dispatchEvent(new CustomEvent('kora:transaction-changed'));
     toast.success('Removido');
     setOpenActionsId(null);
     fetchTxs();

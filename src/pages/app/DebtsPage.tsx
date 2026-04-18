@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomSheet from '@/components/app/BottomSheet';
 import { useAuth } from '@/contexts/AuthContext';
@@ -87,9 +87,7 @@ export default function DebtsPage() {
   const [payNotes, setPayNotes] = useState('');
   const [paySubmitting, setPaySubmitting] = useState(false);
 
-  useEffect(() => { fetchData(); }, [user]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     const [dRes, pRes] = await Promise.all([
@@ -101,7 +99,9 @@ export default function DebtsPage() {
     const { data: config } = await supabase.from('user_config').select('debt_strategy').eq('user_id', user.id).single();
     if (config?.debt_strategy === 'snowball') setStrategy('snowball');
     setLoading(false);
-  };
+  }, [user]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const activeDebts = debts.filter(d => d.status === 'active');
   const paidDebts = debts.filter(d => d.status === 'paid');
@@ -253,8 +253,10 @@ export default function DebtsPage() {
   };
 
   const handleDeleteDebt = async (id: string) => {
-    await supabase.from('debt_payments').delete().eq('debt_id', id);
-    await supabase.from('debts').delete().eq('id', id);
+    await supabase
+      .from('debts')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id);
     toast.success('Dívida excluída'); fetchData();
   };
 

@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
-import { formatCurrency } from '@/lib/plans';
+import { formatCurrency, PLAN_LIMITS, type PlanType } from '@/lib/plans';
 import { DollarSign, TrendingUp, AlertCircle, PieChart } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -38,7 +38,9 @@ const C = {
 
 export default function BudgetPage() {
   const { user } = useAuth();
-  useProfile();
+  const { profile } = useProfile();
+  const plan = (profile?.plan || 'free') as PlanType;
+  const planLimits = PLAN_LIMITS[plan];
   const [budgets, setBudgets] = useState<BudgetRow[]>([]);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,6 +101,8 @@ export default function BudgetPage() {
 
   const handleSaveBudgets = async () => {
     if (!user) return;
+    const existingCount = budgets.length;
+    let createdCount = 0;
     for (const [cat, val] of Object.entries(budgetInputs)) {
       const amount = parseFloat(val);
       if (isNaN(amount) || amount <= 0) continue;
@@ -106,7 +110,12 @@ export default function BudgetPage() {
       if (existing) {
         await supabase.from('budgets').update({ limit_amount: amount }).eq('id', existing.id);
       } else {
+        if (planLimits.budgets !== Infinity && existingCount + createdCount >= planLimits.budgets) {
+          toast.error(`Plano ${plan} permite até ${planLimits.budgets} orçamentos. Faça upgrade para criar mais.`);
+          break;
+        }
         await supabase.from('budgets').insert({ user_id: user.id, category: cat, month_year: monthYear, limit_amount: amount });
+        createdCount++;
       }
     }
     toast.success('Orçamento salvo!');

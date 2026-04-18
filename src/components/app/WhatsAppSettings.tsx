@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -30,22 +30,22 @@ export default function WhatsAppSettings() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
 
-  useEffect(() => {
+  const loadConnection = useCallback(async () => {
     if (!user) return;
-    loadConnection();
-  }, [user]);
-
-  async function loadConnection() {
     setChecking(true);
     const { data } = await supabase.functions.invoke('whatsapp-verify', {
-      body: { userId: user!.id, action: 'status' },
+      body: { userId: user.id, action: 'status' },
     });
     if (data?.connection) {
       setConnection(data.connection);
       setStep('connected');
     }
     setChecking(false);
-  }
+  }, [user]);
+
+  useEffect(() => {
+    loadConnection();
+  }, [loadConnection]);
 
   async function sendCode() {
     const digits = phoneInput.replace(/\D/g, '');
