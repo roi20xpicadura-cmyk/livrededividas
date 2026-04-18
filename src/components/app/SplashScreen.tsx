@@ -5,7 +5,8 @@ export default function SplashScreen() {
   return (
     <div
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
-      style={{ background: 'var(--color-bg-base)' }}
+      // Background hardcoded como fallback caso CSS vars não tenham carregado.
+      style={{ background: 'var(--color-bg-base, #0b0f14)' }}
     >
       <motion.div
         initial={{ scale: 0.7, opacity: 0 }}

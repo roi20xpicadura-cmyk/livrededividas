@@ -46,16 +46,31 @@ export function useProfile() {
   const fetchProfile = useCallback(async () => {
     if (!user) { setLoading(false); return; }
 
-    const [profileRes, configRes] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', user.id).single(),
-      supabase.from('user_config').select('*').eq('user_id', user.id).single(),
+    // maybeSingle() em vez de single() — não dá erro se a linha ainda não
+    // existe (race com trigger handle_new_user em signups novos). Em vez de
+    // crashar, a gente faz 1 retry curto e segue como "loading concluído".
+    const fetchOnce = async () => Promise.all([
+      supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+      supabase.from('user_config').select('*').eq('user_id', user.id).maybeSingle(),
     ]);
 
-    if (profileRes.data) {
+    let [profileRes, configRes] = await fetchOnce().catch(() => [
+      { data: null, error: null }, { data: null, error: null },
+    ] as any);
+
+    // Se o profile ainda não foi criado pelo trigger, espera 600ms e tenta de novo.
+    if (!profileRes?.data && user) {
+      await new Promise(r => setTimeout(r, 600));
+      try {
+        [profileRes, configRes] = await fetchOnce();
+      } catch { /* segue mesmo sem dados */ }
+    }
+
+    if (profileRes?.data) {
       setProfile(profileRes.data as Profile);
       previousPlanRef.current = (profileRes.data as Profile).plan;
     }
-    if (configRes.data) setConfig(configRes.data as unknown as UserConfig);
+    if (configRes?.data) setConfig(configRes.data as unknown as UserConfig);
     setLoading(false);
   }, [user]);
 

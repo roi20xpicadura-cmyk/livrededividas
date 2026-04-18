@@ -11,7 +11,7 @@ export default function LogoLoader({ fullScreen = false, label }: LogoLoaderProp
     : 'min-h-[60vh] w-full flex flex-col items-center justify-center';
 
   return (
-    <div className={containerClass} style={{ background: 'var(--color-bg-base)', gap: 16 }}>
+    <div className={containerClass} style={{ background: 'var(--color-bg-base, #0b0f14)', gap: 16 }}>
       <motion.div
         initial={{ scale: 0.85, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
