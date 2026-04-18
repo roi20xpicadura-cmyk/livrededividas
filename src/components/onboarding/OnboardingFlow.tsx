@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { OBJECTIVES } from '@/lib/objectives';
-import { formatCurrency } from '@/lib/plans';
 import { toast } from 'sonner';
 
 const PROFILE_TYPES = [

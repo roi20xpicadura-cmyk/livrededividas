@@ -65,6 +65,11 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null;
   }
 
+  // SAFETY: `dangerouslySetInnerHTML` é necessário porque React não permite
+  // filhos de texto em <style>. Todos os valores interpolados (`id`, `prefix`,
+  // `key`, `color`) vêm de configs tipadas definidas em tempo de compilação
+  // pelos desenvolvedores — nunca de entrada do usuário — portanto não há
+  // superfície de XSS. Se for permitir cores via input, sanitizar antes.
   return (
     <style
       dangerouslySetInnerHTML={{

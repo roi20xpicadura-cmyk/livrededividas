@@ -17,7 +17,7 @@ interface Stats {
 interface RecentUser {
   id: string;
   full_name: string | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 export default function AdminDashboardPage() {
@@ -43,7 +43,7 @@ export default function AdminDashboardPage() {
       supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", today),
     ]);
 
-    const uniqueActive = new Set(activeUsers.data?.map((t: any) => t.user_id)).size;
+    const uniqueActive = new Set(activeUsers.data?.map((t: { user_id: string }) => t.user_id)).size;
 
     setStats({
       totalUsers: users.count || 0,
@@ -114,7 +114,7 @@ export default function AdminDashboardPage() {
               <TableRow key={u.id}>
                 <TableCell className="font-medium">{u.full_name || "Sem nome"}</TableCell>
                 <TableCell className="text-right text-muted-foreground">
-                  {new Date(u.created_at).toLocaleDateString("pt-BR")}
+                  {u.created_at ? new Date(u.created_at).toLocaleDateString("pt-BR") : "—"}
                 </TableCell>
               </TableRow>
             ))}

@@ -5,8 +5,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/plans';
 import { format, addDays, differenceInDays, parseISO, startOfMonth, endOfMonth } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import type { Database } from '@/integrations/supabase/types';
+
+type BillRow = Database['public']['Tables']['scheduled_bills']['Row'];
+type BudgetRow = Database['public']['Tables']['budgets']['Row'];
+type TxRow = Database['public']['Tables']['transactions']['Row'];
+type CardRow = Database['public']['Tables']['credit_cards']['Row'];
+type DebtRow = Database['public']['Tables']['debts']['Row'];
 
 interface SmartAlert {
   id: string;
@@ -29,11 +35,11 @@ const alertStyles: Record<string, { bg: string; border: string; text: string; ic
 export default function SmartAlertsWidget() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [bills, setBills] = useState<any[]>([]);
-  const [budgets, setBudgets] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [cards, setCards] = useState<any[]>([]);
-  const [debts, setDebts] = useState<any[]>([]);
+  const [bills, setBills] = useState<BillRow[]>([]);
+  const [budgets, setBudgets] = useState<BudgetRow[]>([]);
+  const [transactions, setTransactions] = useState<TxRow[]>([]);
+  const [cards, setCards] = useState<CardRow[]>([]);
+  const [debts, setDebts] = useState<DebtRow[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 

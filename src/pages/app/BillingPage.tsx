@@ -42,8 +42,17 @@ export default function BillingPage() {
       toast.info('Plano indisponível no momento.');
       return;
     }
-    const emailParam = user?.email ? `&email=${encodeURIComponent(user.email)}` : '';
-    window.open(`${url}${emailParam}`, '_blank', 'noopener,noreferrer');
+
+    // Abre o checkout sem expor o email do usuário na URL (evita vazamento
+    // via histórico do navegador, logs de servidor intermediário e Referer).
+    // Se necessário, o usuário preenche o email na própria página da Hotmart.
+    // O vínculo com o perfil acontece no webhook via email recebido da Hotmart.
+    const popup = window.open('about:blank', '_blank', 'noopener,noreferrer');
+    if (!popup) {
+      toast.error('Permita pop-ups para continuar o pagamento.');
+      return;
+    }
+    popup.location.href = url;
   };
 
   const limits = PLAN_LIMITS[plan];

@@ -7,7 +7,7 @@ interface PluggyConnectOptions {
   onError?: (error: string) => void;
 }
 
-export function usePluggyConnect({ onSuccess, onError }: PluggyConnectOptions = {}) {
+export function usePluggyConnect({ onSuccess: _onSuccess, onError }: PluggyConnectOptions = {}) {
   const [loading, setLoading] = useState(false);
   const [connectToken, setConnectToken] = useState<string | null>(null);
 
@@ -27,8 +27,8 @@ export function usePluggyConnect({ onSuccess, onError }: PluggyConnectOptions = 
 
       setConnectToken(data.accessToken);
       return data;
-    } catch (err: any) {
-      const msg = err?.message || 'Erro ao conectar com Open Finance';
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao conectar com Open Finance';
       toast.error(msg);
       onError?.(msg);
       return null;
@@ -50,8 +50,8 @@ export function usePluggyConnect({ onSuccess, onError }: PluggyConnectOptions = 
 
       if (error) throw new Error(error.message || 'Erro na sincronização');
       return data;
-    } catch (err: any) {
-      const msg = err?.message || 'Erro ao sincronizar';
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao sincronizar';
       toast.error(msg);
       return null;
     }
@@ -120,7 +120,7 @@ export function usePluggyConnect({ onSuccess, onError }: PluggyConnectOptions = 
 
       if (error) throw error;
       return newConn?.id;
-    } catch (err: any) {
+    } catch (err) {
       console.error('saveConnection error:', err);
       throw err;
     }

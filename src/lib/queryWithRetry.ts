@@ -1,7 +1,7 @@
 export async function queryWithRetry<T>(
-  queryFn: () => Promise<{ data: T | null; error: any }>,
+  queryFn: () => Promise<{ data: T | null; error: unknown }>,
   maxRetries = 3
-): Promise<{ data: T | null; error: any }> {
+): Promise<{ data: T | null; error: unknown }> {
   for (let i = 0; i < maxRetries; i++) {
     try {
       const result = await queryFn();

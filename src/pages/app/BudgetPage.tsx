@@ -8,6 +8,10 @@ import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import type { Database } from '@/integrations/supabase/types';
+
+type BudgetRow = Database['public']['Tables']['budgets']['Row'];
+type TransactionRow = Database['public']['Tables']['transactions']['Row'];
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 import { PERSONAL_EXPENSE_CATS, BUSINESS_EXPENSE_CATS } from '@/lib/objectives';
 
@@ -34,9 +38,9 @@ const C = {
 
 export default function BudgetPage() {
   const { user } = useAuth();
-  const { config } = useProfile();
-  const [budgets, setBudgets] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  useProfile();
+  const [budgets, setBudgets] = useState<BudgetRow[]>([]);
+  const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showSetup, setShowSetup] = useState(false);

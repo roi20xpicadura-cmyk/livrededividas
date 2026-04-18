@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense, type CSSProperties } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/plans';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   SimulatorBase, ScenarioAdjustments, DEFAULT_SCENARIO, PRESET_SCENARIOS, computeSimulation,
+  MonthData,
 } from '@/lib/simulatorEngine';
 import { TrendingUp, TrendingDown, RotateCcw, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,8 +35,8 @@ const C = {
 };
 
 const LazySimChart = lazy(() => import('recharts').then(m => ({
-  default: ({ timeline, baseline }: { timeline: any[]; baseline: any[] }) => {
-    const data = timeline.map((t: any, i: number) => ({
+  default: ({ timeline, baseline }: { timeline: MonthData[]; baseline: MonthData[] }) => {
+    const data = timeline.map((t, i) => ({
       label: t.label,
       simulado: t.balance,
       atual: baseline[i]?.balance || 0,
@@ -118,7 +119,7 @@ function SliderControl({ label, value, onChange, min, max, step = 1, helper, for
         type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(Number(e.target.value))}
         className="violet-slider w-full"
-        style={{ ['--pct' as any]: `${pct}%` }}
+        style={{ '--pct': `${pct}%` } as CSSProperties & Record<'--pct', string>}
       />
       {helper && <p style={{ color: C.textSubtle, fontSize: 11, marginTop: 6 }}>{helper}</p>}
     </div>

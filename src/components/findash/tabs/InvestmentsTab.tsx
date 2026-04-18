@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { Investment, INVESTMENT_TYPES } from "@/types/findash";
 import { format, parseISO } from "date-fns";
 import { Plus, X, TrendingUp, TrendingDown } from "lucide-react";
-import { motion } from "framer-motion";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 interface Props {
@@ -19,7 +18,7 @@ function fmt(v: number, c: string) {
 
 const COLORS = ['#7C3AED', '#2563eb', '#7c3aed', '#d97706', '#0891b2', '#dc2626', '#e11d48'];
 
-export default function InvestmentsTab({ investments, currency, onAdd, onUpdate, onRemove }: Props) {
+export default function InvestmentsTab({ investments, currency, onAdd, onUpdate: _onUpdate, onRemove }: Props) {
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [name, setName] = useState("");
   const [val, setVal] = useState("");

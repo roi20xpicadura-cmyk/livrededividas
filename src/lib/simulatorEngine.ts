@@ -1,6 +1,28 @@
 import { format, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+export interface SimulatorDebt {
+  id: string;
+  current_amount?: number | string | null;
+  name?: string | null;
+  [key: string]: unknown;
+}
+
+export interface SimulatorGoal {
+  id: string;
+  current_amount?: number | string | null;
+  target_amount: number | string;
+  name?: string | null;
+  [key: string]: unknown;
+}
+
+export interface SimulatorRecurring {
+  id: string;
+  amount?: number | string | null;
+  type?: string | null;
+  [key: string]: unknown;
+}
+
 export interface SimulatorBase {
   avgMonthlyIncome: number;
   avgMonthlyExpenses: number;
@@ -8,9 +30,9 @@ export interface SimulatorBase {
   totalDebt: number;
   currentBalance: number;
   financialScore: number;
-  debts: any[];
-  goals: any[];
-  recurring: any[];
+  debts: SimulatorDebt[];
+  goals: SimulatorGoal[];
+  recurring: SimulatorRecurring[];
 }
 
 export interface ScenarioAdjustments {

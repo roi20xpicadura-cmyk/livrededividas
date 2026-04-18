@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -12,16 +12,40 @@ import QuickAddFAB from '@/components/app/QuickAddFAB';
 import icon from '@/assets/korafinance-icon.png';
 import {
   LayoutDashboard, ArrowLeftRight, Target, TrendingUp, FileText,
-  CreditCard, Briefcase, BarChart2, Download, Settings2, Crown,
-  LogOut, Menu, X, Bell, ChevronRight, BarChart3, Home, MoreHorizontal, Sparkles,
-  AlertCircle, CalendarDays, Trophy, Gift, Sun, Moon, Monitor, Plus, Building2, Plug, FlaskConical, Lock, Repeat
+  CreditCard, Briefcase, BarChart2, Settings2, Crown,
+  LogOut, Menu, X, Bell, ChevronRight, Home, MoreHorizontal, Sparkles,
+  AlertCircle, CalendarDays, Trophy, Gift, Sun, Moon, Plus, Building2, Plug, FlaskConical, Lock, Repeat
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
+type NavItem = {
+  label: string;
+  path: string;
+  icon: React.ComponentType<{ style?: React.CSSProperties }>;
+  profiles: string[];
+  emoji?: string;
+  comingSoon?: boolean;
+  badge?: string;
+};
+
+type AccountItem = {
+  label: string;
+  path: string;
+  icon: React.ComponentType<{ style?: React.CSSProperties }>;
+  profiles?: string[];
+};
+
+type MobileNavItem = {
+  label: string;
+  path: string;
+  icon: React.ComponentType<{ style?: React.CSSProperties }>;
+  activeColor: string;
+};
+
 // Note: 'Lançamentos' is rendered specially per profile_type (see navItems memo below).
-const ALL_NAV_ITEMS = [
+const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Visão Geral', path: '/app', icon: LayoutDashboard, profiles: ['personal', 'business', 'both'] },
   { label: 'Lançamentos', path: '/app/transactions', icon: ArrowLeftRight, profiles: ['personal', 'business'] },
   { label: 'Lançamentos Pessoais', path: '/app/transactions/personal', icon: Home, profiles: ['both'], emoji: '🏠' },
@@ -40,14 +64,14 @@ const ALL_NAV_ITEMS = [
 
 ];
 
-const ACCOUNT_ITEMS = [
+const ACCOUNT_ITEMS: AccountItem[] = [
   { label: 'Conquistas', path: '/app/achievements', icon: Trophy, profiles: ['personal', 'both'] },
   { label: 'Indicar Amigos', path: '/app/referral', icon: Gift },
   { label: 'Configurações', path: '/app/settings', icon: Settings2 },
   { label: 'Meu Plano', path: '/app/billing', icon: Crown },
 ];
 
-const MOBILE_NAV_PERSONAL = [
+const MOBILE_NAV_PERSONAL: MobileNavItem[] = [
   { label: 'Início', path: '/app', icon: Home, activeColor: '#7C3AED' },
   { label: 'Lançar', path: '/app/transactions', icon: ArrowLeftRight, activeColor: '#2563eb' },
   { label: '', path: 'fab', icon: Plus, activeColor: '#7C3AED' },
@@ -55,7 +79,7 @@ const MOBILE_NAV_PERSONAL = [
   { label: 'Mais', path: 'more', icon: MoreHorizontal, activeColor: '#64748b' },
 ];
 
-const MOBILE_NAV_BOTH = [
+const MOBILE_NAV_BOTH: MobileNavItem[] = [
   { label: 'Início', path: '/app', icon: Home, activeColor: '#7C3AED' },
   { label: 'Pessoal', path: '/app/transactions/personal', icon: Home, activeColor: '#7C3AED' },
   { label: '', path: 'fab', icon: Plus, activeColor: '#7C3AED' },
@@ -63,7 +87,7 @@ const MOBILE_NAV_BOTH = [
   { label: 'Mais', path: 'more', icon: MoreHorizontal, activeColor: '#64748b' },
 ];
 
-const MOBILE_NAV_BUSINESS = [
+const MOBILE_NAV_BUSINESS: MobileNavItem[] = [
   { label: 'Início', path: '/app', icon: Home, activeColor: '#7C3AED' },
   { label: 'Lançar', path: '/app/transactions', icon: ArrowLeftRight, activeColor: '#2563eb' },
   { label: '', path: 'fab', icon: Plus, activeColor: '#7C3AED' },
@@ -97,7 +121,7 @@ const PAGE_TITLES: Record<string, string> = {
 export default function AppLayout() {
   const { user, signOut } = useAuth();
   const { profile, config, loading, refetch } = useProfile();
-  const { theme, resolvedTheme, setTheme, cycleTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -130,13 +154,13 @@ export default function AppLayout() {
 
   const profileType = config?.profile_type || 'personal';
   const visibleNavItems = ALL_NAV_ITEMS.filter(item => item.profiles.includes(profileType));
-  const navItems = visibleNavItems.filter(item => !(item as any).comingSoon);
-  const comingSoonItems = visibleNavItems.filter(item => (item as any).comingSoon);
+  const navItems = visibleNavItems.filter(item => !item.comingSoon);
+  const comingSoonItems = visibleNavItems.filter(item => item.comingSoon);
   const MOBILE_NAV =
     profileType === 'both' ? MOBILE_NAV_BOTH :
     profileType === 'business' ? MOBILE_NAV_BUSINESS :
     MOBILE_NAV_PERSONAL;
-  const accountItems = ACCOUNT_ITEMS.filter(item => !(item as any).profiles || (item as any).profiles.includes(profileType));
+  const accountItems = ACCOUNT_ITEMS.filter(item => !item.profiles || item.profiles.includes(profileType));
   const plan = profile?.plan || 'free';
 
   useEffect(() => {
@@ -268,8 +292,8 @@ export default function AppLayout() {
                   fontWeight: active ? 700 : 600,
                   color: active ? 'var(--color-green-800)' : 'var(--color-text-base)',
                 }}>{item.label}</span>
-                {(item as any).badge && (
-                  <span style={{ fontSize: 9, fontWeight: 800, background: '#fbbf24', color: '#78350f', padding: '2px 7px', borderRadius: 99 }}>{(item as any).badge}</span>
+                {item.badge && (
+                  <span style={{ fontSize: 9, fontWeight: 800, background: '#fbbf24', color: '#78350f', padding: '2px 7px', borderRadius: 99 }}>{item.badge}</span>
                 )}
                 {item.path === '/app/debts' && activeDebtCount > 0 && (
                   <span className="ml-auto text-center" style={{
@@ -565,7 +589,7 @@ export default function AppLayout() {
           height: 68,
           borderTop: '1px solid var(--color-border-weak)',
         }}>
-          {MOBILE_NAV.map((item, i) => {
+          {MOBILE_NAV.map((item) => {
             if (item.path === 'fab') {
               return (
                 <div key="fab" className="flex-1 flex items-center justify-center" style={{ marginTop: -24 }}>

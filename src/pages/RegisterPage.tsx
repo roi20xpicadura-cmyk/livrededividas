@@ -115,7 +115,7 @@ export default function RegisterPage() {
         terms_accepted_at: new Date().toISOString(),
         terms_version: '1.0',
         marketing_emails: false,
-      } as any).eq('id', data.user.id);
+      }).eq('id', data.user.id);
 
       // Fire-and-forget welcome email (non-blocking)
       supabase.functions.invoke('send-welcome-email', {

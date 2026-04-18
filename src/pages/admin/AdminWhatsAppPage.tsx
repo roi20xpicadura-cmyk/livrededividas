@@ -28,7 +28,7 @@ export default function AdminWhatsAppPage() {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(50)
-      .then(({ data }) => setMessages((data as any) || []));
+      .then(({ data }) => setMessages((data as unknown as WAMessage[]) || []));
   }, []);
 
   async function sendBroadcast() {

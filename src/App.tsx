@@ -110,7 +110,7 @@ function usePrefetchAppRoutes() {
 const App = () => {
   const [showSplash, setShowSplash] = useState(() => {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-      || (navigator as any).standalone === true;
+      || (navigator as Navigator & { standalone?: boolean }).standalone === true;
     return isStandalone;
   });
 

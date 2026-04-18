@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import {
   Plus, ChevronDown, ChevronRight, Zap, Pencil, Check, Trash2,
-  MoreVertical, Pause, Play, AlertTriangle, DollarSign, Sparkles, Calculator,
+  MoreVertical, Pause, Play, AlertTriangle, DollarSign, Sparkles,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 

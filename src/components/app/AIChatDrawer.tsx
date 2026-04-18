@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect, useCallback, useMemo, forwardRef } from 'react';
+import { useState, useRef, useEffect, useCallback, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, X, Loader2, CheckCircle2, RotateCcw,
-  ArrowUp, ChevronLeft, ChevronRight, Clock, Lock
+  ArrowUp, ChevronLeft, ChevronRight, Clock
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,15 +10,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useProfile } from '@/hooks/useProfile';
 
 type Msg = { role: 'user' | 'assistant'; content: string; ts: Date; actions?: string[] };
-type Conversation = { id: string; title: string; updated_at: string };
+type Conversation = { id: string; title: string | null; updated_at: string | null };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
-
-function formatCompact(v: number): string {
-  if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`;
-  if (v >= 1000) return `${(v / 1000).toFixed(1)}k`;
-  return v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
 
 /* ─── Typing Indicator ─── */
 const TypingIndicator = forwardRef<HTMLDivElement>((_, ref) => {
@@ -46,23 +40,24 @@ const TypingIndicator = forwardRef<HTMLDivElement>((_, ref) => {
 TypingIndicator.displayName = 'TypingIndicator';
 
 /* ─── Markdown Components ─── */
+type MdProps = { children?: import('react').ReactNode };
 const markdownComponents = {
-  strong: ({ children }: any) => <strong style={{ fontWeight: 800, color: 'var(--color-text-strong)' }}>{children}</strong>,
-  p: ({ children }: any) => <p style={{ margin: 0, marginBottom: 6 }}>{children}</p>,
-  ul: ({ children }: any) => <ul style={{ margin: '6px 0', paddingLeft: 0, listStyle: 'none' }}>{children}</ul>,
-  li: ({ children }: any) => (
+  strong: ({ children }: MdProps) => <strong style={{ fontWeight: 800, color: 'var(--color-text-strong)' }}>{children}</strong>,
+  p: ({ children }: MdProps) => <p style={{ margin: 0, marginBottom: 6 }}>{children}</p>,
+  ul: ({ children }: MdProps) => <ul style={{ margin: '6px 0', paddingLeft: 0, listStyle: 'none' }}>{children}</ul>,
+  li: ({ children }: MdProps) => (
     <li style={{ display: 'flex', gap: 8, marginBottom: 5 }}>
       <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--color-green-500)', flexShrink: 0, marginTop: 8 }} />
       <span style={{ lineHeight: 1.6 }}>{children}</span>
     </li>
   ),
-  code: ({ children }: any) => (
+  code: ({ children }: MdProps) => (
     <code style={{
       background: 'var(--color-bg-sunken)', borderRadius: 6,
       padding: '2px 6px', fontFamily: 'var(--font-mono)', fontSize: 13,
     }}>{children}</code>
   ),
-  h3: ({ children }: any) => <h3 style={{ fontSize: 14, fontWeight: 800, margin: '8px 0 4px', color: 'var(--color-text-strong)' }}>{children}</h3>,
+  h3: ({ children }: MdProps) => <h3 style={{ fontSize: 14, fontWeight: 800, margin: '8px 0 4px', color: 'var(--color-text-strong)' }}>{children}</h3>,
 };
 
 /* ─── Message Bubble ─── */
@@ -255,9 +250,9 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
   const [loading, setLoading] = useState(false);
   const [streamingText, setStreamingText] = useState('');
   const [streamActions, setStreamActions] = useState<string[]>([]);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [, setConversations] = useState<Conversation[]>([]);
   const [activeConvoId, setActiveConvoId] = useState<string | null>(null);
-  const [showHistory, setShowHistory] = useState(false);
+  const [, setShowHistory] = useState(false);
   const [financialData, setFinancialData] = useState({ balance: 0, score: 0, totalDebt: 0, topCategory: null as string | null });
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -318,18 +313,6 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
     if (data) setConversations(data);
   };
 
-  const loadMessages = async (convoId: string) => {
-    const { data } = await supabase.from('chat_messages').select('role, content, actions, created_at').eq('conversation_id', convoId).order('created_at', { ascending: true });
-    if (data) {
-      setMessages(data.map(m => ({
-        role: m.role as 'user' | 'assistant', content: m.content, ts: new Date(m.created_at),
-        actions: m.actions && m.actions.length > 0 ? m.actions : undefined,
-      })));
-    }
-    setActiveConvoId(convoId);
-    setShowHistory(false);
-  };
-
   const saveMessage = async (convoId: string, msg: Msg) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
@@ -347,13 +330,6 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
     if (error || !data) return null;
     await loadConversations();
     return data.id;
-  };
-
-  const deleteConversation = async (convoId: string) => {
-    await supabase.from('chat_messages').delete().eq('conversation_id', convoId);
-    await supabase.from('chat_conversations').delete().eq('id', convoId);
-    if (activeConvoId === convoId) { setActiveConvoId(null); setMessages([]); }
-    await loadConversations();
   };
 
   const startNewChat = () => { setActiveConvoId(null); setMessages([]); setShowHistory(false); };

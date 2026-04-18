@@ -41,7 +41,8 @@ export default function MRRChart() {
 
         let mrr = 0;
         let paying = 0;
-        (profiles || []).forEach((p: any) => {
+        (profiles || []).forEach((p: { plan: string | null; plan_expires_at: string | null; created_at: string | null }) => {
+          if (!p.created_at) return;
           const created = new Date(p.created_at);
           if (created > monthEnd) return; // ainda não existia
           const plan = p.plan || "free";

@@ -11,7 +11,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, client-token',
 };
 
 async function sendWhatsApp(phone: string, message: string) {
@@ -261,6 +261,23 @@ function isWithinBrazilDaytime(): boolean {
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
+  }
+
+  // Auth: endpoint é público (verify_jwt=false) para permitir cron/scheduler,
+  // mas exige Client-Token compartilhado com Z-API para bloquear acesso não autorizado.
+  if (!ZAPI_CLIENT_TOKEN) {
+    console.error('🚨 ZAPI_CLIENT_TOKEN not configured — rejecting all requests');
+    return new Response(
+      JSON.stringify({ error: 'endpoint not configured' }),
+      { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
+  const sentToken = req.headers.get('client-token');
+  if (sentToken !== ZAPI_CLIENT_TOKEN) {
+    return new Response(
+      JSON.stringify({ error: 'unauthorized' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
   }
 
   console.log('🔔 Running WhatsApp notifications...');

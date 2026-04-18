@@ -31,9 +31,10 @@ export default function TransactionCardMobile({ transaction: tx, currency = 'R$'
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const startX = e.touches[0].clientX;
-    const el = e.currentTarget;
-    const handleMove = (ev: TouchEvent) => {
-      const dx = ev.touches[0].clientX - startX;
+    const el = e.currentTarget as HTMLElement;
+    const handleMove = (ev: Event) => {
+      const te = ev as TouchEvent;
+      const dx = te.touches[0].clientX - startX;
       if (dx < 0) setOffset(Math.max(dx, -80));
     };
     const handleEnd = () => {

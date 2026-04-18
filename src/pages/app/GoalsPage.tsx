@@ -2,26 +2,34 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
-import { formatCurrency, PLAN_LIMITS, PlanType } from '@/lib/plans';
+import { PLAN_LIMITS, PlanType } from '@/lib/plans';
 import { OBJECTIVES } from '@/lib/objectives';
 import {
-  Plus, ChevronDown, Pencil, Sparkles, Check, Zap, Trophy,
-  PiggyBank, Archive, Target
+  Plus, ChevronDown, Pencil, Check, Trophy,
+  PiggyBank, Archive
 } from 'lucide-react';
-import { format, subDays, isSameDay, differenceInDays, parseISO, addMonths } from 'date-fns';
+import { format, differenceInDays, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 import BottomSheet from '@/components/app/BottomSheet';
+import type { Database } from '@/integrations/supabase/types';
+
+type GoalRow = Database['public']['Tables']['goals']['Row'];
+
+interface GoalFormState {
+  name: string;
+  target_amount: string;
+  current_amount: string;
+  deadline: string;
+  objective_type: string;
+}
+
+type EditGoalState = (GoalRow & { _prefill?: boolean }) | { _prefill: true; name?: string } | null;
 
 /* ─── Helpers ─── */
 function formatMoney(v: number): string {
   return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-function formatCompact(v: number): string {
-  if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`;
-  if (v >= 1000) return `${(v / 1000).toFixed(1)}k`;
-  return v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 function getGoalEmoji(name: string): string {
@@ -51,10 +59,10 @@ export default function GoalsPage() {
   const plan = (profile?.plan || 'free') as PlanType;
   const limits = PLAN_LIMITS[plan];
 
-  const [goals, setGoals] = useState<any[]>([]);
+  const [goals, setGoals] = useState<GoalRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editGoal, setEditGoal] = useState<any>(null);
+  const [editGoal, setEditGoal] = useState<EditGoalState>(null);
 
   const fetchGoals = useCallback(async () => {
     if (!user) return;
@@ -107,7 +115,7 @@ export default function GoalsPage() {
     fetchGoals();
   };
 
-  const handleSaveGoal = async (form: any) => {
+  const handleSaveGoal = async (form: GoalFormState) => {
     if (!user) return;
     const target = parseFloat(form.target_amount);
     if (!form.name?.trim() || isNaN(target) || target <= 0) {
@@ -115,7 +123,7 @@ export default function GoalsPage() {
       return;
     }
 
-    if (editGoal) {
+    if (editGoal && 'id' in editGoal && editGoal.id) {
       await supabase.from('goals').update({
         name: form.name.trim(),
         target_amount: target,
@@ -160,7 +168,7 @@ export default function GoalsPage() {
     fetchGoals();
   };
 
-  const openEdit = (goal: any) => {
+  const openEdit = (goal: GoalRow) => {
     setEditGoal(goal);
     setSheetOpen(true);
   };
@@ -376,7 +384,7 @@ function EmptyState({ onAdd }: { onAdd: (prefill?: { name?: string }) => void })
 }
 
 /* ─── Summary Bar ─── */
-function SummaryBar({ goals }: { goals: any[] }) {
+function SummaryBar({ goals }: { goals: GoalRow[] }) {
   const totalTarget = goals.reduce((s, g) => s + Number(g.target_amount), 0);
   const totalSaved = goals.reduce((s, g) => s + Number(g.current_amount), 0);
   const overallPct = totalTarget > 0 ? Math.min(100, (totalSaved / totalTarget) * 100) : 0;
@@ -451,9 +459,9 @@ function SummaryBar({ goals }: { goals: any[] }) {
 
 /* ─── Goal Card ─── */
 function GoalCard({ goal, index, onDeposit, onEdit, onDelete, onComplete }: {
-  goal: any; index: number;
+  goal: GoalRow; index: number;
   onDeposit: (id: string, amount: number) => void;
-  onEdit: (g: any) => void;
+  onEdit: (g: GoalRow) => void;
   onDelete: (id: string) => void;
   onComplete: (id: string) => void;
 }) {
@@ -848,7 +856,7 @@ function GoalCard({ goal, index, onDeposit, onEdit, onDelete, onComplete }: {
 }
 
 /* ─── Completed Section ─── */
-function CompletedSection({ goals }: { goals: any[] }) {
+function CompletedSection({ goals }: { goals: GoalRow[] }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ padding: '0 16px', marginTop: 16 }}>
@@ -937,11 +945,11 @@ function CompletedSection({ goals }: { goals: any[] }) {
 function GoalSheet({ open, onClose, editGoal, onSave }: {
   open: boolean;
   onClose: () => void;
-  editGoal: any;
-  onSave: (form: any) => void;
+  editGoal: EditGoalState;
+  onSave: (form: GoalFormState) => void;
 }) {
-  const isEdit = editGoal && !editGoal._prefill;
-  const [form, setForm] = useState({
+  const isEdit = Boolean(editGoal && 'id' in editGoal && !editGoal._prefill);
+  const [form, setForm] = useState<GoalFormState>({
     name: '',
     target_amount: '',
     current_amount: '0',
@@ -951,7 +959,7 @@ function GoalSheet({ open, onClose, editGoal, onSave }: {
 
   useEffect(() => {
     if (open) {
-      if (isEdit) {
+      if (isEdit && editGoal && 'id' in editGoal) {
         setForm({
           name: editGoal.name || '',
           target_amount: String(editGoal.target_amount || ''),
@@ -969,7 +977,7 @@ function GoalSheet({ open, onClose, editGoal, onSave }: {
         });
       }
     }
-  }, [open, editGoal]);
+  }, [open, editGoal, isEdit]);
 
   const suggestedEmoji = getGoalEmoji(form.name);
 

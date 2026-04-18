@@ -23,11 +23,11 @@ export function useAchievements() {
     prog['launches_10'] = Math.min(total, 10);
     prog['launches_100'] = Math.min(total, 100);
 
-    const waTxs = (txs || []).filter((t: any) => t.source === 'whatsapp').length;
+    const waTxs = (txs || []).filter((t) => t.source === 'whatsapp').length;
     prog['whatsapp_10'] = Math.min(waTxs, 10);
 
     // Streak: consecutive days ending today
-    const dates = [...new Set((txs || []).map((t: any) => t.date as string))].sort().reverse();
+    const dates = [...new Set((txs || []).map((t) => t.date))].sort().reverse();
     let streak = 0;
     const checkDate = new Date();
     for (let i = 0; i < dates.length; i++) {
@@ -51,9 +51,9 @@ export function useAchievements() {
 
     // Positive months streak
     try {
-      const { data: monthStats } = await supabase.rpc('get_monthly_balances' as any, { p_user_id: uid });
+      const { data: monthStats } = await supabase.rpc('get_monthly_balances', { p_user_id: uid });
       let positive = 0;
-      for (const m of (monthStats || []) as any[]) {
+      for (const m of monthStats || []) {
         if (Number(m.balance) > 0) positive++;
         else break;
       }
@@ -68,7 +68,7 @@ export function useAchievements() {
       .select('current_amount, target_amount')
       .eq('user_id', uid)
       .is('deleted_at', null);
-    const completed = (goals || []).filter((g: any) => Number(g.current_amount) >= Number(g.target_amount)).length;
+    const completed = (goals || []).filter((g) => Number(g.current_amount) >= Number(g.target_amount)).length;
     if (completed > 0) prog['goal_complete'] = 1;
 
     setProgress(prog);
@@ -84,7 +84,7 @@ export function useAchievements() {
         .select('achievement_key')
         .eq('user_id', user.id);
       if (!active) return;
-      const ids = (achieved || []).map((a: any) => a.achievement_key);
+      const ids = (achieved || []).map((a) => a.achievement_key);
       setUnlocked(ids);
       await calculateProgress(user.id);
       if (active) setLoading(false);

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, MessageCircle, Bot, RefreshCw, X, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Sparkles, MessageCircle, RefreshCw, X, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -19,9 +19,9 @@ interface AgentAlert {
   alert_type: string;
   severity: string;
   title: string;
-  description: string;
+  description: string | null;
   triggered_date: string;
-  dismissed: boolean;
+  dismissed: boolean | null;
 }
 
 const typeStyles: Record<string, { bg: string; border: string; text: string }> = {

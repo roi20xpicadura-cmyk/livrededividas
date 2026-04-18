@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { Transaction, INCOME_CATEGORIES, EXPENSE_CATEGORIES } from "@/types/findash";
 import { format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { Plus, X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -62,11 +61,11 @@ export default function TransactionsTab({ filteredTx, currency, onAdd, onRemove 
           <input placeholder="Descrição" value={desc} onChange={e => setDesc(e.target.value)}
             className={`${inputClass} col-span-2 md:col-span-1`} />
           <input type="number" placeholder="Valor" value={val} onChange={e => setVal(e.target.value)} className={inputClass} />
-          <select value={type} onChange={e => { setType(e.target.value as any); setCat(""); }} className={inputClass}>
+          <select value={type} onChange={e => { setType(e.target.value as 'income' | 'expense'); setCat(""); }} className={inputClass}>
             <option value="income">Receita</option>
             <option value="expense">Despesa</option>
           </select>
-          <select value={origin} onChange={e => setOrigin(e.target.value as any)} className={inputClass}>
+          <select value={origin} onChange={e => setOrigin(e.target.value as 'business' | 'personal')} className={inputClass}>
             <option value="business">Negócio</option>
             <option value="personal">Pessoal</option>
           </select>

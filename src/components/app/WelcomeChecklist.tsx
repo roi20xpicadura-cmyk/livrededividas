@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronDown, ArrowRight, Sparkles, ReceiptText, Target, CreditCard, Landmark, Settings } from 'lucide-react';
+import { Check, ChevronDown, ArrowRight, ReceiptText, Target, CreditCard, Landmark, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';

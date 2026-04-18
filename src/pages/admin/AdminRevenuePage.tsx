@@ -14,7 +14,7 @@ export default function AdminRevenuePage() {
   useEffect(() => {
     supabase.from("profiles").select("plan").then(({ data }) => {
       const c: Record<string, number> = {};
-      (data || []).forEach((r: any) => {
+      (data || []).forEach((r: { plan: string | null }) => {
         const p = r.plan || "free";
         c[p] = (c[p] || 0) + 1;
       });

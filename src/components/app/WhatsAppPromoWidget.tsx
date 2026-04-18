@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function WhatsAppPromoWidget() {

@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Legend
+  Tooltip, ResponsiveContainer
 } from 'recharts';
 
 interface Card {
@@ -46,7 +46,7 @@ function fmtMonth(my: string) {
 
 function daysUntilDue(dueDay: number | null) {
   if (!dueDay) return 999;
-  const now = new Date(); const today = now.getDate();
+  const now = new Date();
   const thisMonth = new Date(now.getFullYear(), now.getMonth(), dueDay);
   const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, dueDay);
   const target = thisMonth >= now ? thisMonth : nextMonth;
@@ -129,7 +129,7 @@ function VisualCard({ card, onClick, onDelete, scale = 1 }: {
       )}
       {confirmDel && (
         <div className="absolute top-3 left-3 z-10 flex gap-1.5">
-          <button onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          <button onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
             className="text-[10px] font-bold text-white bg-[#dc2626] px-2 py-1 rounded">Excluir</button>
           <button onClick={(e) => { e.stopPropagation(); setConfirmDel(false); }}
             className="text-[10px] font-bold text-white bg-black/40 px-2 py-1 rounded">Não</button>
@@ -210,8 +210,8 @@ export default function CardsPage() {
       supabase.from('credit_cards').select('*').eq('user_id', user.id).order('created_at'),
       supabase.from('card_bills').select('*').eq('user_id', user.id),
     ]);
-    setCards((cRes.data as any[])?.map(c => ({ ...c, credit_limit: Number(c.credit_limit), used_amount: Number(c.used_amount) })) || []);
-    setBills((bRes.data as any[])?.map(b => ({ ...b, total_amount: Number(b.total_amount) })) || []);
+    setCards((cRes.data ?? []).map(c => ({ ...c, credit_limit: Number(c.credit_limit), used_amount: Number(c.used_amount) })) as Card[]);
+    setBills((bRes.data ?? []).map(b => ({ ...b, total_amount: Number(b.total_amount) })) as Bill[]);
     setLoading(false);
   };
 

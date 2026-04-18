@@ -51,7 +51,35 @@ function removeOutliers(values: number[]): number[] {
   return values.filter(v => v >= lower && v <= upper);
 }
 
-function analyzePatterns(transactions: any[]) {
+type Transaction = {
+  date: string;
+  type: string;
+  amount: number | string;
+  category?: string | null;
+  description?: string | null;
+  card_id?: string | null;
+};
+
+type RecurringTransaction = {
+  active: boolean | null;
+  frequency: string;
+  day_of_month?: number | null;
+  next_date: string;
+  description?: string | null;
+  amount: number | string;
+  type: string;
+  category?: string | null;
+};
+
+type ScheduledBill = {
+  due_date: string;
+  status: string | null;
+  description: string;
+  amount: number | string;
+  category?: string | null;
+};
+
+function analyzePatterns(transactions: Transaction[]) {
   // Agrupa gastos por dia da semana, mas usa MEDIANA dos valores diários (não média)
   const expensesByDayOfWeek: number[][] = Array(7).fill(0).map(() => []);
   const dailyTotals: Record<string, Record<number, number>> = {}; // date -> {dayOfWeek: total}
@@ -108,7 +136,7 @@ function analyzePatterns(transactions: any[]) {
  * Heurística: descrições parecidas (normalizadas) com mesmo valor recorrendo mensalmente.
  * Retorna parcelas futuras esperadas (ainda não cobradas).
  */
-function detectFutureInstallments(transactions: any[]): Array<{ date: string; amount: number; description: string; category: string }> {
+function detectFutureInstallments(transactions: Transaction[]): Array<{ date: string; amount: number; description: string; category: string }> {
   const installments: Array<{ date: string; amount: number; description: string; category: string }> = [];
   const cardExpenses = transactions.filter(t => t.type === 'expense' && t.card_id);
 
@@ -121,9 +149,9 @@ function detectFutureInstallments(transactions: any[]): Array<{ date: string; am
       .trim();
 
   // Agrupa por (descrição normalizada + valor arredondado)
-  const groups: Record<string, any[]> = {};
+  const groups: Record<string, Transaction[]> = {};
   cardExpenses.forEach(t => {
-    const key = `${normalize(t.description)}|${Math.round(Number(t.amount) * 100) / 100}`;
+    const key = `${normalize(t.description || '')}|${Math.round(Number(t.amount) * 100) / 100}`;
     if (!groups[key]) groups[key] = [];
     groups[key].push(t);
   });
@@ -131,7 +159,7 @@ function detectFutureInstallments(transactions: any[]): Array<{ date: string; am
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  Object.entries(groups).forEach(([key, txs]) => {
+  Object.values(groups).forEach((txs) => {
     if (txs.length < 2) return; // precisa de pelo menos 2 ocorrências
 
     // Ordena por data
@@ -165,7 +193,7 @@ function detectFutureInstallments(transactions: any[]): Array<{ date: string; am
     const lastDate = dates[dates.length - 1];
     const dayOfMonth = lastDate.getDate();
     const sample = txs[0];
-    const cleanDesc = normalize(sample.description) || sample.description;
+    const cleanDesc = normalize(sample.description || '') || sample.description || '';
 
     for (let i = 1; i <= Math.min(remaining, 12); i++) {
       const next = addMonths(lastDate, i);
@@ -183,7 +211,7 @@ function detectFutureInstallments(transactions: any[]): Array<{ date: string; am
   return installments;
 }
 
-function isRecurringDue(rec: any, date: Date): boolean {
+function isRecurringDue(rec: RecurringTransaction, date: Date): boolean {
   if (!rec.active) return false;
   const dayOfMonth = rec.day_of_month || new Date(rec.next_date + 'T12:00:00').getDate();
   if (rec.frequency === 'monthly') return date.getDate() === dayOfMonth;
@@ -193,9 +221,9 @@ function isRecurringDue(rec: any, date: Date): boolean {
 
 export function buildPrediction(
   currentBalance: number,
-  transactions: any[],
-  recurring: any[],
-  scheduledBills: any[],
+  transactions: Transaction[],
+  recurring: RecurringTransaction[],
+  scheduledBills: ScheduledBill[],
   days: number = 90
 ): DayPrediction[] {
   const predictions: DayPrediction[] = [];
@@ -220,14 +248,14 @@ export function buildPrediction(
     for (const rec of recurring) {
       if (isRecurringDue(rec, date)) {
         const amt = Number(rec.amount) * (rec.type === 'expense' ? -1 : 1);
-        dayEvents.push({ type: rec.type === 'expense' ? 'recurring_expense' : 'recurring_income', description: rec.description, amount: amt, probability: 0.95, category: rec.category });
+        dayEvents.push({ type: rec.type === 'expense' ? 'recurring_expense' : 'recurring_income', description: rec.description || '', amount: amt, probability: 0.95, category: rec.category || '' });
         runningBalance += amt;
       }
     }
 
     for (const bill of scheduledBills) {
       if (bill.due_date === dateStr && bill.status === 'pending') {
-        dayEvents.push({ type: 'scheduled_bill', description: bill.description, amount: -Number(bill.amount), probability: 0.99, category: bill.category });
+        dayEvents.push({ type: 'scheduled_bill', description: bill.description, amount: -Number(bill.amount), probability: 0.99, category: bill.category || '' });
         runningBalance -= Number(bill.amount);
       }
     }

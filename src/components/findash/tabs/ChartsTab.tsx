@@ -41,7 +41,7 @@ const tooltipStyle = {
   },
 };
 
-export default function ChartsTab({ filteredTx, investments, currency, rangeStart, rangeEnd }: Props) {
+export default function ChartsTab({ filteredTx, investments: _investments, currency, rangeStart, rangeEnd }: Props) {
   const dailyData = useMemo(() => {
     const days = eachDayOfInterval({ start: rangeStart, end: rangeEnd });
     return days.map(d => {
