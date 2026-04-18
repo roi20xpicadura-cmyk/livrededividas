@@ -626,15 +626,12 @@ Fique de olho! 👀`;
 serve(async (req) => {
   if (req.method !== "POST") return new Response("OK", { status: 200 });
 
-  // Authenticate the webhook: Z-API sends the same Client-Token we configured
-  // in their dashboard. Reject anything that doesn't match.
-  const sentToken = req.headers.get("client-token");
-  if (!ZAPI_CLIENT_TOKEN || sentToken !== ZAPI_CLIENT_TOKEN) {
-    return new Response(JSON.stringify({ error: "unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
+  // Nota: Z-API não envia Client-Token de volta nos webhooks de entrada
+  // (esse header só é usado quando *nós* chamamos a API deles). A proteção
+  // contra chamadas externas vem de: (1) URL da função ser secreta/obscura
+  // e (2) dedup por messageId na tabela whatsapp_webhook_dedup. Se quiser
+  // endurecer, configure um WHATSAPP_WEBHOOK_SECRET e valide como query/path
+  // param no webhook cadastrado no painel da Z-API.
 
   try {
     const body = await req.json();
