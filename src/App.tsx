@@ -116,18 +116,24 @@ function usePrefetchAppRoutes() {
 
 const App = () => {
   const [showSplash, setShowSplash] = useState(() => {
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-      || (navigator as Navigator & { standalone?: boolean }).standalone === true;
-    return isStandalone;
+    try {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+        || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+      return isStandalone;
+    } catch {
+      return false;
+    }
   });
 
   usePrefetchAppRoutes();
 
   useEffect(() => {
-    if (showSplash) {
-      const timer = setTimeout(() => setShowSplash(false), 1800);
-      return () => clearTimeout(timer);
-    }
+    if (!showSplash) return;
+    // Splash normal: 1.8s. Fail-safe absoluto: 3.5s — se algo segurar o
+    // unmount (raro), garante que o usuário nunca fica preso na splash.
+    const t1 = setTimeout(() => setShowSplash(false), 1800);
+    const t2 = setTimeout(() => setShowSplash(false), 3500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [showSplash]);
 
   return (
