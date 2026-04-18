@@ -682,6 +682,9 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
                     fontFamily: 'inherit',
                   }}
                 />
+                {kora.enabled && !hasText && (
+                  <AudioRecordButton onRecorded={handleAudioRecorded} disabled={loading} />
+                )}
                 <motion.button
                   whileTap={hasText && !loading ? { scale: 0.85 } : undefined}
                   onClick={() => send(input)}
