@@ -107,17 +107,18 @@ export default function AppLayout() {
   const [showMoreDrawer, setShowMoreDrawer] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [activeDebtCount, setActiveDebtCount] = useState(0);
-  // Esconde o FAB de IA quando há sheets/dialogs abertos no app (Radix trava o body com data-scroll-locked).
+  // Esconde o FAB de IA quando há sheets/dialogs abertos no app.
   const [anyOverlayOpen, setAnyOverlayOpen] = useState(false);
   useEffect(() => {
     const update = () => {
       const locked = document.body.hasAttribute('data-scroll-locked');
-      const hasPortalOverlay = !!document.querySelector('[data-radix-portal] [role="dialog"][data-state="open"], [data-state="open"][role="alertdialog"]');
-      setAnyOverlayOpen(locked || hasPortalOverlay);
+      const sheetOpen = document.body.hasAttribute('data-bottom-sheet-open');
+      const hasPortalOverlay = !!document.querySelector('[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]');
+      setAnyOverlayOpen(locked || sheetOpen || hasPortalOverlay);
     };
     update();
     const obs = new MutationObserver(update);
-    obs.observe(document.body, { attributes: true, attributeFilter: ['data-scroll-locked', 'style'], childList: true, subtree: true });
+    obs.observe(document.body, { attributes: true, attributeFilter: ['data-scroll-locked', 'data-bottom-sheet-open', 'style'], childList: true, subtree: true });
     return () => obs.disconnect();
   }, []);
 
