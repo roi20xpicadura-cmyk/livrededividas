@@ -261,7 +261,8 @@ serve(async (req: Request) => {
 
     // Mensagem pra imagem não-financeira / confiança baixa
     if (imageType === "unknown" || validTxs.length === 0) {
-      await logInteraction(supabase, authCtx.userId, body.hint, rawText, aiResult, parsed);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await logInteraction(supabase as any, authCtx.userId, body.hint, rawText, aiResult, parsed);
       return jsonResponse({
         ...emptyResponse(),
         image_type: "unknown",
@@ -272,7 +273,8 @@ serve(async (req: Request) => {
     }
 
     if (avgConfidence < 0.5) {
-      await logInteraction(supabase, authCtx.userId, body.hint, rawText, aiResult, parsed);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await logInteraction(supabase as any, authCtx.userId, body.hint, rawText, aiResult, parsed);
       return jsonResponse({
         ...emptyResponse(),
         image_type: imageType,
@@ -344,7 +346,8 @@ serve(async (req: Request) => {
       pendingCount: pendingActionIds.length,
     });
 
-    await logInteraction(supabase, authCtx.userId, body.hint, message, aiResult, parsed, [
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await logInteraction(supabase as any, authCtx.userId, body.hint, message, aiResult, parsed, [
       ...pendingActionIds,
     ]);
 

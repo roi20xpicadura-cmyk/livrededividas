@@ -195,9 +195,11 @@ serve(async (req: Request) => {
     const effectiveModel = limitDecision.effectiveModel;
 
     // Contexto + dados financeiros aprofundados
-    const context = await getUserContext(supabase, authCtx.userId);
-    const financials = await loadDeepFinancials(supabase, authCtx.userId);
-    const specific = await loadSpecificData(supabase, body);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any;
+    const context = await getUserContext(sb, authCtx.userId);
+    const financials = await loadDeepFinancials(sb, authCtx.userId);
+    const specific = await loadSpecificData(sb, body);
 
     const contextSection = buildContextPrompt(context);
     const financialSection = formatDeepFinancialContext(financials);

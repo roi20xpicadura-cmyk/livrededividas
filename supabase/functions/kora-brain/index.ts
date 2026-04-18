@@ -135,8 +135,10 @@ serve(async (req: Request) => {
 
   try {
     // ─── 1. Contexto ────────────────────────────────────
-    const context = await getUserContext(supabase, userId);
-    const financialSnapshot = await loadFinancialSnapshot(supabase, userId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any;
+    const context = await getUserContext(sb, userId);
+    const financialSnapshot = await loadFinancialSnapshot(sb, userId);
 
     // ─── 2. Persona ─────────────────────────────────────
     const triggerType =
@@ -312,7 +314,8 @@ serve(async (req: Request) => {
       // Fire-and-forget; usa EdgeRuntime.waitUntil quando disponível pra não
       // ser abortado quando a response é devolvida.
       const extractionPromise = extractAndSaveMemories(
-        supabase,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        supabase as any,
         userId,
         body.message,
         responseText,
