@@ -835,6 +835,19 @@ serve(async (req) => {
         return new Response("OK", { status: 200 });
       }
 
+      // Feedback imediato — usuário sabe que recebemos enquanto a IA processa
+      const isPdfHint = document ? true : false;
+      const ackMsg = isPdfHint
+        ? `📄 Recebi seu documento, ${ctx.name}! Analisando as transações... ⏳`
+        : `📷 Recebi sua imagem, ${ctx.name}! Lendo o comprovante... ⏳`;
+      await sendWhatsApp(phone, ackMsg);
+      await supabase.from("whatsapp_messages").insert({
+        user_id: userId, phone, phone_number: phone,
+        direction: "outbound", role: "assistant",
+        message: ackMsg, content: ackMsg,
+        created_at: new Date().toISOString(),
+      });
+
       const { transactions, reply, importDirect } = await processAttachment(fileUrl, ctx.name, ctx.profile);
 
       // Sempre envia o resumo primeiro
