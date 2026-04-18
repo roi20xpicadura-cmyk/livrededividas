@@ -1143,8 +1143,9 @@ Acesse seu dashboard pra revisar e ajustar categorias se quiser, ${ctx.name}! �
             }
           }
         }
-      } catch (_e) {
-        // Plain text reply, keep aiText as finalReply
+      } catch (parseErr) {
+        // JSON inválido vindo da IA → mantém aiText como finalReply, mas loga
+        console.warn("[AI JSON parse] falhou, enviando texto puro:", (parseErr as Error)?.message);
       }
 
       await sendWhatsApp(phone, finalReply);
