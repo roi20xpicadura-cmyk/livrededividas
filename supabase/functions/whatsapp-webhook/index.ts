@@ -650,6 +650,8 @@ serve(async (req) => {
     let text = body.text?.message?.trim();
     const image = body.image || body.imageMessage;
     const audio = body.audio || body.audioMessage;
+    // Z-API document/PDF payload variants
+    const document = body.document || body.documentMessage || body.documentWithCaption || body.documentWithCaptionMessage;
 
     if (!phone) return new Response("OK", { status: 200 });
 
