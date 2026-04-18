@@ -153,12 +153,8 @@ const App = () => {
             <ThemeProvider>
               <Suspense fallback={<PageSkeleton />}>
                 <Routes>
-                  {/* Public routes */}
-                  <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
-                  <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-                  <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                  <Route path="/reset-password" element={<ResetPasswordPage />} />
+                  {/* Public marketing routes - independentes de auth */}
+                  <Route path="/" element={<LandingPage />} />
                   <Route path="/pricing" element={<PricingPage />} />
                   <Route path="/termos-de-uso" element={<TermosDeUsoPage />} />
                   <Route path="/politica-de-privacidade" element={<PoliticaPrivacidadePage />} />
@@ -167,6 +163,12 @@ const App = () => {
                   <Route path="/seguranca" element={<SegurancaPage />} />
                   <Route path="/sobre" element={<SobrePage />} />
                   <Route path="/privacidade" element={<PrivacidadePage />} />
+
+                  {/* Auth pages */}
+                  <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+                  <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                   {/* Protected app routes */}
                   <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
