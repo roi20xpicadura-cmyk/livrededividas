@@ -1,9 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, MessageCircle, RefreshCw, X, CheckCircle2 } from 'lucide-react';
+import { Sparkles, MessageCircle, RefreshCw, X, CheckCircle2, BarChart3, AlertTriangle, TrendingUp, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import {
+  alertTypeToDisplayMode,
+  insightTypeToDisplayMode,
+  getDisplayMeta,
+  insightHash,
+  titleCaseName,
+  type KoraDisplayMode,
+} from '@/lib/koraDisplay';
 
 type Insight = {
   type: 'warning' | 'success' | 'info' | 'danger';
@@ -24,31 +32,108 @@ interface AgentAlert {
   dismissed: boolean | null;
 }
 
-const typeStyles: Record<string, { bg: string; border: string; text: string }> = {
-  danger: { bg: '#fef2f2', border: '#fecaca', text: '#991b1b' },
-  warning: { bg: '#fffbeb', border: '#fde68a', text: '#92400e' },
-  success: { bg: '#F5F3FF', border: '#DDD6FE', text: '#5B21B6' },
-  info: { bg: '#f8fafc', border: '#e2e8f0', text: '#0f172a' },
+/** Unified card model — works for both AI insights and agent alerts */
+type CardItem = {
+  key: string;
+  hash: string;
+  mode: KoraDisplayMode;
+  title: string;
+  message: string;
+  action_label?: string;
+  action_path?: string;
+  // Optional dismiss handler (only for agent alerts)
+  onDismiss?: () => void;
 };
 
-const AGENT_META: Record<string, { name: string; emoji: string }> = {
-  budget_exceeded: { name: 'Marie', emoji: '👩‍🔬' },
-  budget_warning: { name: 'Marie', emoji: '👩‍🔬' },
-  spending_anomaly: { name: 'Einstein', emoji: '🧑‍🔬' },
-  category_spike: { name: 'Einstein', emoji: '🧑‍🔬' },
-  cashflow_negative: { name: 'Galileu', emoji: '🔭' },
-  cashflow_tight: { name: 'Galileu', emoji: '🔭' },
-  bill_due_soon: { name: 'Assistente', emoji: '📅' },
-  card_limit: { name: 'Assistente', emoji: '💳' },
-  goal_deadline: { name: 'Motivador', emoji: '🎯' },
-  goal_almost: { name: 'Motivador', emoji: '🏆' },
-  savings_low: { name: 'Einstein', emoji: '💸' },
+const MODE_ICONS: Record<KoraDisplayMode, typeof BarChart3> = {
+  analysis: BarChart3,
+  alert: AlertTriangle,
+  projection: TrendingUp,
 };
 
-function severityToType(severity: string): string {
-  if (severity === 'critical') return 'danger';
-  if (severity === 'warning') return 'warning';
-  return 'info';
+const MAX_HOME_CARDS = 3;
+
+function InsightCard({ item, index }: { item: CardItem; index: number }) {
+  const meta = getDisplayMeta(item.mode);
+  const Icon = MODE_ICONS[item.mode];
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ delay: index * 0.05 }}
+      style={{
+        padding: '14px',
+        borderRadius: 14,
+        background: 'var(--color-bg-surface)',
+        border: '0.5px solid var(--color-border-weak)',
+        display: 'flex',
+        gap: 12,
+        alignItems: 'flex-start',
+      }}
+    >
+      {/* Icon chip */}
+      <div
+        style={{
+          width: 36, height: 36, borderRadius: 10,
+          background: meta.bgHsl,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <Icon style={{ width: 16, height: 16, color: meta.accentHsl }} />
+      </div>
+
+      {/* Body */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontSize: 9, fontWeight: 800, letterSpacing: '0.7px',
+          color: meta.accentHsl, textTransform: 'uppercase', marginBottom: 4,
+        }}>
+          {meta.label} · Kora
+        </div>
+        <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-strong)', lineHeight: 1.3, margin: 0 }}>
+          {item.title}
+        </p>
+        {item.message && (
+          <p style={{ fontSize: 12.5, color: 'var(--color-text-muted)', lineHeight: 1.45, marginTop: 4, margin: 0 }}>
+            {item.message}
+          </p>
+        )}
+        {item.action_label && item.action_path && (
+          <a
+            href={item.action_path}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              marginTop: 8, fontSize: 12, fontWeight: 700,
+              color: meta.accentHsl, textDecoration: 'none',
+            }}
+          >
+            {item.action_label} <ChevronRight style={{ width: 12, height: 12 }} />
+          </a>
+        )}
+      </div>
+
+      {/* Optional dismiss */}
+      {item.onDismiss && (
+        <motion.button
+          whileTap={{ scale: 0.85 }}
+          onClick={item.onDismiss}
+          aria-label="Dispensar"
+          style={{
+            width: 24, height: 24, borderRadius: 6,
+            background: 'var(--color-bg-sunken)', border: 'none',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <X style={{ width: 12, height: 12, color: 'var(--color-text-subtle)' }} />
+        </motion.button>
+      )}
+    </motion.div>
+  );
 }
 
 export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => void }) {
@@ -57,7 +142,7 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
   const [agentAlerts, setAgentAlerts] = useState<AgentAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [tab, setTab] = useState<'insights' | 'agents'>('agents');
+  const [showAll, setShowAll] = useState(false);
 
   // Fetch AI insights
   useEffect(() => {
@@ -72,7 +157,7 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
         );
         if (!res.ok) throw new Error('Failed');
         const data = await res.json();
-        if (Array.isArray(data)) setInsights(data.slice(0, 4));
+        if (Array.isArray(data)) setInsights(data);
       } catch (e) {
         console.error('AI insights error:', e);
       }
@@ -113,53 +198,94 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
 
   useEffect(() => { fetchAgents(); }, [fetchAgents]);
 
-  const dismissAlert = async (alertId: string) => {
+  const dismissAlert = useCallback(async (alertId: string) => {
     await supabase.from('prediction_alerts').update({ dismissed: true }).eq('id', alertId);
     setAgentAlerts((prev) => prev.filter((a) => a.id !== alertId));
     toast.success('Alerta dispensado');
-  };
+  }, []);
 
-  const activeAlerts = agentAlerts.filter((a) => !a.dismissed);
-  const criticalCount = activeAlerts.filter((a) => a.severity === 'critical').length;
+  /** Combine insights + alerts → unified, deduplicated card list */
+  const allCards = useMemo<CardItem[]>(() => {
+    const seen = new Set<string>();
+    const out: CardItem[] = [];
 
-  // Combine: show agent tab by default if there are alerts, otherwise insights
-  const hasAlerts = activeAlerts.length > 0;
-  const hasInsights = insights.length > 0;
+    // Agent alerts first (more actionable / time-sensitive)
+    for (const alert of agentAlerts.filter((a) => !a.dismissed)) {
+      const title = titleCaseName(alert.title);
+      const message = alert.description || '';
+      const hash = insightHash(title, message);
+      if (seen.has(hash)) continue;
+      seen.add(hash);
+      out.push({
+        key: `alert-${alert.id}`,
+        hash,
+        mode: alertTypeToDisplayMode(alert.alert_type),
+        title,
+        message,
+        onDismiss: () => dismissAlert(alert.id),
+      });
+    }
+
+    // Then AI insights
+    for (let i = 0; i < insights.length; i++) {
+      const ins = insights[i];
+      const title = titleCaseName(ins.title);
+      const message = ins.message || '';
+      const hash = insightHash(title, message);
+      if (seen.has(hash)) continue;
+      seen.add(hash);
+      out.push({
+        key: `insight-${i}-${hash}`,
+        hash,
+        mode: insightTypeToDisplayMode(ins.type),
+        title,
+        message,
+        action_label: ins.action_label,
+        action_path: ins.action_path,
+      });
+    }
+
+    return out;
+  }, [agentAlerts, insights, dismissAlert]);
+
+  const visibleCards = showAll ? allCards : allCards.slice(0, MAX_HOME_CARDS);
+  const hiddenCount = allCards.length - MAX_HOME_CARDS;
 
   return (
-    <motion.div
+    <motion.section
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-      style={{ background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 16, overflow: 'hidden' }}
+      style={{
+        background: 'var(--color-bg-surface)',
+        border: '0.5px solid var(--color-border-weak)',
+        borderRadius: 16,
+        overflow: 'hidden',
+      }}
     >
       {/* Header */}
       <div className="flex items-center justify-between" style={{ padding: '14px 16px 0' }}>
         <div className="flex items-center gap-2">
           <div style={{
             width: 28, height: 28, borderRadius: 8,
-            background: 'linear-gradient(135deg, #7C3AED, #6D28D9)',
+            background: 'linear-gradient(135deg, hsl(262 83% 58%), hsl(262 83% 48%))',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(124, 58, 237,0.25)',
+            boxShadow: '0 2px 8px hsl(262 83% 58% / 0.25)',
           }}>
             <Sparkles className="w-3.5 h-3.5 text-white" />
           </div>
           <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-base)' }}>IA Financeira</span>
-          <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 99, background: 'rgba(124, 58, 237,0.08)', color: '#7C3AED' }}>AGENTE</span>
-          {criticalCount > 0 && (
-            <span style={{
-              fontSize: 9, fontWeight: 800, color: 'white',
-              background: '#ef4444', borderRadius: 20, padding: '1px 6px',
-            }}>
-              {criticalCount}
-            </span>
-          )}
+          <span style={{
+            fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 99,
+            background: 'hsl(262 83% 58% / 0.10)', color: 'hsl(262 83% 58%)',
+          }}>KORA</span>
         </div>
         <div className="flex items-center" style={{ gap: 4 }}>
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => fetchAgents(true)}
             disabled={refreshing}
+            aria-label="Atualizar insights"
             style={{
               width: 28, height: 28, borderRadius: 8,
               background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)',
@@ -177,7 +303,7 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
             className="flex items-center gap-1.5"
             style={{
               height: 28, padding: '0 12px', borderRadius: 99, border: 'none',
-              background: 'linear-gradient(135deg, #7C3AED, #6D28D9)',
+              background: 'linear-gradient(135deg, hsl(262 83% 58%), hsl(262 83% 48%))',
               color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer',
             }}
           >
@@ -187,162 +313,47 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex" style={{ padding: '10px 16px 0', gap: 4 }}>
-        <button
-          onClick={() => setTab('agents')}
-          style={{
-            fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 8,
-            border: 'none', cursor: 'pointer',
-            background: tab === 'agents' ? 'var(--color-green-100, rgba(124, 58, 237,0.1))' : 'transparent',
-            color: tab === 'agents' ? 'var(--color-green-700, #7C3AED)' : 'var(--color-text-muted)',
-          }}
-        >
-          <span style={{ marginRight: 4 }}>🤖</span>
-          Agentes {hasAlerts && <span style={{ fontSize: 9, fontWeight: 800, background: '#fde68a', color: '#92400e', borderRadius: 10, padding: '1px 5px', marginLeft: 4 }}>{activeAlerts.length}</span>}
-        </button>
-        <button
-          onClick={() => setTab('insights')}
-          style={{
-            fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 8,
-            border: 'none', cursor: 'pointer',
-            background: tab === 'insights' ? 'var(--color-green-100, rgba(124, 58, 237,0.1))' : 'transparent',
-            color: tab === 'insights' ? 'var(--color-green-700, #7C3AED)' : 'var(--color-text-muted)',
-          }}
-        >
-          <span style={{ marginRight: 4 }}>💡</span>
-          Insights
-        </button>
-      </div>
-
       {/* Content */}
-      <div style={{ padding: '10px 16px 14px' }}>
+      <div style={{ padding: '12px 16px 14px' }}>
         {loading ? (
           <div className="space-y-2">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="skeleton-shimmer" style={{ height: 48, borderRadius: 10 }} />
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="skeleton-shimmer" style={{ height: 64, borderRadius: 12 }} />
             ))}
           </div>
-        ) : tab === 'agents' ? (
-          /* ━━━ AGENTS TAB ━━━ */
-          <>
-            {/* Agent status chips */}
-            <div className="flex" style={{ gap: 4, marginBottom: 8, overflowX: 'auto', paddingBottom: 2 }}>
-              {[
-                { name: 'Marie', emoji: '👩‍🔬', role: 'Orçamentos' },
-                { name: 'Einstein', emoji: '🧑‍🔬', role: 'Padrões' },
-                { name: 'Galileu', emoji: '🔭', role: 'Fluxo' },
-              ].map((a) => (
-                <div key={a.name} className="flex items-center" style={{
-                  flex: '0 0 auto', gap: 4, padding: '4px 8px', borderRadius: 16,
-                  background: 'var(--color-bg-sunken)', border: '0.5px solid var(--color-border-weak)',
-                }}>
-                  <span style={{ fontSize: 12 }}>{a.emoji}</span>
-                  <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--color-text-strong)' }}>{a.name}</span>
-                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#7C3AED', boxShadow: '0 0 4px #7C3AED' }} />
-                </div>
-              ))}
-            </div>
-
-            {activeAlerts.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '12px 0' }}>
-                <CheckCircle2 style={{ width: 24, height: 24, color: 'var(--color-green-600)', margin: '0 auto 6px' }} />
-                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-strong)' }}>Tudo sob controle ✨</p>
-                <p style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 2 }}>Agentes monitorando 24/7</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <AnimatePresence mode="popLayout" initial={false}>
-                  {activeAlerts.slice(0, 4).map((alert) => {
-                    const sType = severityToType(alert.severity);
-                    const style = typeStyles[sType] || typeStyles.info;
-                    const agent = AGENT_META[alert.alert_type] || { name: 'IA', emoji: '🤖' };
-
-                    return (
-                      <motion.div
-                        key={alert.id}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="flex items-start gap-2.5"
-                        style={{
-                          padding: '10px 12px', borderRadius: 10,
-                          border: `1px solid ${style.border}`, background: style.bg,
-                        }}
-                      >
-                        <span style={{ fontSize: 15, flexShrink: 0, lineHeight: 1, marginTop: 1 }}>{agent.emoji}</span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div className="flex items-center" style={{ gap: 4, marginBottom: 2 }}>
-                            <span style={{ fontSize: 8, fontWeight: 800, color: style.text, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.6 }}>{agent.name}</span>
-                          </div>
-                          <p style={{ fontSize: 12, fontWeight: 700, color: style.text, lineHeight: 1.3 }}>{alert.title}</p>
-                          <p style={{ fontSize: 11, color: style.text, opacity: 0.75, lineHeight: 1.4, marginTop: 2 }}>{alert.description}</p>
-                        </div>
-                        <motion.button
-                          whileTap={{ scale: 0.85 }}
-                          onClick={() => dismissAlert(alert.id)}
-                          style={{
-                            width: 22, height: 22, borderRadius: 6,
-                            background: 'rgba(0,0,0,0.05)', border: 'none',
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexShrink: 0,
-                          }}
-                        >
-                          <X style={{ width: 10, height: 10, color: style.text, opacity: 0.5 }} />
-                        </motion.button>
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </div>
-            )}
-          </>
+        ) : allCards.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '16px 0' }}>
+            <CheckCircle2 style={{ width: 28, height: 28, color: 'var(--color-green-600)', margin: '0 auto 8px' }} />
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-strong)' }}>Tudo sob controle ✨</p>
+            <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>Kora monitora seus dados 24/7</p>
+          </div>
         ) : (
-          /* ━━━ INSIGHTS TAB ━━━ */
-          !hasInsights ? (
-            <div style={{ textAlign: 'center', padding: '12px 0' }}>
-              <Sparkles style={{ width: 24, height: 24, color: 'var(--color-green-600)', margin: '0 auto 6px' }} />
-              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-strong)' }}>Sem insights ainda</p>
-              <p style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 2 }}>Adicione lançamentos para a IA analisar</p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {insights.map((insight, i) => {
-                const style = typeStyles[insight.type] || typeStyles.info;
-                return (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.06 }}
-                    className="flex items-start gap-2.5"
-                    style={{
-                      padding: '10px 12px', borderRadius: 10,
-                      border: `1px solid ${style.border}`, background: style.bg,
-                    }}
-                  >
-                    <span style={{ fontSize: 15, flexShrink: 0, lineHeight: 1, marginTop: 1 }}>{insight.icon}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 12, fontWeight: 700, color: style.text, lineHeight: 1.3 }}>{insight.title}</p>
-                      <p style={{ fontSize: 11, color: style.text, opacity: 0.75, lineHeight: 1.4, marginTop: 2 }}>{insight.message}</p>
-                    </div>
-                    {insight.action_label && insight.action_path && (
-                      <a href={insight.action_path}
-                        style={{
-                          flexShrink: 0, fontSize: 10, fontWeight: 700, color: style.text,
-                          border: `1px solid ${style.border}`, borderRadius: 8, padding: '4px 8px',
-                          textDecoration: 'none',
-                        }}>
-                        {insight.action_label}
-                      </a>
-                    )}
-                  </motion.div>
-                );
-              })}
-            </div>
-          )
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <AnimatePresence mode="popLayout" initial={false}>
+              {visibleCards.map((card, i) => (
+                <InsightCard key={card.key} item={card} index={i} />
+              ))}
+            </AnimatePresence>
+
+            {hiddenCount > 0 && (
+              <button
+                onClick={() => setShowAll((v) => !v)}
+                style={{
+                  marginTop: 4, padding: '10px 12px', borderRadius: 10,
+                  background: 'var(--color-bg-sunken)', border: 'none',
+                  fontSize: 12.5, fontWeight: 700, color: 'var(--color-text-muted)',
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                }}
+              >
+                {showAll
+                  ? 'Mostrar menos'
+                  : <>Ver todos os insights ({allCards.length}) <ChevronRight style={{ width: 13, height: 13 }} /></>}
+              </button>
+            )}
+          </div>
         )}
       </div>
-    </motion.div>
+    </motion.section>
   );
 }
