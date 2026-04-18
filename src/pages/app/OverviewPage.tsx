@@ -303,7 +303,9 @@ export default function OverviewPage() {
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
-  const firstName = profile?.full_name?.split(' ')[0] || '';
+  const rawFirst = profile?.full_name?.split(' ')[0] || '';
+  // Capitaliza a inicial do primeiro nome ("klecio" → "Klecio")
+  const firstName = rawFirst ? rawFirst.charAt(0).toLocaleUpperCase('pt-BR') + rawFirst.slice(1) : '';
 
   const heroBalance = profileType === 'personal' ? stats.netBalance
     : profileType === 'business' ? stats.bizProfit
@@ -343,7 +345,7 @@ export default function OverviewPage() {
       <motion.div {...stagger(0)} className="flex items-center justify-between" style={{ padding: isMobile ? '4px 0' : '0' }}>
         <div>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 2 }}>
-            {greeting}, {firstName} 👋
+            {greeting}{firstName ? `, ${firstName}` : ''}
           </p>
           <p style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>
             {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
@@ -483,17 +485,19 @@ export default function OverviewPage() {
           </div>
 
           <div className="flex items-center gap-4" style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 48, fontWeight: 900, color: getScoreColor(scoreResult.total), letterSpacing: '-2px', lineHeight: 1, fontFamily: 'var(--font-mono)' }}>
-              {showValues ? Math.round(scoreResult.total) : '•••'}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+              <span style={{ fontSize: 48, fontWeight: 900, color: getScoreColor(scoreResult.total), letterSpacing: '-2px', lineHeight: 1, fontFamily: 'var(--font-mono)' }}>
+                {showValues ? Math.round(scoreResult.total) : '•••'}
+              </span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-subtle)', fontFamily: 'var(--font-mono)' }}>
+                /1000
+              </span>
             </div>
-            <div>
-              <div style={{ fontSize: 10, color: 'var(--color-text-muted)', fontWeight: 600, marginBottom: 4 }}>de 1000</div>
-              <div className="inline-flex items-center gap-1" style={{ padding: '4px 10px', borderRadius: 99, background: getScoreColor(scoreResult.total) + '18' }}>
-                <div style={{ width: 7, height: 7, borderRadius: '50%', background: getScoreColor(scoreResult.total) }} />
-                <span style={{ fontSize: 12, fontWeight: 800, color: getScoreColor(scoreResult.total) }}>
-                  {getScoreLevel(scoreResult.total).label}
-                </span>
-              </div>
+            <div className="inline-flex items-center gap-1" style={{ padding: '4px 10px', borderRadius: 99, background: getScoreColor(scoreResult.total) + '18' }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: getScoreColor(scoreResult.total) }} />
+              <span style={{ fontSize: 12, fontWeight: 800, color: getScoreColor(scoreResult.total) }}>
+                {getScoreLevel(scoreResult.total).label}
+              </span>
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ height: 6, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden' }}>
@@ -551,7 +555,9 @@ export default function OverviewPage() {
             {activeGoals.slice(0, 4).map(goal => {
               const pct = Math.min(100, (Number(goal.current_amount || 0) / Number(goal.target_amount)) * 100);
               const obj = OBJECTIVES.find(o => o.key === goal.objective_type);
-              const barColor = pct >= 75 ? '#7C3AED' : pct >= 40 ? '#f59e0b' : '#ef4444';
+              // Cinza neutro p/ metas em estágio inicial (0–40%); âmbar p/ andamento; roxo p/ quase lá.
+              // Vermelho NÃO é usado em meta saudável — só em estados realmente críticos (não cobertos aqui).
+              const barColor = pct >= 75 ? '#7C3AED' : pct >= 40 ? '#f59e0b' : 'var(--color-border-base)';
               const emoji = obj?.emoji || getGoalEmoji(goal.name);
               return (
                 <motion.div key={goal.id} whileTap={{ scale: 0.97 }} onClick={() => navigate('/app/goals')}
