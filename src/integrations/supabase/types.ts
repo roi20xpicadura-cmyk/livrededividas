@@ -1593,6 +1593,21 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_webhook_dedup: {
+        Row: {
+          message_id: string
+          received_at: string
+        }
+        Insert: {
+          message_id: string
+          received_at?: string
+        }
+        Update: {
+          message_id?: string
+          received_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
