@@ -1,6 +1,8 @@
 import type { ComponentType } from "react";
 import { Suspense, useState, useEffect, memo } from "react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
+import LandingPage from "./pages/LandingPage";
+import LoginPage from "./pages/LoginPage";
 
 // Rotas usam retries mas SEM fallback pra null — se o chunk realmente
 // não carregar, é melhor o ErrorBoundary aparecer do que uma tela em branco.
@@ -23,9 +25,8 @@ import LogoLoader from "@/components/app/LogoLoader";
 import Paywall from "@/components/app/Paywall";
 import { useProfile } from "@/hooks/useProfile";
 
-// Lazy-loaded routes
-const LandingPage = lazy(() => import("./pages/LandingPage"));
-const LoginPage = lazy(() => import("./pages/LoginPage"));
+// Rotas públicas críticas ficam eager-loaded para evitar tela branca por
+// chunk antigo/falha de lazy import justamente na landing e login.
 const RegisterPage = lazy(() => import("./pages/RegisterPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
