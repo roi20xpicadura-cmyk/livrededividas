@@ -13,13 +13,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.whatsapp-webhook]
-# Deprecated — replaced by `wpp-webhook` because the original function's
-# gateway kept enforcing JWT even after config.toml set this to false.
-# Remove this entry and delete the function directory once the Z-API
-# dashboard is pointing to the new URL.
-verify_jwt = false
-
-[functions.wpp-webhook]
-# Z-API webhooks don't carry a Supabase JWT; the function authenticates
-# via message dedup + (optionally) a secret in the URL path/query.
+# Z-API webhooks arrive without a Supabase JWT; the function validates
+# requests via the Z-API Client-Token header instead (see function code).
 verify_jwt = false
