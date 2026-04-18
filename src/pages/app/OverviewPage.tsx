@@ -14,14 +14,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { lazyWithRetry } from '@/lib/lazyWithRetry';
 // Heavy below-the-fold widgets are lazy-loaded so the dashboard hero paints fast.
-const PredictiveWidget = lazy(() => import('@/components/dashboard/PredictiveWidget'));
-const AIInsightsWidget = lazy(() => import('@/components/dashboard/AIInsightsWidget'));
-const WelcomeChecklist = lazy(() => import('@/components/app/WelcomeChecklist'));
-const PushNotificationOptIn = lazy(() => import('@/components/app/PushNotificationOptIn'));
-const AIChatDrawer = lazy(() => import('@/components/app/AIChatDrawer'));
-const WhatsAppPromoWidget = lazy(() => import('@/components/app/WhatsAppPromoWidget'));
-const SmartAlertsWidget = lazy(() => import('@/components/dashboard/SmartAlertsWidget'));
+// lazyWithRetry: se o chunk falhar (deploy novo, glitch de rede), tenta de novo
+// e cai pra null em vez de derrubar a Overview com o ErrorBoundary.
+const PredictiveWidget = lazyWithRetry(() => import('@/components/dashboard/PredictiveWidget'));
+const AIInsightsWidget = lazyWithRetry(() => import('@/components/dashboard/AIInsightsWidget'));
+const WelcomeChecklist = lazyWithRetry(() => import('@/components/app/WelcomeChecklist'));
+const PushNotificationOptIn = lazyWithRetry(() => import('@/components/app/PushNotificationOptIn'));
+const AIChatDrawer = lazyWithRetry(() => import('@/components/app/AIChatDrawer'));
+const WhatsAppPromoWidget = lazyWithRetry(() => import('@/components/app/WhatsAppPromoWidget'));
+const SmartAlertsWidget = lazyWithRetry(() => import('@/components/dashboard/SmartAlertsWidget'));
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { Database } from '@/integrations/supabase/types';
 
