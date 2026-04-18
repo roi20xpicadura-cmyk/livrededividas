@@ -40,22 +40,11 @@ async function sendWhatsApp(phone: string, text: string) {
   }
 }
 
+// Legado: mantido pra retrocompatibilidade caso outras funções importem.
+// O novo fluxo de anexos usa `downloadAsBase64` (suporta PDF + imagem).
 async function downloadImageBase64(imageUrl: string): Promise<{ base64: string; mimeType: string }> {
-  const response = await fetch(imageUrl, { headers: { "Client-Token": ZAPI_CLIENT_TOKEN } });
-  const buffer = await response.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  }
-  const contentType = response.headers.get("content-type") || "image/jpeg";
-  const mimeType = contentType.includes("png")
-    ? "image/png"
-    : contentType.includes("webp")
-    ? "image/webp"
-    : "image/jpeg";
-  return { base64: btoa(binary), mimeType };
+  const { base64, mimeType } = await downloadAsBase64(imageUrl);
+  return { base64, mimeType };
 }
 
 // ─── AUDIO TRANSCRIPTION via Lovable AI Gateway (Gemini) ──
