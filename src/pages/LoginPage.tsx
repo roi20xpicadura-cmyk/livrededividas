@@ -279,7 +279,7 @@ export default function LoginPage() {
     const label = provider === 'google' ? 'Google' : 'Apple';
     try {
       const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/app`,
       });
       if (result?.error) {
         toast.error(`Não foi possível entrar com ${label}. Tente novamente.`);
@@ -379,8 +379,8 @@ export default function LoginPage() {
               onChange={e => f.onChange(e.target.value)}
               required
               placeholder={f.placeholder}
-              className={inputFocusClass}
-              style={{ ...inputStyle, placeholderColor: '#cbd5e1' } as React.CSSProperties}
+              className={`${inputFocusClass} placeholder:text-[#cbd5e1]`}
+              style={inputStyle}
             />
           </motion.div>
         ))}
