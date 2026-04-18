@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { X } from 'lucide-react';
@@ -16,6 +16,19 @@ interface BottomSheetProps {
  */
 export default function BottomSheet({ open, onClose, title, children, maxHeight = '90vh' }: BottomSheetProps) {
   const isMobile = useIsMobile();
+
+  // Sinaliza ao AppLayout para esconder o FAB de IA enquanto o sheet está aberto.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.getAttribute('data-bottom-sheet-open');
+    const count = (parseInt(prev || '0', 10) || 0) + 1;
+    document.body.setAttribute('data-bottom-sheet-open', String(count));
+    return () => {
+      const cur = parseInt(document.body.getAttribute('data-bottom-sheet-open') || '0', 10) || 0;
+      if (cur <= 1) document.body.removeAttribute('data-bottom-sheet-open');
+      else document.body.setAttribute('data-bottom-sheet-open', String(cur - 1));
+    };
+  }, [open]);
 
   return (
     <AnimatePresence>
