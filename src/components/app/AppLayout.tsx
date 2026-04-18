@@ -107,6 +107,19 @@ export default function AppLayout() {
   const [showMoreDrawer, setShowMoreDrawer] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [activeDebtCount, setActiveDebtCount] = useState(0);
+  // Esconde o FAB de IA quando há sheets/dialogs abertos no app (Radix trava o body com data-scroll-locked).
+  const [anyOverlayOpen, setAnyOverlayOpen] = useState(false);
+  useEffect(() => {
+    const update = () => {
+      const locked = document.body.hasAttribute('data-scroll-locked');
+      const hasPortalOverlay = !!document.querySelector('[data-radix-portal] [role="dialog"][data-state="open"], [data-state="open"][role="alertdialog"]');
+      setAnyOverlayOpen(locked || hasPortalOverlay);
+    };
+    update();
+    const obs = new MutationObserver(update);
+    obs.observe(document.body, { attributes: true, attributeFilter: ['data-scroll-locked', 'style'], childList: true, subtree: true });
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!user) return;
