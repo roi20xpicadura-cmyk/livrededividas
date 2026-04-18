@@ -1,8 +1,13 @@
-const CACHE_NAME = 'kora-v4';
-const STATIC_ASSETS = ['/', '/app', '/login', '/manifest.json', '/icons/icon-192.png', '/icons/icon-512.png'];
+// Bump esse número a cada deploy que mexe na estratégia de cache.
+// v5: corrige chunk-load failures após deploy — index.html nunca é cacheado
+// e assets hashados ganham fallback de rede quando o cache não bate.
+const CACHE_NAME = 'kora-v5';
+const STATIC_ASSETS = ['/manifest.json', '/icons/icon-192.png', '/icons/icon-512.png'];
 const API_CACHE = 'kora-api-v1';
 
-// Install: pre-cache critical assets
+// Install: pre-cache APENAS arquivos estáticos imutáveis.
+// Não cacheamos rotas HTML (/, /app, /login) — elas precisam ser sempre frescas
+// pra apontar pros chunks JS atuais (com hash) gerados no último build.
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME)
@@ -11,7 +16,7 @@ self.addEventListener('install', e => {
   );
 });
 
-// Activate: clean old caches, claim clients
+// Activate: limpa caches antigos e assume controle das abas abertas.
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
@@ -22,38 +27,68 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Fetch: network-first for navigation, stale-while-revalidate for assets
+// Fetch strategy:
+// - Navigation (HTML): network-first, NUNCA serve HTML cacheado em rede normal
+//   (só como fallback de offline puro). Senão o usuário vê index.html velho
+//   apontando pra chunks que não existem mais → "Failed to fetch dynamically
+//   imported module".
+// - Assets hashados (/assets/foo-HASH.js): cache-first com fallback de rede
+//   atualizando o cache em background (stale-while-revalidate).
+// - Outros .js/.css/imagens: network-first com fallback pro cache.
 self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
 
-  // Skip OAuth, Supabase API, and extension requests
+  // Skip OAuth, Supabase API e extensões.
   if (url.pathname.includes('/~oauth') || url.hostname.includes('supabase')) return;
 
-  // Navigation: network first, fallback to cache
+  // Navegação → network-first sem cachear o HTML.
   if (e.request.mode === 'navigate') {
     e.respondWith(
-      fetch(e.request)
-        .then(res => {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-          return res;
-        })
-        .catch(() => caches.match(e.request).then(r => r || caches.match('/app') || caches.match('/')))
+      fetch(e.request, { cache: 'no-store' })
+        .catch(() => caches.match(e.request) || caches.match('/'))
     );
     return;
   }
 
-  // Static assets: cache-first
-  if (url.pathname.match(/\.(js|css|png|jpg|svg|woff2?)$/)) {
+  // Assets hashados pelo Vite (immutable) → stale-while-revalidate.
+  // Esses arquivos têm hash no nome (ex: /assets/index-aB12cD.js), então
+  // nunca conflitam entre versões. Pode cachear pra sempre — se o nome
+  // mudar, é outro arquivo.
+  const isHashedAsset =
+    url.pathname.startsWith('/assets/') &&
+    /-[A-Za-z0-9_-]{8,}\.(js|css|woff2?|png|jpg|svg)$/.test(url.pathname);
+
+  if (isHashedAsset) {
     e.respondWith(
       caches.match(e.request).then(cached => {
-        if (cached) return cached;
-        return fetch(e.request).then(res => {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-          return res;
-        });
+        const networkPromise = fetch(e.request)
+          .then(res => {
+            if (res.ok) {
+              const clone = res.clone();
+              caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+            }
+            return res;
+          })
+          .catch(() => cached); // se a rede falhar, usa o cache que já temos
+        return cached || networkPromise;
       })
+    );
+    return;
+  }
+
+  // Outros estáticos (sem hash) → network-first, cache como fallback.
+  if (url.pathname.match(/\.(js|css|png|jpg|svg|woff2?|json)$/)) {
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(e.request))
     );
     return;
   }
