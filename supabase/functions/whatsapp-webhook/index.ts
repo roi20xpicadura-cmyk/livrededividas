@@ -21,7 +21,7 @@ function fmt(v: number): string {
   });
 }
 
-async function sendWhatsApp(phone: string, text: string) {
+async function sendWhatsApp(phone: string, text: string): Promise<boolean> {
   const url = `https://api.z-api.io/instances/${ZAPI_INSTANCE_ID}/token/${ZAPI_TOKEN}/send-text`;
   console.log("[Z-API SEND] →", phone, "| len:", text.length);
   try {
@@ -35,8 +35,10 @@ async function sendWhatsApp(phone: string, text: string) {
     });
     const respText = await res.text();
     console.log("[Z-API SEND] status:", res.status, "| body:", respText.slice(0, 300));
+    return res.ok;
   } catch (e) {
     console.error("[Z-API SEND] EXCEPTION", e);
+    return false;
   }
 }
 
