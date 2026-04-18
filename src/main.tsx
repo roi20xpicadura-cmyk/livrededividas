@@ -57,6 +57,7 @@ window.addEventListener('unhandledrejection', (event) => {
 
 // Kill-switch do antigo SW: priorizamos confiabilidade e removemos registros legados
 // que podem servir HTML/chunks velhos e causar tela branca após deploy.
+// Build tag: força rebuild para reinjetar envs (republish 2026-04-18).
 void clearRuntimeCaches();
 
 createRoot(document.getElementById("root")!).render(<App />);
