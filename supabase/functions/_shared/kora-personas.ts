@@ -291,9 +291,11 @@ function detectEmergencySignals(msg: string): boolean {
 }
 
 function detectStressSignals(msg: string): boolean {
+  // Sufixos como "apertado/apertada", "preocupado/preocupada" são comuns —
+  // por isso não fechamos com \b à direita (deixamos o radical aberto).
   const patterns = [
-    /\b(apertad|dif[ií]cil|pesado|n[aã]o tá dando|complicad)\b/iu,
-    /\b(preocupad|ansios|estressad|perdid)\b/iu,
+    /\b(apertad|dif[ií]cil|pesad|n[aã]o tá dando|complicad)/iu,
+    /\b(preocupad|ansios|estressad|perdid)/iu,
   ];
   return patterns.some((p) => p.test(msg));
 }
