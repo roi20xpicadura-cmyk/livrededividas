@@ -17,3 +17,26 @@ verify_jwt = false
 # requests via the Z-API Client-Token header instead (see function code).
 # Force redeploy to ensure verify_jwt=false is applied.
 verify_jwt = false
+
+# ──────────────────────────────────────────────────────────────
+# Kora v2 endpoints
+# Auth é feita internamente por authenticateKoraRequest (kora-auth.ts):
+# aceita tanto JWT do usuário quanto service_role pra chamadas internas
+# (kora-audio → kora-brain). Por isso verify_jwt = false — deixar true
+# quebraria o fluxo service_role.
+# ──────────────────────────────────────────────────────────────
+
+[functions.kora-brain]
+verify_jwt = false
+
+[functions.kora-vision]
+verify_jwt = false
+
+[functions.kora-audio]
+verify_jwt = false
+
+[functions.kora-coach]
+verify_jwt = false
+
+[functions.kora-confirm-action]
+verify_jwt = false

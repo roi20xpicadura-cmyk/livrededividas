@@ -40,6 +40,15 @@ export interface CategoryItem {
   emoji: string;
 }
 
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║ ⚠️  WARNING: as 4 listas abaixo são espelhadas em                    ║
+// ║     supabase/functions/_shared/kora-categories.ts                    ║
+// ║                                                                      ║
+// ║ Qualquer mudança (add/rename/remove de categoria) precisa ser feita  ║
+// ║ nos DOIS arquivos. Edge functions Deno não importam de src/          ║
+// ║ por causa de bundler diferente, então duplicamos manualmente.        ║
+// ╚══════════════════════════════════════════════════════════════════════╝
+
 export const PERSONAL_EXPENSE_CATEGORIES: CategoryItem[] = [
   // Alimentação
   { label: 'Supermercado', emoji: '🛒' },

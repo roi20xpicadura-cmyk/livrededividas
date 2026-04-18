@@ -8,8 +8,16 @@ import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useProfile } from '@/hooks/useProfile';
+import { useKora, type KoraPendingAction } from '@/hooks/useKora';
+import KoraPendingActionCard from '@/components/app/KoraPendingActionCard';
 
-type Msg = { role: 'user' | 'assistant'; content: string; ts: Date; actions?: string[] };
+type Msg = {
+  role: 'user' | 'assistant';
+  content: string;
+  ts: Date;
+  actions?: string[];
+  pendingActions?: KoraPendingAction[];
+};
 type Conversation = { id: string; title: string | null; updated_at: string | null };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
@@ -61,7 +69,13 @@ const markdownComponents = {
 };
 
 /* ─── Message Bubble ─── */
-const MessageBubble = forwardRef<HTMLDivElement, { msg: Msg; index: number }>(({ msg, index }, ref) => {
+interface MessageBubbleProps {
+  msg: Msg;
+  index: number;
+  onConfirmAction?: (actionId: string) => Promise<boolean>;
+  onRejectAction?: (actionId: string) => Promise<boolean>;
+}
+const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(({ msg, index, onConfirmAction, onRejectAction }, ref) => {
   const isUser = msg.role === 'user';
   const timeStr = msg.ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
@@ -114,6 +128,24 @@ const MessageBubble = forwardRef<HTMLDivElement, { msg: Msg; index: number }>(({
               <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-green-600)' }} />
               <span className="text-[12px] font-semibold leading-snug" style={{ color: 'var(--color-success-text)' }}>{action}</span>
             </motion.div>
+          ))}
+        </motion.div>
+      )}
+
+      {msg.pendingActions && msg.pendingActions.length > 0 && onConfirmAction && onRejectAction && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="ml-[42px] mt-2 space-y-2"
+        >
+          {msg.pendingActions.map((pa) => (
+            <KoraPendingActionCard
+              key={pa.action_id}
+              action={pa}
+              onConfirm={onConfirmAction}
+              onReject={onRejectAction}
+            />
           ))}
         </motion.div>
       )}
@@ -245,6 +277,7 @@ WelcomeScreen.displayName = 'WelcomeScreen';
 export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const isMobile = useIsMobile();
   const { profile } = useProfile();
+  const kora = useKora();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -344,6 +377,29 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
     setStreamingText('');
     setStreamActions([]);
 
+    // Kora v2 branch: quando user_config.kora_v2_enabled=true, usa o novo
+    // orquestrador em vez do ai-chat SSE legado. Persona, tools e memória
+    // rodam no backend; aqui só processamos a response final.
+    if (kora.enabled) {
+      const result = await kora.sendMessage(text.trim());
+      if (result) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: result.response_text || 'Ok.',
+          ts: new Date(),
+          pendingActions: result.pending_actions,
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: '⚠️ Erro de conexão. Tente novamente.',
+          ts: new Date(),
+        }]);
+      }
+      setLoading(false);
+      return;
+    }
+
     const allMsgs = [...messages, userMsg].map(m => ({ role: m.role, content: m.content }));
 
     try {
@@ -431,7 +487,7 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
     // read `user` via supabase each call); including them would recreate `send`
     // on every message and break auto-scroll.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, messages, activeConvoId]);
+  }, [loading, messages, activeConvoId, kora.enabled, kora.sendMessage]);
 
   const hasText = input.trim().length > 0;
 
@@ -518,7 +574,15 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
                 <WelcomeScreen onSend={send} firstName={firstName} financialData={financialData} />
               ) : (
                 <div className="flex flex-col gap-4 p-4">
-                  {messages.map((m, i) => <MessageBubble key={i} msg={m} index={i} />)}
+                  {messages.map((m, i) => (
+                    <MessageBubble
+                      key={i}
+                      msg={m}
+                      index={i}
+                      onConfirmAction={kora.enabled ? kora.confirmAction : undefined}
+                      onRejectAction={kora.enabled ? kora.rejectAction : undefined}
+                    />
+                  ))}
 
                   {streamActions.length > 0 && (
                     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="ml-[42px] space-y-1.5">
