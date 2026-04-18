@@ -554,7 +554,7 @@ export default function AppLayout() {
           </div>
         )}
 
-        <main style={{ maxWidth: 1400, margin: '0 auto', width: '100%', padding: isMobile ? '8px 16px 16px' : '24px 28px' }}>
+        <main style={{ maxWidth: 1400, margin: '0 auto', width: '100%', padding: isMobile ? '8px 16px 112px' : '24px 28px' }}>
           <Outlet />
         </main>
       </div>
