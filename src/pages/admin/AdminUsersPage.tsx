@@ -11,9 +11,9 @@ import { toast } from "sonner";
 interface AdminUser {
   id: string;
   full_name: string | null;
-  created_at: string;
+  created_at: string | null;
   plan?: string | null;
-  whatsapp?: { phone_number: string; verified: boolean; active: boolean; last_message_at: string | null } | null;
+  whatsapp?: { phone_number: string; verified: boolean | null; active: boolean | null; last_message_at: string | null } | null;
   config?: { profile_type: string | null; financial_score: number | null } | null;
 }
 
@@ -45,10 +45,10 @@ export default function AdminUsersPage() {
 
       if (profilesRes.error) throw profilesRes.error;
 
-      const waMap = new Map((waRes.data || []).map((w: any) => [w.user_id, w]));
-      const cfgMap = new Map((cfgRes.data || []).map((c: any) => [c.user_id, c]));
+      const waMap = new Map((waRes.data || []).map((w) => [w.user_id, w]));
+      const cfgMap = new Map((cfgRes.data || []).map((c) => [c.user_id, c]));
 
-      const merged: AdminUser[] = (profilesRes.data || []).map((p: any) => ({
+      const merged: AdminUser[] = (profilesRes.data || []).map((p) => ({
         id: p.id,
         full_name: p.full_name,
         created_at: p.created_at,
@@ -58,9 +58,9 @@ export default function AdminUsersPage() {
       }));
 
       setUsers(merged);
-    } catch (e: any) {
+    } catch (e) {
       console.error("Erro ao carregar usuários:", e);
-      toast.error("Erro ao carregar usuários: " + (e.message || "desconhecido"));
+      toast.error("Erro ao carregar usuários: " + (e instanceof Error ? e.message : "desconhecido"));
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,7 @@ export default function AdminUsersPage() {
                   </TableCell>
                   <TableCell className="font-semibold">{cfg?.financial_score ?? 0}</TableCell>
                   <TableCell className="text-muted-foreground text-xs">
-                    {new Date(u.created_at).toLocaleDateString("pt-BR")}
+                    {u.created_at ? new Date(u.created_at).toLocaleDateString("pt-BR") : "—"}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button

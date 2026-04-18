@@ -93,6 +93,9 @@ export function useProfile() {
     }, 30_000);
 
     return () => clearInterval(interval);
+    // Only depends on user and current plan — tracking whole `profile` would
+    // reset the polling interval on every profile field change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, profile?.plan]);
 
   const updateProfile = async (updates: Partial<Profile>) => {
@@ -103,7 +106,7 @@ export function useProfile() {
 
   const updateConfig = async (updates: Partial<UserConfig>) => {
     if (!user) return;
-    const { data } = await supabase.from('user_config').update(updates as any).eq('user_id', user.id).select().single();
+    const { data } = await supabase.from('user_config').update(updates).eq('user_id', user.id).select().single();
     if (data) setConfig(data as unknown as UserConfig);
   };
 

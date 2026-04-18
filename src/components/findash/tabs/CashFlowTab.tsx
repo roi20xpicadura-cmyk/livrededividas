@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Transaction } from "@/types/findash";
-import { format, parseISO, eachDayOfInterval } from "date-fns";
+import { format, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { motion } from "framer-motion";

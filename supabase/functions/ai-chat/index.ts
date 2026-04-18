@@ -819,6 +819,21 @@ serve(async (req) => {
     const userId = userData.user.id;
     const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Paywall: Kora IA is gated to paid plans. Check BEFORE the expensive
+    // LLM call so free-tier abuse can't rack up API costs.
+    const { data: planRow } = await serviceClient
+      .from("profiles")
+      .select("plan")
+      .eq("id", userId)
+      .single();
+    const userPlan = planRow?.plan || "free";
+    if (userPlan !== "pro" && userPlan !== "business") {
+      return new Response(
+        JSON.stringify({ error: "Kora IA está disponível nos planos Pro e Business." }),
+        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     // Fetch all financial data
     const [txRes, goalsRes, configRes, investRes, debtsRes, budgetsRes, billsRes, cardsRes, recurringRes, profileRes] = await Promise.all([
       serviceClient.from("transactions").select("id, description, amount, type, category, origin, date").eq("user_id", userId).is("deleted_at", null).order("date", { ascending: false }).limit(200),

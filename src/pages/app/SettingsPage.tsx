@@ -4,7 +4,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { OBJECTIVES } from '@/lib/objectives';
 import { PROFILE_TYPES } from '@/components/onboarding/OnboardingFlow';
-import { Check, Download, Trash2, FileText, Camera, Bell, BellOff, Shield, ChevronRight, User, Target as TargetIcon, Sliders, Lock, MessageCircle, AlertTriangle } from 'lucide-react';
+import { Check, Download, Trash2, FileText, Camera, Bell, BellOff, Shield, ChevronRight, User, Target as TargetIcon, Sliders, Lock, MessageCircle, AlertTriangle, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { requestPushPermission, checkNotificationSupport, sendLocalNotification } from '@/lib/pushNotifications';
@@ -91,8 +91,8 @@ export default function SettingsPage() {
       await updateProfile({ avatar_url: url });
       setAvatarUrl(url);
       toast.success('Foto de perfil atualizada!');
-    } catch (err: any) {
-      toast.error(err?.message || 'Erro ao enviar foto');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao enviar foto');
     } finally {
       setUploadingAvatar(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -103,7 +103,7 @@ export default function SettingsPage() {
     if (!user) return;
     setUploadingAvatar(true);
     try {
-      await updateProfile({ avatar_url: null as any });
+      await updateProfile({ avatar_url: null });
       setAvatarUrl('');
       toast.success('Foto removida');
     } catch {
@@ -115,7 +115,7 @@ export default function SettingsPage() {
 
   const handleSaveProfileType = async (val: string) => {
     setProfileType(val);
-    await updateConfig({ profile_type: val } as any);
+    await updateConfig({ profile_type: val });
     toast.success('Perfil atualizado!');
   };
 
@@ -125,7 +125,7 @@ export default function SettingsPage() {
 
   const handleSaveObjectives = async () => {
     setSaving(true);
-    await updateConfig({ financial_objectives: objectives } as any);
+    await updateConfig({ financial_objectives: objectives });
     toast.success('Objetivos salvos!');
     setSaving(false);
   };
@@ -153,7 +153,7 @@ export default function SettingsPage() {
     setExporting(true);
     try {
       const tables = ['transactions', 'goals', 'goal_checkins', 'debts', 'debt_payments', 'credit_cards', 'card_bills', 'investments', 'budgets', 'achievements', 'recurring_transactions'] as const;
-      const allData: Record<string, any> = { profile, config };
+      const allData: Record<string, unknown> = { profile, config };
       for (const table of tables) {
         const { data } = await supabase.from(table).select('*');
         allData[table] = data || [];
@@ -561,7 +561,7 @@ export default function SettingsPage() {
 
 /* ═════════════ Subcomponents (premium minimal) ═════════════ */
 
-function SectionHeader({ icon: Icon, title, description, tone = 'default' }: { icon: any; title: string; description?: string; tone?: 'default' | 'danger' }) {
+function SectionHeader({ icon: Icon, title, description, tone = 'default' }: { icon: LucideIcon; title: string; description?: string; tone?: 'default' | 'danger' }) {
   const color = tone === 'danger' ? 'var(--color-danger-solid, #dc2626)' : 'var(--color-text-strong)';
   const iconBg = tone === 'danger' ? 'var(--color-danger-bg, #fef2f2)' : 'var(--color-green-50)';
   const iconColor = tone === 'danger' ? 'var(--color-danger-solid, #dc2626)' : 'var(--color-green-700)';

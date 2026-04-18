@@ -14,7 +14,7 @@ export default function OfflineBanner() {
         setSyncing(true);
         // Trigger background sync
         navigator.serviceWorker?.ready.then(reg => {
-          (reg as any).sync?.register('sync-transactions').catch(() => {});
+          (reg as ServiceWorkerRegistration & { sync?: { register: (tag: string) => Promise<void> } }).sync?.register('sync-transactions').catch(() => {});
         });
         setTimeout(() => { setSyncing(false); setWasOffline(false); }, 3000);
       }

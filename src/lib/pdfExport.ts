@@ -108,7 +108,7 @@ export function generateMonthlyPDF({ transactions, userName, period, currency }:
       alternateRowStyles: { fillColor: [248, 250, 248] },
     });
 
-    y = (doc as any).lastAutoTable.finalY + 12;
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
   }
 
   // ── Transaction table ──

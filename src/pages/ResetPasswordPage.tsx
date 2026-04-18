@@ -9,7 +9,7 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
   const [loading, setLoading] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [, setReady] = useState(false);
 
   useEffect(() => {
     const hash = window.location.hash;

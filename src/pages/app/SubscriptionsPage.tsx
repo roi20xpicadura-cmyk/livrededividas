@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { detectSubscriptions, monthlyTotal, type DetectedSubscription } from '@/lib/subscriptionDetector';
+import { detectSubscriptions, monthlyTotal } from '@/lib/subscriptionDetector';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, X, CheckCircle2, AlertCircle, Calendar, TrendingDown, Search, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
+import type { Database } from '@/integrations/supabase/types';
+
+type DetectedSubscriptionInsert = Database['public']['Tables']['detected_subscriptions']['Insert'];
 
 type Status = 'active' | 'cancelled' | 'ignored';
 
@@ -105,7 +108,7 @@ export default function SubscriptionsPage() {
       const existingMap = new Map((existing || []).map(e => [e.match_pattern, e]));
 
       let newCount = 0;
-      const upserts: any[] = [];
+      const upserts: DetectedSubscriptionInsert[] = [];
       for (const d of detected) {
         const prev = existingMap.get(d.match_pattern);
         if (!prev) newCount++;
@@ -136,8 +139,8 @@ export default function SubscriptionsPage() {
         if (newCount > 0) toast.success(`${newCount} nova${newCount > 1 ? 's' : ''} assinatura${newCount > 1 ? 's' : ''} detectada${newCount > 1 ? 's' : ''}!`);
         else toast.success('Análise concluída — nada de novo.');
       }
-    } catch (e: any) {
-      toast.error('Erro ao analisar: ' + (e.message || ''));
+    } catch (e: unknown) {
+      toast.error('Erro ao analisar: ' + (e instanceof Error ? e.message : ''));
     } finally {
       setScanning(false);
     }

@@ -80,6 +80,7 @@ export default function NewTransactionSheet({ open, onClose, onSuccess, profileT
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
     toast.success(type === 'income' ? '💰 Receita registrada!' : '💸 Despesa registrada!');
+    window.dispatchEvent(new CustomEvent('kora:transaction-changed'));
     setAmount(''); setDescription(''); setCategory(''); setRecurring(false);
     setDate(format(new Date(), 'yyyy-MM-dd'));
     onSuccess?.();

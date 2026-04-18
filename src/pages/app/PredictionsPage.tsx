@@ -5,7 +5,7 @@ import { formatCurrency } from '@/lib/plans';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { buildPrediction, generateAlerts, DayPrediction, PredictionAlert } from '@/lib/predictionEngine';
 import {
-  TrendingDown, AlertCircle, Activity, Calendar, ChevronRight, Zap, Sparkles, AlertTriangle, Filter
+  TrendingDown, AlertCircle, Activity, Zap
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format, differenceInDays } from 'date-fns';

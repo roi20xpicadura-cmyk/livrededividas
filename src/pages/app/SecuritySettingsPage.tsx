@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Shield, Download, Trash2, Mail, ChevronLeft, ExternalLink } from 'lucide-react';
+import { ChevronLeft, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -32,7 +32,7 @@ export default function SecuritySettingsPage() {
     setExporting(true);
     try {
       const tables = ['transactions', 'goals', 'debts', 'credit_cards', 'investments', 'budgets', 'user_config'] as const;
-      const data: Record<string, any> = {};
+      const data: Record<string, unknown[]> = {};
       for (const t of tables) {
         const { data: rows } = await supabase.from(t).select('*').eq('user_id', user.id);
         data[t] = rows || [];
@@ -190,7 +190,14 @@ function Row({ item, badge, last }: { item: { icon: string; title: string; desc:
   );
 }
 
-function ActionRow({ icon, label, desc, cta, onClick, color }: any) {
+function ActionRow({ icon, label, desc, cta, onClick, color }: {
+  icon: React.ReactNode;
+  label: string;
+  desc: string;
+  cta: string;
+  onClick: () => void;
+  color: string;
+}) {
   return (
     <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--color-bg-sunken)' }}>
       <div className="text-xl">{icon}</div>

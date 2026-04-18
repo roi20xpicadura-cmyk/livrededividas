@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, X, FileText, AlertCircle, Check } from 'lucide-react';
-import { parseOFX, parseCSV, ParsedTransaction } from '@/lib/ofxParser';
+import { parseOFX, ParsedTransaction } from '@/lib/ofxParser';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -57,7 +57,7 @@ export default function ImportModal({ open, onClose, onSuccess, profileType }: P
     const txs: ParsedTransaction[] = rows.map(row => {
       const d = row[csvMapping.date];
       const de = row[csvMapping.desc];
-      const v = parseFloat(row[csvMapping.val].replace(/[^\d.,\-]/g, '').replace(',', '.'));
+      const v = parseFloat(row[csvMapping.val].replace(/[^\d.,-]/g, '').replace(',', '.'));
       const tp = csvMapping.type >= 0 && row[csvMapping.type]?.toLowerCase().includes('desp')
         ? 'expense' as const
         : (v < 0 ? 'expense' as const : 'income' as const);
@@ -154,7 +154,10 @@ export default function ImportModal({ open, onClose, onSuccess, profileType }: P
                       const inp = document.createElement('input');
                       inp.type = 'file';
                       inp.accept = '.csv,.ofx';
-                      inp.onchange = (ev: any) => { if (ev.target.files[0]) handleFile(ev.target.files[0]); };
+                      inp.onchange = (ev: Event) => {
+                        const target = ev.target as HTMLInputElement;
+                        if (target.files?.[0]) handleFile(target.files[0]);
+                      };
                       inp.click();
                     }}>
                     <Upload style={{ width: 40, height: 40, color: 'var(--color-green-600)' }} className="mx-auto mb-3" />
@@ -207,7 +210,7 @@ export default function ImportModal({ open, onClose, onSuccess, profileType }: P
                       <div key={key}>
                         <label className="text-[10px] uppercase font-bold block mb-1" style={{ color: 'var(--color-text-subtle)' }}>{label}</label>
                         <select
-                          value={(csvMapping as any)[key]}
+                          value={csvMapping[key]}
                           onChange={e => setCsvMapping(prev => ({ ...prev, [key]: Number(e.target.value) }))}
                           className="w-full h-9 px-2 text-[12px] rounded-lg border focus:outline-none"
                           style={{ borderColor: 'var(--color-border-base)', background: 'var(--color-bg-base)', color: 'var(--color-text-base)' }}>

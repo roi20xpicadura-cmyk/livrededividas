@@ -1,17 +1,19 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { Gift, Copy, Check, Share2 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import type { Database } from '@/integrations/supabase/types';
+
+type ReferralRow = Database['public']['Tables']['referrals']['Row'];
 
 export default function ReferralPage() {
   const { user } = useAuth();
-  const { config } = useProfile();
+  useProfile();
   const [referralCode, setReferralCode] = useState('');
-  const [referrals, setReferrals] = useState<any[]>([]);
+  const [referrals, setReferrals] = useState<ReferralRow[]>([]);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -120,7 +122,7 @@ export default function ReferralPage() {
                       background: r.status === 'subscribed' ? '#F5F3FF' : r.status === 'registered' ? '#eff6ff' : 'var(--bg-elevated)',
                       color: r.status === 'subscribed' ? '#7C3AED' : r.status === 'registered' ? '#2563eb' : 'var(--text-hint)',
                     }}>{r.status === 'subscribed' ? 'Assinou ✓' : r.status === 'registered' ? 'Registrado' : 'Cadastrou'}</span>
-                    <span className="text-[11px]" style={{ color: 'var(--text-hint)' }}>{format(new Date(r.created_at), 'dd/MM/yy')}</span>
+                    <span className="text-[11px]" style={{ color: 'var(--text-hint)' }}>{r.created_at ? format(new Date(r.created_at), 'dd/MM/yy') : '—'}</span>
                   </div>
                 </div>
               ))}
@@ -145,7 +147,7 @@ export default function ReferralPage() {
                         color: r.status === 'subscribed' ? '#7C3AED' : r.status === 'registered' ? '#2563eb' : 'var(--text-hint)',
                       }}>{r.status === 'subscribed' ? 'Assinou Pro ✓' : r.status === 'registered' ? 'Registrado' : 'Cadastrou'}</span>
                     </td>
-                    <td className="px-5 py-3 text-xs" style={{ color: 'var(--text-hint)' }}>{format(new Date(r.created_at), 'dd/MM/yyyy')}</td>
+                    <td className="px-5 py-3 text-xs" style={{ color: 'var(--text-hint)' }}>{r.created_at ? format(new Date(r.created_at), 'dd/MM/yyyy') : '—'}</td>
                     <td className="px-5 py-3 text-right text-xs font-bold" style={{ color: r.status === 'subscribed' ? '#7C3AED' : 'var(--text-hint)' }}>
                       {r.status === 'subscribed' ? '1 mês grátis ✓' : '—'}
                     </td>

@@ -1,5 +1,5 @@
 import { Transaction, Goal, CreditCard, Investment, Config } from "@/types/findash";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { Download, FileText, Table } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -9,11 +9,7 @@ interface Props {
   currency: string;
 }
 
-function fmt(v: number) {
-  return v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-export default function ExportTab({ data, filteredTx, currency }: Props) {
+export default function ExportTab({ data, filteredTx, currency: _currency }: Props) {
   const exportCSV = () => {
     const header = "Data,Descrição,Valor,Tipo,Origem,Categoria\n";
     const rows = filteredTx.map(t =>

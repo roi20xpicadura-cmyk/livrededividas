@@ -91,6 +91,10 @@ export default function OnboardingChat({ onComplete }: { onComplete: () => void 
       }, 800);
       setCurrentStep('name');
     }
+    // Intentionally run once on mount: this useEffect seeds the first message
+    // based on the initial profile snapshot. Re-running on profile changes
+    // would duplicate the welcome message.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleNameSubmit = () => {

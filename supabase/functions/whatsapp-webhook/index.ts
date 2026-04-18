@@ -626,6 +626,16 @@ Fique de olho! 👀`;
 serve(async (req) => {
   if (req.method !== "POST") return new Response("OK", { status: 200 });
 
+  // Authenticate the webhook: Z-API sends the same Client-Token we configured
+  // in their dashboard. Reject anything that doesn't match.
+  const sentToken = req.headers.get("client-token");
+  if (!ZAPI_CLIENT_TOKEN || sentToken !== ZAPI_CLIENT_TOKEN) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const body = await req.json();
     console.log("Z-API payload:", JSON.stringify(body).slice(0, 500));
@@ -633,14 +643,14 @@ serve(async (req) => {
     if (body.fromMe || body.isGroup) return new Response("OK", { status: 200 });
 
     // ── DEDUP: evita processar o mesmo webhook 2x (Z-API às vezes reentrega) ──
-    const messageId = body.messageId || body.id;
+    const messageId = body.messageId || body.id || body.key?.id;
     if (messageId) {
       const { error: dedupErr } = await supabase
         .from("whatsapp_webhook_dedup")
         .insert({ message_id: String(messageId) });
       if (dedupErr) {
         // 23505 = unique violation → já processado
-        if ((dedupErr as any).code === "23505") {
+        if ((dedupErr as unknown as { code?: string }).code === "23505") {
           console.log(`[DEDUP] skipping duplicate messageId=${messageId}`);
           return new Response("OK", { status: 200 });
         }

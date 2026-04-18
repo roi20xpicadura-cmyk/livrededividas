@@ -60,6 +60,7 @@ const QuickAddFAB = forwardRef<HTMLButtonElement, QuickAddFABProps>(function Qui
       return;
     }
     toast.success('✓ Lançamento adicionado!');
+    window.dispatchEvent(new CustomEvent('kora:transaction-changed'));
     setDesc('');
     setVal('');
     setCat('');

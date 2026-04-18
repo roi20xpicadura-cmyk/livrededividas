@@ -17,6 +17,9 @@ import {
 } from '@/lib/integrations-data';
 import { parseOFX, parseCSV, type ParsedTransaction } from '@/lib/ofxParser';
 import { haptic } from '@/lib/haptics';
+import type { Database } from '@/integrations/supabase/types';
+
+type IntegrationRow = Database['public']['Tables']['integrations']['Row'];
 
 /* ─── Logo ─── */
 function IntegrationLogo({ name, domain, color, size = 36 }: { name: string; domain: string; color: string; size?: number }) {
@@ -107,8 +110,8 @@ export default function IntegrationsPage() {
     enabled: !!user,
   });
 
-  const connectedPlatforms = new Set(userIntegrations.map((i: any) => i.platform));
-  const lastSync = userIntegrations.reduce((latest: string | null, i: any) => {
+  const connectedPlatforms = new Set(userIntegrations.map((i: IntegrationRow) => i.platform));
+  const lastSync = userIntegrations.reduce<string | null>((latest, i: IntegrationRow) => {
     if (!i.last_sync_at) return latest;
     return !latest || i.last_sync_at > latest ? i.last_sync_at : latest;
   }, null);
@@ -119,7 +122,7 @@ export default function IntegrationsPage() {
     return true;
   });
 
-  const connectedList = userIntegrations.filter((i: any) => i.status === 'active');
+  const connectedList = userIntegrations.filter((i: IntegrationRow) => i.status === 'active');
 
   return (
     <div className="scroll-container hide-scrollbar" style={{ padding: isMobile ? 16 : 28, maxWidth: 1280 }}>
@@ -160,7 +163,7 @@ export default function IntegrationsPage() {
             <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 99, background: 'var(--color-green-50)', color: 'var(--color-green-700)' }}>{connectedList.length}</span>
           </div>
           <div className="flex hide-scrollbar" style={{ gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
-            {connectedList.map((conn: any) => {
+            {connectedList.map((conn: IntegrationRow) => {
               const def = INTEGRATIONS.find(i => i.id === conn.platform);
               return (
                 <div key={conn.id} className="flex-shrink-0" style={{ width: 220, background: 'var(--color-bg-surface)', border: '1px solid var(--color-green-200)', borderRadius: 'var(--radius-xl)', padding: 14 }}>
@@ -417,7 +420,11 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
       let existingIds = new Set<string>();
       if (sourceIds.length > 0) {
         const { data: existing } = await supabase.from('transactions').select('notes').eq('user_id', userId).in('notes', sourceIds.map(id => `src:${id}`));
-        existingIds = new Set((existing || []).map((e: any) => e.notes?.replace('src:', '')));
+        existingIds = new Set(
+          (existing || [])
+            .map((e: { notes: string | null }) => e.notes?.replace('src:', ''))
+            .filter((v): v is string => !!v),
+        );
       }
       const newTxs = parsed.filter(t => !t.source_id || !existingIds.has(t.source_id));
       if (newTxs.length === 0) { toast.info('Todas as transações já foram importadas.'); setImporting(false); return; }
@@ -440,7 +447,7 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
 
       if (existingInteg) {
         await supabase.from('integrations').update({
-          status: 'active' as any,
+          status: 'active',
           last_sync_at: new Date().toISOString(),
           total_imported: (existingInteg.total_imported || 0) + newTxs.length,
         }).eq('id', existingInteg.id);
@@ -448,7 +455,7 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
         await supabase.from('integrations').insert({
           user_id: userId, platform: integration.id,
           platform_display_name: integration.name,
-          method: 'ofx_import', status: 'active' as any,
+          method: 'ofx_import', status: 'active',
           last_sync_at: new Date().toISOString(),
           total_imported: newTxs.length,
         });
@@ -458,8 +465,8 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
       toast.success(`${newTxs.length} transações importadas! 🎉`);
       onConnected();
       setStep(4);
-    } catch (err: any) {
-      toast.error('Erro ao importar: ' + (err.message || 'tente novamente'));
+    } catch (err) {
+      toast.error('Erro ao importar: ' + (err instanceof Error ? err.message : 'tente novamente'));
     } finally {
       setImporting(false);
     }
@@ -621,7 +628,7 @@ function ConnectionFlow({ integration, onClose, userId, onConnected }: {
                     await supabase.from('integrations').insert({
                       user_id: userId, platform: integration.id,
                       platform_display_name: integration.name,
-                      method: 'webhook', status: 'pending' as any, webhook_url: webhookUrl,
+                      method: 'webhook', status: 'pending', webhook_url: webhookUrl,
                     });
                     haptic.success();
                     toast.success('Integração configurada!');

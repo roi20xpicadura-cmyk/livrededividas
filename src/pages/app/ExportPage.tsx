@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { generateMonthlyPDF } from '@/lib/pdfExport';
-import { formatCurrency } from '@/lib/plans';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion } from 'framer-motion';
@@ -29,8 +28,9 @@ export function ExportPage() {
 
   useEffect(() => {
     if (!user) return;
-    const start = format(startOfMonth(targetDate), 'yyyy-MM-dd');
-    const end = format(endOfMonth(targetDate), 'yyyy-MM-dd');
+    const date = subMonths(new Date(), monthOffset);
+    const start = format(startOfMonth(date), 'yyyy-MM-dd');
+    const end = format(endOfMonth(date), 'yyyy-MM-dd');
     setLoading(true);
     supabase.from('transactions').select('date,description,amount,type,category,origin')
       .eq('user_id', user.id).gte('date', start).lte('date', end).is('deleted_at', null)

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef, lazy, Suspense } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -7,13 +7,13 @@ import { OBJECTIVES } from '@/lib/objectives';
 import { calculateFinancialScore, getScoreColor, getScoreLevel, ScoreData } from '@/lib/financialScore';
 import {
   TrendingUp, TrendingDown, Eye, EyeOff, ChevronDown, Check,
-  ArrowRight, PlusCircle, ReceiptText, Target, Shield, Flame, PiggyBank,
-  DollarSign, Percent, Hash, Zap, BarChart2, Calendar as CalendarIcon
+  PlusCircle, Target, Shield, Flame, PiggyBank,
+  DollarSign, Percent, Hash, BarChart2, Calendar as CalendarIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 // Heavy below-the-fold widgets are lazy-loaded so the dashboard hero paints fast.
 const PredictiveWidget = lazy(() => import('@/components/dashboard/PredictiveWidget'));
 const AIInsightsWidget = lazy(() => import('@/components/dashboard/AIInsightsWidget'));
@@ -23,9 +23,16 @@ const AIChatDrawer = lazy(() => import('@/components/app/AIChatDrawer'));
 const WhatsAppPromoWidget = lazy(() => import('@/components/app/WhatsAppPromoWidget'));
 const SmartAlertsWidget = lazy(() => import('@/components/dashboard/SmartAlertsWidget'));
 import { useIsMobile } from '@/hooks/use-mobile';
+import type { Database } from '@/integrations/supabase/types';
+
+type TransactionRow = Database['public']['Tables']['transactions']['Row'];
+type InvestmentRow = Database['public']['Tables']['investments']['Row'];
+type GoalRow = Database['public']['Tables']['goals']['Row'];
+type CreditCardRow = Database['public']['Tables']['credit_cards']['Row'];
+type DebtRow = Database['public']['Tables']['debts']['Row'];
 
 const LazyChart = lazy(() => import('recharts').then(m => ({
-  default: ({ data }: { data: any[] }) => (
+  default: ({ data }: { data: { date: string; saldo: number | null }[] }) => (
     <m.ResponsiveContainer width="100%" height="100%">
       <m.AreaChart data={data} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
         <defs>
@@ -183,12 +190,12 @@ export default function OverviewPage() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [aiChatOpen, setAiChatOpen] = useState(false);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [allTransactions, setAllTransactions] = useState<any[]>([]);
-  const [investments, setInvestments] = useState<any[]>([]);
-  const [goals, setGoals] = useState<any[]>([]);
-  const [cards, setCards] = useState<any[]>([]);
-  const [debts, setDebts] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<TransactionRow[]>([]);
+  const [allTransactions, setAllTransactions] = useState<TransactionRow[]>([]);
+  const [investments, setInvestments] = useState<InvestmentRow[]>([]);
+  const [goals, setGoals] = useState<GoalRow[]>([]);
+  const [cards, setCards] = useState<CreditCardRow[]>([]);
+  const [debts, setDebts] = useState<DebtRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showValues, setShowValues] = useState(true);
   const [period, setPeriod] = useState({ month: new Date().getMonth(), year: new Date().getFullYear() });
@@ -197,7 +204,7 @@ export default function OverviewPage() {
   const showPersonal = profileType === 'personal' || profileType === 'both';
   const showBusiness = profileType === 'business' || profileType === 'both';
 
-  const fetchData = (month: number, year: number) => {
+  const fetchData = useCallback((month: number, year: number) => {
     if (!user) return;
     const periodDate = new Date(year, month);
     const start = format(startOfMonth(periodDate), 'yyyy-MM-dd');
@@ -220,11 +227,19 @@ export default function OverviewPage() {
       setDebts(debtRes.data || []);
       setLoading(false);
     });
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchData(period.month, period.year);
-  }, [user, period.month, period.year]);
+  }, [fetchData, period.month, period.year]);
+
+  // Refetch when any part of the app emits a transaction-change event
+  // (QuickAddFAB, NewTransactionSheet, delete handlers).
+  useEffect(() => {
+    const handler = () => fetchData(period.month, period.year);
+    window.addEventListener('kora:transaction-changed', handler);
+    return () => window.removeEventListener('kora:transaction-changed', handler);
+  }, [fetchData, period.month, period.year]);
 
   const handlePeriodChange = (month: number, year: number) => {
     setLoading(true);

@@ -28,8 +28,9 @@ export default function SignupsChart() {
         d.setDate(d.getDate() + i);
         buckets.set(d.toISOString().slice(0, 10), 0);
       }
-      (rows || []).forEach((r: any) => {
-        const key = (r.created_at as string).slice(0, 10);
+      (rows || []).forEach((r: { created_at: string | null }) => {
+        if (!r.created_at) return;
+        const key = r.created_at.slice(0, 10);
         if (buckets.has(key)) buckets.set(key, (buckets.get(key) || 0) + 1);
       });
       const points: DayPoint[] = Array.from(buckets.entries()).map(([date, count]) => ({
