@@ -2,40 +2,61 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// PWA Service Worker registration — only in production, never in iframe/preview
-const isInIframe = (() => {
-  try { return window.self !== window.top; } catch { return true; }
-})();
-const isPreviewHost =
-  window.location.hostname.includes("id-preview--") ||
-  window.location.hostname.includes("lovableproject.com");
+const STALE_ASSET_MARKERS = [
+  'failed to fetch dynamically imported module',
+  'importing a module script failed',
+  'chunkloaderror',
+  'loading chunk',
+];
 
-if (isPreviewHost || isInIframe) {
-  // Never register SW in preview/iframe — causes stale content
-  navigator.serviceWorker?.getRegistrations().then(regs =>
-    regs.forEach(r => r.unregister())
-  );
-} else if ('serviceWorker' in navigator) {
-  // Production: register SW for static asset caching (instant repeat visits)
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then(reg => {
-      const notify = (sw: ServiceWorker) => {
-        window.dispatchEvent(new CustomEvent('sw-update-available', { detail: sw }));
-      };
-      // SW already waiting on load
-      if (reg.waiting && navigator.serviceWorker.controller) notify(reg.waiting);
-      // New SW found during this session
-      reg.addEventListener('updatefound', () => {
-        const installing = reg.installing;
-        if (!installing) return;
-        installing.addEventListener('statechange', () => {
-          if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-            notify(installing);
-          }
-        });
-      });
-    }).catch(() => {});
-  });
+function isStaleAssetError(message: string) {
+  const normalized = message.toLowerCase();
+  return STALE_ASSET_MARKERS.some((marker) => normalized.includes(marker));
 }
+
+async function clearRuntimeCaches() {
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((reg) => reg.unregister()));
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((key) => caches.delete(key)));
+    }
+  } catch {
+    // Nunca bloquear bootstrap por causa da limpeza.
+  }
+}
+
+function hardReloadOnce(reason: string) {
+  try {
+    const key = 'kora:stale-assets-recovered';
+    if (sessionStorage.getItem(key) === reason) return;
+    sessionStorage.setItem(key, reason);
+    void clearRuntimeCaches().finally(() => window.location.reload());
+  } catch {
+    window.location.reload();
+  }
+}
+
+window.addEventListener('error', (event) => {
+  const message = event.message || (event.error instanceof Error ? event.error.message : '');
+  if (message && isStaleAssetError(message)) {
+    hardReloadOnce('window-error');
+  }
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason;
+  const message = reason instanceof Error ? reason.message : String(reason || '');
+  if (message && isStaleAssetError(message)) {
+    hardReloadOnce('unhandledrejection');
+  }
+});
+
+// Kill-switch do antigo SW: priorizamos confiabilidade e removemos registros legados
+// que podem servir HTML/chunks velhos e causar tela branca após deploy.
+void clearRuntimeCaches();
 
 createRoot(document.getElementById("root")!).render(<App />);
