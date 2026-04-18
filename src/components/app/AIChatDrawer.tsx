@@ -10,6 +10,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useProfile } from '@/hooks/useProfile';
 import { useKora, type KoraPendingAction } from '@/hooks/useKora';
 import KoraPendingActionCard from '@/components/app/KoraPendingActionCard';
+import AudioRecordButton from '@/components/app/AudioRecordButton';
+import { toast } from 'sonner';
 
 type Msg = {
   role: 'user' | 'assistant';
