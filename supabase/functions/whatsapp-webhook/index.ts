@@ -799,23 +799,28 @@ serve(async (req) => {
       }
     }
 
-    // ── IMAGE PROCESSING ──
-    if (image) {
-      const imageUrl = typeof image === "string"
-        ? image
-        : (image.imageUrl || image.url);
-
-      const { transactions, reply } = await processImage(imageUrl, ctx.name);
-
-      if (transactions.length > 0) {
-        await supabase.from("whatsapp_context").upsert({
-          user_id: userId,
-          pending_confirmation: true,
-          pending_transactions: transactions,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: "user_id" });
+    // ── ATTACHMENT PROCESSING (PDF de extrato/fatura/comprovante OU imagem) ──
+    // Importa DIRETO no banco, sem confirmação. Detecta origem (personal/business) via IA.
+    if (document || image) {
+      let fileUrl: string | undefined;
+      if (document) {
+        fileUrl = typeof document === "string"
+          ? document
+          : (document.documentUrl || document.url || document.fileUrl);
+      } else if (image) {
+        fileUrl = typeof image === "string"
+          ? image
+          : (image.imageUrl || image.url);
       }
 
+      if (!fileUrl) {
+        await sendWhatsApp(phone, `Não consegui baixar o arquivo, ${ctx.name} 😕 Tenta enviar de novo!`);
+        return new Response("OK", { status: 200 });
+      }
+
+      const { transactions, reply, importDirect } = await processAttachment(fileUrl, ctx.name, ctx.profile);
+
+      // Sempre envia o resumo primeiro
       await sendWhatsApp(phone, reply);
       await supabase.from("whatsapp_messages").insert({
         user_id: userId, phone, phone_number: phone,
@@ -823,6 +828,65 @@ serve(async (req) => {
         message: reply, content: reply,
         created_at: new Date().toISOString(),
       });
+
+      // Importa direto se a IA achou transações válidas
+      if (importDirect && transactions.length > 0) {
+        const rows = transactions.map((t: any) => ({
+          user_id: userId,
+          type: t.type,
+          amount: t.amount,
+          description: t.description,
+          category: t.category,
+          date: t.date,
+          origin: t.origin || ctx.profile || "personal",
+          source: "whatsapp",
+        }));
+
+        // Insert em chunks de 50
+        let saved = 0;
+        for (let i = 0; i < rows.length; i += 50) {
+          const chunk = rows.slice(i, i + 50);
+          const { error } = await supabase.from("transactions").insert(chunk);
+          if (error) {
+            console.error("[ATTACHMENT INSERT] error:", error.message);
+          } else {
+            saved += chunk.length;
+          }
+        }
+
+        const incomeTotal = transactions.filter((t: any) => t.type === "income").reduce((s: number, t: any) => s + t.amount, 0);
+        const expenseTotal = transactions.filter((t: any) => t.type === "expense").reduce((s: number, t: any) => s + t.amount, 0);
+
+        const confirmReply = `🎉 *Importação concluída!*
+
+✅ *${saved} de ${transactions.length}* lançamento${saved > 1 ? "s" : ""} salvos
+💰 +${fmt(incomeTotal)}
+💸 -${fmt(expenseTotal)}
+📊 Líquido: *${fmt(incomeTotal - expenseTotal)}*
+
+Acesse seu dashboard pra revisar e ajustar categorias se quiser, ${ctx.name}! 🐨`;
+
+        await sendWhatsApp(phone, confirmReply);
+        await supabase.from("whatsapp_messages").insert({
+          user_id: userId, phone, phone_number: phone,
+          direction: "outbound", role: "assistant",
+          message: confirmReply, content: confirmReply,
+          created_at: new Date().toISOString(),
+        });
+
+        // Alerta orçamento agrupado por categoria
+        const byCat: Record<string, number> = {};
+        for (const tx of transactions) {
+          if (tx.type === "expense") {
+            byCat[tx.category] = (byCat[tx.category] || 0) + Number(tx.amount);
+          }
+        }
+        const freshCtx = await loadUserContext(userId);
+        for (const [cat, amt] of Object.entries(byCat)) {
+          await checkAndAlertBudget(userId, phone, cat, ctx.name, freshCtx, amt);
+        }
+      }
+
       return new Response("OK", { status: 200 });
     }
 
