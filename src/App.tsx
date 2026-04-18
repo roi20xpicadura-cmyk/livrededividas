@@ -1,4 +1,11 @@
-import { lazy, Suspense, useState, useEffect, memo } from "react";
+import type { ComponentType } from "react";
+import { Suspense, useState, useEffect, memo } from "react";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
+
+// Rotas usam retries mas SEM fallback pra null — se o chunk realmente
+// não carregar, é melhor o ErrorBoundary aparecer do que uma tela em branco.
+const lazy = <T extends ComponentType<any>>(imp: () => Promise<{ default: T }>) =>
+  lazyWithRetry(imp, { fallbackToEmpty: false });
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
