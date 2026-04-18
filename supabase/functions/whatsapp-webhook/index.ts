@@ -40,22 +40,11 @@ async function sendWhatsApp(phone: string, text: string) {
   }
 }
 
+// Legado: mantido pra retrocompatibilidade caso outras funções importem.
+// O novo fluxo de anexos usa `downloadAsBase64` (suporta PDF + imagem).
 async function downloadImageBase64(imageUrl: string): Promise<{ base64: string; mimeType: string }> {
-  const response = await fetch(imageUrl, { headers: { "Client-Token": ZAPI_CLIENT_TOKEN } });
-  const buffer = await response.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  }
-  const contentType = response.headers.get("content-type") || "image/jpeg";
-  const mimeType = contentType.includes("png")
-    ? "image/png"
-    : contentType.includes("webp")
-    ? "image/webp"
-    : "image/jpeg";
-  return { base64: btoa(binary), mimeType };
+  const { base64, mimeType } = await downloadAsBase64(imageUrl);
+  return { base64, mimeType };
 }
 
 // ─── AUDIO TRANSCRIPTION via Lovable AI Gateway (Gemini) ──
@@ -316,95 +305,215 @@ REGRAS:
 - Confirme gastos acima de R$500 antes de salvar`;
 }
 
-// ─── IMPROVEMENT 3: IMAGE PROCESSING ────────────────
-async function processImage(imageUrl: string, userName: string): Promise<{
-  transactions: any[];
-  reply: string;
-}> {
-  try {
-    const { base64, mimeType } = await downloadImageBase64(imageUrl);
+// ─── ATTACHMENT PROCESSING (PDF + Image) via Lovable AI Gemini ──
+// Suporta: extratos bancários, faturas de cartão, comprovantes (Pix/TED/boleto), cupons.
+// Importa DIRETO no banco e responde com resumo.
+async function downloadAsBase64(url: string): Promise<{ base64: string; mimeType: string; bytes: number }> {
+  const res = await fetch(url, { headers: { "Client-Token": ZAPI_CLIENT_TOKEN } });
+  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+  const buffer = await res.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  const ct = (res.headers.get("content-type") || "").toLowerCase();
+  let mimeType = ct.split(";")[0].trim();
+  if (!mimeType || mimeType === "application/octet-stream") {
+    // sniff via URL extension
+    const lower = url.toLowerCase();
+    if (lower.includes(".pdf")) mimeType = "application/pdf";
+    else if (lower.includes(".png")) mimeType = "image/png";
+    else if (lower.includes(".webp")) mimeType = "image/webp";
+    else mimeType = "image/jpeg";
+  }
+  return { base64: btoa(binary), mimeType, bytes: bytes.length };
+}
 
-    const response = await fetch(ANTHROPIC_URL, {
+async function processAttachment(
+  fileUrl: string,
+  userName: string,
+  defaultProfile: string,
+): Promise<{ transactions: any[]; reply: string; importDirect: boolean }> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) {
+    return {
+      transactions: [],
+      reply: `Configuração da IA pendente, ${userName}. Tenta de novo em instantes!`,
+      importDirect: false,
+    };
+  }
+
+  try {
+    const { base64, mimeType, bytes } = await downloadAsBase64(fileUrl);
+    console.log(`[ATTACHMENT] ${mimeType} | ${(bytes / 1024).toFixed(1)} KB`);
+
+    const isPdf = mimeType === "application/pdf";
+    const isImage = mimeType.startsWith("image/");
+
+    if (!isPdf && !isImage) {
+      return {
+        transactions: [],
+        reply: `Não consigo ler esse tipo de arquivo (${mimeType}), ${userName} 😕\nManda PDF de extrato/fatura ou foto do comprovante!`,
+        importDirect: false,
+      };
+    }
+
+    const systemPrompt = `Você é a Kora IA, especialista em extrair transações financeiras de extratos bancários, faturas de cartão e comprovantes brasileiros.
+
+Analise o documento e extraia TODAS as transações encontradas.
+
+REGRAS DE CATEGORIZAÇÃO (use apenas estas):
+- Alimentação, Supermercado, Delivery, Restaurante
+- Transporte, Combustível, Uber/99
+- Saúde, Farmácia, Plano de Saúde
+- Lazer, Streaming, Viagem
+- Casa, Aluguel, Contas (água/luz/internet)
+- Educação, Cursos
+- Vestuário, Eletrônicos
+- Salário, Freelance, Investimentos, Vendas, Reembolso
+- Cartão (pagamento de fatura)
+- Transferência, Pix
+- Empréstimo, Juros, Tarifas
+- Outros
+
+DETECÇÃO DE ORIGEM (origin):
+- "business" se houver: CNPJ, nome de empresa fantasia, "LTDA", "ME", "EIRELI", taxa de maquininha, fornecedor, nota fiscal de serviço B2B
+- "personal" para gastos pessoais (mercado, farmácia, salário, transferências entre pessoas físicas)
+- Se ambíguo, use "${defaultProfile}"
+
+REGRAS DE TIPO:
+- "income" para créditos/entradas (recebimento, salário, depósito, Pix recebido, estorno)
+- "expense" para débitos/saídas (compra, pagamento, Pix enviado, tarifa)
+
+REGRAS DE DATA:
+- Formato OBRIGATÓRIO: YYYY-MM-DD
+- Se a data estiver dd/mm/aaaa, converta
+- Se faltar ano, use o ano atual (${new Date().getFullYear()})
+- Se faltar data completa, use a data de hoje: ${new Date().toISOString().split("T")[0]}
+
+Responda APENAS JSON válido (sem markdown, sem comentários):
+{
+  "found": true,
+  "doc_type": "extrato|fatura|comprovante|cupom",
+  "institution": "nome do banco/empresa se identificado",
+  "transactions": [
+    {
+      "date": "YYYY-MM-DD",
+      "description": "descrição limpa e curta",
+      "amount": 123.45,
+      "type": "expense",
+      "category": "Categoria",
+      "origin": "personal"
+    }
+  ]
+}
+
+Se não encontrar nenhuma transação:
+{"found": false, "reason": "motivo curto"}`;
+
+    const userContent: any[] = [
+      { type: "text", text: "Extraia todas as transações financeiras deste documento e retorne o JSON conforme instruído." },
+    ];
+
+    if (isPdf) {
+      userContent.push({
+        type: "file",
+        file: { filename: "documento.pdf", file_data: `data:application/pdf;base64,${base64}` },
+      });
+    } else {
+      userContent.push({
+        type: "image_url",
+        image_url: { url: `data:${mimeType};base64,${base64}` },
+      });
+    }
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: ANTHROPIC_MODEL,
-        max_tokens: 2000,
-        system: `Você é a Kora IA do KoraFinance.
-Analise a imagem e extraia dados financeiros.
-A imagem pode ser: cupom fiscal, nota fiscal, comprovante, extrato ou print de app.
-
-Responda APENAS com JSON válido:
-{
-  "found": true/false,
-  "establishment": "nome do estabelecimento",
-  "date": "data se visível",
-  "total": valor total como número,
-  "items": [
-    {
-      "description": "nome do item",
-      "amount": valor como número,
-      "category": "categoria",
-      "type": "expense"
-    }
-  ],
-  "summary": "resumo amigável"
-}
-
-Categorias: Supermercado, Alimentação, Delivery, Farmácia, Combustível, Transporte, Saúde, Lazer, Vestuário, Eletrônicos, Casa, Educação, Outros
-
-Se não encontrar dados:
-{"found": false, "summary": "Não consegui identificar dados financeiros"}`,
-        messages: [{
-          role: "user",
-          content: [
-            { type: "image", source: { type: "base64", media_type: mimeType, data: base64 } },
-            { type: "text", text: "Analise esta imagem e extraia os dados financeiros." },
-          ],
-        }],
+        model: "google/gemini-2.5-pro",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
       }),
     });
 
     if (!response.ok) {
       const errBody = await response.text();
-      console.error("[Anthropic Image] HTTP", response.status, errBody.slice(0, 500));
-      return { transactions: [], reply: `Não consegui ler essa imagem agora, ${userName}. Tenta de novo ou descreve em texto 📷` };
+      console.error("[ATTACHMENT] Gemini error:", response.status, errBody.slice(0, 500));
+      if (response.status === 429) {
+        return { transactions: [], reply: `IA sobrecarregada agora, ${userName} 😅 Manda de novo em 1 minutinho!`, importDirect: false };
+      }
+      if (response.status === 402) {
+        return { transactions: [], reply: `Limite de IA atingido. Avisa o admin pra recarregar créditos, ${userName}!`, importDirect: false };
+      }
+      return { transactions: [], reply: `Não consegui ler esse arquivo, ${userName}. Tenta de novo ou descreve em texto 📄`, importDirect: false };
     }
 
     const data = await response.json();
-    const text = data.content?.[0]?.text || "{}";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const raw = data.choices?.[0]?.message?.content || "{}";
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
     const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : "{}");
 
-    if (!parsed.found || !parsed.items?.length) {
+    if (!parsed.found || !Array.isArray(parsed.transactions) || parsed.transactions.length === 0) {
       return {
         transactions: [],
-        reply: `Não consegui identificar dados financeiros nessa imagem, ${userName}. Tente descrever o gasto em texto: _"gastei X em Y"_ 😊`,
+        reply: `Não identifiquei transações nesse arquivo, ${userName} 🤔\n${parsed.reason || "Confere se é um extrato/comprovante legível."}`,
+        importDirect: false,
       };
     }
 
-    const itemsList = parsed.items
-      .map((item: any) => `  💸 ${item.description} — ${fmt(Number(item.amount))}`)
+    // Sanitize transactions
+    const today = new Date().toISOString().split("T")[0];
+    const txs = parsed.transactions
+      .map((t: any) => ({
+        date: typeof t.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(t.date) ? t.date : today,
+        description: String(t.description || "Sem descrição").slice(0, 200),
+        amount: Math.abs(Number(t.amount) || 0),
+        type: t.type === "income" ? "income" : "expense",
+        category: String(t.category || "Outros").slice(0, 50),
+        origin: t.origin === "business" ? "business" : "personal",
+      }))
+      .filter((t: any) => t.amount > 0);
+
+    if (txs.length === 0) {
+      return { transactions: [], reply: `Encontrei o documento mas as transações estão sem valor 🤷 Tenta um arquivo mais nítido!`, importDirect: false };
+    }
+
+    const income = txs.filter((t: any) => t.type === "income").reduce((s: number, t: any) => s + t.amount, 0);
+    const expense = txs.filter((t: any) => t.type === "expense").reduce((s: number, t: any) => s + t.amount, 0);
+    const docLabel = parsed.doc_type ? `*${parsed.doc_type}*` : "documento";
+    const inst = parsed.institution ? `\n🏦 ${parsed.institution}` : "";
+
+    const preview = txs.slice(0, 5)
+      .map((t: any) => `  ${t.type === "income" ? "💰" : "💸"} ${fmt(t.amount)} — ${t.category}`)
       .join("\n");
+    const more = txs.length > 5 ? `\n  _...e mais ${txs.length - 5} lançamento(s)_` : "";
 
-    const reply = `🧾 *Cupom encontrado!*${parsed.establishment ? `\n🏪 ${parsed.establishment}` : ""}
+    const reply = `📄 *${docLabel.toUpperCase()} processado!*${inst}
 
-${itemsList}
+${preview}${more}
 
-💵 *Total: ${fmt(Number(parsed.total || 0))}*
+📊 *Resumo:*
+💰 Receitas: ${fmt(income)}
+💸 Despesas: ${fmt(expense)}
+📋 Total: *${txs.length} lançamento${txs.length > 1 ? "s" : ""}*
 
-Registrar tudo? Responda *SIM* para confirmar ou *NÃO* para cancelar.`;
+✅ Importando direto no seu dashboard, ${userName}...`;
 
-    return { transactions: parsed.items, reply };
+    return { transactions: txs, reply, importDirect: true };
   } catch (e) {
-    console.error("processImage error:", e);
+    console.error("[ATTACHMENT] error:", e);
     return {
       transactions: [],
-      reply: `Não consegui ler essa imagem, ${userName}. Tente uma foto mais nítida ou descreva o gasto em texto 📷`,
+      reply: `Tive um problema lendo esse arquivo, ${userName} 😕 Tenta de novo ou manda foto do comprovante!`,
+      importDirect: false,
     };
   }
 }
@@ -530,6 +639,8 @@ serve(async (req) => {
     let text = body.text?.message?.trim();
     const image = body.image || body.imageMessage;
     const audio = body.audio || body.audioMessage;
+    // Z-API document/PDF payload variants
+    const document = body.document || body.documentMessage || body.documentWithCaption || body.documentWithCaptionMessage;
 
     if (!phone) return new Response("OK", { status: 200 });
 
@@ -584,7 +695,7 @@ serve(async (req) => {
 
     if (!conn?.user_id) {
       await sendWhatsApp(phone,
-        `👋 Olá! Sou a *Kora IA* do KoraFinance 🐨\n\nPara usar o assistente, conecte seu número:\n\n1️⃣ Acesse *korafinance.app*\n2️⃣ Configurações → WhatsApp\n3️⃣ Informe este número\n\nDepois é só mandar:\n💸 _"gastei 50 no mercado"_\n📷 _Foto do cupom fiscal_`
+        `👋 Olá! Sou a *Kora IA* do KoraFinance 🐨\n\nPara usar o assistente, conecte seu número:\n\n1️⃣ Acesse *korafinance.app*\n2️⃣ Configurações → WhatsApp\n3️⃣ Informe este número\n\nDepois é só mandar:\n💸 _"gastei 50 no mercado"_\n📷 _Foto do comprovante_\n📄 _PDF do extrato ou fatura_`
       );
       return new Response("OK", { status: 200 });
     }
@@ -592,14 +703,15 @@ serve(async (req) => {
     const userId = conn.user_id;
     const ctx = await loadUserContext(userId);
 
+    const inboundLabel = text || (document ? "[documento]" : image ? "[imagem]" : audio ? "[áudio]" : "[mídia]");
     await supabase.from("whatsapp_messages").insert({
       user_id: userId,
       phone,
       phone_number: phone,
       direction: "inbound",
       role: "user",
-      message: text || "[imagem]",
-      content: text || "[imagem]",
+      message: inboundLabel,
+      content: inboundLabel,
       created_at: new Date().toISOString(),
     });
 
@@ -676,23 +788,28 @@ serve(async (req) => {
       }
     }
 
-    // ── IMAGE PROCESSING ──
-    if (image) {
-      const imageUrl = typeof image === "string"
-        ? image
-        : (image.imageUrl || image.url);
-
-      const { transactions, reply } = await processImage(imageUrl, ctx.name);
-
-      if (transactions.length > 0) {
-        await supabase.from("whatsapp_context").upsert({
-          user_id: userId,
-          pending_confirmation: true,
-          pending_transactions: transactions,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: "user_id" });
+    // ── ATTACHMENT PROCESSING (PDF de extrato/fatura/comprovante OU imagem) ──
+    // Importa DIRETO no banco, sem confirmação. Detecta origem (personal/business) via IA.
+    if (document || image) {
+      let fileUrl: string | undefined;
+      if (document) {
+        fileUrl = typeof document === "string"
+          ? document
+          : (document.documentUrl || document.url || document.fileUrl);
+      } else if (image) {
+        fileUrl = typeof image === "string"
+          ? image
+          : (image.imageUrl || image.url);
       }
 
+      if (!fileUrl) {
+        await sendWhatsApp(phone, `Não consegui baixar o arquivo, ${ctx.name} 😕 Tenta enviar de novo!`);
+        return new Response("OK", { status: 200 });
+      }
+
+      const { transactions, reply, importDirect } = await processAttachment(fileUrl, ctx.name, ctx.profile);
+
+      // Sempre envia o resumo primeiro
       await sendWhatsApp(phone, reply);
       await supabase.from("whatsapp_messages").insert({
         user_id: userId, phone, phone_number: phone,
@@ -700,6 +817,65 @@ serve(async (req) => {
         message: reply, content: reply,
         created_at: new Date().toISOString(),
       });
+
+      // Importa direto se a IA achou transações válidas
+      if (importDirect && transactions.length > 0) {
+        const rows = transactions.map((t: any) => ({
+          user_id: userId,
+          type: t.type,
+          amount: t.amount,
+          description: t.description,
+          category: t.category,
+          date: t.date,
+          origin: t.origin || ctx.profile || "personal",
+          source: "whatsapp",
+        }));
+
+        // Insert em chunks de 50
+        let saved = 0;
+        for (let i = 0; i < rows.length; i += 50) {
+          const chunk = rows.slice(i, i + 50);
+          const { error } = await supabase.from("transactions").insert(chunk);
+          if (error) {
+            console.error("[ATTACHMENT INSERT] error:", error.message);
+          } else {
+            saved += chunk.length;
+          }
+        }
+
+        const incomeTotal = transactions.filter((t: any) => t.type === "income").reduce((s: number, t: any) => s + t.amount, 0);
+        const expenseTotal = transactions.filter((t: any) => t.type === "expense").reduce((s: number, t: any) => s + t.amount, 0);
+
+        const confirmReply = `🎉 *Importação concluída!*
+
+✅ *${saved} de ${transactions.length}* lançamento${saved > 1 ? "s" : ""} salvos
+💰 +${fmt(incomeTotal)}
+💸 -${fmt(expenseTotal)}
+📊 Líquido: *${fmt(incomeTotal - expenseTotal)}*
+
+Acesse seu dashboard pra revisar e ajustar categorias se quiser, ${ctx.name}! 🐨`;
+
+        await sendWhatsApp(phone, confirmReply);
+        await supabase.from("whatsapp_messages").insert({
+          user_id: userId, phone, phone_number: phone,
+          direction: "outbound", role: "assistant",
+          message: confirmReply, content: confirmReply,
+          created_at: new Date().toISOString(),
+        });
+
+        // Alerta orçamento agrupado por categoria
+        const byCat: Record<string, number> = {};
+        for (const tx of transactions) {
+          if (tx.type === "expense") {
+            byCat[tx.category] = (byCat[tx.category] || 0) + Number(tx.amount);
+          }
+        }
+        const freshCtx = await loadUserContext(userId);
+        for (const [cat, amt] of Object.entries(byCat)) {
+          await checkAndAlertBudget(userId, phone, cat, ctx.name, freshCtx, amt);
+        }
+      }
+
       return new Response("OK", { status: 200 });
     }
 
