@@ -1,10 +1,30 @@
-import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { Toaster as Sonner, toast } from "sonner";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const syncTheme = () => {
+      const root = document.documentElement;
+      const isDark = root.classList.contains("dark") || root.getAttribute("data-theme") === "dark";
+      setTheme(isDark ? "dark" : "light");
+    };
+
+    syncTheme();
+
+    const observer = new MutationObserver(syncTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "data-theme"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <Sonner
