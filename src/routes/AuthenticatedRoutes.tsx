@@ -74,7 +74,7 @@ export default function AuthenticatedRoutes() {
             <Route path="forgot-password" element={<ForgotPasswordPage />} />
             <Route path="reset-password" element={<ResetPasswordPage />} />
 
-            <Route path="app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route index element={<OverviewPage />} />
               <Route path="transactions" element={<TransactionsRouter />} />
               <Route path="transactions/personal" element={<TransactionsPage profile="personal" />} />
@@ -99,7 +99,7 @@ export default function AuthenticatedRoutes() {
               <Route path="transactions/business" element={<Paywall feature="business_transactions" requiredPlan="business" title="Lançamentos Negócio" description="Separe finanças pessoais e empresariais em um único painel."><TransactionsPage profile="business" /></Paywall>} />
             </Route>
 
-            <Route path="admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
+            <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
               <Route index element={<AdminDashboardPage />} />
               <Route path="users" element={<AdminUsersPage />} />
               <Route path="whatsapp" element={<AdminWhatsAppPage />} />
