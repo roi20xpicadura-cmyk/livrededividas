@@ -46,43 +46,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let resolved = false;
-    const finish = (s: Session | null) => {
-      if (resolved) return;
-      resolved = true;
+    let cancelled = false;
+    let sessionRestored = false;
+
+    const syncSession = (s: Session | null) => {
+      if (cancelled) return;
       setSession(s);
       setUser(s?.user ?? null);
-      setLoading(false);
+    };
+
+    const finishBoot = (s: Session | null) => {
+      sessionRestored = true;
+      syncSession(s);
+      if (!cancelled) setLoading(false);
     };
 
     // 1) Listener PRIMEIRO — captura INITIAL_SESSION e mudanças subsequentes
     //    sem race contra getSession (recomendação oficial Supabase).
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       // Sync only — nada de await aqui pra não travar o callback do GoTrue.
-      setSession(s);
-      setUser(s?.user ?? null);
-      setLoading(false);
-      resolved = true;
+      syncSession(s);
+
+      // INITIAL_SESSION pode chegar antes da restauração real do storage.
+      // Só liberamos a UI quando getSession concluir (ou no timeout).
+      if (event !== 'INITIAL_SESSION' || sessionRestored) {
+        setLoading(false);
+      }
     });
 
     // 2) getSession como backup; se travar, o timeout libera a UI.
     supabase.auth.getSession()
-      .then(({ data: { session: s } }) => finish(s))
+      .then(({ data: { session: s } }) => finishBoot(s))
       .catch((err) => {
         reportAuthBootIssue('getSession_failed', err?.message || String(err));
-        finish(null);
+        finishBoot(null);
       });
 
     // 3) Hard timeout: se em 8s nada resolveu, libera a UI como deslogado.
     //    Evita "tela branca eterna" se o storage ou rede travarem.
     const timeout = setTimeout(() => {
-      if (!resolved) {
+      if (!sessionRestored) {
         reportAuthBootIssue('auth_timeout_8s');
-        finish(null);
+        finishBoot(null);
       }
     }, 8000);
 
     return () => {
+      cancelled = true;
       subscription.unsubscribe();
       clearTimeout(timeout);
     };
