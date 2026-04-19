@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Suspense, memo } from "react";
+import { Suspense, forwardRef } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -47,7 +47,7 @@ const AdminRevenuePage = lazy(() => import("@/pages/admin/AdminRevenuePage"));
 const AdminNotificationsPage = lazy(() => import("@/pages/admin/AdminNotificationsPage"));
 const AdminSettingsPage = lazy(() => import("@/pages/admin/AdminSettingsPage"));
 
-const PageSkeleton = memo(function PageSkeleton() {
+const PageSkeleton = forwardRef<HTMLDivElement>(function PageSkeleton(_, _ref) {
   return <LogoLoader />;
 });
 
