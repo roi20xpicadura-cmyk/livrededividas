@@ -9,7 +9,7 @@ const lazy = <T extends ComponentType<any>>(imp: () => Promise<{ default: T }>) 
   lazyWithRetry(imp, { fallbackToEmpty: false });
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -48,17 +48,29 @@ function PageSkeleton() {
   return <LogoLoader />;
 }
 
-// Prefetch common app routes after initial load
-function usePrefetchAppRoutes() {
+// Só fazemos prefetch dentro da área autenticada.
+// Na landing, isso podia puxar chunks do app cedo demais e disparar erros de boot.
+function AuthenticatedRoutePrefetcher() {
+  const location = useLocation();
+
   useEffect(() => {
+    const isAuthenticatedArea = location.pathname === "/app"
+      || location.pathname.startsWith("/app/")
+      || location.pathname === "/admin"
+      || location.pathname.startsWith("/admin/");
+
+    if (!isAuthenticatedArea) return;
+
     const timer = setTimeout(() => {
-      // Prefetch the most visited pages after 2s idle
       import("./pages/app/OverviewPage");
       import("./pages/app/TransactionsPage");
       import("./pages/app/GoalsPage");
     }, 2000);
+
     return () => clearTimeout(timer);
-  }, []);
+  }, [location.pathname]);
+
+  return null;
 }
 
 const App = () => {
@@ -71,8 +83,6 @@ const App = () => {
       return false;
     }
   });
-
-  usePrefetchAppRoutes();
 
   useEffect(() => {
     if (!showSplash) return;
@@ -95,6 +105,7 @@ const App = () => {
           {showSplash && <SplashScreen key="splash" />}
         </AnimatePresence>
          <BrowserRouter>
+            <AuthenticatedRoutePrefetcher />
            <Suspense fallback={<PageSkeleton />}>
              <Routes>
                <Route path="/" element={<LandingPage />} />
