@@ -65,12 +65,16 @@ export default function AuthenticatedRoutes() {
       <ThemeProvider>
         <Suspense fallback={<PageSkeleton />}>
           <Routes>
-            <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-            <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            {/* Estas rotas são montadas como filhas de "/login/*", "/register/*",
+                etc no App.tsx, então o path relativo aqui precisa ser "" — usar
+                "/login" não casa e cai no NotFound. */}
+            <Route path="" element={<PublicRoute><LoginPage /></PublicRoute>} />
+            <Route path="login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+            <Route path="register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="reset-password" element={<ResetPasswordPage />} />
 
-            <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            <Route path="app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route index element={<OverviewPage />} />
               <Route path="transactions" element={<TransactionsRouter />} />
               <Route path="transactions/personal" element={<TransactionsPage profile="personal" />} />
@@ -95,7 +99,7 @@ export default function AuthenticatedRoutes() {
               <Route path="transactions/business" element={<Paywall feature="business_transactions" requiredPlan="business" title="Lançamentos Negócio" description="Separe finanças pessoais e empresariais em um único painel."><TransactionsPage profile="business" /></Paywall>} />
             </Route>
 
-            <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
+            <Route path="admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
               <Route index element={<AdminDashboardPage />} />
               <Route path="users" element={<AdminUsersPage />} />
               <Route path="whatsapp" element={<AdminWhatsAppPage />} />
