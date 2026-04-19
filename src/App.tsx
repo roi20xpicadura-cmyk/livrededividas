@@ -22,7 +22,6 @@ import LogoLoader from "@/components/app/LogoLoader";
 // Rotas públicas críticas ficam eager-loaded para evitar tela branca por
 // chunk antigo/falha de lazy import justamente na landing e login.
 const PricingPage = lazy(() => import("./pages/PricingPage"));
-const NotFound = lazy(() => import("./pages/NotFound"));
 const TermosDeUsoPage = lazy(() => import("./pages/TermosDeUsoPage"));
 const PoliticaPrivacidadePage = lazy(() => import("./pages/PoliticaPrivacidadePage"));
 const PoliticaCookiesPage = lazy(() => import("./pages/PoliticaCookiesPage"));
@@ -117,13 +116,7 @@ const App = () => {
                <Route path="/seguranca" element={<SegurancaPage />} />
                <Route path="/sobre" element={<SobrePage />} />
                <Route path="/privacidade" element={<PrivacidadePage />} />
-               <Route path="/login/*" element={<AuthenticatedRoutes />} />
-               <Route path="/register/*" element={<AuthenticatedRoutes />} />
-               <Route path="/forgot-password/*" element={<AuthenticatedRoutes />} />
-               <Route path="/reset-password/*" element={<AuthenticatedRoutes />} />
-               <Route path="/app/*" element={<AuthenticatedRoutes />} />
-               <Route path="/admin/*" element={<AuthenticatedRoutes />} />
-               <Route path="*" element={<NotFound />} />
+                <Route path="/*" element={<AuthenticatedRoutes />} />
              </Routes>
            </Suspense>
          </BrowserRouter>

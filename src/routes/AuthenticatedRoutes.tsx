@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Suspense, forwardRef } from "react";
+import { Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -47,13 +47,9 @@ const AdminRevenuePage = lazy(() => import("@/pages/admin/AdminRevenuePage"));
 const AdminNotificationsPage = lazy(() => import("@/pages/admin/AdminNotificationsPage"));
 const AdminSettingsPage = lazy(() => import("@/pages/admin/AdminSettingsPage"));
 
-const PageSkeleton = forwardRef<HTMLDivElement>(function PageSkeleton(_, ref) {
-  return (
-    <div ref={ref}>
-      <LogoLoader />
-    </div>
-  );
-});
+function PageSkeleton() {
+  return <LogoLoader />;
+}
 
 function TransactionsRouter() {
   const { config, loading } = useProfile();
@@ -69,9 +65,9 @@ export default function AuthenticatedRoutes() {
       <ThemeProvider>
         <Suspense fallback={<PageSkeleton />}>
           <Routes>
-            {/* Estas rotas são montadas como filhas de "/login/*", "/register/*",
-                etc no App.tsx, então o path relativo aqui precisa ser "" — usar
-                "/login" não casa e cai no NotFound. */}
+            {/* Estas rotas agora ficam sob um único wildcard no nível raiz,
+                então paths relativos cuidam de login/register e os absolutos
+                continuam cobrindo /app e /admin. */}
             <Route path="" element={<PublicRoute><LoginPage /></PublicRoute>} />
             <Route path="login" element={<PublicRoute><LoginPage /></PublicRoute>} />
             <Route path="register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
