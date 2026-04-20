@@ -31,14 +31,17 @@ const SobrePage = lazy(() => import("./pages/SobrePage"));
 const PrivacidadePage = lazy(() => import("./pages/PrivacidadePage"));
 const AuthenticatedRoutes = lazy(() => import("./routes/AuthenticatedRoutes"));
 
-// Optimized QueryClient with stale time and dedup
+// QueryClient otimizado: staleTime maior reduz refetches em troca de tela
+// e em remounts (drawer abre/fecha, navegação volta).
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 2, // 2 min — avoid refetching on every mount
-      gcTime: 1000 * 60 * 10,   // 10 min garbage collection
+      staleTime: 1000 * 60 * 5,        // 5 min — dashboard financeiro não muda a cada segundo
+      gcTime: 1000 * 60 * 15,          // 15 min — mantém cache mais tempo na memória
       retry: 1,
       refetchOnWindowFocus: false,
+      refetchOnReconnect: 'always',    // só refetch quando volta o net
+      refetchOnMount: false,           // confia no cache fresco
     },
   },
 });
@@ -47,26 +50,32 @@ function PageSkeleton() {
   return <LogoLoader />;
 }
 
-// Só fazemos prefetch dentro da área autenticada.
-// Na landing, isso podia puxar chunks do app cedo demais e disparar erros de boot.
+// Prefetch de páginas mais comuns da área autenticada — UMA vez só (em vez
+// de a cada navegação). Usa requestIdleCallback pra não competir com pintura.
+let didPrefetchAuthChunks = false;
 function AuthenticatedRoutePrefetcher() {
   const location = useLocation();
 
   useEffect(() => {
+    if (didPrefetchAuthChunks) return;
     const isAuthenticatedArea = location.pathname === "/app"
       || location.pathname.startsWith("/app/")
       || location.pathname === "/admin"
       || location.pathname.startsWith("/admin/");
-
     if (!isAuthenticatedArea) return;
 
-    const timer = setTimeout(() => {
-      import("./pages/app/OverviewPage");
-      import("./pages/app/TransactionsPage");
-      import("./pages/app/GoalsPage");
-    }, 2000);
-
-    return () => clearTimeout(timer);
+    didPrefetchAuthChunks = true;
+    const run = () => {
+      void import("./pages/app/OverviewPage");
+      void import("./pages/app/TransactionsPage");
+      void import("./pages/app/GoalsPage");
+    };
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number };
+    if (typeof w.requestIdleCallback === 'function') {
+      w.requestIdleCallback(run, { timeout: 3000 });
+    } else {
+      setTimeout(run, 2000);
+    }
   }, [location.pathname]);
 
   return null;

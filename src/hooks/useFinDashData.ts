@@ -48,8 +48,17 @@ function getPeriodRange(period: string, pStart: string, pEnd: string): [Date, Da
 export function useFinDashData() {
   const [data, setData] = useState<AppData>(loadData);
 
+  // Persistência com debounce: evita JSON.stringify síncrono a cada
+  // teclada/ação. 250ms é imperceptível pro usuário e corta MUITO trabalho.
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch {
+        // quota cheia ou modo privado — ignora
+      }
+    }, 250);
+    return () => clearTimeout(t);
   }, [data]);
 
   const [rangeStart, rangeEnd] = useMemo(

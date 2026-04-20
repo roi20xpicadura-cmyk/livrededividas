@@ -55,9 +55,17 @@ window.addEventListener('unhandledrejection', (event) => {
   }
 });
 
-// Kill-switch do antigo SW: priorizamos confiabilidade e removemos registros legados
-// que podem servir HTML/chunks velhos e causar tela branca após deploy.
-// Build tag: força rebuild para reinjetar envs (republish 2026-04-18).
-void clearRuntimeCaches();
+// Limpeza de SW/cache legados acontece UMA vez por device, não a cada boot.
+// Antes, fazíamos isso sempre — derrubava o cache do PWA e forçava refetch
+// pesado em toda abertura, deixando o app lento.
+try {
+  const FLAG = 'kora:legacy-sw-cleanup-v1';
+  if (!localStorage.getItem(FLAG)) {
+    localStorage.setItem(FLAG, '1');
+    void clearRuntimeCaches();
+  }
+} catch {
+  // Sem storage (modo privado): segue sem limpar — não vale travar boot.
+}
 
 createRoot(document.getElementById("root")!).render(<App />);

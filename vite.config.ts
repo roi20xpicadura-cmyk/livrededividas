@@ -32,7 +32,31 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
+    dedupe: [
+      "react",
+      "react-dom",
+      "react/jsx-runtime",
+      "react/jsx-dev-runtime",
+      "@tanstack/react-query",
+      "@tanstack/query-core",
+      "framer-motion",
+      "lucide-react",
+      "@supabase/supabase-js",
+    ],
+  },
+  // Pré-bundle das libs mais pesadas evita waterfall de imports na 1ª tela.
+  optimizeDeps: {
+    include: [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "@tanstack/react-query",
+      "@supabase/supabase-js",
+      "framer-motion",
+      "lucide-react",
+      "date-fns",
+      "sonner",
+    ],
   },
   build: {
     target: 'es2020',
@@ -49,6 +73,8 @@ export default defineConfig(({ mode }) => ({
           'vendor-charts': ['recharts'],
           'vendor-supabase': ['@supabase/supabase-js'],
           'vendor-ui': ['@radix-ui/react-tooltip', '@radix-ui/react-dialog', '@radix-ui/react-popover'],
+          'vendor-pdf': ['jspdf', 'jspdf-autotable'],
+          'vendor-icons': ['lucide-react'],
         },
       },
     },
