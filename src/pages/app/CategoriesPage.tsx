@@ -17,7 +17,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-type Tx = { id: string; amount: number; category: string; type: string; date: string };
+type Tx = { id: string; amount: number; category: string; type: string; date: string; description: string };
 type Period = 'this_month' | 'last_month' | 'year';
 type TxType = 'expense' | 'income';
 
