@@ -2,17 +2,23 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, format } from 'date-fns';
-import { motion } from 'framer-motion';
-import { ChevronDown, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, TrendingUp, TrendingDown, Wallet, Sparkles, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 type Tx = { id: string; amount: number; category: string; type: string; date: string };
 type Period = 'this_month' | 'last_month' | 'year';
 type TxType = 'expense' | 'income';
 
-// Paleta violet harmoniosa (8 tons) — usada em ordem decrescente de gasto
-const PALETTE = [
-  '#7C3AED', '#A78BFA', '#C4B5FD', '#8B5CF6',
-  '#6D28D9', '#DDD6FE', '#5B21B6', '#9333EA',
+// Paleta premium — gradientes violet com profundidade
+const PALETTE: { from: string; to: string; solid: string }[] = [
+  { from: '#8B5CF6', to: '#6D28D9', solid: '#7C3AED' },
+  { from: '#A78BFA', to: '#7C3AED', solid: '#8B5CF6' },
+  { from: '#C4B5FD', to: '#8B5CF6', solid: '#A78BFA' },
+  { from: '#DDD6FE', to: '#A78BFA', solid: '#C4B5FD' },
+  { from: '#9333EA', to: '#5B21B6', solid: '#7E22CE' },
+  { from: '#A855F7', to: '#6B21A8', solid: '#9333EA' },
+  { from: '#7C3AED', to: '#4C1D95', solid: '#6D28D9' },
+  { from: '#EDE9FE', to: '#C4B5FD', solid: '#DDD6FE' },
 ];
 
 const PERIOD_LABELS: Record<Period, string> = {
@@ -35,30 +41,45 @@ function fmt(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-function Donut({ slices, total }: { slices: { value: number; color: string }[]; total: number }) {
-  const size = 220;
-  const stroke = 28;
+function Donut({ slices, total }: { slices: { from: string; to: string; value: number }[]; total: number }) {
+  const size = 240;
+  const stroke = 22;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   let offset = 0;
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-bg-sunken)" strokeWidth={stroke} />
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90 drop-shadow-[0_8px_24px_rgba(124,58,237,0.18)]">
+      <defs>
+        {slices.map((s, i) => (
+          <linearGradient key={i} id={`donut-grad-${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={s.from} />
+            <stop offset="100%" stopColor={s.to} />
+          </linearGradient>
+        ))}
+        <filter id="donut-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-bg-sunken)" strokeWidth={stroke} opacity={0.6} />
       {total > 0 && slices.map((s, i) => {
         const len = (s.value / total) * c;
         const dash = `${len} ${c - len}`;
         const el = (
-          <circle
+          <motion.circle
             key={i}
             cx={size / 2}
             cy={size / 2}
             r={r}
             fill="none"
-            stroke={s.color}
+            stroke={`url(#donut-grad-${i})`}
             strokeWidth={stroke}
             strokeDasharray={dash}
             strokeDashoffset={-offset}
-            strokeLinecap="butt"
+            strokeLinecap="round"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.05 * i, duration: 0.5 }}
           />
         );
         offset += len;
