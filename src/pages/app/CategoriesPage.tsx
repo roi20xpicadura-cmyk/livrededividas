@@ -112,16 +112,6 @@ export default function CategoriesPage() {
 
   return (
     <div className="max-w-5xl mx-auto pb-20" style={{ padding: '16px' }}>
-      {/* Header */}
-      <div className="mb-5">
-        <h1 style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-text-strong)', letterSpacing: '-0.02em' }}>
-          Categorias
-        </h1>
-        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>
-          Veja para onde seu dinheiro está indo.
-        </p>
-      </div>
-
       {/* Hero card: tipo + período */}
       <div
         className="relative overflow-hidden"
