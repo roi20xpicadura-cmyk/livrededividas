@@ -292,6 +292,10 @@ Identifique formato e período. Responda APENAS com JSON:
 - Se não citar período → "this_month"
 - period_label ex: "este mês", "mês passado", "últimos 7 dias"
 
+AÇÕES NÃO SUPORTADAS pelo WhatsApp (metas, dívidas, orçamentos, cartões, investimentos):
+- Responda em TEXTO NATURAL explicando que essas alterações precisam ser feitas no app (korafinance.app).
+- NUNCA invente actions JSON além das listadas acima (expense, income, export). Qualquer outro tipo deve ser texto puro.
+
 PARA PERGUNTAS FINANCEIRAS: responda com dados REAIS do contexto acima.
 
 Exemplos:
