@@ -14,7 +14,7 @@ import {
   LayoutDashboard, ArrowLeftRight, Target, TrendingUp, FileText,
   CreditCard, Briefcase, BarChart2, Settings2, Crown,
   LogOut, Menu, X, Bell, ChevronRight, Home, MoreHorizontal,
-  AlertCircle, CalendarDays, Trophy, Gift, Sun, Moon, Plus, Building2, Plug, FlaskConical, Lock, Repeat
+  AlertCircle, CalendarDays, Trophy, Gift, Sun, Moon, Plus, Building2, Plug, FlaskConical, Lock, Repeat, Sparkles
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -703,7 +703,38 @@ export default function AppLayout() {
       </AnimatePresence>
 
 
-      {/* AI Chat drawer — atalho fica no header da seção "IA Financeira" (sem FAB flutuante que cortava conteúdo) */}
+      {/* Floating "Conversar com Kora" button — disponível em todas as telas do app */}
+      {!chatOpen && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          whileTap={{ scale: 0.92 }}
+          whileHover={{ scale: 1.05 }}
+          onClick={() => setChatOpen(true)}
+          aria-label="Conversar com Kora"
+          style={{
+            position: 'fixed',
+            right: 20,
+            bottom: isMobile ? 88 : 24,
+            zIndex: 50,
+            width: 56,
+            height: 56,
+            borderRadius: 999,
+            border: 'none',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, hsl(262 83% 58%), hsl(262 83% 48%))',
+            boxShadow: '0 10px 30px hsl(262 83% 58% / 0.45), 0 4px 10px rgba(0,0,0,0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+          }}
+        >
+          <Sparkles style={{ width: 24, height: 24 }} />
+        </motion.button>
+      )}
+
+      {/* AI Chat drawer */}
       <Suspense fallback={null}><AIChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} /></Suspense>
     </div>
   );
