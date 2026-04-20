@@ -203,7 +203,7 @@ export default function CategoriesPage() {
     setLoading(true);
     supabase
       .from('transactions')
-      .select('id, amount, category, type, date')
+      .select('id, amount, category, type, date, description')
       .eq('user_id', user.id)
       .gte('date', start)
       .lte('date', end)
