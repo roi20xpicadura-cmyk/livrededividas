@@ -34,6 +34,7 @@ const SimulatorPage = lazy(() => import("@/pages/app/SimulatorPage"));
 const PredictionsPage = lazy(() => import("@/pages/app/PredictionsPage"));
 const ExportPage = lazy(() => import("@/pages/app/ExportPage").then((m) => ({ default: m.ExportPage })));
 const ChartsPage = lazy(() => import("@/pages/app/ChartsPage"));
+const CategoriesPage = lazy(() => import("@/pages/app/CategoriesPage"));
 const InvestmentsPage = lazy(() => import("@/pages/app/InvestmentsPage"));
 const SubscriptionsPage = lazy(() => import("@/pages/app/SubscriptionsPage"));
 const DREPage = lazy(() => import("@/pages/app/DREPage"));
@@ -93,6 +94,7 @@ export default function AuthenticatedRoutes() {
               <Route path="simulator" element={<Paywall feature="simulator" requiredPlan="pro" title="Simulador Financeiro" description="Teste cenários de receita, despesa e investimentos antes de tomar decisões."><SimulatorPage /></Paywall>} />
               <Route path="predictions" element={<Paywall feature="kora_ia" requiredPlan="pro" title="Previsões com IA" description="Veja projeções inteligentes do seu fluxo de caixa para os próximos meses."><PredictionsPage /></Paywall>} />
               <Route path="charts" element={<Paywall feature="advanced_charts" requiredPlan="pro" title="Gráficos avançados" description="Analise tendências e padrões com gráficos detalhados."><ChartsPage /></Paywall>} />
+              <Route path="categorias" element={<CategoriesPage />} />
               <Route path="investments" element={<InvestmentsPage />} />
               <Route path="subscriptions" element={<SubscriptionsPage />} />
               <Route path="dre" element={<Paywall feature="dre" requiredPlan="business" title="DRE Empresarial" description="Demonstrativo de Resultado completo para empresas e MEIs."><DREPage /></Paywall>} />

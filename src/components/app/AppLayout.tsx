@@ -14,7 +14,7 @@ import {
   LayoutDashboard, ArrowLeftRight, Target, TrendingUp, FileText,
   CreditCard, Briefcase, BarChart2, Settings2, Crown,
   LogOut, Menu, X, Bell, ChevronRight, Home, MoreHorizontal,
-  AlertCircle, CalendarDays, Trophy, Gift, Sun, Moon, Plus, Building2, Plug, FlaskConical, Lock, Repeat, Sparkles
+  AlertCircle, CalendarDays, Trophy, Gift, Sun, Moon, Plus, Building2, Plug, FlaskConical, Lock, Repeat, Sparkles, PieChart
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -57,6 +57,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Assinaturas', path: '/app/subscriptions', icon: Repeat, profiles: ['personal', 'business', 'both'], badge: 'NOVO' },
   { label: 'Investimentos', path: '/app/investments', icon: TrendingUp, profiles: ['personal', 'business', 'both'], comingSoon: true },
   { label: 'Gráficos', path: '/app/charts', icon: BarChart2, profiles: ['personal', 'business', 'both'] },
+  { label: 'Categorias', path: '/app/categorias', icon: PieChart, profiles: ['personal', 'business', 'both'], badge: 'NOVO' },
   { label: 'DRE', path: '/app/dre', icon: FileText, profiles: ['business', 'both'], comingSoon: true },
   { label: 'Integrações', path: '/app/integrations', icon: Plug, profiles: ['personal', 'business', 'both'] },
   { label: 'Simulador', path: '/app/simulator', icon: FlaskConical, profiles: ['personal', 'business', 'both'], badge: 'NOVO' },
@@ -106,6 +107,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/app/cards': 'Cartões de Crédito',
   '/app/investments': 'Investimentos',
   '/app/charts': 'Gráficos',
+  '/app/categorias': 'Categorias',
   '/app/dre': 'DRE',
   '/app/export': 'Exportar',
   '/app/achievements': 'Conquistas',
