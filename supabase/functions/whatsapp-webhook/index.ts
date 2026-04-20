@@ -1321,7 +1321,7 @@ Acesse seu dashboard pra revisar e ajustar categorias se quiser, ${ctx.name}! �
       const trimmed = finalReply.trim();
       if (trimmed.startsWith("{") || trimmed.startsWith("```json") || /^"?action"?\s*:/i.test(trimmed)) {
         console.warn("[guard] Resposta JSON não tratada bloqueada:", trimmed.slice(0, 200));
-        finalReply = `Por enquanto só consigo registrar gastos, receitas e enviar relatórios por aqui, ${ctx.name} 🐨\n\nPra mexer em metas, dívidas, orçamentos ou cartões, abre o app: https://korafinance.app`;
+        finalReply = `Hmm, não consegui processar isso direitinho, ${ctx.name} 🐨\n\nTenta de novo de outra forma, ou abre o app: https://korafinance.app`;
       }
 
       await sendWhatsApp(phone, finalReply);
