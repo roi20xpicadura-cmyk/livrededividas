@@ -14,7 +14,7 @@ import {
   LayoutDashboard, ArrowLeftRight, Target, TrendingUp, FileText,
   CreditCard, Briefcase, BarChart2, Settings2, Crown,
   LogOut, Menu, X, Bell, ChevronRight, Home, MoreHorizontal,
-  AlertCircle, CalendarDays, Trophy, Gift, Sun, Moon, Plus, Building2, Plug, FlaskConical, Lock, Repeat
+  AlertCircle, CalendarDays, Trophy, Gift, Sun, Moon, Plus, Building2, Plug, FlaskConical, Lock, Repeat, Sparkles
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
