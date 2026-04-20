@@ -466,34 +466,35 @@ export default function CardsPage() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-[15px] font-black text-foreground">Meus Cartões</h3>
-          <button onClick={scrollToForm} className="text-[12px] font-bold text-[#7C3AED] hover:underline">+ Adicionar cartão</button>
+          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#7C3AED]/15 text-[#7C3AED]">Adicionar — Em breve</span>
         </div>
         <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-hide">
           {cards.map(c => (
             <VisualCard key={c.id} card={c} onClick={() => handleEditCard(c)} onDelete={() => handleDeleteCard(c.id)} />
           ))}
-          {/* Add placeholder */}
-          <div onClick={scrollToForm}
-            className="flex-shrink-0 w-[300px] h-[178px] rounded-[18px] border-2 border-dashed border-[#d4edda] bg-card flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-secondary hover:border-[#7C3AED] transition-all">
-            <PlusCircle className="w-8 h-8 text-[#C4B5FD]" />
-            <span className="text-[13px] text-[#7C3AED] font-bold">Adicionar cartão</span>
+          {/* Add placeholder — disabled */}
+          <div aria-disabled
+            className="flex-shrink-0 w-[300px] h-[178px] rounded-[18px] border-2 border-dashed border-border bg-card flex flex-col items-center justify-center gap-2 cursor-not-allowed opacity-70">
+            <PlusCircle className="w-8 h-8 text-muted-foreground" />
+            <span className="text-[13px] text-muted-foreground font-bold">Adicionar cartão</span>
+            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#7C3AED]/15 text-[#7C3AED]">Em breve</span>
           </div>
         </div>
       </div>
 
       {/* ═══ 3. ADD/EDIT FORM ═══ */}
       <div ref={formRef}>
-        {!showForm ? (
-          <button onClick={() => { resetForm(); setEditCard(null); setShowForm(true); }}
-            className="w-full bg-card border-[1.5px] border-border rounded-2xl px-5 py-4 flex items-center justify-between hover:bg-[#fafafa] transition-colors">
-            <div className="flex items-center gap-2">
-              <PlusCircle className="w-4 h-4 text-[#7C3AED]" />
-              <span className="text-[14px] font-extrabold text-foreground">{editCard ? 'Editar Cartão' : '+ Novo Cartão'}</span>
-            </div>
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-          </button>
-        ) : (
+        {editCard && showForm ? (
           <CardForm />
+        ) : (
+          <button disabled
+            className="w-full bg-card border-[1.5px] border-dashed border-border rounded-2xl px-5 py-4 flex items-center justify-between cursor-not-allowed opacity-80">
+            <div className="flex items-center gap-2">
+              <PlusCircle className="w-4 h-4 text-muted-foreground" />
+              <span className="text-[14px] font-extrabold text-muted-foreground">+ Novo Cartão</span>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#7C3AED]/15 text-[#7C3AED]">Em breve</span>
+          </button>
         )}
       </div>
 
