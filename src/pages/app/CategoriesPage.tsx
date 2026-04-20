@@ -254,13 +254,13 @@ export default function CategoriesPage() {
             'radial-gradient(120% 80% at 0% 0%, rgba(16,185,129,0.08) 0%, transparent 55%), radial-gradient(100% 70% at 100% 100%, rgba(59,130,246,0.06) 0%, transparent 50%), linear-gradient(180deg, var(--color-bg-surface) 0%, var(--color-bg-surface) 100%)',
           border: '1px solid var(--color-border-weak)',
           borderRadius: 'var(--radius-2xl)',
-          padding: '20px 18px 22px',
-          marginBottom: 16,
+          padding: '14px 14px 16px',
+          marginBottom: 12,
           boxShadow: '0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 40px -24px rgba(16,185,129,0.15)',
         }}
       >
         {/* Premium badge */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div
             className="flex items-center gap-1.5"
             style={{
