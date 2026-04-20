@@ -3,11 +3,106 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, format } from 'date-fns';
 import { motion } from 'framer-motion';
-import { ChevronDown, TrendingUp, TrendingDown, Wallet, Sparkles } from 'lucide-react';
+import {
+  ChevronDown, TrendingUp, TrendingDown, Wallet, Sparkles,
+  UtensilsCrossed, Car, Home, ShoppingBag, Heart, GraduationCap,
+  Plane, Gamepad2, Shirt, Dumbbell, Baby, PawPrint, Fuel, Bus,
+  Coffee, Pizza, ShoppingCart, Smartphone, Wifi, Zap, Droplet,
+  Receipt, CreditCard, Briefcase, DollarSign, Gift, Music, Film,
+  Book, Stethoscope, Pill, Scissors, Sparkle, Bike, Train, Cigarette,
+  Wine, Beer, Banknote, PiggyBank, TrendingUp as TUp, Building2,
+  Hammer, Wrench, Cat, Dog, Sofa, Laptop, Tv, Headphones, Camera,
+  Package, Truck, MapPin, Bed, Tag,
+  type LucideIcon,
+} from 'lucide-react';
 
 type Tx = { id: string; amount: number; category: string; type: string; date: string };
 type Period = 'this_month' | 'last_month' | 'year';
 type TxType = 'expense' | 'income';
+
+// Mapeamento inteligente de categoria → ícone (matching por palavras-chave em PT)
+const CATEGORY_ICONS: { keywords: string[]; icon: LucideIcon }[] = [
+  // Alimentação
+  { keywords: ['restaurante', 'restaur', 'comida', 'aliment', 'refeição', 'refeicao', 'almoço', 'almoco', 'jantar', 'janta'], icon: UtensilsCrossed },
+  { keywords: ['mercado', 'supermercado', 'feira', 'compras de mês', 'compras do mes'], icon: ShoppingCart },
+  { keywords: ['ifood', 'delivery', 'pizza', 'lanche', 'fast food', 'fastfood'], icon: Pizza },
+  { keywords: ['café', 'cafe', 'padaria'], icon: Coffee },
+  { keywords: ['bar', 'cerveja', 'chopp'], icon: Beer },
+  { keywords: ['vinho', 'bebida', 'drink'], icon: Wine },
+  // Transporte
+  { keywords: ['uber', '99', 'taxi', 'táxi', 'corrida'], icon: Car },
+  { keywords: ['gasolina', 'combustível', 'combustivel', 'posto', 'álcool', 'alcool', 'etanol', 'diesel'], icon: Fuel },
+  { keywords: ['ônibus', 'onibus', 'metrô', 'metro', 'transporte público', 'transporte publico', 'bilhete'], icon: Bus },
+  { keywords: ['trem', 'cptm'], icon: Train },
+  { keywords: ['bike', 'bicicleta', 'patinete'], icon: Bike },
+  { keywords: ['carro', 'veículo', 'veiculo', 'automóvel', 'automovel', 'transporte'], icon: Car },
+  // Moradia
+  { keywords: ['aluguel', 'aluguél', 'casa', 'moradia', 'condomínio', 'condominio', 'iptu'], icon: Home },
+  { keywords: ['móveis', 'moveis', 'decoração', 'decoracao', 'sofá', 'sofa'], icon: Sofa },
+  { keywords: ['cama', 'colchão', 'colchao', 'quarto'], icon: Bed },
+  // Contas/Serviços
+  { keywords: ['luz', 'energia', 'elétric', 'eletric'], icon: Zap },
+  { keywords: ['água', 'agua', 'saneamento'], icon: Droplet },
+  { keywords: ['internet', 'wifi', 'wi-fi'], icon: Wifi },
+  { keywords: ['celular', 'telefone', 'fone', 'plano de celular', 'tim', 'vivo', 'claro', 'oi'], icon: Smartphone },
+  { keywords: ['conta', 'fatura', 'boleto'], icon: Receipt },
+  { keywords: ['cartão', 'cartao', 'crédito', 'credito'], icon: CreditCard },
+  // Saúde
+  { keywords: ['saúde', 'saude', 'médico', 'medico', 'hospital', 'consulta', 'plano de saúde', 'plano de saude'], icon: Stethoscope },
+  { keywords: ['farmácia', 'farmacia', 'remédio', 'remedio', 'medicamento'], icon: Pill },
+  { keywords: ['academia', 'gym', 'esporte', 'fitness', 'treino'], icon: Dumbbell },
+  // Educação
+  { keywords: ['educação', 'educacao', 'escola', 'faculdade', 'universidade', 'curso', 'mensalidade'], icon: GraduationCap },
+  { keywords: ['livro', 'livraria'], icon: Book },
+  // Lazer/Entretenimento
+  { keywords: ['lazer', 'entretenimento', 'diversão', 'diversao'], icon: Gamepad2 },
+  { keywords: ['cinema', 'filme', 'streaming', 'netflix', 'disney', 'hbo', 'prime'], icon: Film },
+  { keywords: ['música', 'musica', 'spotify', 'deezer'], icon: Music },
+  { keywords: ['jogo', 'game', 'playstation', 'xbox', 'nintendo'], icon: Gamepad2 },
+  { keywords: ['viagem', 'viajar', 'passagem', 'hotel', 'turismo'], icon: Plane },
+  // Compras/Pessoais
+  { keywords: ['roupa', 'vestuário', 'vestuario', 'moda', 'calçado', 'calcado', 'sapato'], icon: Shirt },
+  { keywords: ['shopping', 'compra'], icon: ShoppingBag },
+  { keywords: ['beleza', 'cabelo', 'salão', 'salao', 'barbearia', 'barbeiro'], icon: Scissors },
+  { keywords: ['cosmético', 'cosmetico', 'maquiagem', 'perfume'], icon: Sparkle },
+  { keywords: ['presente', 'gift'], icon: Gift },
+  // Família/Pets
+  { keywords: ['filho', 'criança', 'crianca', 'bebê', 'bebe', 'fralda'], icon: Baby },
+  { keywords: ['pet', 'animal'], icon: PawPrint },
+  { keywords: ['cachorro', 'cão', 'cao'], icon: Dog },
+  { keywords: ['gato'], icon: Cat },
+  // Vícios
+  { keywords: ['cigarro', 'fumo', 'tabaco'], icon: Cigarette },
+  // Trabalho/Renda
+  { keywords: ['salário', 'salario', 'ordenado'], icon: Banknote },
+  { keywords: ['freela', 'freelance', 'extra', 'bico'], icon: Briefcase },
+  { keywords: ['investimento', 'rendimento', 'dividendo'], icon: TUp },
+  { keywords: ['poupança', 'poupanca', 'reserva'], icon: PiggyBank },
+  { keywords: ['venda', 'vendas'], icon: Tag },
+  { keywords: ['empresa', 'negócio', 'negocio'], icon: Building2 },
+  // Manutenção
+  { keywords: ['reforma', 'construção', 'construcao'], icon: Hammer },
+  { keywords: ['conserto', 'manutenção', 'manutencao', 'reparo'], icon: Wrench },
+  // Tech
+  { keywords: ['computador', 'notebook', 'laptop'], icon: Laptop },
+  { keywords: ['tv', 'televisão', 'televisao'], icon: Tv },
+  { keywords: ['fone', 'headphone', 'headset'], icon: Headphones },
+  { keywords: ['câmera', 'camera', 'foto'], icon: Camera },
+  // Outros
+  { keywords: ['frete', 'entrega', 'envio'], icon: Truck },
+  { keywords: ['pacote', 'encomenda'], icon: Package },
+  { keywords: ['dinheiro', 'cash'], icon: DollarSign },
+  { keywords: ['amor', 'doação', 'doacao'], icon: Heart },
+  { keywords: ['endereço', 'endereco', 'localização', 'localizacao'], icon: MapPin },
+];
+
+function getCategoryIcon(name: string): LucideIcon {
+  const normalized = name.toLowerCase().trim();
+  for (const { keywords, icon } of CATEGORY_ICONS) {
+    if (keywords.some(k => normalized.includes(k))) return icon;
+  }
+  return Wallet;
+}
 
 // Paleta multicolor premium — uma cor distinta por categoria
 const PALETTE: { from: string; to: string; solid: string }[] = [
