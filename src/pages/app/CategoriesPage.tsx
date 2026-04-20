@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, format } from 'date-fns';
 import { motion } from 'framer-motion';
-import { ChevronDown, TrendingUp, TrendingDown, Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ChevronDown, TrendingUp, TrendingDown, Wallet, Sparkles } from 'lucide-react';
 
 type Tx = { id: string; amount: number; category: string; type: string; date: string };
 type Period = 'this_month' | 'last_month' | 'year';
@@ -265,10 +265,25 @@ export default function CategoriesPage() {
 
           {/* Top 5 legenda */}
           <div className="space-y-2">
-            {categories.slice(0, 5).map(c => (
-              <div key={c.name} className="flex items-center justify-between">
+            {categories.slice(0, 5).map((c, i) => (
+              <motion.div
+                key={c.name}
+                initial={{ opacity: 0, x: 8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 + i * 0.05 }}
+                className="flex items-center justify-between"
+              >
                 <div className="flex items-center gap-2 min-w-0">
-                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: c.color, flexShrink: 0 }} />
+                  <span
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      background: `linear-gradient(135deg, ${c.from}, ${c.to})`,
+                      boxShadow: `0 0 8px ${c.solid}66`,
+                      flexShrink: 0,
+                    }}
+                  />
                   <span style={{ fontSize: 13, color: 'var(--color-text-base)', fontWeight: 600 }} className="truncate">
                     {c.name}
                   </span>
@@ -276,7 +291,7 @@ export default function CategoriesPage() {
                 <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-strong)', fontVariantNumeric: 'tabular-nums' }}>
                   {c.pct.toFixed(1)}%
                 </span>
-              </div>
+              </motion.div>
             ))}
             {categories.length === 0 && !loading && (
               <div className="flex flex-col items-center justify-center py-4 text-center">
@@ -333,11 +348,12 @@ export default function CategoriesPage() {
         {!loading && categories.map((c, i) => (
           <motion.div
             key={c.name}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.03 }}
+            transition={{ delay: i * 0.04, ease: 'easeOut' }}
+            whileHover={{ x: 2 }}
             style={{
-              padding: '12px',
+              padding: '14px 12px',
               borderBottom: i < categories.length - 1 ? '1px solid var(--color-border-weak)' : 'none',
             }}
           >
@@ -346,10 +362,12 @@ export default function CategoriesPage() {
                 <div
                   className="flex items-center justify-center flex-shrink-0"
                   style={{
-                    width: 36, height: 36, borderRadius: '50%',
-                    background: `${c.color}22`,
-                    color: c.color,
-                    fontSize: 14, fontWeight: 900,
+                    width: 40, height: 40, borderRadius: '12px',
+                    background: `linear-gradient(135deg, ${c.from}1f, ${c.to}33)`,
+                    border: `1px solid ${c.solid}33`,
+                    color: c.solid,
+                    fontSize: 15, fontWeight: 900,
+                    boxShadow: `0 4px 12px -4px ${c.solid}40`,
                   }}
                 >
                   {c.name[0]?.toUpperCase()}
@@ -359,7 +377,17 @@ export default function CategoriesPage() {
                     <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-text-strong)' }} className="truncate">
                       {c.name}
                     </span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)' }}>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 800,
+                        color: c.solid,
+                        background: `${c.solid}14`,
+                        padding: '2px 6px',
+                        borderRadius: 999,
+                        letterSpacing: '0.02em',
+                      }}
+                    >
                       {c.pct.toFixed(1)}%
                     </span>
                   </div>
@@ -367,21 +395,26 @@ export default function CategoriesPage() {
               </div>
               <span
                 style={{
-                  fontSize: 14,
+                  fontSize: 15,
                   fontWeight: 900,
-                  color: txType === 'expense' ? 'var(--color-danger-solid)' : 'var(--color-success-solid)',
+                  color: 'var(--color-text-strong)',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
                 {fmt(c.value)}
               </span>
             </div>
-            <div style={{ height: 6, background: 'var(--color-bg-sunken)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+            <div style={{ height: 6, background: 'var(--color-bg-sunken)', borderRadius: 'var(--radius-full)', overflow: 'hidden', marginLeft: 52 }}>
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${c.pct}%` }}
-                transition={{ duration: 0.6, delay: i * 0.03, ease: 'easeOut' }}
-                style={{ height: '100%', background: c.color, borderRadius: 'var(--radius-full)' }}
+                transition={{ duration: 0.8, delay: 0.1 + i * 0.04, ease: [0.16, 1, 0.3, 1] }}
+                style={{
+                  height: '100%',
+                  background: `linear-gradient(90deg, ${c.from}, ${c.to})`,
+                  borderRadius: 'var(--radius-full)',
+                  boxShadow: `0 0 12px ${c.solid}55`,
+                }}
               />
             </div>
           </motion.div>
