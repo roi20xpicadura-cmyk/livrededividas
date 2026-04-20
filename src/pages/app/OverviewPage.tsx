@@ -417,14 +417,13 @@ export default function OverviewPage() {
         </div>
 
         {/* Receitas / Despesas — always show */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1px 1fr', background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: '12px 16px', position: 'relative' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: '12px 16px', position: 'relative' }}>
           <div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Receitas</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: '#DDD6FE', fontVariantNumeric: 'tabular-nums' }}>
               {showValues ? formatCurrency(heroIncome, currency) : '••••'}
             </div>
           </div>
-          <div style={{ width: 1, background: 'rgba(255,255,255,0.12)', margin: '0 16px' }} />
           <div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Despesas</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: '#fca5a5', fontVariantNumeric: 'tabular-nums' }}>
