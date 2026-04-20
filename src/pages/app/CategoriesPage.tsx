@@ -142,8 +142,8 @@ function fmt(v: number) {
 }
 
 function Donut({ slices, total }: { slices: { from: string; to: string; value: number }[]; total: number }) {
-  const size = 240;
-  const stroke = 22;
+  const size = 200;
+  const stroke = 20;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   let offset = 0;
