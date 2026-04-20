@@ -284,7 +284,7 @@ export default function CategoriesPage() {
         </div>
 
         {/* Type selector */}
-        <div className="flex items-center justify-center mb-4 relative">
+        <div className="flex items-center justify-center mb-3 relative">
           <button
             onClick={() => setShowTypeMenu(v => !v)}
             className="flex items-center gap-2 transition-all"
@@ -350,8 +350,8 @@ export default function CategoriesPage() {
             background: 'var(--color-bg-sunken)',
             border: '1px solid var(--color-border-weak)',
             borderRadius: 'var(--radius-full)',
-            padding: 4,
-            margin: '0 auto 24px',
+            padding: 3,
+            margin: '0 auto 14px',
             width: 'fit-content',
           }}
         >
@@ -378,7 +378,7 @@ export default function CategoriesPage() {
         </div>
 
         {/* Donut + summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-3 md:gap-6">
           <div className="flex justify-center relative">
             <Donut slices={categories} total={total} />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
