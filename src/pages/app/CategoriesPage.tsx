@@ -489,15 +489,24 @@ export default function CategoriesPage() {
         )}
 
         {!loading && categories.map((c, i) => (
-          <motion.div
+          <motion.button
             key={c.name}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.04, ease: 'easeOut' }}
             whileHover={{ x: 2 }}
+            whileTap={{ scale: 0.99 }}
+            onClick={() => setSelectedCat({ name: c.name, from: c.from, to: c.to, solid: c.solid, value: c.value })}
+            className="w-full text-left"
             style={{
               padding: '14px 12px',
               borderBottom: i < categories.length - 1 ? '1px solid var(--color-border-weak)' : 'none',
+              background: 'transparent',
+              border: 'none',
+              borderBottomWidth: i < categories.length - 1 ? 1 : 0,
+              borderBottomStyle: 'solid',
+              borderBottomColor: 'var(--color-border-weak)',
+              cursor: 'pointer',
             }}
           >
             <div className="flex items-center justify-between mb-2">
@@ -540,16 +549,19 @@ export default function CategoriesPage() {
                   </div>
                 </div>
               </div>
-              <span
-                style={{
-                  fontSize: 15,
-                  fontWeight: 900,
-                  color: 'var(--color-text-strong)',
-                  fontVariantNumeric: 'tabular-nums',
-                }}
-              >
-                {fmt(c.value)}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 900,
+                    color: 'var(--color-text-strong)',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {fmt(c.value)}
+                </span>
+                <ChevronRight style={{ width: 16, height: 16, color: 'var(--color-text-subtle)' }} />
+              </div>
             </div>
             <div style={{ height: 6, background: 'var(--color-bg-sunken)', borderRadius: 'var(--radius-full)', overflow: 'hidden', marginLeft: 52 }}>
               <motion.div
@@ -564,9 +576,93 @@ export default function CategoriesPage() {
                 }}
               />
             </div>
-          </motion.div>
+          </motion.button>
         ))}
       </div>
+
+      {/* Drawer com transações da categoria */}
+      <Sheet open={!!selectedCat} onOpenChange={(o) => !o && setSelectedCat(null)}>
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto p-0">
+          {selectedCat && (() => {
+            const catTxs = txs
+              .filter(t => t.type === txType && (t.category || 'Outro') === selectedCat.name)
+              .sort((a, b) => b.date.localeCompare(a.date));
+            const Icon = getCategoryIcon(selectedCat.name);
+            return (
+              <>
+                <SheetHeader
+                  className="px-5 pt-5 pb-4 sticky top-0 z-10"
+                  style={{
+                    background: `linear-gradient(180deg, ${selectedCat.from}14, var(--color-bg-surface) 100%)`,
+                    borderBottom: '1px solid var(--color-border-weak)',
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex items-center justify-center flex-shrink-0"
+                      style={{
+                        width: 44, height: 44, borderRadius: 14,
+                        background: `linear-gradient(135deg, ${selectedCat.from}, ${selectedCat.to})`,
+                        color: '#fff',
+                        boxShadow: `0 8px 20px -6px ${selectedCat.solid}80`,
+                      }}
+                    >
+                      <Icon style={{ width: 20, height: 20 }} strokeWidth={2.4} />
+                    </div>
+                    <div className="min-w-0 text-left flex-1">
+                      <SheetTitle style={{ fontSize: 16, fontWeight: 900, color: 'var(--color-text-strong)' }} className="truncate">
+                        {selectedCat.name}
+                      </SheetTitle>
+                      <p style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600, marginTop: 2 }}>
+                        {catTxs.length} {catTxs.length === 1 ? 'transação' : 'transações'} · {PERIOD_LABELS[period]}
+                      </p>
+                    </div>
+                    <span style={{ fontSize: 16, fontWeight: 900, color: selectedCat.solid, fontVariantNumeric: 'tabular-nums' }}>
+                      {fmt(selectedCat.value)}
+                    </span>
+                  </div>
+                </SheetHeader>
+                <div className="px-3 py-2">
+                  {catTxs.length === 0 && (
+                    <p style={{ padding: 24, textAlign: 'center', fontSize: 13, color: 'var(--color-text-muted)' }}>
+                      Nenhuma transação encontrada.
+                    </p>
+                  )}
+                  {catTxs.map((t, i) => (
+                    <div
+                      key={t.id}
+                      className="flex items-center justify-between"
+                      style={{
+                        padding: '12px 10px',
+                        borderBottom: i < catTxs.length - 1 ? '1px solid var(--color-border-weak)' : 'none',
+                      }}
+                    >
+                      <div className="min-w-0 flex-1 pr-3">
+                        <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-strong)' }} className="truncate">
+                          {t.description || '—'}
+                        </p>
+                        <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2, fontWeight: 600 }}>
+                          {format(new Date(t.date + 'T12:00:00'), 'dd/MM/yyyy')}
+                        </p>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 900,
+                          fontVariantNumeric: 'tabular-nums',
+                          color: txType === 'expense' ? 'var(--color-danger-solid)' : 'var(--color-success-solid)',
+                        }}
+                      >
+                        {txType === 'expense' ? '-' : '+'}{fmt(Number(t.amount))}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
