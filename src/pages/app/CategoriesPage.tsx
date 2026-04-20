@@ -143,16 +143,45 @@ export default function CategoriesPage() {
   return (
     <div className="max-w-5xl mx-auto pb-20" style={{ padding: '16px' }}>
       {/* Hero card: tipo + período */}
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
         className="relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, var(--color-green-50) 0%, var(--color-bg-surface) 100%)',
+          background:
+            'radial-gradient(120% 80% at 0% 0%, rgba(139,92,246,0.10) 0%, transparent 55%), radial-gradient(100% 70% at 100% 100%, rgba(124,58,237,0.08) 0%, transparent 50%), linear-gradient(180deg, var(--color-bg-surface) 0%, var(--color-bg-surface) 100%)',
           border: '1px solid var(--color-border-weak)',
           borderRadius: 'var(--radius-2xl)',
-          padding: '18px',
+          padding: '20px 18px 22px',
           marginBottom: 16,
+          boxShadow: '0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 40px -24px rgba(124,58,237,0.18)',
         }}
       >
+        {/* Premium badge */}
+        <div className="flex items-center justify-between mb-4">
+          <div
+            className="flex items-center gap-1.5"
+            style={{
+              background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(124,58,237,0.06))',
+              border: '1px solid rgba(139,92,246,0.25)',
+              borderRadius: 999,
+              padding: '4px 10px',
+              fontSize: 10,
+              fontWeight: 800,
+              color: '#7C3AED',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}
+          >
+            <Sparkles style={{ width: 11, height: 11 }} />
+            Breakdown
+          </div>
+          <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600 }}>
+            {PERIOD_LABELS[period]}
+          </span>
+        </div>
+
         {/* Type selector */}
         <div className="flex items-center justify-center mb-4 relative">
           <button
@@ -221,7 +250,7 @@ export default function CategoriesPage() {
             border: '1px solid var(--color-border-weak)',
             borderRadius: 'var(--radius-full)',
             padding: 4,
-            margin: '0 auto 22px',
+            margin: '0 auto 24px',
             width: 'fit-content',
           }}
         >
@@ -229,16 +258,17 @@ export default function CategoriesPage() {
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className="transition-all"
+              className="transition-all relative"
               style={{
                 padding: '6px 14px',
                 fontSize: 12,
                 fontWeight: 800,
                 borderRadius: 'var(--radius-full)',
-                background: period === p ? 'var(--color-green-600)' : 'transparent',
+                background: period === p ? 'linear-gradient(135deg, #8B5CF6, #6D28D9)' : 'transparent',
                 color: period === p ? '#fff' : 'var(--color-text-muted)',
                 cursor: 'pointer',
                 border: 'none',
+                boxShadow: period === p ? '0 4px 12px -2px rgba(124,58,237,0.45)' : 'none',
               }}
             >
               {PERIOD_LABELS[p]}
@@ -254,9 +284,24 @@ export default function CategoriesPage() {
               <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                 Total
               </span>
-              <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text-strong)', fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>
+              <motion.span
+                key={total}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{
+                  fontSize: 24,
+                  fontWeight: 900,
+                  background: 'linear-gradient(135deg, var(--color-text-strong), #7C3AED)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  fontVariantNumeric: 'tabular-nums',
+                  marginTop: 2,
+                  letterSpacing: '-0.02em',
+                }}
+              >
                 {fmt(total)}
-              </span>
+              </motion.span>
               <span style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 2 }}>
                 {categories.length} {categories.length === 1 ? 'categoria' : 'categorias'}
               </span>
@@ -303,7 +348,7 @@ export default function CategoriesPage() {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Lista detalhada */}
       <div
