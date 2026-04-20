@@ -283,18 +283,31 @@ PARA REGISTRAR RECEITA (recebi, entrou, ganhei, depositou):
 Responda APENAS com JSON:
 {"action":"income","amount":VALOR,"description":"descrição","category":"Categoria","confirm":false}
 
-PARA EXPORTAR/ENVIAR RELATÓRIO (relatório, relatorio, exportar, planilha, extrato, pdf, csv, excel, "me manda", "me envia"):
-Identifique formato e período. Responda APENAS com JSON:
+PARA EXPORTAR/ENVIAR RELATÓRIO (relatório, exportar, planilha, extrato, pdf, csv, excel, "me manda"):
 {"action":"export","format":"summary|pdf|csv","period":"this_month|last_month|last_7_days|last_30_days|year","period_label":"texto humano curto"}
-- format="summary" quando pedir apenas resumo/total
-- format="pdf" quando pedir relatório, PDF, comprovante, detalhado
-- format="csv" quando pedir planilha, excel, csv, tabela
-- Se não citar período → "this_month"
-- period_label ex: "este mês", "mês passado", "últimos 7 dias"
 
-AÇÕES NÃO SUPORTADAS pelo WhatsApp (metas, dívidas, orçamentos, cartões, investimentos):
-- Responda em TEXTO NATURAL explicando que essas alterações precisam ser feitas no app (korafinance.app).
-- NUNCA invente actions JSON além das listadas acima (expense, income, export). Qualquer outro tipo deve ser texto puro.
+PARA METAS — criar nova meta OU adicionar depósito numa meta existente:
+- Criar: {"action":"goal_create","name":"Nome","target_amount":VALOR,"deadline":"YYYY-MM-DD opcional"}
+- Depósito: {"action":"goal_deposit","goal_name":"nome aproximado da meta","amount":VALOR}
+  → use o nome mais parecido da lista de METAS no contexto acima.
+
+PARA DÍVIDAS — criar nova dívida OU registrar pagamento:
+- Criar: {"action":"debt_create","name":"Nome","creditor":"Credor","total_amount":VALOR,"debt_type":"credit_card|personal_loan|bank_loan|overdraft|friend_family|store_credit|medical|tax|other"}
+- Pagamento: {"action":"debt_payment","debt_name":"nome aproximado da dívida","amount":VALOR}
+
+PARA ORÇAMENTOS — definir/ajustar limite mensal por categoria:
+{"action":"budget_set","category":"Categoria","limit_amount":VALOR}
+(usa mês atual automaticamente — substitui se já existir)
+
+PARA CARTÕES — criar novo OU atualizar limite OU marcar fatura paga:
+- Criar: {"action":"card_create","name":"Nome do cartão","credit_limit":VALOR,"network":"visa|mastercard|elo|amex|hipercard|other"}
+- Atualizar limite: {"action":"card_update_limit","card_name":"nome aproximado","credit_limit":VALOR}
+- Marcar fatura paga: {"action":"card_pay_bill","card_name":"nome aproximado"}
+
+REGRAS DE ACTIONS:
+- Responda APENAS o JSON puro (sem ```json, sem texto antes/depois)
+- Se faltar dado essencial (ex.: valor sem categoria), pergunte em texto natural
+- Investimentos ainda só pelo app — responda em texto pedindo abrir korafinance.app
 
 PARA PERGUNTAS FINANCEIRAS: responda com dados REAIS do contexto acima.
 
@@ -1098,7 +1111,160 @@ Acesse seu dashboard pra revisar e ajustar categorias se quiser, ${ctx.name}! �
             return new Response("OK", { status: 200 });
           }
 
-          if (action.action === "expense" || action.action === "income") {
+          // ─── METAS ───
+          if (action.action === "goal_create") {
+            const target = parseFloat(action.target_amount);
+            if (!action.name || isNaN(target) || target <= 0) {
+              finalReply = `Me diz o nome e o valor da meta, ${ctx.name}? Ex: "cria meta viagem 5000"`;
+            } else {
+              const { error } = await supabase.from("goals").insert({
+                user_id: userId, name: action.name, target_amount: target,
+                current_amount: 0, deadline: action.deadline || null,
+                is_highlighted: true, objective_type: "custom",
+              });
+              finalReply = error
+                ? `❌ Não consegui criar a meta, ${ctx.name}.`
+                : `🎯 *Meta criada!*\n\n${action.name}\nObjetivo: *${fmt(target)}*${action.deadline ? `\nPrazo: ${action.deadline}` : ""}\n\n_Kora 🐨_`;
+            }
+          }
+          else if (action.action === "goal_deposit") {
+            const amount = parseFloat(action.amount);
+            const { data: goals } = await supabase.from("goals")
+              .select("id,name,current_amount,target_amount")
+              .eq("user_id", userId).is("deleted_at", null);
+            const target = (goals || []).find((g: any) =>
+              g.name.toLowerCase().includes(String(action.goal_name || "").toLowerCase()) ||
+              String(action.goal_name || "").toLowerCase().includes(g.name.toLowerCase()));
+            if (!target || isNaN(amount) || amount <= 0) {
+              finalReply = `Não achei a meta "${action.goal_name}", ${ctx.name}. Suas metas: ${(goals || []).map((g: any) => g.name).join(", ") || "nenhuma"}`;
+            } else {
+              await supabase.from("goal_deposits").insert({
+                user_id: userId, goal_id: target.id, amount,
+                deposit_date: new Date().toISOString().slice(0, 10),
+              });
+              const newAmount = Number(target.current_amount || 0) + amount;
+              await supabase.from("goals").update({ current_amount: newAmount }).eq("id", target.id);
+              const pct = Math.min(100, Math.round((newAmount / Number(target.target_amount)) * 100));
+              finalReply = `💰 *+${fmt(amount)} na meta ${target.name}!*\n\nProgresso: *${fmt(newAmount)}* / ${fmt(Number(target.target_amount))} (${pct}%)\n\n_Kora 🐨_`;
+            }
+          }
+          // ─── DÍVIDAS ───
+          else if (action.action === "debt_create") {
+            const total = parseFloat(action.total_amount);
+            if (!action.name || !action.creditor || isNaN(total) || total <= 0) {
+              finalReply = `Me diz nome, credor e valor da dívida, ${ctx.name}.`;
+            } else {
+              const { error } = await supabase.from("debts").insert({
+                user_id: userId, name: action.name, creditor: action.creditor,
+                total_amount: total, remaining_amount: total,
+                debt_type: action.debt_type || "other",
+                status: "active", strategy: "snowball",
+              });
+              finalReply = error
+                ? `❌ Não consegui criar a dívida, ${ctx.name}.`
+                : `📋 *Dívida cadastrada!*\n\n${action.name} (${action.creditor})\nValor: *${fmt(total)}*\n\n_Kora 🐨_`;
+            }
+          }
+          else if (action.action === "debt_payment") {
+            const amount = parseFloat(action.amount);
+            const { data: debts } = await supabase.from("debts")
+              .select("id,name,remaining_amount").eq("user_id", userId)
+              .is("deleted_at", null).eq("status", "active");
+            const target = (debts || []).find((d: any) =>
+              d.name.toLowerCase().includes(String(action.debt_name || "").toLowerCase()) ||
+              String(action.debt_name || "").toLowerCase().includes(d.name.toLowerCase()));
+            if (!target || isNaN(amount) || amount <= 0) {
+              finalReply = `Não achei a dívida "${action.debt_name}", ${ctx.name}. Suas dívidas: ${(debts || []).map((d: any) => d.name).join(", ") || "nenhuma"}`;
+            } else {
+              await supabase.from("debt_payments").insert({
+                user_id: userId, debt_id: target.id, amount,
+                payment_date: new Date().toISOString().slice(0, 10),
+              });
+              const newRemaining = Math.max(0, Number(target.remaining_amount) - amount);
+              const updates: any = { remaining_amount: newRemaining };
+              if (newRemaining === 0) updates.status = "paid";
+              await supabase.from("debts").update(updates).eq("id", target.id);
+              finalReply = newRemaining === 0
+                ? `🎉 *Dívida ${target.name} QUITADA!*\n\nParabéns, ${ctx.name}! 🐨`
+                : `✅ *Pagamento de ${fmt(amount)} em ${target.name}*\n\nResta: *${fmt(newRemaining)}*\n\n_Kora 🐨_`;
+            }
+          }
+          // ─── ORÇAMENTOS ───
+          else if (action.action === "budget_set") {
+            const limit = parseFloat(action.limit_amount);
+            if (!action.category || isNaN(limit) || limit <= 0) {
+              finalReply = `Me diz a categoria e o valor do orçamento, ${ctx.name}.`;
+            } else {
+              const monthYear = new Date().toISOString().slice(0, 7);
+              const { data: existing } = await supabase.from("budgets").select("id")
+                .eq("user_id", userId).eq("category", action.category)
+                .eq("month_year", monthYear).maybeSingle();
+              const { error } = existing
+                ? await supabase.from("budgets").update({ limit_amount: limit }).eq("id", existing.id)
+                : await supabase.from("budgets").insert({
+                    user_id: userId, category: action.category,
+                    limit_amount: limit, month_year: monthYear,
+                  });
+              finalReply = error
+                ? `❌ Não consegui salvar o orçamento, ${ctx.name}.`
+                : `📊 *Orçamento ${existing ? "atualizado" : "criado"}!*\n\n${action.category}: *${fmt(limit)}* / mês\n\n_Kora 🐨_`;
+            }
+          }
+          // ─── CARTÕES ───
+          else if (action.action === "card_create") {
+            const lim = parseFloat(action.credit_limit);
+            if (!action.name || isNaN(lim) || lim <= 0) {
+              finalReply = `Me diz nome e limite do cartão, ${ctx.name}.`;
+            } else {
+              const { error } = await supabase.from("credit_cards").insert({
+                user_id: userId, name: action.name, credit_limit: lim,
+                used_amount: 0, network: action.network || "visa",
+              });
+              finalReply = error
+                ? `❌ Não consegui criar o cartão, ${ctx.name}.`
+                : `💳 *Cartão criado!*\n\n${action.name} — limite *${fmt(lim)}*\n\n_Kora 🐨_`;
+            }
+          }
+          else if (action.action === "card_update_limit") {
+            const lim = parseFloat(action.credit_limit);
+            const { data: cards } = await supabase.from("credit_cards")
+              .select("id,name").eq("user_id", userId);
+            const target = (cards || []).find((c: any) =>
+              c.name.toLowerCase().includes(String(action.card_name || "").toLowerCase()));
+            if (!target || isNaN(lim) || lim <= 0) {
+              finalReply = `Não achei o cartão "${action.card_name}", ${ctx.name}.`;
+            } else {
+              await supabase.from("credit_cards").update({ credit_limit: lim }).eq("id", target.id);
+              finalReply = `💳 *Limite atualizado!*\n\n${target.name}: *${fmt(lim)}*\n\n_Kora 🐨_`;
+            }
+          }
+          else if (action.action === "card_pay_bill") {
+            const { data: cards } = await supabase.from("credit_cards")
+              .select("id,name").eq("user_id", userId);
+            const target = (cards || []).find((c: any) =>
+              c.name.toLowerCase().includes(String(action.card_name || "").toLowerCase()));
+            if (!target) {
+              finalReply = `Não achei o cartão "${action.card_name}", ${ctx.name}.`;
+            } else {
+              const monthYear = new Date().toISOString().slice(0, 7);
+              const { data: bill } = await supabase.from("card_bills").select("id")
+                .eq("user_id", userId).eq("card_id", target.id)
+                .eq("month_year", monthYear).maybeSingle();
+              if (bill) {
+                await supabase.from("card_bills").update({
+                  paid: true, paid_at: new Date().toISOString(),
+                }).eq("id", bill.id);
+              } else {
+                await supabase.from("card_bills").insert({
+                  user_id: userId, card_id: target.id, month_year: monthYear,
+                  paid: true, paid_at: new Date().toISOString(), total_amount: 0,
+                });
+              }
+              await supabase.from("credit_cards").update({ used_amount: 0 }).eq("id", target.id);
+              finalReply = `✅ *Fatura do ${target.name} marcada como paga!*\n\n_Kora 🐨_`;
+            }
+          }
+          else if (action.action === "expense" || action.action === "income") {
             const amount = parseFloat(action.amount);
 
             if (action.confirm) {
@@ -1155,7 +1321,7 @@ Acesse seu dashboard pra revisar e ajustar categorias se quiser, ${ctx.name}! �
       const trimmed = finalReply.trim();
       if (trimmed.startsWith("{") || trimmed.startsWith("```json") || /^"?action"?\s*:/i.test(trimmed)) {
         console.warn("[guard] Resposta JSON não tratada bloqueada:", trimmed.slice(0, 200));
-        finalReply = `Por enquanto só consigo registrar gastos, receitas e enviar relatórios por aqui, ${ctx.name} 🐨\n\nPra mexer em metas, dívidas, orçamentos ou cartões, abre o app: https://korafinance.app`;
+        finalReply = `Hmm, não consegui processar isso direitinho, ${ctx.name} 🐨\n\nTenta de novo de outra forma, ou abre o app: https://korafinance.app`;
       }
 
       await sendWhatsApp(phone, finalReply);
