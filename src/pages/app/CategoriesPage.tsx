@@ -5,7 +5,7 @@ import { startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, format } f
 import { motion } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
-  ChevronDown, TrendingUp, TrendingDown, Wallet, Sparkles, X, ChevronRight,
+  ChevronDown, TrendingUp, TrendingDown, Wallet, Sparkles, ChevronRight,
   UtensilsCrossed, Car, Home, ShoppingBag, Heart, GraduationCap,
   Plane, Gamepad2, Shirt, Dumbbell, Baby, PawPrint, Fuel, Bus,
   Coffee, Pizza, ShoppingCart, Smartphone, Wifi, Zap, Droplet,
