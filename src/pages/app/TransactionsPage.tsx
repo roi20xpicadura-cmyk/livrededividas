@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import ImportModal from '@/components/app/ImportModal';
 import NewTransactionSheet from '@/components/app/NewTransactionSheet';
-import { Plus, Search, X, Trash2, Upload, ChevronDown, Inbox } from 'lucide-react';
+import { Plus, Search, X, Trash2, Upload, Inbox } from 'lucide-react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -308,31 +308,41 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div style={{
-          margin: '24px 16px', padding: '40px 20px', textAlign: 'center',
-          background: 'var(--color-bg-surface)',
-          border: '1px dashed var(--color-border-base)',
-          borderRadius: 16,
-        }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text-strong)', marginBottom: 4 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            margin: '24px 16px', padding: '48px 24px', textAlign: 'center',
+            background: 'var(--color-bg-surface)',
+            border: '1px dashed var(--color-border-base)',
+            borderRadius: 20,
+          }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: 20,
+            background: 'var(--color-bg-sunken)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 14,
+          }}>
+            <Inbox style={{ width: 28, height: 28, color: 'var(--color-text-muted)' }} />
+          </div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-strong)', marginBottom: 4 }}>
             {search || filter !== 'all' ? 'Nenhum lançamento encontrado' : 'Nenhum lançamento ainda'}
           </div>
-          <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>
-            {search || filter !== 'all' ? 'Tente ajustar os filtros' : 'Adicione sua primeira receita ou despesa'}
+          <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 18 }}>
+            {search || filter !== 'all' ? 'Tente ajustar os filtros' : 'Comece adicionando sua primeira movimentação'}
           </div>
           {!search && filter === 'all' && (
             <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowSheet(true)}
               style={{
                 height: 44, padding: '0 24px', background: 'var(--color-green-600)',
                 border: 'none', borderRadius: 12, color: 'white',
-                fontSize: 14, fontWeight: 800, cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(124, 58, 237,0.3)',
+                fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(34, 197, 94, 0.25)',
               }}>
-              + Novo lançamento
+              + Adicionar primeiro lançamento
             </motion.button>
           )}
-        </div>
+        </motion.div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {grouped.map(([date, list]) => {
