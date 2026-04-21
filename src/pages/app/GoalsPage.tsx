@@ -404,6 +404,73 @@ function SummaryBar({ goals }: { goals: GoalRow[] }) {
   const overallPct = totalTarget > 0 ? Math.min(100, (totalSaved / totalTarget) * 100) : 0;
   const remaining = Math.max(0, totalTarget - totalSaved);
 
+  // Deadline-aware status: compute expected progress based on time elapsed
+  // vs actual progress. If we're materially behind schedule → "alerta",
+  // otherwise → "no ritmo". No aggressive red — uses brand + amber only.
+  const { status, expectedPct } = useMemo(() => {
+    const withDeadline = goals.filter(g => g.deadline && g.start_date);
+    if (withDeadline.length === 0) {
+      return { status: 'on-track' as const, expectedPct: overallPct };
+    }
+    const now = Date.now();
+    let weightedExpected = 0;
+    let weightTotal = 0;
+    withDeadline.forEach(g => {
+      const start = new Date(g.start_date!).getTime();
+      const end = new Date(g.deadline!).getTime();
+      const weight = Number(g.target_amount) || 0;
+      if (end <= start || weight <= 0) return;
+      const elapsed = Math.max(0, Math.min(1, (now - start) / (end - start)));
+      weightedExpected += elapsed * 100 * weight;
+      weightTotal += weight;
+    });
+    const expected = weightTotal > 0 ? weightedExpected / weightTotal : overallPct;
+    const gap = expected - overallPct;
+    const st = overallPct >= 100
+      ? 'done'
+      : gap >= 15
+        ? 'alert'
+        : gap >= 5
+          ? 'warning'
+          : 'on-track';
+    return { status: st as 'done' | 'alert' | 'warning' | 'on-track', expectedPct: expected };
+  }, [goals, overallPct]);
+
+  const statusConfig = {
+    'done': {
+      label: 'Concluído',
+      dot: '#22c55e',
+      chipBg: 'rgba(34,197,94,0.12)',
+      chipText: '#16a34a',
+      barColor: 'linear-gradient(90deg, hsl(var(--primary)), #22c55e)',
+      hint: 'Todas as metas alcançadas! 🎉',
+    },
+    'on-track': {
+      label: 'No ritmo',
+      dot: 'hsl(var(--primary))',
+      chipBg: 'hsl(var(--primary) / 0.10)',
+      chipText: 'hsl(var(--primary))',
+      barColor: 'hsl(var(--primary))',
+      hint: null,
+    },
+    'warning': {
+      label: 'Acelerar',
+      dot: '#d97706',
+      chipBg: 'rgba(217,119,6,0.10)',
+      chipText: '#b45309',
+      barColor: 'linear-gradient(90deg, hsl(var(--primary)), #f59e0b)',
+      hint: 'Um pequeno empurrão e você volta ao ritmo.',
+    },
+    'alert': {
+      label: 'Atenção',
+      dot: '#d97706',
+      chipBg: 'rgba(217,119,6,0.14)',
+      chipText: '#b45309',
+      barColor: 'linear-gradient(90deg, hsl(var(--primary)), #f59e0b)',
+      hint: 'Você está atrás do planejado. Que tal um depósito hoje?',
+    },
+  }[status];
+
   return (
     <div style={{
       margin: '14px 16px 0',
@@ -428,22 +495,26 @@ function SummaryBar({ goals }: { goals: GoalRow[] }) {
         </div>
         <div style={{
           display: 'inline-flex', alignItems: 'center',
-          gap: 4, padding: '3px 9px',
-          background: 'hsl(var(--primary) / 0.1)',
+          gap: 6, padding: '3px 10px',
+          background: statusConfig.chipBg,
           borderRadius: 99,
-          fontSize: 12, fontWeight: 800,
-          fontFamily: 'var(--font-mono)',
-          color: 'hsl(var(--primary))',
-          letterSpacing: '-0.02em',
+          fontSize: 11, fontWeight: 800,
+          color: statusConfig.chipText,
+          letterSpacing: '-0.01em',
         }}>
-          {overallPct.toFixed(0)}%
+          <span style={{
+            width: 6, height: 6, borderRadius: '50%',
+            background: statusConfig.dot,
+            boxShadow: `0 0 0 3px ${statusConfig.dot}22`,
+          }} />
+          {statusConfig.label}
         </div>
       </div>
 
       {/* Amount */}
       <div style={{
         display: 'flex', alignItems: 'baseline',
-        gap: 6, marginBottom: 12, flexWrap: 'wrap',
+        gap: 6, marginBottom: 10, flexWrap: 'wrap',
       }}>
         <span style={{
           fontSize: 24, fontWeight: 900,
@@ -460,44 +531,79 @@ function SummaryBar({ goals }: { goals: GoalRow[] }) {
         }}>
           de R$ {formatMoney(totalTarget)}
         </span>
-      </div>
-
-      {/* Progress bar — clean primary */}
-      <div style={{
-        height: 6, background: 'var(--color-bg-sunken)',
-        borderRadius: 99, overflow: 'hidden',
-      }}>
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${overallPct}%` }}
-          transition={{ duration: 1.2, ease: 'easeOut' }}
-          style={{
-            height: '100%', borderRadius: 99,
-            background: overallPct >= 100
-              ? 'linear-gradient(90deg, hsl(var(--primary)), #22c55e)'
-              : 'hsl(var(--primary))',
-          }}
-        />
-      </div>
-
-      {/* Footer hint */}
-      {remaining > 0 && (
-        <div style={{
-          marginTop: 8,
-          fontSize: 11.5,
-          color: 'var(--color-text-subtle)',
-          fontWeight: 500,
+        <span style={{
+          marginLeft: 'auto',
+          fontSize: 12, fontWeight: 800,
+          fontFamily: 'var(--font-mono)',
+          color: 'var(--color-text-strong)',
+          letterSpacing: '-0.02em',
         }}>
-          Falta{' '}
-          <span style={{
-            color: 'var(--color-text-base)', fontWeight: 700,
-            fontFamily: 'var(--font-mono)',
-          }}>
-            R$ {formatMoney(remaining)}
-          </span>
-          {' '}para alcançar todas as metas
+          {overallPct.toFixed(0)}%
+        </span>
+      </div>
+
+      {/* Progress bar — status aware, with expected marker */}
+      <div style={{
+        position: 'relative',
+        height: 8, background: 'var(--color-bg-sunken)',
+        borderRadius: 99, overflow: 'visible',
+      }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          borderRadius: 99, overflow: 'hidden',
+        }}>
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${overallPct}%` }}
+            transition={{ duration: 1.2, ease: 'easeOut' }}
+            style={{
+              height: '100%', borderRadius: 99,
+              background: statusConfig.barColor,
+            }}
+          />
         </div>
-      )}
+        {/* Expected-progress marker (only if deadline data exists and makes sense) */}
+        {expectedPct > 1 && expectedPct < 100 && Math.abs(expectedPct - overallPct) > 1 && (
+          <div
+            title={`Esperado: ${expectedPct.toFixed(0)}%`}
+            style={{
+              position: 'absolute',
+              left: `${Math.min(99, expectedPct)}%`,
+              top: -2, bottom: -2,
+              width: 2,
+              background: 'var(--color-text-subtle)',
+              opacity: 0.45,
+              borderRadius: 2,
+            }}
+          />
+        )}
+      </div>
+
+      {/* Footer: status-aware hint or remaining amount */}
+      <div style={{
+        marginTop: 10,
+        fontSize: 11.5,
+        color: 'var(--color-text-subtle)',
+        fontWeight: 500,
+        lineHeight: 1.4,
+      }}>
+        {statusConfig.hint ? (
+          <span style={{ color: statusConfig.chipText, fontWeight: 600 }}>
+            {statusConfig.hint}
+          </span>
+        ) : remaining > 0 ? (
+          <>
+            Falta{' '}
+            <span style={{
+              color: 'var(--color-text-base)', fontWeight: 700,
+              fontFamily: 'var(--font-mono)',
+            }}>
+              R$ {formatMoney(remaining)}
+            </span>
+            {' '}para alcançar todas as metas
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }
