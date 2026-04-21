@@ -75,28 +75,40 @@ function ImpactCard({ label, baseline, simulated, unit, inverse, accentKey }: {
     accentKey === 'score' ? C.amber :
     C.red;
 
+  const isScore = accentKey === 'score';
+  const formatted = isScore
+    ? simulated.toFixed(0)
+    : formatCurrency(simulated, '').replace('R$', '').trim();
+
   return (
     <div style={{
       background: C.white,
       border: `1px solid ${C.borderSoft}`,
       borderRadius: 16,
-      padding: 16,
+      padding: 14,
       boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+      minWidth: 0,
     }}>
       <div style={{
         color: C.textSubtle, fontSize: 10, fontWeight: 700,
-        textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6,
+        textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6,
+        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
       }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 900, color: valueColor, letterSpacing: '-0.5px' }}>
-        {unit}{formatCurrency(simulated, '').replace('R$', '').trim()}
+      <div style={{
+        fontSize: 18, fontWeight: 800, color: valueColor, letterSpacing: '-0.3px',
+        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.15,
+      }}>
+        {!isScore && <span style={{ fontSize: 12, fontWeight: 700, marginRight: 2, opacity: 0.85 }}>R$</span>}
+        {formatted}
       </div>
       {delta !== 0 && (
         <div style={{
-          fontSize: 12, marginTop: 6, color: isPositive ? C.green : C.red,
-          display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600,
+          fontSize: 11, marginTop: 6, color: isPositive ? C.green : C.red,
+          display: 'flex', alignItems: 'center', gap: 3, fontWeight: 600,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>
-          {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-          {delta > 0 ? '+' : ''}{formatCurrency(delta, 'R$')}/mês
+          {isPositive ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+          {delta > 0 ? '+' : ''}{formatCurrency(delta, 'R$')}{!isScore && '/mês'}
         </div>
       )}
     </div>
