@@ -373,29 +373,42 @@ export default function BudgetPage() {
                           </div>
                         </div>
                       </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                          <div style={{ width: 36, height: 36, borderRadius: 10, background: C.violetSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-                            {getCatEmoji(row.category)}
-                          </div>
-                          <div style={{ minWidth: 0, flex: 1 }}>
-                            <div style={{ color: C.textStrong, fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {row.category}
+                    ) : (() => {
+                      const suggested = historyAvg[row.category] || 0;
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                            <div style={{ width: 36, height: 36, borderRadius: 10, background: C.violetSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                              {getCatEmoji(row.category)}
                             </div>
-                            <div style={{ color: C.red, fontSize: 11, fontWeight: 600 }}>
-                              {formatCurrency(row.spent)} gasto · sem limite
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{ color: C.textStrong, fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {row.category}
+                              </div>
+                              <div style={{ color: C.textMuted, fontSize: 11, fontWeight: 500 }}>
+                                {formatCurrency(row.spent)} gasto · sem limite
+                              </div>
                             </div>
                           </div>
+                          {suggested > 0 ? (
+                            <button
+                              onClick={() => handleAcceptSuggestion(row.category, suggested)}
+                              style={{ background: C.violetSoft, border: `1px solid ${C.violetBorder}`, borderRadius: 8, padding: '8px 12px', color: C.violetText, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                              title="Sugestão baseada na média dos últimos 3 meses + 10%"
+                            >
+                              ✨ Usar sugestão: {formatCurrency(suggested)}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => { setBudgetInputs(prev => ({ ...prev, [row.category]: '' })); setShowSetup(true); }}
+                              style={{ background: C.violetSoft, border: `1px solid ${C.violetBorder}`, borderRadius: 8, padding: '8px 12px', color: C.violet, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', width: '100%' }}
+                            >
+                              + Definir limite
+                            </button>
+                          )}
                         </div>
-                        <button
-                          onClick={() => { setBudgetInputs(prev => ({ ...prev, [row.category]: '' })); setShowSetup(true); }}
-                          style={{ background: C.violetSoft, border: `1px solid ${C.violetBorder}`, borderRadius: 8, padding: '8px 12px', color: C.violet, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', width: '100%' }}
-                        >
-                          + Definir limite
-                        </button>
-                      </div>
-                    )}
+                      );
+                    })()}
                     {row.hasLimit && (
                       <div style={{ background: C.trackBg, borderRadius: 99, height: 6, overflow: 'hidden' }}>
                         <motion.div
