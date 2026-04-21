@@ -402,55 +402,69 @@ function SummaryBar({ goals }: { goals: GoalRow[] }) {
   const totalTarget = goals.reduce((s, g) => s + Number(g.target_amount), 0);
   const totalSaved = goals.reduce((s, g) => s + Number(g.current_amount), 0);
   const overallPct = totalTarget > 0 ? Math.min(100, (totalSaved / totalTarget) * 100) : 0;
+  const remaining = Math.max(0, totalTarget - totalSaved);
 
   return (
     <div style={{
-      margin: '12px 16px 0',
+      margin: '14px 16px 0',
       background: 'var(--color-bg-surface)',
-      borderRadius: 16,
-      padding: '16px 18px',
+      borderRadius: 18,
+      padding: '16px 18px 18px',
       boxShadow: 'var(--shadow-sm)',
+      border: '0.5px solid var(--color-border-weak)',
     }}>
+      {/* Header row */}
       <div style={{
         display: 'flex', justifyContent: 'space-between',
-        alignItems: 'flex-end', marginBottom: 12,
+        alignItems: 'center', marginBottom: 10,
       }}>
-        <div>
-          <div style={{
-            fontSize: 11, fontWeight: 600,
-            color: 'var(--color-text-subtle)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em', marginBottom: 4,
-          }}>
-            Progresso geral
-          </div>
-          <div style={{
-            fontSize: 26, fontWeight: 900,
-            fontFamily: 'var(--font-mono)',
-            letterSpacing: '-0.03em',
-            color: 'var(--color-text-strong)',
-            lineHeight: 1,
-          }}>
-            R$ {formatMoney(totalSaved)}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 2 }}>
-            de R$ {formatMoney(totalTarget)}
-          </div>
+        <div style={{
+          fontSize: 11, fontWeight: 700,
+          color: 'var(--color-text-subtle)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+        }}>
+          Progresso geral
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{
-            fontSize: 32, fontWeight: 900,
-            fontFamily: 'var(--font-mono)',
-            color: 'hsl(var(--primary))',
-            letterSpacing: '-0.03em', lineHeight: 1,
-          }}>
-            {overallPct.toFixed(0)}%
-          </div>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center',
+          gap: 4, padding: '3px 9px',
+          background: 'hsl(var(--primary) / 0.1)',
+          borderRadius: 99,
+          fontSize: 12, fontWeight: 800,
+          fontFamily: 'var(--font-mono)',
+          color: 'hsl(var(--primary))',
+          letterSpacing: '-0.02em',
+        }}>
+          {overallPct.toFixed(0)}%
         </div>
       </div>
 
+      {/* Amount */}
       <div style={{
-        height: 8, background: 'var(--color-bg-sunken)',
+        display: 'flex', alignItems: 'baseline',
+        gap: 6, marginBottom: 12, flexWrap: 'wrap',
+      }}>
+        <span style={{
+          fontSize: 24, fontWeight: 900,
+          fontFamily: 'var(--font-mono)',
+          letterSpacing: '-0.03em',
+          color: 'var(--color-text-strong)',
+          lineHeight: 1,
+        }}>
+          R$ {formatMoney(totalSaved)}
+        </span>
+        <span style={{
+          fontSize: 12, color: 'var(--color-text-subtle)',
+          fontWeight: 500,
+        }}>
+          de R$ {formatMoney(totalTarget)}
+        </span>
+      </div>
+
+      {/* Progress bar — clean primary */}
+      <div style={{
+        height: 6, background: 'var(--color-bg-sunken)',
         borderRadius: 99, overflow: 'hidden',
       }}>
         <motion.div
@@ -459,14 +473,31 @@ function SummaryBar({ goals }: { goals: GoalRow[] }) {
           transition={{ duration: 1.2, ease: 'easeOut' }}
           style={{
             height: '100%', borderRadius: 99,
-            background: overallPct >= 75
-              ? 'linear-gradient(90deg, #7C3AED, #22c55e)'
-              : overallPct >= 40
-              ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
-              : 'linear-gradient(90deg, #ef4444, #f87171)',
+            background: overallPct >= 100
+              ? 'linear-gradient(90deg, hsl(var(--primary)), #22c55e)'
+              : 'hsl(var(--primary))',
           }}
         />
       </div>
+
+      {/* Footer hint */}
+      {remaining > 0 && (
+        <div style={{
+          marginTop: 8,
+          fontSize: 11.5,
+          color: 'var(--color-text-subtle)',
+          fontWeight: 500,
+        }}>
+          Falta{' '}
+          <span style={{
+            color: 'var(--color-text-base)', fontWeight: 700,
+            fontFamily: 'var(--font-mono)',
+          }}>
+            R$ {formatMoney(remaining)}
+          </span>
+          {' '}para alcançar todas as metas
+        </div>
+      )}
     </div>
   );
 }
