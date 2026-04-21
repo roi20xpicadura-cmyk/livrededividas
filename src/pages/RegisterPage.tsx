@@ -192,21 +192,38 @@ export default function RegisterPage() {
           return (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
               style={{ background: palette.bg, border: `1px solid ${palette.border}`, borderRadius: 10, padding: '12px 14px', marginTop: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                <AlertCircle style={{ width: 14, height: 14, color: palette.icon, flexShrink: 0, marginTop: 2 }} />
-                <span style={{ fontSize: 13, color: palette.text }}>{error}</span>
-              </div>
-
-              {errorKind === 'email_exists' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
-                  <Link to={`/login?email=${encodeURIComponent(email)}`}
-                    style={{ height: 42, background: '#7C3AED', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'white', textDecoration: 'none' }}>
-                    Ir para login →
-                  </Link>
-                  <button type="button" onClick={handleGoogleAuth}
-                    style={{ height: 42, background: 'white', border: '1.5px solid #e2e8f0', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
-                    <GoogleIcon /> Continuar com Google
-                  </button>
+              {errorKind === 'email_exists' ? (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <AlertCircle style={{ width: 16, height: 16, color: palette.icon, flexShrink: 0, marginTop: 1 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: palette.text, lineHeight: 1.3 }}>
+                        Já existe uma conta com este e-mail
+                      </div>
+                      <div style={{ fontSize: 13, color: palette.text, opacity: 0.85, marginTop: 4, lineHeight: 1.45 }}>
+                        Entre com sua senha, continue com o Google ou recupere o acesso se esqueceu.
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+                    <Link to={`/login?email=${encodeURIComponent(email)}`}
+                      style={{ height: 44, background: '#7C3AED', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'white', textDecoration: 'none' }}>
+                      Entrar com este e-mail
+                    </Link>
+                    <button type="button" onClick={handleGoogleAuth}
+                      style={{ height: 44, background: 'white', border: '1.5px solid #e2e8f0', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                      <GoogleIcon /> Continuar com Google
+                    </button>
+                    <Link to={`/forgot-password?email=${encodeURIComponent(email)}`}
+                      style={{ fontSize: 13, fontWeight: 600, color: '#7C3AED', textDecoration: 'none', textAlign: 'center', padding: '6px 0' }}>
+                      Esqueci minha senha
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                  <AlertCircle style={{ width: 14, height: 14, color: palette.icon, flexShrink: 0, marginTop: 2 }} />
+                  <span style={{ fontSize: 13, color: palette.text }}>{error}</span>
                 </div>
               )}
 
