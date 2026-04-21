@@ -54,7 +54,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [existingOAuthEmail, setExistingOAuthEmail] = useState(false);
+  type ErrorKind = 'email_exists' | 'weak_password' | 'invalid_email' | 'rate_limit' | 'network' | 'generic' | null;
+  const [errorKind, setErrorKind] = useState<ErrorKind>(null);
 
   const strength = getStrength(password);
 
@@ -75,45 +76,79 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setExistingOAuthEmail(false);
+    setErrorKind(null);
     if (password.length < 8) { setError('A senha deve ter pelo menos 8 caracteres'); haptic.error(); return; }
     if (!agreedTerms) { setError('Aceite os termos para continuar'); haptic.error(); return; }
 
     setLoading(true);
     haptic.light();
 
-    const { data, error: err } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName },
-        emailRedirectTo: window.location.origin,
-      },
-    });
+    let data: Awaited<ReturnType<typeof supabase.auth.signUp>>['data'] | null = null;
+    try {
+      const res = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName },
+          emailRedirectTo: `${window.location.origin}/app`,
+        },
+      });
+      data = res.data;
+      const err = res.error;
 
-    if (err) {
+      if (err) {
+        setLoading(false);
+        haptic.error();
+        const raw = (err.message || '').toLowerCase();
+        const status = (err as { status?: number }).status;
+
+        if (raw.includes('weak') || raw.includes('pwned') || raw.includes('compromised') || raw.includes('password should')) {
+          setErrorKind('weak_password');
+          setError('Essa senha foi vazada em outros sites e não é segura. Tente uma combinação única, com letras, números e símbolos.');
+        } else if (raw.includes('already registered') || raw.includes('already been registered') || raw.includes('user already exists')) {
+          setErrorKind('email_exists');
+          setError('Este e-mail já tem uma conta. Faça login ou continue com Google.');
+        } else if (raw.includes('invalid') && raw.includes('email')) {
+          setErrorKind('invalid_email');
+          setError('E-mail inválido. Verifique se digitou corretamente.');
+        } else if (status === 429 || raw.includes('rate') || raw.includes('too many')) {
+          setErrorKind('rate_limit');
+          setError('Muitas tentativas em pouco tempo. Aguarde alguns minutos antes de tentar de novo.');
+        } else if (raw.includes('network') || raw.includes('fetch') || raw.includes('failed to fetch')) {
+          setErrorKind('network');
+          setError('Sem conexão com o servidor. Verifique sua internet e tente novamente.');
+        } else {
+          setErrorKind('generic');
+          setError(err.message || 'Não foi possível criar a conta. Tente novamente em instantes.');
+        }
+        return;
+      }
+    } catch (e) {
+      // Thrown errors (network failure, DNS, offline, CORS, etc.)
       setLoading(false);
-      const msg = err.message.includes('weak_password') || err.message.includes('weak')
-        ? 'Essa senha é muito comum. Tente uma senha mais única.'
-        : err.message.includes('already registered') || err.message.includes('already been registered')
-        ? 'Este e-mail já está cadastrado. Tente fazer login.'
-        : err.message;
-      setError(msg);
       haptic.error();
+      const msg = (e as Error)?.message?.toLowerCase() || '';
+      if (!navigator.onLine || msg.includes('fetch') || msg.includes('network')) {
+        setErrorKind('network');
+        setError('Sem conexão com o servidor. Verifique sua internet e tente novamente.');
+      } else {
+        setErrorKind('generic');
+        setError('Algo deu errado ao criar sua conta. Tente novamente em instantes.');
+      }
       return;
     }
 
     // Supabase quirk: when email exists, signUp returns user with identities: []
     // (no error, to prevent email enumeration). Detect and guide user.
-    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
       setLoading(false);
-      setExistingOAuthEmail(true);
-      setError('Este e-mail já está cadastrado. Se você criou a conta com Google, use o botão abaixo.');
+      setErrorKind('email_exists');
+      setError('Este e-mail já tem uma conta. Faça login ou continue com Google.');
       haptic.error();
       return;
     }
 
-    if (data.user) {
+    if (data?.user) {
       await supabase.from('profiles').update({
         terms_accepted_at: new Date().toISOString(),
         terms_version: '1.0',
