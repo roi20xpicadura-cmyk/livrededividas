@@ -407,9 +407,9 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                 </div>
                 <div style={{
                   background: 'var(--color-bg-surface)',
-                  borderRadius: 14, margin: '0 16px',
+                  borderRadius: 16, margin: '0 16px',
                   overflow: 'hidden',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                  boxShadow: '0 2px 8px -4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.03)',
                   border: '1px solid var(--color-border-weak)',
                 }}>
                   {list.map((tx, i) => (
@@ -417,16 +417,21 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                         onClick={() => setOpenActionsId(openActionsId === tx.id ? null : tx.id)}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 12,
-                          padding: '12px 14px',
+                          padding: '14px',
                           borderBottom: i < list.length - 1 ? '0.5px solid var(--color-border-weak)' : 'none',
                           cursor: 'pointer',
                         }}>
                         {/* Icon */}
                         <div style={{
-                          width: 42, height: 42, borderRadius: 12,
-                          background: tx.type === 'income' ? 'var(--color-success-bg)' : 'var(--color-bg-sunken)',
+                          width: 44, height: 44, borderRadius: 13,
+                          background: tx.type === 'income'
+                            ? 'linear-gradient(135deg, rgba(34,197,94,0.18), rgba(34,197,94,0.08))'
+                            : 'linear-gradient(135deg, var(--color-bg-sunken), var(--color-bg-base))',
+                          border: tx.type === 'income'
+                            ? '1px solid rgba(34,197,94,0.18)'
+                            : '1px solid var(--color-border-weak)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 20, flexShrink: 0,
+                          fontSize: 21, flexShrink: 0,
                         }}>
                           {getCategoryEmoji(tx.category)}
                         </div>
@@ -449,19 +454,24 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                             {tx.category && (
                               <span style={{
                                 background: 'var(--color-bg-sunken)',
-                                padding: '1px 7px', borderRadius: 99,
-                                fontSize: 10, fontWeight: 600,
+                                padding: '2px 8px', borderRadius: 99,
+                                fontSize: 10, fontWeight: 700,
+                                color: 'var(--color-text-base)',
                               }}>
                                 {tx.category}
                               </span>
                             )}
                             {profileType === 'both' && tx.origin && (
                               <>
-                                <span>·</span>
                                 <span style={{
-                                  fontSize: 10, fontWeight: 600,
+                                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                                  fontSize: 10, fontWeight: 700,
                                   color: tx.origin === 'personal' ? 'var(--color-green-600)' : '#3B82F6',
                                 }}>
+                                  <span style={{
+                                    width: 5, height: 5, borderRadius: 99,
+                                    background: tx.origin === 'personal' ? 'var(--color-green-600)' : '#3B82F6',
+                                  }} />
                                   {tx.origin === 'personal' ? 'Pessoal' : 'Negócio'}
                                 </span>
                               </>
