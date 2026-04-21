@@ -4,11 +4,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import ImportModal from '@/components/app/ImportModal';
 import NewTransactionSheet from '@/components/app/NewTransactionSheet';
-import { Plus, Search, X, Trash2, Upload } from 'lucide-react';
+import { Plus, Search, X, Trash2, Upload, Inbox } from 'lucide-react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { normalizeTransactionName } from '@/lib/normalizeTransactionName';
+import { getCategoryStyle } from '@/lib/categoryIcons';
 
 type Tx = {
   id: string; date: string; description: string; amount: number;
@@ -18,41 +20,31 @@ type Tx = {
 
 const ITEMS_PER_PAGE = 20;
 
-const CATEGORY_EMOJI: Record<string, string> = {
-  // expense
-  'Supermercado': '🛒', 'Alimentação': '🍽️', 'Delivery': '🛵',
-  'Transporte': '🚌', 'Combustível': '⛽', 'Uber/Taxi': '🚕',
-  'Moradia': '🏠', 'Aluguel': '🏡', 'Contas': '🧾',
-  'Saúde': '❤️', 'Farmácia': '💊', 'Academia': '🏋️',
-  'Educação': '📚', 'Cursos': '🎓',
-  'Lazer': '🎉', 'Streaming': '🎬', 'Assinaturas': '🔁',
-  'Vestuário': '👕', 'Roupas': '👕', 'Beleza': '💄',
-  'Financeiro': '💼', 'Cartão': '💳', 'Cartão de Crédito': '💳', 'Dívidas': '💸',
-  'Pets': '🐾', 'Outros': '✨', 'Outro': '✨',
-  // business expense
-  'Marketing': '📢', 'Fornecedor': '📦', 'Folha de Pagamento': '👥',
-  'Software': '💻', 'Impostos': '🏛️', 'Equipamentos': '🖥️', 'Logística': '🚚',
-  // income
-  'Salário': '💰', 'Freelance': '💼', 'Vendas': '🛍️',
-  'Aluguel Recebido': '🏘️', 'Investimentos': '📈',
-  'Dividendos': '💵', 'Bônus': '🎁', 'Renda Extra': '✨',
-  'Presente': '🎁', 'Reembolso': '↩️',
-  'Serviços': '🛠️', 'Consultoria': '🧠', 'Parceria': '🤝',
-};
-
-function getCategoryEmoji(cat: string) {
-  return CATEGORY_EMOJI[cat] || '✨';
-}
-
 function formatBRL(n: number) {
   return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function formatCompact(n: number) {
-  const abs = Math.abs(n);
-  if (abs >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + 'M';
-  if (abs >= 1000) return (n / 1000).toFixed(1).replace('.0', '') + 'k';
-  return abs.toFixed(0);
+function formatDayLabelPt(d: Date): string {
+  // "sábado, 18 de abril" — sem pontos / sem capitalização forçada
+  return d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+/** Agrupa transações com mesmo nome normalizado + mesmo valor + mesmo dia. */
+type TxGroup = { key: string; items: Tx[]; total: number };
+function aggregateSameDay(list: Tx[]): TxGroup[] {
+  const map = new Map<string, TxGroup>();
+  for (const tx of list) {
+    const name = normalizeTransactionName(tx.description) || tx.description;
+    const key = `${tx.type}|${name.toLowerCase()}|${Number(tx.amount).toFixed(2)}|${tx.category}`;
+    const existing = map.get(key);
+    if (existing) {
+      existing.items.push(tx);
+      existing.total += Number(tx.amount);
+    } else {
+      map.set(key, { key, items: [tx], total: Number(tx.amount) });
+    }
+  }
+  return Array.from(map.values());
 }
 
 interface TransactionsPageProps {
@@ -76,6 +68,7 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Debounce search to prevent re-render storm and scroll-jump on every keystroke
   useEffect(() => {
@@ -216,31 +209,58 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
       <div style={{
         margin: '12px 16px',
         background: 'var(--color-bg-surface)',
-        borderRadius: 16, padding: '14px 18px',
+        borderRadius: 16, padding: '16px 18px',
         boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
         border: '1px solid var(--color-border-weak)',
       }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
-          {[
-            { label: 'Receitas', value: totals.inc, color: 'var(--color-success-text)', prefix: '+' },
-            { label: 'Despesas', value: totals.exp, color: 'var(--color-danger-text)', prefix: '-' },
-            { label: 'Saldo', value: Math.abs(balance), color: balance >= 0 ? 'var(--color-success-text)' : 'var(--color-danger-text)', prefix: balance < 0 ? '-' : '' },
-          ].map((s, i) => (
-            <div key={i} style={{ padding: '0 12px', borderLeft: i > 0 ? '0.5px solid var(--color-border-weak)' : 'none' }}>
-              <div style={{
-                fontSize: 10, fontWeight: 600, color: 'var(--color-text-muted)',
-                textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4,
-              }}>
-                {s.label}
-              </div>
-              <div style={{
-                fontSize: 15, fontWeight: 800, fontFamily: 'var(--font-mono)',
-                color: s.color, letterSpacing: '-0.02em',
-              }}>
-                {s.prefix}R$ {formatCompact(s.value)}
-              </div>
+        {/* Saldo central */}
+        <div style={{ textAlign: 'center', marginBottom: 14 }}>
+          <div style={{
+            fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)',
+            textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4,
+          }}>
+            Saldo do mês
+          </div>
+          <div className="text-2xl md:text-3xl" style={{
+            fontWeight: 800, fontFamily: 'var(--font-mono)', letterSpacing: '-0.02em',
+            color: balance < 0 ? 'var(--color-danger-text)' : 'var(--color-text-strong)',
+          }}>
+            {balance < 0 ? '−' : ''}R$ {formatBRL(Math.abs(balance))}
+          </div>
+        </div>
+        {/* Receitas / Despesas — sóbrios */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0,
+          borderTop: '0.5px solid var(--color-border-weak)', paddingTop: 12,
+        }}>
+          <div style={{ padding: '0 8px', borderRight: '0.5px solid var(--color-border-weak)', textAlign: 'center' }}>
+            <div style={{
+              fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)',
+              textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3,
+            }}>
+              Receitas
             </div>
-          ))}
+            <div className="text-sm md:text-base" style={{
+              fontWeight: 700, fontFamily: 'var(--font-mono)', letterSpacing: '-0.01em',
+              color: 'var(--color-text-strong)',
+            }}>
+              +R$ {formatBRL(totals.inc)}
+            </div>
+          </div>
+          <div style={{ padding: '0 8px', textAlign: 'center' }}>
+            <div style={{
+              fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)',
+              textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3,
+            }}>
+              Despesas
+            </div>
+            <div className="text-sm md:text-base" style={{
+              fontWeight: 700, fontFamily: 'var(--font-mono)', letterSpacing: '-0.01em',
+              color: 'var(--color-text-strong)',
+            }}>
+              −R$ {formatBRL(totals.exp)}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -288,31 +308,41 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div style={{
-          margin: '24px 16px', padding: '40px 20px', textAlign: 'center',
-          background: 'var(--color-bg-surface)',
-          border: '1px dashed var(--color-border-base)',
-          borderRadius: 16,
-        }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text-strong)', marginBottom: 4 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            margin: '24px 16px', padding: '48px 24px', textAlign: 'center',
+            background: 'var(--color-bg-surface)',
+            border: '1px dashed var(--color-border-base)',
+            borderRadius: 20,
+          }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: 20,
+            background: 'var(--color-bg-sunken)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 14,
+          }}>
+            <Inbox style={{ width: 28, height: 28, color: 'var(--color-text-muted)' }} />
+          </div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-strong)', marginBottom: 4 }}>
             {search || filter !== 'all' ? 'Nenhum lançamento encontrado' : 'Nenhum lançamento ainda'}
           </div>
-          <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>
-            {search || filter !== 'all' ? 'Tente ajustar os filtros' : 'Adicione sua primeira receita ou despesa'}
+          <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 18 }}>
+            {search || filter !== 'all' ? 'Tente ajustar os filtros' : 'Comece adicionando sua primeira movimentação'}
           </div>
           {!search && filter === 'all' && (
             <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowSheet(true)}
               style={{
                 height: 44, padding: '0 24px', background: 'var(--color-green-600)',
                 border: 'none', borderRadius: 12, color: 'white',
-                fontSize: 14, fontWeight: 800, cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(124, 58, 237,0.3)',
+                fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(34, 197, 94, 0.25)',
               }}>
-              + Novo lançamento
+              + Adicionar primeiro lançamento
             </motion.button>
           )}
-        </div>
+        </motion.div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {grouped.map(([date, list]) => {
@@ -323,13 +353,15 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
             let label: string;
             if (d.getTime() === today.getTime()) label = 'Hoje';
             else if (d.getTime() === yesterday.getTime()) label = 'Ontem';
-            else label = d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' });
+            else label = formatDayLabelPt(d);
+
+            const groups = aggregateSameDay(list);
 
             return (
               <div key={date}>
                 <div style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '10px 20px 6px',
+                  padding: '12px 20px 6px',
                 }}>
                   <span style={{
                     fontSize: 12, fontWeight: 700, color: 'var(--color-text-muted)',
@@ -339,9 +371,9 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                   </span>
                   <span style={{
                     fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)',
-                    color: dayTotal >= 0 ? 'var(--color-success-text)' : 'var(--color-danger-text)',
+                    color: 'var(--color-text-muted)',
                   }}>
-                    {dayTotal >= 0 ? '+' : ''}R$ {formatBRL(dayTotal)}
+                    {dayTotal >= 0 ? '+' : '−'}R$ {formatBRL(Math.abs(dayTotal))}
                   </span>
                 </div>
                 <div style={{
@@ -351,101 +383,193 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                   boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
                   border: '1px solid var(--color-border-weak)',
                 }}>
-                  {list.map((tx, i) => (
-                      <div key={tx.id}
-                        onClick={() => setOpenActionsId(openActionsId === tx.id ? null : tx.id)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 12,
-                          padding: '12px 14px',
-                          borderBottom: i < list.length - 1 ? '0.5px solid var(--color-border-weak)' : 'none',
-                          cursor: 'pointer',
-                        }}>
-                        {/* Icon */}
-                        <div style={{
-                          width: 42, height: 42, borderRadius: 12,
-                          background: tx.type === 'income' ? 'var(--color-success-bg)' : 'var(--color-bg-sunken)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 20, flexShrink: 0,
-                        }}>
-                          {getCategoryEmoji(tx.category)}
-                        </div>
+                  {groups.map((group, i) => {
+                    const tx = group.items[0];
+                    const isGroup = group.items.length > 1;
+                    const isExpanded = expandedGroups.has(group.key);
+                    const displayName = normalizeTransactionName(tx.description) || tx.description;
+                    const isIncome = tx.type === 'income';
+                    const style = getCategoryStyle(tx.category, isIncome);
+                    const Icon = style.Icon;
+                    const amountAbs = Math.abs(group.total);
+                    const isLarge = amountAbs >= 500;
+                    const isSmall = amountAbs < 100;
 
-                        {/* Description + meta */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{
-                            fontSize: 14, fontWeight: 600, color: 'var(--color-text-strong)',
-                            letterSpacing: '-0.01em',
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                            marginBottom: 3, textTransform: 'capitalize',
+                    const handleClick = () => {
+                      if (isGroup) {
+                        setExpandedGroups(prev => {
+                          const next = new Set(prev);
+                          if (next.has(group.key)) next.delete(group.key);
+                          else next.add(group.key);
+                          return next;
+                        });
+                      } else {
+                        setOpenActionsId(openActionsId === tx.id ? null : tx.id);
+                      }
+                    };
+
+                    return (
+                      <div key={group.key}>
+                        <motion.div
+                          layout
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.18 }}
+                          onClick={handleClick}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 12,
+                            padding: '12px 14px',
+                            borderBottom: i < groups.length - 1 ? '0.5px solid var(--color-border-weak)' : 'none',
+                            cursor: 'pointer',
                           }}>
-                            {tx.description}
+                          {/* Icon */}
+                          <div style={{
+                            width: 40, height: 40, borderRadius: 12,
+                            background: style.bg,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            flexShrink: 0,
+                          }}>
+                            <Icon style={{ width: 20, height: 20, color: style.fg }} />
                           </div>
-                          <div style={{
-                            display: 'flex', alignItems: 'center', gap: 6,
-                            fontSize: 11, color: 'var(--color-text-muted)',
-                            flexWrap: 'wrap',
-                          }}>
-                            {tx.category && (
-                              <span style={{
-                                background: 'var(--color-bg-sunken)',
-                                padding: '1px 7px', borderRadius: 99,
-                                fontSize: 10, fontWeight: 600,
+
+                          {/* Description + meta */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{
+                              display: 'flex', alignItems: 'center', gap: 6,
+                              marginBottom: 3,
+                            }}>
+                              <div style={{
+                                fontSize: isLarge ? 15 : 14, fontWeight: 600,
+                                color: 'var(--color-text-strong)',
+                                letterSpacing: '-0.01em',
+                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                minWidth: 0, flex: '0 1 auto',
                               }}>
-                                {tx.category}
-                              </span>
-                            )}
-                            {profileType === 'both' && tx.origin && (
-                              <>
-                                <span>·</span>
+                                {displayName}
+                              </div>
+                              {isGroup && (
                                 <span style={{
-                                  fontSize: 10, fontWeight: 600,
-                                  color: tx.origin === 'personal' ? 'var(--color-green-600)' : '#3B82F6',
+                                  fontSize: 10, fontWeight: 700,
+                                  background: 'var(--color-bg-sunken)',
+                                  color: 'var(--color-text-muted)',
+                                  padding: '1px 6px', borderRadius: 99,
+                                  flexShrink: 0,
                                 }}>
+                                  {group.items.length}×
+                                </span>
+                              )}
+                            </div>
+                            <div style={{
+                              display: 'flex', alignItems: 'center', gap: 6,
+                              fontSize: 11, color: 'var(--color-text-muted)',
+                              flexWrap: 'wrap',
+                            }}>
+                              {tx.category && (
+                                <span style={{
+                                  background: 'var(--color-bg-sunken)',
+                                  padding: '1px 7px', borderRadius: 99,
+                                  fontSize: 10, fontWeight: 600,
+                                }}>
+                                  {tx.category}
+                                </span>
+                              )}
+                              {profileType === 'both' && tx.origin && (
+                                <span style={{
+                                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                                  fontSize: 10, fontWeight: 600,
+                                  color: 'var(--color-text-muted)',
+                                }}>
+                                  <span style={{
+                                    width: 6, height: 6, borderRadius: '50%',
+                                    background: tx.origin === 'personal' ? '#7C3AED' : '#3B82F6',
+                                  }} />
                                   {tx.origin === 'personal' ? 'Pessoal' : 'Negócio'}
                                 </span>
-                              </>
-                            )}
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Amount */}
-                        <div style={{
-                          fontSize: 15, fontWeight: 800, fontFamily: 'var(--font-mono)',
-                          letterSpacing: '-0.02em',
-                          color: tx.type === 'income' ? 'var(--color-success-text)' : 'var(--color-danger-text)',
-                          flexShrink: 0,
-                        }}>
-                          {tx.type === 'income' ? '+' : '-'}R$ {formatBRL(Number(tx.amount))}
-                        </div>
+                          {/* Amount — sóbrio */}
+                          <div style={{
+                            fontSize: isLarge ? 16 : isSmall ? 13 : 15,
+                            fontWeight: isLarge ? 800 : 700,
+                            fontFamily: 'var(--font-mono)',
+                            letterSpacing: '-0.02em',
+                            color: 'var(--color-text-strong)',
+                            opacity: isSmall ? 0.85 : 1,
+                            flexShrink: 0,
+                          }}>
+                            {isIncome ? '+' : '−'}R$ {formatBRL(amountAbs)}
+                          </div>
 
-                        {/* Delete */}
+                          {/* Delete (apenas itens não agrupados) */}
+                          <AnimatePresence>
+                            {!isGroup && openActionsId === tx.id && (
+                              <motion.button
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                onClick={e => { e.stopPropagation(); handleDelete(tx.id); }}
+                                style={{
+                                  width: 32, height: 32, borderRadius: 8,
+                                  background: 'var(--color-danger-bg)',
+                                  border: 'none', cursor: 'pointer',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  flexShrink: 0,
+                                }}>
+                                <Trash2 style={{ width: 14, height: 14, color: 'var(--color-danger-text)' }} />
+                              </motion.button>
+                            )}
+                          </AnimatePresence>
+                        </motion.div>
+
+                        {/* Itens agrupados expandidos */}
                         <AnimatePresence>
-                          {openActionsId === tx.id && (
-                            <motion.button
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.8 }}
-                              onClick={e => { e.stopPropagation(); handleDelete(tx.id); }}
-                              style={{
-                                width: 32, height: 32, borderRadius: 8,
-                                background: 'var(--color-danger-bg)',
-                                border: 'none', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                flexShrink: 0,
-                              }}>
-                              <Trash2 style={{ width: 14, height: 14, color: 'var(--color-danger-text)' }} />
-                            </motion.button>
+                          {isGroup && isExpanded && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              style={{ overflow: 'hidden', background: 'var(--color-bg-sunken)' }}
+                            >
+                              {group.items.map((sub) => (
+                                <div key={sub.id}
+                                  onClick={() => setOpenActionsId(openActionsId === sub.id ? null : sub.id)}
+                                  style={{
+                                    display: 'flex', alignItems: 'center', gap: 12,
+                                    padding: '8px 14px 8px 64px',
+                                    fontSize: 12, color: 'var(--color-text-muted)',
+                                    cursor: 'pointer',
+                                    borderBottom: '0.5px solid var(--color-border-weak)',
+                                  }}>
+                                  <span style={{ flex: 1 }}>
+                                    {format(new Date((sub.created_at || sub.date)), 'HH:mm')} · {sub.notes || 'sem nota'}
+                                  </span>
+                                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--color-text-strong)' }}>
+                                    {isIncome ? '+' : '−'}R$ {formatBRL(Number(sub.amount))}
+                                  </span>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleDelete(sub.id); }}
+                                    style={{
+                                      background: 'transparent', border: 'none', cursor: 'pointer',
+                                      padding: 4, display: 'flex',
+                                    }}>
+                                    <Trash2 style={{ width: 12, height: 12, color: 'var(--color-text-muted)' }} />
+                                  </button>
+                                </div>
+                              ))}
+                            </motion.div>
                           )}
                         </AnimatePresence>
                       </div>
-                    ))}
+                    );
+                  })}
                 </div>
               </div>
             );
           })}
 
-          {/* Load more / total */}
-          {hasMore ? (
+          {hasMore && (
             <div style={{ padding: '12px 16px' }}>
               <motion.button whileTap={{ scale: 0.97 }} onClick={() => setPage(p => p + 1)}
                 style={{
@@ -458,14 +582,25 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                 Ver mais lançamentos
               </motion.button>
             </div>
-          ) : (
-            <div style={{
-              textAlign: 'center', padding: 16,
-              fontSize: 12, color: 'var(--color-text-muted)',
-            }}>
-              {filtered.length} lançamento{filtered.length !== 1 ? 's' : ''} no total
-            </div>
           )}
+        </div>
+      )}
+
+      {/* Footer fixo sutil — acima do bottom nav */}
+      {filtered.length > 0 && (
+        <div style={{
+          position: 'fixed',
+          left: 0, right: 0,
+          bottom: 'calc(64px + env(safe-area-inset-bottom))',
+          padding: '6px 16px',
+          background: 'linear-gradient(to top, var(--color-bg-base), transparent)',
+          textAlign: 'center',
+          fontSize: 11, fontWeight: 500,
+          color: 'var(--color-text-muted)',
+          pointerEvents: 'none',
+          zIndex: 5,
+        }}>
+          {filtered.length} lançamento{filtered.length !== 1 ? 's' : ''} · {balance < 0 ? '−' : ''}R$ {formatBRL(Math.abs(balance))} de saldo
         </div>
       )}
 
