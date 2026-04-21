@@ -93,27 +93,29 @@ Deno.serve(async (req) => {
       const newlyCreatedAlerts: AgentAlert[] = [];
 
       for (const alert of allAlerts) {
-        // Check if same alert already exists today
-        const { data: existing } = await supabase
+        // Atomic dedup via UNIQUE(user_id, alert_type, triggered_date).
+        // ignoreDuplicates makes Postgres skip on conflict — only one row wins
+        // even when multiple parallel invocations race here.
+        const { data: inserted, error } = await supabase
           .from("prediction_alerts")
-          .select("id")
-          .eq("user_id", alert.user_id)
-          .eq("alert_type", alert.alert_type)
-          .eq("triggered_date", today)
-          .maybeSingle();
-
-        if (!existing) {
-          await supabase.from("prediction_alerts").insert({
-            ...alert,
-            triggered_date: today,
-          });
+          .upsert(
+            { ...alert, triggered_date: today },
+            { onConflict: "user_id,alert_type,triggered_date", ignoreDuplicates: true }
+          )
+          .select("id");
+        if (!error && inserted && inserted.length > 0) {
           newlyCreatedAlerts.push(alert);
         }
       }
 
-      // Send WhatsApp ONLY for newly-created critical/warning alerts (avoid spam)
+      // Send WhatsApp ONLY for newly-created critical/warning alerts (avoid spam),
+      // and cap at 3 messages per run per user to prevent floods.
+      const sentCountByUser: Record<string, number> = {};
       for (const alert of newlyCreatedAlerts.filter((a) => a.severity !== "info")) {
-        await sendWhatsAppAlert(alert);
+        sentCountByUser[alert.user_id] = (sentCountByUser[alert.user_id] || 0);
+        if (sentCountByUser[alert.user_id] >= 3) continue;
+        const sent = await sendWhatsAppAlert(alert);
+        if (sent) sentCountByUser[alert.user_id]++;
       }
     }
 
@@ -398,17 +400,27 @@ async function runAgents(userId: string): Promise<AgentAlert[]> {
 }
 
 // ━━━ SEND WHATSAPP ALERT ━━━
-async function sendWhatsAppAlert(alert: AgentAlert) {
+async function sendWhatsAppAlert(alert: AgentAlert): Promise<boolean> {
   try {
     const { data: connection } = await supabase
       .from("whatsapp_connections")
-      .select("phone_number, active, verified")
+      .select("phone_number, active, verified, last_notification_at")
       .eq("user_id", alert.user_id)
       .eq("verified", true)
       .eq("active", true)
       .maybeSingle();
 
-    if (!connection) return;
+    if (!connection) return false;
+
+    // Global throttle: max 1 agent_alert per user every 4 hours.
+    if (connection.last_notification_at) {
+      const lastMs = new Date(connection.last_notification_at).getTime();
+      const fourHoursMs = 4 * 60 * 60 * 1000;
+      if (Date.now() - lastMs < fourHoursMs) {
+        console.log(`[throttle] skip ${alert.user_id} — last sent ${Math.round((Date.now() - lastMs) / 60000)}min ago`);
+        return false;
+      }
+    }
 
     // Check notification preferences
     const { data: prefs } = await supabase
@@ -418,17 +430,17 @@ async function sendWhatsAppAlert(alert: AgentAlert) {
       .maybeSingle();
 
     if (prefs) {
-      if (alert.alert_type.startsWith("budget") && !prefs.budget_alerts) return;
-      if (alert.alert_type === "card_limit" && !prefs.card_due_alerts) return;
-      if (alert.alert_type.startsWith("goal") && !prefs.goal_alerts) return;
-      if (alert.alert_type.startsWith("debt") && !prefs.debt_reminders) return;
+      if (alert.alert_type.startsWith("budget") && !prefs.budget_alerts) return false;
+      if (alert.alert_type === "card_limit" && !prefs.card_due_alerts) return false;
+      if (alert.alert_type.startsWith("goal") && !prefs.goal_alerts) return false;
+      if (alert.alert_type.startsWith("debt") && !prefs.debt_reminders) return false;
     }
 
     const ZAPI_INSTANCE_ID = Deno.env.get("ZAPI_INSTANCE_ID");
     const ZAPI_TOKEN = Deno.env.get("ZAPI_TOKEN");
     const ZAPI_CLIENT_TOKEN = Deno.env.get("ZAPI_CLIENT_TOKEN");
 
-    if (!ZAPI_INSTANCE_ID || !ZAPI_TOKEN || !ZAPI_CLIENT_TOKEN) return;
+    if (!ZAPI_INSTANCE_ID || !ZAPI_TOKEN || !ZAPI_CLIENT_TOKEN) return false;
 
     const message = `${alert.title}\n\n${alert.description}\n\n— KoraFinance IA 🤖`;
 
@@ -455,7 +467,19 @@ async function sendWhatsAppAlert(alert: AgentAlert) {
       message,
       intent: "agent_alert",
     });
+
+    // Stamp the connection so the throttle works on next runs.
+    await supabase
+      .from("whatsapp_connections")
+      .update({
+        last_notification_at: new Date().toISOString(),
+        last_notification_category: "agent_alert",
+      })
+      .eq("user_id", alert.user_id);
+
+    return true;
   } catch (err) {
     console.error("WhatsApp alert error:", err);
+    return false;
   }
 }
