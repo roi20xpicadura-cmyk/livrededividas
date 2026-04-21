@@ -220,14 +220,6 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
         boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
         border: '1px solid var(--color-border-weak)',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-strong)', textTransform: 'capitalize' }}>
-            {periodLabel}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-            {totals.count} lançamento{totals.count !== 1 ? 's' : ''}
-          </div>
-        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
           {[
             { label: 'Receitas', value: totals.inc, color: 'var(--color-success-text)', prefix: '+' },
