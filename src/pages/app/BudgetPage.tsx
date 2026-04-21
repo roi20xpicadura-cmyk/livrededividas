@@ -17,6 +17,15 @@ import { PERSONAL_EXPENSE_CATS, BUSINESS_EXPENSE_CATS } from '@/lib/objectives';
 
 const ALL_EXPENSE_CATS = [...new Set([...PERSONAL_EXPENSE_CATS, ...BUSINESS_EXPENSE_CATS])];
 
+const formatCompact = (v: number): string => {
+  if (!v && v !== 0) return 'R$ 0';
+  const abs = Math.abs(v);
+  if (abs >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(1).replace('.', ',')}M`;
+  if (abs >= 10_000) return `R$ ${(v / 1000).toFixed(1).replace('.', ',')}k`;
+  if (abs >= 1000) return `R$ ${(v / 1000).toFixed(2).replace('.', ',')}k`;
+  return `R$ ${Math.round(v).toLocaleString('pt-BR')}`;
+};
+
 const C = {
   violet: '#7C3AED',
   violetSoft: '#F5F3FF',
