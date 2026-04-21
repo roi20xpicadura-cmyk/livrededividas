@@ -4,11 +4,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import ImportModal from '@/components/app/ImportModal';
 import NewTransactionSheet from '@/components/app/NewTransactionSheet';
-import { Plus, Search, X, Trash2, Upload } from 'lucide-react';
+import { Plus, Search, X, Trash2, Upload, ChevronDown, Inbox } from 'lucide-react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { normalizeTransactionName } from '@/lib/normalizeTransactionName';
+import { getCategoryStyle } from '@/lib/categoryIcons';
 
 type Tx = {
   id: string; date: string; description: string; amount: number;
@@ -18,41 +20,31 @@ type Tx = {
 
 const ITEMS_PER_PAGE = 20;
 
-const CATEGORY_EMOJI: Record<string, string> = {
-  // expense
-  'Supermercado': '🛒', 'Alimentação': '🍽️', 'Delivery': '🛵',
-  'Transporte': '🚌', 'Combustível': '⛽', 'Uber/Taxi': '🚕',
-  'Moradia': '🏠', 'Aluguel': '🏡', 'Contas': '🧾',
-  'Saúde': '❤️', 'Farmácia': '💊', 'Academia': '🏋️',
-  'Educação': '📚', 'Cursos': '🎓',
-  'Lazer': '🎉', 'Streaming': '🎬', 'Assinaturas': '🔁',
-  'Vestuário': '👕', 'Roupas': '👕', 'Beleza': '💄',
-  'Financeiro': '💼', 'Cartão': '💳', 'Cartão de Crédito': '💳', 'Dívidas': '💸',
-  'Pets': '🐾', 'Outros': '✨', 'Outro': '✨',
-  // business expense
-  'Marketing': '📢', 'Fornecedor': '📦', 'Folha de Pagamento': '👥',
-  'Software': '💻', 'Impostos': '🏛️', 'Equipamentos': '🖥️', 'Logística': '🚚',
-  // income
-  'Salário': '💰', 'Freelance': '💼', 'Vendas': '🛍️',
-  'Aluguel Recebido': '🏘️', 'Investimentos': '📈',
-  'Dividendos': '💵', 'Bônus': '🎁', 'Renda Extra': '✨',
-  'Presente': '🎁', 'Reembolso': '↩️',
-  'Serviços': '🛠️', 'Consultoria': '🧠', 'Parceria': '🤝',
-};
-
-function getCategoryEmoji(cat: string) {
-  return CATEGORY_EMOJI[cat] || '✨';
-}
-
 function formatBRL(n: number) {
   return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function formatCompact(n: number) {
-  const abs = Math.abs(n);
-  if (abs >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + 'M';
-  if (abs >= 1000) return (n / 1000).toFixed(1).replace('.0', '') + 'k';
-  return abs.toFixed(0);
+function formatDayLabelPt(d: Date): string {
+  // "sábado, 18 de abril" — sem pontos / sem capitalização forçada
+  return d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+/** Agrupa transações com mesmo nome normalizado + mesmo valor + mesmo dia. */
+type TxGroup = { key: string; items: Tx[]; total: number };
+function aggregateSameDay(list: Tx[]): TxGroup[] {
+  const map = new Map<string, TxGroup>();
+  for (const tx of list) {
+    const name = normalizeTransactionName(tx.description) || tx.description;
+    const key = `${tx.type}|${name.toLowerCase()}|${Number(tx.amount).toFixed(2)}|${tx.category}`;
+    const existing = map.get(key);
+    if (existing) {
+      existing.items.push(tx);
+      existing.total += Number(tx.amount);
+    } else {
+      map.set(key, { key, items: [tx], total: Number(tx.amount) });
+    }
+  }
+  return Array.from(map.values());
 }
 
 interface TransactionsPageProps {
@@ -76,6 +68,7 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Debounce search to prevent re-render storm and scroll-jump on every keystroke
   useEffect(() => {
