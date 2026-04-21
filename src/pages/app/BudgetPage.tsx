@@ -282,8 +282,8 @@ export default function BudgetPage() {
           </button>
         </div>
 
-        {/* KPI cards — compact */}
-        <div className="grid grid-cols-4 gap-2 px-4">
+        {/* KPI cards — 2x2 on mobile, 4 across on tablet+ so values never truncate */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 px-4">
           {kpis.map((s, i) => (
             <motion.div
               key={i}
@@ -293,21 +293,22 @@ export default function BudgetPage() {
               style={{
                 background: C.white,
                 border: `1px solid ${C.cardBorder}`,
-                borderRadius: 12,
-                padding: '10px 8px 12px',
+                borderRadius: 14,
+                padding: '12px 14px',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                 display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                gap: 8,
+                alignItems: 'center',
+                gap: 12,
                 minWidth: 0,
               }}
             >
-              <div style={{ width: 24, height: 24, borderRadius: 7, background: s.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <s.Icon style={{ width: 13, height: 13, color: s.iconColor }} />
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: s.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <s.Icon style={{ width: 18, height: 18, color: s.iconColor }} />
               </div>
-              <p style={{ color: C.textMuted, fontSize: 10, fontWeight: 600, lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{s.label}</p>
-              <p style={{ color: s.valColor, fontSize: 15, fontWeight: 800, lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', letterSpacing: '-0.01em' }} title={s.value}>{s.value}</p>
+              <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <p style={{ color: C.textMuted, fontSize: 11, fontWeight: 600, lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</p>
+                <p style={{ color: s.valColor, fontSize: 16, fontWeight: 800, lineHeight: 1.15, letterSpacing: '-0.015em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={s.value}>{s.value}</p>
+              </div>
             </motion.div>
           ))}
         </div>
