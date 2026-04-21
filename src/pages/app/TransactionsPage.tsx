@@ -182,16 +182,19 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg-base)', paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
-      {/* Page header */}
-      <div style={{ padding: '14px 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          {/* Profile badge — only when route locks the page to a profile */}
+      {/* Page header — chip de contexto + ações (título "Lançamentos" já vem do AppLayout) */}
+      <div style={{
+        padding: '14px 16px 0',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: 12, flexWrap: 'wrap',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
           {profile && (
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               background: profile === 'personal' ? 'rgba(124,58,237,0.12)' : 'rgba(37,99,235,0.12)',
               border: `1px solid ${profile === 'personal' ? 'rgba(124,58,237,0.25)' : 'rgba(37,99,235,0.25)'}`,
-              borderRadius: 99, padding: '3px 10px', marginBottom: 6,
+              borderRadius: 99, padding: '4px 10px', flexShrink: 0,
             }}>
               <span style={{ fontSize: 11 }}>{profile === 'personal' ? '🏠' : '💼'}</span>
               <span style={{
@@ -202,73 +205,103 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
               </span>
             </div>
           )}
-          <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text-strong)', letterSpacing: '-0.03em', lineHeight: 1 }}>
-            Lançamentos
-          </h1>
-          <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 3, textTransform: 'capitalize' }}>
+          <p style={{
+            fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)',
+            textTransform: 'capitalize', margin: 0, letterSpacing: '-0.01em',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
             {periodLabel}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
           <motion.button whileTap={{ scale: 0.95 }} onClick={() => setShowImport(true)}
+            aria-label="Importar lançamentos"
             style={{
-              width: 36, height: 36, borderRadius: 10,
+              width: 38, height: 38, borderRadius: 10,
               background: 'var(--color-bg-surface)',
               border: '1px solid var(--color-border-base)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', color: 'var(--color-text-muted)',
             }}>
-            <Upload style={{ width: 15, height: 15 }} />
+            <Upload style={{ width: 16, height: 16 }} />
           </motion.button>
           <motion.button whileTap={{ scale: 0.95 }} onClick={() => setShowSheet(true)}
             style={{
-              display: 'flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px',
-              background: 'var(--color-green-600)', border: 'none', borderRadius: 10,
+              display: 'flex', alignItems: 'center', gap: 6, height: 38, padding: '0 16px',
+              background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
+              border: 'none', borderRadius: 10,
               color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(34, 197, 94, 0.3)',
+              boxShadow: '0 4px 14px rgba(124,58,237,0.35)',
             }}>
-            <Plus style={{ width: 14, height: 14 }} /> Novo
+            <Plus style={{ width: 15, height: 15 }} /> Novo
           </motion.button>
         </div>
       </div>
 
-      {/* Summary */}
+      {/* Summary — hero card com gradiente sutil + saldo destacado */}
       <div style={{
-        margin: '12px 16px',
-        background: 'var(--color-bg-surface)',
-        borderRadius: 16, padding: '14px 18px',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+        margin: '14px 16px 4px',
+        background: 'linear-gradient(135deg, var(--color-bg-surface) 0%, var(--color-bg-surface) 100%)',
+        borderRadius: 20,
+        padding: '16px 18px 14px',
+        boxShadow: '0 4px 20px -8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)',
         border: '1px solid var(--color-border-weak)',
+        position: 'relative', overflow: 'hidden',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-strong)', textTransform: 'capitalize' }}>
-            {periodLabel}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-            {totals.count} lançamento{totals.count !== 1 ? 's' : ''}
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
-          {[
-            { label: 'Receitas', value: totals.inc, color: 'var(--color-success-text)', prefix: '+' },
-            { label: 'Despesas', value: totals.exp, color: 'var(--color-danger-text)', prefix: '-' },
-            { label: 'Saldo', value: Math.abs(balance), color: balance >= 0 ? 'var(--color-success-text)' : 'var(--color-danger-text)', prefix: balance < 0 ? '-' : '' },
-          ].map((s, i) => (
-            <div key={i} style={{ padding: '0 12px', borderLeft: i > 0 ? '0.5px solid var(--color-border-weak)' : 'none' }}>
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0,
+          background: balance >= 0
+            ? 'radial-gradient(120% 80% at 100% 0%, rgba(34,197,94,0.08), transparent 60%)'
+            : 'radial-gradient(120% 80% at 100% 0%, rgba(239,68,68,0.08), transparent 60%)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
+            <div>
               <div style={{
-                fontSize: 10, fontWeight: 600, color: 'var(--color-text-muted)',
-                textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4,
+                fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)',
+                textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2,
               }}>
-                {s.label}
+                Saldo do período
               </div>
               <div style={{
-                fontSize: 15, fontWeight: 800, fontFamily: 'var(--font-mono)',
-                color: s.color, letterSpacing: '-0.02em',
+                fontSize: 26, fontWeight: 900, fontFamily: 'var(--font-mono)',
+                color: balance >= 0 ? 'var(--color-success-text)' : 'var(--color-danger-text)',
+                letterSpacing: '-0.03em', lineHeight: 1,
               }}>
-                {s.prefix}R$ {formatCompact(s.value)}
+                {balance < 0 ? '-' : ''}R$ {formatCompact(Math.abs(balance))}
               </div>
             </div>
-          ))}
+            <div style={{
+              fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)',
+              background: 'var(--color-bg-sunken)', padding: '4px 10px', borderRadius: 99,
+            }}>
+              {totals.count} {totals.count === 1 ? 'item' : 'itens'}
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {[
+              { label: 'Receitas', value: totals.inc, color: 'var(--color-success-text)', bg: 'rgba(34,197,94,0.08)', prefix: '+' },
+              { label: 'Despesas', value: totals.exp, color: 'var(--color-danger-text)', bg: 'rgba(239,68,68,0.08)', prefix: '-' },
+            ].map((s, i) => (
+              <div key={i} style={{
+                background: s.bg, borderRadius: 12, padding: '8px 12px',
+              }}>
+                <div style={{
+                  fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)',
+                  textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2,
+                }}>
+                  {s.label}
+                </div>
+                <div style={{
+                  fontSize: 15, fontWeight: 800, fontFamily: 'var(--font-mono)',
+                  color: s.color, letterSpacing: '-0.02em',
+                }}>
+                  {s.prefix}R$ {formatCompact(s.value)}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -374,9 +407,9 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                 </div>
                 <div style={{
                   background: 'var(--color-bg-surface)',
-                  borderRadius: 14, margin: '0 16px',
+                  borderRadius: 16, margin: '0 16px',
                   overflow: 'hidden',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                  boxShadow: '0 2px 8px -4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.03)',
                   border: '1px solid var(--color-border-weak)',
                 }}>
                   {list.map((tx, i) => (
@@ -384,16 +417,21 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                         onClick={() => setOpenActionsId(openActionsId === tx.id ? null : tx.id)}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 12,
-                          padding: '12px 14px',
+                          padding: '14px',
                           borderBottom: i < list.length - 1 ? '0.5px solid var(--color-border-weak)' : 'none',
                           cursor: 'pointer',
                         }}>
                         {/* Icon */}
                         <div style={{
-                          width: 42, height: 42, borderRadius: 12,
-                          background: tx.type === 'income' ? 'var(--color-success-bg)' : 'var(--color-bg-sunken)',
+                          width: 44, height: 44, borderRadius: 13,
+                          background: tx.type === 'income'
+                            ? 'linear-gradient(135deg, rgba(34,197,94,0.18), rgba(34,197,94,0.08))'
+                            : 'linear-gradient(135deg, var(--color-bg-sunken), var(--color-bg-base))',
+                          border: tx.type === 'income'
+                            ? '1px solid rgba(34,197,94,0.18)'
+                            : '1px solid var(--color-border-weak)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 20, flexShrink: 0,
+                          fontSize: 21, flexShrink: 0,
                         }}>
                           {getCategoryEmoji(tx.category)}
                         </div>
@@ -416,19 +454,24 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                             {tx.category && (
                               <span style={{
                                 background: 'var(--color-bg-sunken)',
-                                padding: '1px 7px', borderRadius: 99,
-                                fontSize: 10, fontWeight: 600,
+                                padding: '2px 8px', borderRadius: 99,
+                                fontSize: 10, fontWeight: 700,
+                                color: 'var(--color-text-base)',
                               }}>
                                 {tx.category}
                               </span>
                             )}
                             {profileType === 'both' && tx.origin && (
                               <>
-                                <span>·</span>
                                 <span style={{
-                                  fontSize: 10, fontWeight: 600,
+                                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                                  fontSize: 10, fontWeight: 700,
                                   color: tx.origin === 'personal' ? 'var(--color-green-600)' : '#3B82F6',
                                 }}>
+                                  <span style={{
+                                    width: 5, height: 5, borderRadius: 99,
+                                    background: tx.origin === 'personal' ? 'var(--color-green-600)' : '#3B82F6',
+                                  }} />
                                   {tx.origin === 'personal' ? 'Pessoal' : 'Negócio'}
                                 </span>
                               </>
