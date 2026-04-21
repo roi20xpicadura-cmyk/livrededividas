@@ -312,7 +312,6 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {grouped.map(([date, list]) => {
-            const dayTotal = list.reduce((s, tx) => tx.type === 'income' ? s + Number(tx.amount) : s - Number(tx.amount), 0);
             const d = new Date(date + 'T00:00:00');
             const today = new Date(); today.setHours(0,0,0,0);
             const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
