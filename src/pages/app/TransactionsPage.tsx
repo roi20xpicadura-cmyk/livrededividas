@@ -209,31 +209,58 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
       <div style={{
         margin: '12px 16px',
         background: 'var(--color-bg-surface)',
-        borderRadius: 16, padding: '14px 18px',
+        borderRadius: 16, padding: '16px 18px',
         boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
         border: '1px solid var(--color-border-weak)',
       }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
-          {[
-            { label: 'Receitas', value: totals.inc, color: 'var(--color-success-text)', prefix: '+' },
-            { label: 'Despesas', value: totals.exp, color: 'var(--color-danger-text)', prefix: '-' },
-            { label: 'Saldo', value: Math.abs(balance), color: balance >= 0 ? 'var(--color-success-text)' : 'var(--color-danger-text)', prefix: balance < 0 ? '-' : '' },
-          ].map((s, i) => (
-            <div key={i} style={{ padding: '0 12px', borderLeft: i > 0 ? '0.5px solid var(--color-border-weak)' : 'none' }}>
-              <div style={{
-                fontSize: 10, fontWeight: 600, color: 'var(--color-text-muted)',
-                textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4,
-              }}>
-                {s.label}
-              </div>
-              <div style={{
-                fontSize: 15, fontWeight: 800, fontFamily: 'var(--font-mono)',
-                color: s.color, letterSpacing: '-0.02em',
-              }}>
-                {s.prefix}R$ {formatCompact(s.value)}
-              </div>
+        {/* Saldo central */}
+        <div style={{ textAlign: 'center', marginBottom: 14 }}>
+          <div style={{
+            fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)',
+            textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4,
+          }}>
+            Saldo do mês
+          </div>
+          <div className="text-2xl md:text-3xl" style={{
+            fontWeight: 800, fontFamily: 'var(--font-mono)', letterSpacing: '-0.02em',
+            color: balance < 0 ? 'var(--color-danger-text)' : 'var(--color-text-strong)',
+          }}>
+            {balance < 0 ? '−' : ''}R$ {formatBRL(Math.abs(balance))}
+          </div>
+        </div>
+        {/* Receitas / Despesas — sóbrios */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0,
+          borderTop: '0.5px solid var(--color-border-weak)', paddingTop: 12,
+        }}>
+          <div style={{ padding: '0 8px', borderRight: '0.5px solid var(--color-border-weak)', textAlign: 'center' }}>
+            <div style={{
+              fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)',
+              textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3,
+            }}>
+              Receitas
             </div>
-          ))}
+            <div className="text-sm md:text-base" style={{
+              fontWeight: 700, fontFamily: 'var(--font-mono)', letterSpacing: '-0.01em',
+              color: 'var(--color-text-strong)',
+            }}>
+              +R$ {formatBRL(totals.inc)}
+            </div>
+          </div>
+          <div style={{ padding: '0 8px', textAlign: 'center' }}>
+            <div style={{
+              fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)',
+              textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3,
+            }}>
+              Despesas
+            </div>
+            <div className="text-sm md:text-base" style={{
+              fontWeight: 700, fontFamily: 'var(--font-mono)', letterSpacing: '-0.01em',
+              color: 'var(--color-text-strong)',
+            }}>
+              −R$ {formatBRL(totals.exp)}
+            </div>
+          </div>
         </div>
       </div>
 
