@@ -68,12 +68,28 @@ export default function BudgetPage() {
     setBudgets(bRes.data || []);
     setTransactions(tRes.data || []);
     const catTotals: Record<string, number> = {};
-    (hRes.data || []).forEach((t: { category: string; amount: number }) => {
+    const breakdown: Record<string, Record<string, number>> = {};
+    // Pre-fill 3 prior months as zero so even months without data show up
+    const monthKeys: string[] = [];
+    for (let i = 3; i >= 1; i--) {
+      monthKeys.push(format(subMonths(currentMonth, i), 'yyyy-MM'));
+    }
+    (hRes.data || []).forEach((t: { category: string; amount: number; date: string }) => {
       catTotals[t.category] = (catTotals[t.category] || 0) + Number(t.amount);
+      const mk = (t.date || '').slice(0, 7);
+      if (!breakdown[t.category]) breakdown[t.category] = {};
+      breakdown[t.category][mk] = (breakdown[t.category][mk] || 0) + Number(t.amount);
+    });
+    // Ensure every category has all 3 month keys (even if 0)
+    Object.keys(breakdown).forEach(cat => {
+      monthKeys.forEach(mk => {
+        if (breakdown[cat][mk] === undefined) breakdown[cat][mk] = 0;
+      });
     });
     const avg: Record<string, number> = {};
     Object.entries(catTotals).forEach(([cat, total]) => { avg[cat] = Math.ceil((total / 3) * 1.1); });
     setHistoryAvg(avg);
+    setHistoryBreakdown(breakdown);
     setLoading(false);
   }, [user, monthYear, currentMonth]);
 
