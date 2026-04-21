@@ -238,43 +238,70 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
         </div>
       </div>
 
-      {/* Summary */}
+      {/* Summary — hero card com gradiente sutil + saldo destacado */}
       <div style={{
-        margin: '12px 16px',
-        background: 'var(--color-bg-surface)',
-        borderRadius: 16, padding: '14px 18px',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+        margin: '14px 16px 4px',
+        background: 'linear-gradient(135deg, var(--color-bg-surface) 0%, var(--color-bg-surface) 100%)',
+        borderRadius: 20,
+        padding: '16px 18px 14px',
+        boxShadow: '0 4px 20px -8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)',
         border: '1px solid var(--color-border-weak)',
+        position: 'relative', overflow: 'hidden',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-strong)', textTransform: 'capitalize' }}>
-            {periodLabel}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-            {totals.count} lançamento{totals.count !== 1 ? 's' : ''}
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
-          {[
-            { label: 'Receitas', value: totals.inc, color: 'var(--color-success-text)', prefix: '+' },
-            { label: 'Despesas', value: totals.exp, color: 'var(--color-danger-text)', prefix: '-' },
-            { label: 'Saldo', value: Math.abs(balance), color: balance >= 0 ? 'var(--color-success-text)' : 'var(--color-danger-text)', prefix: balance < 0 ? '-' : '' },
-          ].map((s, i) => (
-            <div key={i} style={{ padding: '0 12px', borderLeft: i > 0 ? '0.5px solid var(--color-border-weak)' : 'none' }}>
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0,
+          background: balance >= 0
+            ? 'radial-gradient(120% 80% at 100% 0%, rgba(34,197,94,0.08), transparent 60%)'
+            : 'radial-gradient(120% 80% at 100% 0%, rgba(239,68,68,0.08), transparent 60%)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
+            <div>
               <div style={{
-                fontSize: 10, fontWeight: 600, color: 'var(--color-text-muted)',
-                textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4,
+                fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)',
+                textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2,
               }}>
-                {s.label}
+                Saldo do período
               </div>
               <div style={{
-                fontSize: 15, fontWeight: 800, fontFamily: 'var(--font-mono)',
-                color: s.color, letterSpacing: '-0.02em',
+                fontSize: 26, fontWeight: 900, fontFamily: 'var(--font-mono)',
+                color: balance >= 0 ? 'var(--color-success-text)' : 'var(--color-danger-text)',
+                letterSpacing: '-0.03em', lineHeight: 1,
               }}>
-                {s.prefix}R$ {formatCompact(s.value)}
+                {balance < 0 ? '-' : ''}R$ {formatCompact(Math.abs(balance))}
               </div>
             </div>
-          ))}
+            <div style={{
+              fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)',
+              background: 'var(--color-bg-sunken)', padding: '4px 10px', borderRadius: 99,
+            }}>
+              {totals.count} {totals.count === 1 ? 'item' : 'itens'}
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {[
+              { label: 'Receitas', value: totals.inc, color: 'var(--color-success-text)', bg: 'rgba(34,197,94,0.08)', prefix: '+' },
+              { label: 'Despesas', value: totals.exp, color: 'var(--color-danger-text)', bg: 'rgba(239,68,68,0.08)', prefix: '-' },
+            ].map((s, i) => (
+              <div key={i} style={{
+                background: s.bg, borderRadius: 12, padding: '8px 12px',
+              }}>
+                <div style={{
+                  fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)',
+                  textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2,
+                }}>
+                  {s.label}
+                </div>
+                <div style={{
+                  fontSize: 15, fontWeight: 800, fontFamily: 'var(--font-mono)',
+                  color: s.color, letterSpacing: '-0.02em',
+                }}>
+                  {s.prefix}R$ {formatCompact(s.value)}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
