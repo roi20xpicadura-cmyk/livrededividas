@@ -386,8 +386,17 @@ export default function BudgetPage() {
                           <div style={{ color: overspent ? C.red : C.violet, fontSize: 15, fontWeight: 800 }}>
                             {formatCurrency(row.limit)}
                           </div>
-                          <div style={{ fontSize: 10, color: overspent ? C.red : C.textMuted, fontWeight: 600 }}>
+                          <div style={{ fontSize: 10, color: overspent ? C.red : C.textMuted, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
                             {overspent ? '⚠️ Estourado' : 'limite'}
+                            {!overspent && historyAvg[row.category] === row.limit && (
+                              <button
+                                onClick={() => setAuditCategory(row.category)}
+                                title="Limite veio da média dos últimos 3 meses + 10%. Clique para auditar."
+                                style={{ background: C.violetSoft, color: C.violetText, border: `1px solid ${C.violetBorder}`, borderRadius: 6, padding: '1px 6px', fontSize: 9, fontWeight: 700, cursor: 'pointer' }}
+                              >
+                                ✨ histórico
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
