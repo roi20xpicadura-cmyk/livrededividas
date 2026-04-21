@@ -184,24 +184,47 @@ export default function RegisterPage() {
       <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>Sem cartão. Gratuito para sempre.</p>
 
       <AnimatePresence>
-        {error && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-            style={{ background: existingOAuthEmail ? '#fffbeb' : '#fef2f2', border: existingOAuthEmail ? '1px solid #fde68a' : '1px solid #fecaca', borderRadius: 10, padding: '12px 14px', marginTop: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-              <AlertCircle style={{ width: 14, height: 14, color: existingOAuthEmail ? '#d97706' : '#ef4444', flexShrink: 0, marginTop: 2 }} />
-              <span style={{ fontSize: 13, color: existingOAuthEmail ? '#92400e' : '#dc2626' }}>{error}</span>
-            </div>
-            {existingOAuthEmail && (
-              <button
-                type="button"
-                onClick={handleGoogleAuth}
-                style={{ marginTop: 10, width: '100%', height: 42, background: 'white', border: '1.5px solid #e2e8f0', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#0f172a' }}
-              >
-                <GoogleIcon /> Continuar com Google
-              </button>
-            )}
-          </motion.div>
-        )}
+        {error && (() => {
+          const isWarn = errorKind === 'email_exists';
+          const palette = isWarn
+            ? { bg: '#fffbeb', border: '#fde68a', icon: '#d97706', text: '#92400e' }
+            : { bg: '#fef2f2', border: '#fecaca', icon: '#ef4444', text: '#dc2626' };
+          return (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+              style={{ background: palette.bg, border: `1px solid ${palette.border}`, borderRadius: 10, padding: '12px 14px', marginTop: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <AlertCircle style={{ width: 14, height: 14, color: palette.icon, flexShrink: 0, marginTop: 2 }} />
+                <span style={{ fontSize: 13, color: palette.text }}>{error}</span>
+              </div>
+
+              {errorKind === 'email_exists' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                  <Link to={`/login?email=${encodeURIComponent(email)}`}
+                    style={{ height: 42, background: '#7C3AED', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'white', textDecoration: 'none' }}>
+                    Ir para login →
+                  </Link>
+                  <button type="button" onClick={handleGoogleAuth}
+                    style={{ height: 42, background: 'white', border: '1.5px solid #e2e8f0', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                    <GoogleIcon /> Continuar com Google
+                  </button>
+                </div>
+              )}
+
+              {errorKind === 'network' && (
+                <button type="button" onClick={(ev) => { ev.preventDefault(); handleRegister(ev as unknown as React.FormEvent); }}
+                  style={{ marginTop: 10, width: '100%', height: 42, background: 'white', border: '1.5px solid #fecaca', borderRadius: 10, fontSize: 14, fontWeight: 600, color: '#dc2626', cursor: 'pointer' }}>
+                  Tentar novamente
+                </button>
+              )}
+
+              {errorKind === 'weak_password' && (
+                <p style={{ marginTop: 8, fontSize: 12, color: palette.text, opacity: 0.85 }}>
+                  Dica: use 8+ caracteres misturando letras maiúsculas, números e símbolos.
+                </p>
+              )}
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
 
       {/* Google button */}
