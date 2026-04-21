@@ -205,29 +205,24 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
         </div>
       </div>
 
-      {/* Summary — minimal: só o saldo, grande e centrado */}
-      <div style={{ padding: '20px 20px 18px', textAlign: 'center' }}>
-        <div style={{
-          fontSize: 10, fontWeight: 600, color: 'var(--color-text-muted)',
-          textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6,
+      {/* Summary — minimal inline: saldo discreto */}
+      <div style={{
+        padding: '10px 20px 14px',
+        display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+      }}>
+        <span style={{
+          fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)',
+          textTransform: 'uppercase', letterSpacing: '0.08em',
         }}>
-          Saldo do mês
-        </div>
-        <div className="text-3xl md:text-4xl" style={{
-          fontWeight: 700, fontFamily: 'var(--font-mono)', letterSpacing: '-0.03em',
+          Saldo
+        </span>
+        <span style={{
+          fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-mono)',
+          letterSpacing: '-0.02em',
           color: balance < 0 ? 'var(--color-danger-text)' : 'var(--color-text-strong)',
-          lineHeight: 1.1,
         }}>
           {balance < 0 ? '−' : ''}R$ {formatBRL(Math.abs(balance))}
-        </div>
-        <div style={{
-          marginTop: 8, fontSize: 12, color: 'var(--color-text-muted)',
-          fontFamily: 'var(--font-mono)',
-        }}>
-          <span>+R$ {formatBRL(totals.inc)}</span>
-          <span style={{ margin: '0 8px', opacity: 0.4 }}>·</span>
-          <span>−R$ {formatBRL(totals.exp)}</span>
-        </div>
+        </span>
       </div>
 
       {/* Filter chips */}
