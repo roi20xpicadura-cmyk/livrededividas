@@ -43,6 +43,7 @@ export default function BudgetPage() {
   const planLimits = PLAN_LIMITS[plan];
   const [budgets, setBudgets] = useState<BudgetRow[]>([]);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
+  const [historyAvg, setHistoryAvg] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showSetup, setShowSetup] = useState(false);
@@ -55,12 +56,22 @@ export default function BudgetPage() {
     if (!user) return;
     const start = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
     const end = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
-    const [bRes, tRes] = await Promise.all([
+    const histStart = format(startOfMonth(subMonths(currentMonth, 3)), 'yyyy-MM-dd');
+    const histEnd = format(endOfMonth(subMonths(currentMonth, 1)), 'yyyy-MM-dd');
+    const [bRes, tRes, hRes] = await Promise.all([
       supabase.from('budgets').select('*').eq('user_id', user.id).eq('month_year', monthYear),
       supabase.from('transactions').select('*').eq('user_id', user.id).eq('type', 'expense').gte('date', start).lte('date', end),
+      supabase.from('transactions').select('category, amount').eq('user_id', user.id).eq('type', 'expense').gte('date', histStart).lte('date', histEnd),
     ]);
     setBudgets(bRes.data || []);
     setTransactions(tRes.data || []);
+    const catTotals: Record<string, number> = {};
+    (hRes.data || []).forEach((t: { category: string; amount: number }) => {
+      catTotals[t.category] = (catTotals[t.category] || 0) + Number(t.amount);
+    });
+    const avg: Record<string, number> = {};
+    Object.entries(catTotals).forEach(([cat, total]) => { avg[cat] = Math.ceil((total / 3) * 1.1); });
+    setHistoryAvg(avg);
     setLoading(false);
   }, [user, monthYear, currentMonth]);
 
