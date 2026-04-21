@@ -327,26 +327,19 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
               <div key={date}>
                 <div style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '12px 20px 6px',
+                  padding: '18px 20px 6px',
                 }}>
                   <span style={{
-                    fontSize: 12, fontWeight: 700, color: 'var(--color-text-muted)',
-                    textTransform: 'capitalize',
+                    fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)',
+                    textTransform: 'uppercase', letterSpacing: '0.06em',
                   }}>
                     {label}
-                  </span>
-                  <span style={{
-                    fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)',
-                    color: 'var(--color-text-muted)',
-                  }}>
-                    {dayTotal >= 0 ? '+' : '−'}R$ {formatBRL(Math.abs(dayTotal))}
                   </span>
                 </div>
                 <div style={{
                   background: 'var(--color-bg-surface)',
-                  borderRadius: 14, margin: '0 16px',
+                  borderRadius: 16, margin: '0 16px',
                   overflow: 'hidden',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
                   border: '1px solid var(--color-border-weak)',
                 }}>
                   {groups.map((group, i) => {
@@ -447,7 +440,7 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                                 }}>
                                   <span style={{
                                     width: 6, height: 6, borderRadius: '50%',
-                                    background: tx.origin === 'personal' ? '#7C3AED' : '#3B82F6',
+                                    background: tx.origin === 'personal' ? 'hsl(var(--primary))' : 'hsl(var(--blue))',
                                   }} />
                                   {tx.origin === 'personal' ? 'Pessoal' : 'Negócio'}
                                 </span>
@@ -552,21 +545,12 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
         </div>
       )}
 
-      {/* Footer fixo sutil — acima do bottom nav */}
       {filtered.length > 0 && (
         <div style={{
-          position: 'fixed',
-          left: 0, right: 0,
-          bottom: 'calc(64px + env(safe-area-inset-bottom))',
-          padding: '6px 16px',
-          background: 'linear-gradient(to top, var(--color-bg-base), transparent)',
-          textAlign: 'center',
-          fontSize: 11, fontWeight: 500,
-          color: 'var(--color-text-muted)',
-          pointerEvents: 'none',
-          zIndex: 5,
+          padding: '20px 16px 8px', textAlign: 'center',
+          fontSize: 11, color: 'var(--color-text-muted)',
         }}>
-          {filtered.length} lançamento{filtered.length !== 1 ? 's' : ''} · {balance < 0 ? '−' : ''}R$ {formatBRL(Math.abs(balance))} de saldo
+          {filtered.length} lançamento{filtered.length !== 1 ? 's' : ''} este mês
         </div>
       )}
 
