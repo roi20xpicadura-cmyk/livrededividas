@@ -17,6 +17,15 @@ import { PERSONAL_EXPENSE_CATS, BUSINESS_EXPENSE_CATS } from '@/lib/objectives';
 
 const ALL_EXPENSE_CATS = [...new Set([...PERSONAL_EXPENSE_CATS, ...BUSINESS_EXPENSE_CATS])];
 
+const formatCompact = (v: number): string => {
+  if (!v && v !== 0) return 'R$ 0';
+  const abs = Math.abs(v);
+  if (abs >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(1).replace('.', ',')}M`;
+  if (abs >= 10_000) return `R$ ${(v / 1000).toFixed(1).replace('.', ',')}k`;
+  if (abs >= 1000) return `R$ ${(v / 1000).toFixed(2).replace('.', ',')}k`;
+  return `R$ ${Math.round(v).toLocaleString('pt-BR')}`;
+};
+
 const C = {
   violet: '#7C3AED',
   violetSoft: '#F5F3FF',
@@ -219,9 +228,9 @@ export default function BudgetPage() {
   if (loading) return <div className="p-7"><div className="h-96 rounded-2xl skeleton-shimmer" /></div>;
 
   const kpis = [
-    { label: 'Orçamento', value: formatCurrency(totalBudget), Icon: DollarSign, iconBg: C.violetSoft, iconColor: C.violet, valColor: C.violet },
-    { label: 'Gasto', value: formatCurrency(totalSpent), Icon: TrendingUp, iconBg: C.redSoft, iconColor: C.red, valColor: C.red },
-    { label: 'Disponível', value: formatCurrency(Math.max(0, totalBudget - totalSpent)), Icon: PieChart, iconBg: C.greenSoft, iconColor: C.green, valColor: C.green },
+    { label: 'Orçamento', value: formatCompact(totalBudget), Icon: DollarSign, iconBg: C.violetSoft, iconColor: C.violet, valColor: C.violet },
+    { label: 'Gasto', value: formatCompact(totalSpent), Icon: TrendingUp, iconBg: C.redSoft, iconColor: C.red, valColor: C.red },
+    { label: 'Disponível', value: formatCompact(Math.max(0, totalBudget - totalSpent)), Icon: PieChart, iconBg: C.greenSoft, iconColor: C.green, valColor: C.green },
     { label: 'No limite', value: String(overBudgetCount), Icon: AlertCircle, iconBg: C.amberSoft, iconColor: C.amber, valColor: C.amber },
   ];
 
@@ -285,22 +294,20 @@ export default function BudgetPage() {
                 background: C.white,
                 border: `1px solid ${C.cardBorder}`,
                 borderRadius: 12,
-                padding: '10px 8px',
+                padding: '10px 8px 12px',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'flex-start',
-                gap: 4,
+                gap: 8,
                 minWidth: 0,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, width: '100%' }}>
-                <div style={{ width: 22, height: 22, borderRadius: 6, background: s.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <s.Icon style={{ width: 12, height: 12, color: s.iconColor }} />
-                </div>
-                <p style={{ color: C.textMuted, fontSize: 10, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.label}</p>
+              <div style={{ width: 24, height: 24, borderRadius: 7, background: s.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <s.Icon style={{ width: 13, height: 13, color: s.iconColor }} />
               </div>
-              <p style={{ color: s.valColor, fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{s.value}</p>
+              <p style={{ color: C.textMuted, fontSize: 10, fontWeight: 600, lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{s.label}</p>
+              <p style={{ color: s.valColor, fontSize: 15, fontWeight: 800, lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', letterSpacing: '-0.01em' }} title={s.value}>{s.value}</p>
             </motion.div>
           ))}
         </div>
