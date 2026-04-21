@@ -171,6 +171,17 @@ export default function BudgetPage() {
     fetchData();
   };
 
+  const handleAcceptSuggestion = async (category: string, amount: number) => {
+    if (!user || !amount || amount <= 0) return;
+    if (planLimits.budgets !== Infinity && budgets.length >= planLimits.budgets) {
+      toast.error(`Plano ${plan} permite até ${planLimits.budgets} orçamentos.`);
+      return;
+    }
+    await supabase.from('budgets').insert({ user_id: user.id, category, month_year: monthYear, limit_amount: amount });
+    toast.success(`Limite de ${formatCurrency(amount)} definido para ${category}`);
+    fetchData();
+  };
+
   const getProgressColor = (pct: number) => {
     if (pct >= 100) return C.red;
     if (pct >= 80) return C.amber;
