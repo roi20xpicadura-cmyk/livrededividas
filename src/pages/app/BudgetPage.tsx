@@ -255,27 +255,34 @@ export default function BudgetPage() {
           </button>
         </div>
 
-        {/* KPI cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 px-4">
+        {/* KPI cards — compact */}
+        <div className="grid grid-cols-4 gap-2 px-4">
           {kpis.map((s, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }}
+              transition={{ delay: i * 0.05 }}
               style={{
                 background: C.white,
                 border: `1px solid ${C.cardBorder}`,
-                borderRadius: 16,
-                padding: 14,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                borderRadius: 12,
+                padding: '10px 8px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: 4,
+                minWidth: 0,
               }}
             >
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: s.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
-                <s.Icon style={{ width: 18, height: 18, color: s.iconColor }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, width: '100%' }}>
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: s.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <s.Icon style={{ width: 12, height: 12, color: s.iconColor }} />
+                </div>
+                <p style={{ color: C.textMuted, fontSize: 10, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.label}</p>
               </div>
-              <p style={{ color: C.textMuted, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{s.label}</p>
-              <p style={{ color: s.valColor, fontSize: 20, fontWeight: 900 }}>{s.value}</p>
+              <p style={{ color: s.valColor, fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{s.value}</p>
             </motion.div>
           ))}
         </div>
