@@ -307,6 +307,9 @@ export default function RegisterPage() {
               </span>
             </div>
           )}
+          <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6, lineHeight: 1.4 }}>
+            Mín. 8 caracteres. Por segurança, bloqueamos senhas vazadas em outros sites — evite reutilizar.
+          </p>
         </motion.div>
 
         {/* Terms checkbox */}
