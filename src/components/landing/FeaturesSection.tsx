@@ -185,42 +185,71 @@ export default function FeaturesSection() {
                         <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-gradient-to-br from-[#4ade80] to-[#16a34a]" />
                       </div>
 
-                      {/* Balance card */}
-                      <div className="rounded-md md:rounded-lg p-1.5 md:p-2 bg-gradient-to-br from-[#16a34a] to-[#065f46] relative overflow-hidden">
+                      {/* Balance card — soft glow + shimmer sweep */}
+                      <div className="rounded-md md:rounded-lg p-1.5 md:p-2 bg-gradient-to-br from-[#16a34a] to-[#065f46] relative overflow-hidden animate-balance-glow motion-reduce:animate-none [will-change:box-shadow]">
                         <div className="absolute -right-3 -top-3 w-10 h-10 rounded-full bg-white/10" />
-                        <p className="text-[5px] md:text-[7px] text-white/70 leading-none">Saldo do mês</p>
-                        <p className="text-[11px] md:text-[15px] font-[900] text-white leading-tight mt-0.5">R$ 3.200</p>
-                        <div className="flex items-center gap-1 mt-0.5">
+                        {/* shimmer sweep */}
+                        <div
+                          aria-hidden
+                          className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/2 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-shimmer-sweep motion-reduce:hidden [will-change:transform]"
+                        />
+                        <p className="relative text-[5px] md:text-[7px] text-white/70 leading-none">Saldo do mês</p>
+                        <p className="relative text-[11px] md:text-[15px] font-[900] text-white leading-tight mt-0.5">R$ 3.200</p>
+                        <div className="relative flex items-center gap-1 mt-0.5">
                           <ArrowUpRight className="w-1.5 h-1.5 md:w-2 md:h-2 text-white" />
                           <span className="text-[5px] md:text-[7px] text-white/90 font-semibold">+12% vs mês ant.</span>
                         </div>
                       </div>
 
-                      {/* Mini chart bars */}
-                      <div className="flex items-end gap-[2px] md:gap-[3px] h-5 md:h-7">
+                      {/* Mini chart bars — pulse staggered */}
+                      <div className="flex items-end gap-[2px] md:gap-[3px] h-5 md:h-7 origin-bottom">
                         {[40, 65, 35, 80, 55, 90, 70].map((h, i) => (
                           <div
                             key={i}
-                            className="flex-1 rounded-[1px] md:rounded-sm bg-gradient-to-t from-[#4ade80]/30 to-[#4ade80]"
-                            style={{ height: `${h}%` }}
+                            className="flex-1 rounded-[1px] md:rounded-sm bg-gradient-to-t from-[#4ade80]/30 to-[#4ade80] origin-bottom animate-bar-rise motion-reduce:animate-none [will-change:transform]"
+                            style={{ height: `${h}%`, animationDelay: `${i * 0.18}s` }}
                           />
                         ))}
                       </div>
 
-                      {/* Tx list */}
-                      <div className="flex flex-col gap-1 md:gap-1.5">
-                        {[
-                          { icon: ArrowDownLeft, label: 'Mercado', val: '-R$ 84', color: '#f87171' },
-                          { icon: ArrowUpRight, label: 'Salário', val: '+R$ 5k', color: '#4ade80' },
-                        ].map((tx, i) => (
-                          <div key={i} className="flex items-center gap-1 md:gap-1.5">
-                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full flex items-center justify-center" style={{ background: `${tx.color}25` }}>
-                              <tx.icon className="w-1.5 h-1.5 md:w-2 md:h-2" style={{ color: tx.color }} />
+                      {/* Tx list — micro-scroll marquee (mask top/bottom) */}
+                      <div
+                        className="relative overflow-hidden h-[34px] md:h-[46px]"
+                        style={{
+                          maskImage:
+                            "linear-gradient(to bottom, transparent 0, black 18%, black 82%, transparent 100%)",
+                          WebkitMaskImage:
+                            "linear-gradient(to bottom, transparent 0, black 18%, black 82%, transparent 100%)",
+                        }}
+                      >
+                        <div className="flex flex-col gap-1 md:gap-1.5 animate-tx-marquee motion-reduce:animate-none [will-change:transform]">
+                          {[
+                            ...[
+                              { icon: ArrowDownLeft, label: 'Mercado', val: '-R$ 84', color: '#f87171' },
+                              { icon: ArrowUpRight, label: 'Salário', val: '+R$ 5.000', color: '#4ade80' },
+                              { icon: ArrowDownLeft, label: 'iFood', val: '-R$ 42', color: '#f87171' },
+                              { icon: ArrowDownLeft, label: 'Uber', val: '-R$ 18', color: '#f87171' },
+                              { icon: ArrowUpRight, label: 'PIX João', val: '+R$ 120', color: '#4ade80' },
+                              { icon: ArrowDownLeft, label: 'Netflix', val: '-R$ 55', color: '#f87171' },
+                            ],
+                            ...[
+                              { icon: ArrowDownLeft, label: 'Mercado', val: '-R$ 84', color: '#f87171' },
+                              { icon: ArrowUpRight, label: 'Salário', val: '+R$ 5.000', color: '#4ade80' },
+                              { icon: ArrowDownLeft, label: 'iFood', val: '-R$ 42', color: '#f87171' },
+                              { icon: ArrowDownLeft, label: 'Uber', val: '-R$ 18', color: '#f87171' },
+                              { icon: ArrowUpRight, label: 'PIX João', val: '+R$ 120', color: '#4ade80' },
+                              { icon: ArrowDownLeft, label: 'Netflix', val: '-R$ 55', color: '#f87171' },
+                            ],
+                          ].map((tx, i) => (
+                            <div key={i} className="flex items-center gap-1 md:gap-1.5">
+                              <div className="w-3 h-3 md:w-4 md:h-4 rounded-full flex items-center justify-center shrink-0" style={{ background: `${tx.color}25` }}>
+                                <tx.icon className="w-1.5 h-1.5 md:w-2 md:h-2" style={{ color: tx.color }} />
+                              </div>
+                              <span className="text-[6px] md:text-[8px] text-white/80 flex-1 leading-none truncate">{tx.label}</span>
+                              <span className="text-[6px] md:text-[8px] font-bold leading-none" style={{ color: tx.color }}>{tx.val}</span>
                             </div>
-                            <span className="text-[6px] md:text-[8px] text-white/80 flex-1 leading-none">{tx.label}</span>
-                            <span className="text-[6px] md:text-[8px] font-bold leading-none" style={{ color: tx.color }}>{tx.val}</span>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </div>
 
