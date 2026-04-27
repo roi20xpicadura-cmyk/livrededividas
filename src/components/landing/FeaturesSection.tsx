@@ -145,10 +145,25 @@ export default function FeaturesSection() {
                 <span className="inline-flex items-center gap-1 text-[10px] md:text-[11px] font-semibold text-[#C4B5FD] bg-[#7C3AED]/15 border border-[#7C3AED]/30 rounded-full px-2 py-0.5 mb-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA] animate-pulse" /> iOS · Android
                 </span>
-                <h3 className="text-[18px] md:text-[20px] font-[900] mb-1 leading-tight">Nativo no celular</h3>
-                <p className="text-[12px] md:text-[13px] text-white/60 leading-snug">
-                  Tudo o que importa, na palma da sua mão.
-                </p>
+                <h3 className="text-[18px] md:text-[20px] font-[900] mb-2 leading-tight">Suas finanças sempre com você</h3>
+                <ul className="space-y-1.5 text-[12px] md:text-[13px] text-white/70 leading-snug">
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#A78BFA] mt-0.5">✓</span>
+                    <span>Lance gastos em segundos, onde estiver</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#A78BFA] mt-0.5">✓</span>
+                    <span>Notificações inteligentes em tempo real</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#A78BFA] mt-0.5">✓</span>
+                    <span>Funciona offline, sincroniza depois</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#A78BFA] mt-0.5">✓</span>
+                    <span>Biometria para acesso rápido e seguro</span>
+                  </li>
+                </ul>
               </div>
 
               {/* Phone mockup */}
