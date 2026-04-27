@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, CheckCheck, Mic, Plus, Camera, Smile, Send, ArrowRight, Sparkles, Receipt, BarChart3, Wallet, Target, RotateCcw, X, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import koraIcon from '@/assets/korafinance-icon.png';
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -463,12 +464,14 @@ export default function WhatsAppSection() {
 
                 {/* Header */}
                 <div className="bg-[#1f2c33] pt-9 pb-2 px-3 flex items-center gap-2.5 border-b border-black/40">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#22c55e] to-[#15803d] flex items-center justify-center text-white text-[13px] font-[900] shadow-md">
-                    K
-                  </div>
+                  <img
+                    src={koraIcon}
+                    alt="Kora Finance"
+                    className="w-9 h-9 rounded-full object-cover shadow-md flex-shrink-0"
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="text-[13px] font-semibold text-white leading-tight flex items-center gap-1">
-                      Kora · IA Financeira
+                      Kora Finance
                       <span className="text-[9px] font-bold text-[#0b141a] bg-[#22c55e] px-1 py-[1px] rounded">✓</span>
                     </div>
                     <div className="text-[10px] text-[#86efac] flex items-center gap-1">
