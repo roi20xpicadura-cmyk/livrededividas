@@ -350,7 +350,7 @@ PARA CARTÕES — criar novo OU atualizar limite OU marcar fatura paga:
 - Marcar fatura paga: {"action":"card_pay_bill","card_name":"nome aproximado"}
 
 REGRAS DE ACTIONS:
-- Responda APENAS o JSON puro (sem ```json, sem texto antes/depois)
+- Responda APENAS o JSON puro (sem cercas markdown tipo \`\`\`json, sem texto antes/depois)
 - Se faltar dado essencial (ex.: valor sem categoria), pergunte em texto natural
 - Investimentos ainda só pelo app — responda em texto pedindo abrir korafinance.app
 
