@@ -390,7 +390,7 @@ export default function WhatsAppSection() {
   };
 
   return (
-    <section className="relative py-20 md:py-32 px-4 overflow-hidden bg-[#0a0613]">
+    <section className="relative py-16 sm:py-20 md:py-32 px-3 sm:px-4 overflow-hidden bg-[#0a0613]">
       {/* Background — premium violet mesh */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(124,58,237,0.35),transparent_60%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_85%_90%,rgba(34,197,94,0.18),transparent_70%)]" />
@@ -414,26 +414,26 @@ export default function WhatsAppSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease }}
-          className="text-center mb-10 md:mb-14"
+          className="text-center mb-8 sm:mb-10 md:mb-14"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#a78bfa]/30 bg-[#7C3AED]/10 backdrop-blur-md mb-6 shadow-[0_0_30px_rgba(124,58,237,0.25)]">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full border border-[#a78bfa]/30 bg-[#7C3AED]/10 backdrop-blur-md mb-5 sm:mb-6 shadow-[0_0_30px_rgba(124,58,237,0.25)]">
             <span className="relative flex w-2 h-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#22c55e] opacity-75" />
               <span className="relative inline-flex w-2 h-2 rounded-full bg-[#22c55e]" />
             </span>
-            <span className="text-[11px] font-[800] text-white uppercase tracking-[1.5px]">Demo ao vivo · IA real</span>
+            <span className="text-[10px] sm:text-[11px] font-[800] text-white uppercase tracking-[1.2px] sm:tracking-[1.5px]">Demo ao vivo · IA real</span>
           </div>
-          <h2 className="text-[32px] md:text-[56px] font-[900] text-white tracking-[-1.5px] md:tracking-[-2.5px] leading-[1.05]">
+          <h2 className="text-[26px] sm:text-[34px] md:text-[56px] font-[900] text-white tracking-[-1px] sm:tracking-[-1.5px] md:tracking-[-2.5px] leading-[1.05]">
             Converse com a Kora<br className="hidden md:block" />
-            <span className="bg-gradient-to-r from-[#a78bfa] via-[#c4b5fd] to-[#86efac] bg-clip-text text-transparent">no WhatsApp. Agora mesmo.</span>
+            <span className="bg-gradient-to-r from-[#a78bfa] via-[#c4b5fd] to-[#86efac] bg-clip-text text-transparent"> no WhatsApp. Agora mesmo.</span>
           </h2>
-          <p className="text-[15px] md:text-[18px] text-white/60 mt-5 max-w-[600px] mx-auto leading-[1.6]">
+          <p className="text-[14px] sm:text-[15px] md:text-[18px] text-white/60 mt-4 sm:mt-5 max-w-[600px] mx-auto leading-[1.6] px-2">
             Não é vídeo. Não é gif. É a IA real do <span className="text-white font-semibold">KoraFinance</span> respondendo às suas mensagens com uma carteira fictícia.
           </p>
         </motion.div>
 
         {/* Persona toggle */}
-        <div className="flex justify-center mb-12">
+        <div className="flex justify-center mb-10 sm:mb-12">
           <div className="inline-flex p-1 bg-white/[0.04] border border-white/10 rounded-full backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
             {([
               { id: 'personal' as const, emoji: '👤', label: 'Vida pessoal', sub: 'Lucas' },
@@ -442,7 +442,7 @@ export default function WhatsAppSection() {
               <button
                 key={opt.id}
                 onClick={() => switchPersona(opt.id)}
-                className={`relative px-5 md:px-6 py-2.5 rounded-full text-[13px] md:text-[14px] font-bold transition-colors ${
+                className={`relative px-3.5 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-full text-[12px] sm:text-[13px] md:text-[14px] font-bold transition-colors ${
                   persona === opt.id ? 'text-white' : 'text-white/50 hover:text-white/80'
                 }`}
               >
@@ -453,17 +453,17 @@ export default function WhatsAppSection() {
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
-                <span className="relative flex items-center gap-2">
+                <span className="relative flex items-center gap-1.5 sm:gap-2">
                   <span>{opt.emoji}</span>
                   <span>{opt.label}</span>
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${persona === opt.id ? 'bg-white/20' : 'bg-white/5'}`}>{opt.sub}</span>
+                  <span className={`hidden sm:inline text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${persona === opt.id ? 'bg-white/20' : 'bg-white/5'}`}>{opt.sub}</span>
                 </span>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-12 lg:gap-20 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-10 sm:gap-12 lg:gap-20 items-start">
           {/* Phone */}
           <motion.div
             initial={{ opacity: 0, scale: 0.92 }}
@@ -473,15 +473,15 @@ export default function WhatsAppSection() {
             className="flex justify-center lg:sticky lg:top-24 relative"
           >
             {/* Glow halo behind phone */}
-            <div className="absolute -inset-10 bg-gradient-to-br from-[#7C3AED]/30 via-[#8B5CF6]/20 to-[#22c55e]/20 blur-3xl rounded-full pointer-events-none" />
+            <div className="absolute -inset-6 sm:-inset-10 bg-gradient-to-br from-[#7C3AED]/30 via-[#8B5CF6]/20 to-[#22c55e]/20 blur-3xl rounded-full pointer-events-none" />
 
-            {/* Floating decorative card — top right */}
+            {/* Floating decorative card — top right (lg+ only to avoid overlap on tablet) */}
             <motion.div
               initial={{ opacity: 0, x: 20, y: -10 }}
               whileInView={{ opacity: 1, x: 0, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.4, ease }}
-              className="hidden md:flex absolute -right-6 top-12 z-10 items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-white/40 shadow-[0_20px_60px_-15px_rgba(124,58,237,0.5)] rotate-[6deg]"
+              className="hidden lg:flex absolute -right-4 xl:-right-6 top-12 z-10 items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-white/40 shadow-[0_20px_60px_-15px_rgba(124,58,237,0.5)] rotate-[6deg]"
             >
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#5B21B6] flex items-center justify-center">
                 <Receipt className="w-4 h-4 text-white" />
@@ -492,13 +492,13 @@ export default function WhatsAppSection() {
               </div>
             </motion.div>
 
-            {/* Floating decorative card — bottom left */}
+            {/* Floating decorative card — bottom left (lg+ only) */}
             <motion.div
               initial={{ opacity: 0, x: -20, y: 10 }}
               whileInView={{ opacity: 1, x: 0, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.55, ease }}
-              className="hidden md:flex absolute -left-8 bottom-20 z-10 items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-white/40 shadow-[0_20px_60px_-15px_rgba(34,197,94,0.5)] -rotate-[5deg]"
+              className="hidden lg:flex absolute -left-6 xl:-left-8 bottom-20 z-10 items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-white/40 shadow-[0_20px_60px_-15px_rgba(34,197,94,0.5)] -rotate-[5deg]"
             >
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#16a34a] to-[#15803d] flex items-center justify-center">
                 <Target className="w-4 h-4 text-white" />
@@ -514,7 +514,7 @@ export default function WhatsAppSection() {
               </div>
             </motion.div>
 
-            <div className="relative w-[320px] md:w-[360px] aspect-[9/19] rounded-[44px] border-[10px] border-[#0a0a0a] bg-[#0a0a0a] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.7),0_0_0_1px_rgba(167,139,250,0.15)]">
+            <div className="relative w-[280px] xs:w-[300px] sm:w-[340px] md:w-[360px] aspect-[9/19] rounded-[40px] sm:rounded-[44px] border-[8px] sm:border-[10px] border-[#0a0a0a] bg-[#0a0a0a] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.7),0_0_0_1px_rgba(167,139,250,0.15)]">
               <div className="absolute -left-[12px] top-[22%] w-[3px] h-8 rounded-l bg-[#1a1a1a]" />
               <div className="absolute -left-[12px] top-[32%] w-[3px] h-14 rounded-l bg-[#1a1a1a]" />
               <div className="absolute -left-[12px] top-[44%] w-[3px] h-14 rounded-l bg-[#1a1a1a]" />
