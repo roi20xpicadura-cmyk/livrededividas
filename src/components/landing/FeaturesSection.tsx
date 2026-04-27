@@ -135,24 +135,15 @@ export default function FeaturesSection() {
           </BentoCard>
 
           {/* Mobile + Gamification + Security - 3 cards in a row on desktop, stacked on mobile */}
-          <BentoCard className="md:col-span-4 bg-gradient-to-br from-[#1a0b2e] via-[#1e0a3a] to-[#2d0f4f] text-white relative overflow-hidden" index={4}>
+          <BentoCard className="md:col-span-4 bg-gradient-to-br from-[#0f172a] via-[#0b2a1a] to-[#082f1f] text-white relative" index={4}>
             {/* glow */}
-            <div className="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[#A78BFA]/25 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-10 w-56 h-56 rounded-full bg-[#7C3AED]/20 blur-3xl" />
-            {/* subtle grid */}
-            <div
-              className="pointer-events-none absolute inset-0 opacity-[0.06]"
-              style={{
-                backgroundImage:
-                  'linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)',
-                backgroundSize: '24px 24px',
-              }}
-            />
+            <div className="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[#4ade80]/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-10 w-56 h-56 rounded-full bg-[#22c55e]/10 blur-3xl" />
 
             <div className="relative flex md:block items-start gap-4">
               <div className="flex-1">
-                <span className="inline-flex items-center gap-1.5 text-[10px] md:text-[11px] font-semibold text-[#DDD6FE] bg-[#7C3AED]/15 border border-[#A78BFA]/30 rounded-full px-2.5 py-0.5 mb-2 backdrop-blur-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA] animate-pulse shadow-[0_0_8px_rgba(167,139,250,0.8)]" /> iOS · Android
+                <span className="inline-flex items-center gap-1 text-[10px] md:text-[11px] font-semibold text-[#86efac] bg-[#4ade80]/10 border border-[#4ade80]/20 rounded-full px-2 py-0.5 mb-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse" /> iOS · Android
                 </span>
                 <h3 className="text-[18px] md:text-[20px] font-[900] mb-1 leading-tight">Nativo no celular</h3>
                 <p className="text-[12px] md:text-[13px] text-white/60 leading-snug">
@@ -162,14 +153,14 @@ export default function FeaturesSection() {
 
               {/* Phone mockup */}
               <div className="flex justify-center md:mt-5 shrink-0">
-                <div className="relative w-[120px] md:w-[180px] aspect-[9/19] rounded-[22px] md:rounded-[32px] border-[3px] md:border-[4px] border-[#1a1a1a] bg-[#0a0a0a] p-[3px] md:p-[4px] shadow-[0_20px_60px_-15px_rgba(124,58,237,0.5)]">
+                <div className="relative w-[120px] md:w-[180px] aspect-[9/19] rounded-[22px] md:rounded-[32px] border-[3px] md:border-[4px] border-[#1a1a1a] bg-[#0a0a0a] p-[3px] md:p-[4px] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.7)]">
                   {/* side button */}
                   <div className="absolute -left-[5px] md:-left-[6px] top-[38%] w-[3px] md:w-[4px] h-10 md:h-14 rounded-l bg-[#1a1a1a]" />
                   <div className="absolute -right-[5px] md:-right-[6px] top-[28%] w-[3px] md:w-[4px] h-6 md:h-8 rounded-r bg-[#1a1a1a]" />
                   <div className="absolute -right-[5px] md:-right-[6px] top-[42%] w-[3px] md:w-[4px] h-10 md:h-14 rounded-r bg-[#1a1a1a]" />
 
                   {/* Screen */}
-                  <div className="relative w-full h-full rounded-[18px] md:rounded-[26px] bg-gradient-to-b from-[#0f0820] to-[#1a0b2e] overflow-hidden flex flex-col">
+                  <div className="relative w-full h-full rounded-[18px] md:rounded-[26px] bg-gradient-to-b from-[#0b1220] to-[#0a1a14] overflow-hidden flex flex-col">
                     {/* notch */}
                     <div className="absolute top-1 md:top-1.5 left-1/2 -translate-x-1/2 w-[36%] h-[10px] md:h-[14px] rounded-full bg-black z-10" />
 
@@ -191,11 +182,11 @@ export default function FeaturesSection() {
                           <p className="text-[6px] md:text-[8px] text-white/50 leading-none">Olá,</p>
                           <p className="text-[8px] md:text-[10px] font-bold text-white leading-tight">Lucas 👋</p>
                         </div>
-                        <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-gradient-to-br from-[#A78BFA] to-[#7C3AED]" />
+                        <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-gradient-to-br from-[#4ade80] to-[#16a34a]" />
                       </div>
 
                       {/* Balance card — soft glow + shimmer sweep */}
-                      <div className="rounded-md md:rounded-lg p-1.5 md:p-2 bg-gradient-to-br from-[#7C3AED] to-[#4C1D95] relative overflow-hidden animate-balance-glow motion-reduce:animate-none [will-change:box-shadow]">
+                      <div className="rounded-md md:rounded-lg p-1.5 md:p-2 bg-gradient-to-br from-[#16a34a] to-[#065f46] relative overflow-hidden animate-balance-glow motion-reduce:animate-none [will-change:box-shadow]">
                         <div className="absolute -right-3 -top-3 w-10 h-10 rounded-full bg-white/10" />
                         {/* shimmer sweep */}
                         <div
@@ -215,7 +206,7 @@ export default function FeaturesSection() {
                         {[40, 65, 35, 80, 55, 90, 70].map((h, i) => (
                           <div
                             key={i}
-                            className="flex-1 rounded-[1px] md:rounded-sm bg-gradient-to-t from-[#A78BFA]/30 to-[#A78BFA] origin-bottom animate-bar-rise motion-reduce:animate-none [will-change:transform]"
+                            className="flex-1 rounded-[1px] md:rounded-sm bg-gradient-to-t from-[#4ade80]/30 to-[#4ade80] origin-bottom animate-bar-rise motion-reduce:animate-none [will-change:transform]"
                             style={{ height: `${h}%`, animationDelay: `${i * 0.18}s` }}
                           />
                         ))}
@@ -235,18 +226,18 @@ export default function FeaturesSection() {
                           {[
                             ...[
                               { icon: ArrowDownLeft, label: 'Mercado', val: '-R$ 84', color: '#f87171' },
-                              { icon: ArrowUpRight, label: 'Salário', val: '+R$ 5.000', color: '#A78BFA' },
+                              { icon: ArrowUpRight, label: 'Salário', val: '+R$ 5.000', color: '#4ade80' },
                               { icon: ArrowDownLeft, label: 'iFood', val: '-R$ 42', color: '#f87171' },
                               { icon: ArrowDownLeft, label: 'Uber', val: '-R$ 18', color: '#f87171' },
-                              { icon: ArrowUpRight, label: 'PIX João', val: '+R$ 120', color: '#A78BFA' },
+                              { icon: ArrowUpRight, label: 'PIX João', val: '+R$ 120', color: '#4ade80' },
                               { icon: ArrowDownLeft, label: 'Netflix', val: '-R$ 55', color: '#f87171' },
                             ],
                             ...[
                               { icon: ArrowDownLeft, label: 'Mercado', val: '-R$ 84', color: '#f87171' },
-                              { icon: ArrowUpRight, label: 'Salário', val: '+R$ 5.000', color: '#A78BFA' },
+                              { icon: ArrowUpRight, label: 'Salário', val: '+R$ 5.000', color: '#4ade80' },
                               { icon: ArrowDownLeft, label: 'iFood', val: '-R$ 42', color: '#f87171' },
                               { icon: ArrowDownLeft, label: 'Uber', val: '-R$ 18', color: '#f87171' },
-                              { icon: ArrowUpRight, label: 'PIX João', val: '+R$ 120', color: '#A78BFA' },
+                              { icon: ArrowUpRight, label: 'PIX João', val: '+R$ 120', color: '#4ade80' },
                               { icon: ArrowDownLeft, label: 'Netflix', val: '-R$ 55', color: '#f87171' },
                             ],
                           ].map((tx, i) => (
@@ -265,10 +256,10 @@ export default function FeaturesSection() {
                     {/* Bottom nav */}
                     <div className="relative mt-auto mb-1 md:mb-1.5 mx-1.5 md:mx-2 flex items-center justify-between bg-white/5 backdrop-blur rounded-full px-2 md:px-2.5 py-1 md:py-1.5 border border-white/10">
                       {[Home, BarChart3, Wallet, User].map((Icon, i) => (
-                        <Icon key={i} className={`w-2 h-2 md:w-2.5 md:h-2.5 ${i === 0 ? 'text-[#A78BFA]' : 'text-white/40'}`} />
+                        <Icon key={i} className={`w-2 h-2 md:w-2.5 md:h-2.5 ${i === 0 ? 'text-[#4ade80]' : 'text-white/40'}`} />
                       ))}
-                      <div className="absolute -top-2 md:-top-2.5 left-1/2 -translate-x-1/2 w-4 h-4 md:w-5 md:h-5 rounded-full bg-gradient-to-br from-[#A78BFA] to-[#7C3AED] flex items-center justify-center shadow-[0_4px_12px_rgba(124,58,237,0.6)]">
-                        <Plus className="w-2 h-2 md:w-2.5 md:h-2.5 text-white" strokeWidth={3} />
+                      <div className="absolute -top-2 md:-top-2.5 left-1/2 -translate-x-1/2 w-4 h-4 md:w-5 md:h-5 rounded-full bg-[#4ade80] flex items-center justify-center shadow-[0_4px_12px_rgba(74,222,128,0.5)]">
+                        <Plus className="w-2 h-2 md:w-2.5 md:h-2.5 text-[#052e16]" strokeWidth={3} />
                       </div>
                     </div>
                   </div>
