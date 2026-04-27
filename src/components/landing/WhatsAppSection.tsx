@@ -433,33 +433,54 @@ export default function WhatsAppSection() {
         </motion.div>
 
         {/* Persona toggle */}
-        <div className="flex justify-center mb-10 sm:mb-12">
-          <div className="inline-flex p-1 bg-white/[0.04] border border-white/10 rounded-full backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+        {/* Persona toggle — fully responsive (no overflow, no wrap) */}
+        <div className="flex justify-center mb-10 sm:mb-12 px-2">
+          <div
+            className="inline-flex w-full max-w-[440px] sm:w-auto sm:max-w-none p-1 bg-white/[0.04] border border-white/10 rounded-full backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+            role="tablist"
+            aria-label="Escolher persona da demo"
+          >
             {([
-              { id: 'personal' as const, emoji: '👤', label: 'Vida pessoal', sub: 'Lucas' },
-              { id: 'business' as const, emoji: '💼', label: 'Meu negócio', sub: 'Mariana' },
-            ]).map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => switchPersona(opt.id)}
-                className={`relative whitespace-nowrap px-3 min-[400px]:px-3.5 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-full text-[11.5px] min-[400px]:text-[12px] sm:text-[13px] md:text-[14px] font-bold transition-colors ${
-                  persona === opt.id ? 'text-white' : 'text-white/50 hover:text-white/80'
-                }`}
-              >
-                {persona === opt.id && (
-                  <motion.div
-                    layoutId="persona-pill"
-                    className="absolute inset-0 bg-gradient-to-r from-[#7C3AED] to-[#8B5CF6] rounded-full shadow-[0_4px_20px_rgba(124,58,237,0.5)]"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <span className="relative flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2">
-                  <span>{opt.emoji}</span>
-                  <span>{opt.label}</span>
-                  <span className={`hidden md:inline text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${persona === opt.id ? 'bg-white/20' : 'bg-white/5'}`}>{opt.sub}</span>
-                </span>
-              </button>
-            ))}
+              { id: 'personal' as const, emoji: '👤', label: 'Vida pessoal', short: 'Pessoal', sub: 'Lucas' },
+              { id: 'business' as const, emoji: '💼', label: 'Meu negócio', short: 'Negócio', sub: 'Mariana' },
+            ]).map(opt => {
+              const active = persona === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => switchPersona(opt.id)}
+                  style={{
+                    paddingInline: 'clamp(0.75rem, 2.5vw, 1.5rem)',
+                    fontSize: 'clamp(0.72rem, 2.6vw, 0.875rem)',
+                  }}
+                  className={`relative flex-1 sm:flex-none min-w-0 whitespace-nowrap py-2 sm:py-2.5 rounded-full font-bold transition-colors ${
+                    active ? 'text-white' : 'text-white/55 hover:text-white/85'
+                  }`}
+                >
+                  {active && (
+                    <motion.div
+                      layoutId="persona-pill"
+                      className="absolute inset-0 bg-gradient-to-r from-[#7C3AED] to-[#8B5CF6] rounded-full shadow-[0_4px_20px_rgba(124,58,237,0.5)]"
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  <span className="relative flex items-center justify-center gap-1.5 sm:gap-2">
+                    <span aria-hidden className="text-[14px] leading-none">{opt.emoji}</span>
+                    {/* short label on tiny screens, full label otherwise */}
+                    <span className="inline min-[380px]:hidden">{opt.short}</span>
+                    <span className="hidden min-[380px]:inline">{opt.label}</span>
+                    <span
+                      className={`hidden md:inline text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${active ? 'bg-white/20' : 'bg-white/5'}`}
+                    >
+                      {opt.sub}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
