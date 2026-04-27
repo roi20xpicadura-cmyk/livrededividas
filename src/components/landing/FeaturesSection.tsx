@@ -143,7 +143,7 @@ export default function FeaturesSection() {
             <div className="relative flex md:block items-start gap-4">
               <div className="flex-1">
                 <span className="inline-flex items-center gap-1 text-[10px] md:text-[11px] font-semibold text-[#86efac] bg-[#4ade80]/10 border border-[#4ade80]/20 rounded-full px-2 py-0.5 mb-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse" /> iOS · Android · PWA
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse" /> iOS · Android
                 </span>
                 <h3 className="text-[18px] md:text-[20px] font-[900] mb-1 leading-tight">Nativo no celular</h3>
                 <p className="text-[12px] md:text-[13px] text-white/60 leading-snug">
