@@ -24,6 +24,79 @@ function fmt(v: number): string {
   });
 }
 
+function normalizeIntentText(value: string): string {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s?]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getBasicFastReply(text: string): string | null {
+  const t = normalizeIntentText(text);
+  if (!t || t.length > 80) return null;
+
+  if (/^(oi|ola|opa|e ai|bom dia|boa tarde|boa noite|tudo bem|td bem|fala|salve)$/.test(t)) {
+    return "Opa! Tô por aqui 🐨 Me manda um gasto, receita ou pergunta rápida sobre suas finanças.";
+  }
+
+  if (/^(obrigado|obrigada|valeu|vlw|show|beleza|blz|perfeito)$/.test(t)) {
+    return "Fechado! Sempre que precisar, é só chamar 🐨";
+  }
+
+  if (/^(ajuda|help|como funciona|o que voce faz|o que vc faz)$/.test(t)) {
+    return "Posso registrar gastos/receitas, consultar saldo, gastos, metas, dívidas, orçamentos e ler comprovantes ou extratos por foto/PDF.";
+  }
+
+  if (/^(voce esta ai|vc esta ai|ta ai|esta online|teste)$/.test(t)) {
+    return "Tô online sim 🐨 Pode mandar.";
+  }
+
+  return null;
+}
+
+function getContextFastReply(text: string, ctx: any): string | null {
+  const t = normalizeIntentText(text);
+  if (!t || /\b(gastei|paguei|comprei|recebi|ganhei|entrou|cria|criar|cadastra|cadastrar|salva|registrar|registra|adiciona|adicionar|depositar|quitei|quitar|exporta|relatorio|pdf|csv|planilha)\b/.test(t)) {
+    return null;
+  }
+
+  if (/\b(saldo|balanco|quanto tenho)\b/.test(t)) {
+    return `${ctx.name}, seu saldo do mês está em *${fmt(ctx.balance)}* ${ctx.balance >= 0 ? "✅" : "⚠️"} Receitas: ${fmt(ctx.income)} | Despesas: ${fmt(ctx.expenses)}.`;
+  }
+
+  if (/\b(quanto gastei|gastei quanto|gastos do mes|despesas do mes|minhas despesas)\b/.test(t)) {
+    const top = ctx.categories.slice(0, 3).map((c: any) => `${c.category}: ${fmt(c.amount)}`).join(" | ");
+    return `${ctx.name}, você gastou *${fmt(ctx.expenses)}* este mês.${top ? ` Top gastos: ${top}.` : " Ainda não encontrei gastos este mês."}`;
+  }
+
+  if (/\b(score|pontuacao|nota financeira)\b/.test(t)) {
+    return `${ctx.name}, seu score financeiro atual é *${ctx.score}/1000*. ${ctx.score >= 700 ? "Você está bem encaminhado ✅" : ctx.score >= 450 ? "Dá pra melhorar com alguns ajustes 🟡" : "Vamos organizar isso com calma 🐨"}`;
+  }
+
+  if (/\b(orcamento|orcamentos|limite do mes|limites)\b/.test(t)) {
+    const alerts = ctx.budgets.filter((b: any) => b.pct >= 80).slice(0, 3);
+    if (!ctx.budgets.length) return `${ctx.name}, você ainda não tem orçamentos cadastrados.`;
+    if (!alerts.length) return `${ctx.name}, seus orçamentos estão dentro do previsto ✅`;
+    return `${ctx.name}, atenção em: ${alerts.map((b: any) => `${b.category} ${b.pct}%`).join(" | ")}.`;
+  }
+
+  if (/\b(meta|metas|objetivos)\b/.test(t)) {
+    if (!ctx.goals.length) return `${ctx.name}, você ainda não tem metas cadastradas.`;
+    return `${ctx.name}, suas metas: ${ctx.goals.slice(0, 3).map((g: any) => `${g.name} ${g.pct}%`).join(" | ")}.`;
+  }
+
+  if (/\b(divida|dividas|devo|devendo)\b/.test(t)) {
+    if (!ctx.debts.length) return `${ctx.name}, você não tem dívidas ativas cadastradas ✅`;
+    const total = ctx.debts.reduce((sum: number, d: any) => sum + Number(d.remaining || 0), 0);
+    return `${ctx.name}, suas dívidas ativas somam *${fmt(total)}*. ${ctx.debts.slice(0, 2).map((d: any) => `${d.name}: ${fmt(d.remaining)}`).join(" | ")}.`;
+  }
+
+  return null;
+}
+
 async function sendWhatsApp(phone: string, text: string): Promise<boolean> {
   const normalizedPhone = String(phone || "").replace(/\D/g, "");
   const normalizedText = String(text || "").trim().replace(/\s+/g, " ");
@@ -822,6 +895,32 @@ serve(async (req) => {
     const userId = conn.user_id;
     const inboundLabel = text || (document ? "[documento]" : image ? "[imagem]" : audio ? "[áudio]" : "[mídia]");
 
+    const earlyBasicReply = text && !document && !image && !audio ? getBasicFastReply(text) : null;
+    if (earlyBasicReply) {
+      const createdAt = new Date().toISOString();
+      await Promise.all([
+        supabase.from("whatsapp_messages").insert({
+          user_id: userId,
+          phone,
+          phone_number: phone,
+          direction: "inbound",
+          role: "user",
+          message: inboundLabel,
+          content: inboundLabel,
+          created_at: createdAt,
+        }),
+        sendWhatsApp(phone, earlyBasicReply),
+      ]);
+      await supabase.from("whatsapp_messages").insert({
+        user_id: userId, phone, phone_number: phone,
+        direction: "outbound", role: "assistant",
+        message: earlyBasicReply, content: earlyBasicReply,
+        created_at: new Date().toISOString(),
+      });
+      console.log("[EARLY FAST REPLY]", normalizeIntentText(text), "→", earlyBasicReply.slice(0, 160));
+      return new Response("OK", { status: 200 });
+    }
+
     // Paraleliza as 4 chamadas independentes ao Supabase (contexto, insert do
     // inbound, histórico recente e pending). Antes eram serializadas e
     // somavam 600-1200ms; agora roda no tempo da query mais lenta (~250ms).
@@ -1031,6 +1130,19 @@ Acesse seu dashboard pra revisar e ajustar categorias se quiser, ${ctx.name}! �
 
     // ── TEXT PROCESSING ──
     if (text) {
+      const fastReply = getContextFastReply(text, ctx);
+      if (fastReply) {
+        await sendWhatsApp(phone, fastReply);
+        await supabase.from("whatsapp_messages").insert({
+          user_id: userId, phone, phone_number: phone,
+          direction: "outbound", role: "assistant",
+          message: fastReply, content: fastReply,
+          created_at: new Date().toISOString(),
+        });
+        console.log("[FAST REPLY]", normalizeIntentText(text), "→", fastReply.slice(0, 160));
+        return new Response("OK", { status: 200 });
+      }
+
       const systemPrompt = buildSystemPrompt(ctx);
 
       const messages = (history?.reverse() || [])
