@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, CheckCheck, Mic, Plus, Camera, Smile, Send, ArrowRight, Sparkles, Receipt, BarChart3, Wallet, Target, RotateCcw, X, Loader2 } from 'lucide-react';
+import { Check, CheckCheck, Mic, Plus, Camera, Smile, Send, ArrowRight, Sparkles, Receipt, BarChart3, Wallet, Target, RotateCcw, X, Loader2, Zap, Shield, Globe2, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import koraIcon from '@/assets/korafinance-icon.png';
@@ -390,9 +390,22 @@ export default function WhatsAppSection() {
   };
 
   return (
-    <section className="relative py-16 md:py-28 px-4 overflow-hidden bg-gradient-to-b from-[#f0fdf4] via-white to-[#f0fdf4]">
-      <div className="pointer-events-none absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-[#22c55e]/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full bg-[#4ade80]/10 blur-3xl" />
+    <section className="relative py-20 md:py-32 px-4 overflow-hidden bg-[#0a0613]">
+      {/* Background — premium violet mesh */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(124,58,237,0.35),transparent_60%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_85%_90%,rgba(34,197,94,0.18),transparent_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_15%_80%,rgba(167,139,250,0.20),transparent_70%)]" />
+      <div
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(167,139,250,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(167,139,250,0.5) 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+        }}
+      />
+      {/* Top + bottom fade */}
+      <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#0a0613] to-transparent" />
+      <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-[#0a0613] to-transparent" />
 
       <div className="relative max-w-[1200px] mx-auto">
         {/* Header */}
@@ -401,58 +414,107 @@ export default function WhatsAppSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease }}
-          className="text-center mb-8 md:mb-12"
+          className="text-center mb-10 md:mb-14"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#bbf7d0] bg-[#f0fdf4] mb-5">
-            <Sparkles className="w-3 h-3 text-[#16a34a]" />
-            <span className="text-[11px] font-[800] text-[#15803d] uppercase tracking-[1px]">Demo ao vivo · IA real</span>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#a78bfa]/30 bg-[#7C3AED]/10 backdrop-blur-md mb-6 shadow-[0_0_30px_rgba(124,58,237,0.25)]">
+            <span className="relative flex w-2 h-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#22c55e] opacity-75" />
+              <span className="relative inline-flex w-2 h-2 rounded-full bg-[#22c55e]" />
+            </span>
+            <span className="text-[11px] font-[800] text-white uppercase tracking-[1.5px]">Demo ao vivo · IA real</span>
           </div>
-          <h2 className="text-[28px] md:text-[48px] font-[900] text-[#0f172a] tracking-[-1px] md:tracking-[-2px] leading-[1.1]">
-            Converse com a Kora <br className="hidden md:block" />
-            <span className="text-[#16a34a]">no WhatsApp. Agora.</span>
+          <h2 className="text-[32px] md:text-[56px] font-[900] text-white tracking-[-1.5px] md:tracking-[-2.5px] leading-[1.05]">
+            Converse com a Kora<br className="hidden md:block" />
+            <span className="bg-gradient-to-r from-[#a78bfa] via-[#c4b5fd] to-[#86efac] bg-clip-text text-transparent">no WhatsApp. Agora mesmo.</span>
           </h2>
-          <p className="text-[15px] md:text-[18px] text-[#64748b] mt-4 max-w-[580px] mx-auto leading-[1.6]">
-            Não é vídeo. Não é gif. É a IA real do KoraFinance respondendo às suas mensagens com uma carteira fictícia. Teste agora 👇
+          <p className="text-[15px] md:text-[18px] text-white/60 mt-5 max-w-[600px] mx-auto leading-[1.6]">
+            Não é vídeo. Não é gif. É a IA real do <span className="text-white font-semibold">KoraFinance</span> respondendo às suas mensagens com uma carteira fictícia.
           </p>
         </motion.div>
 
         {/* Persona toggle */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex p-1 bg-white border border-[#e2e8f0] rounded-full shadow-sm">
+        <div className="flex justify-center mb-12">
+          <div className="inline-flex p-1 bg-white/[0.04] border border-white/10 rounded-full backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
             {([
-              { id: 'personal' as const, label: '👤 Vida pessoal', sub: 'Lucas' },
-              { id: 'business' as const, label: '💼 Meu negócio', sub: 'Mariana' },
+              { id: 'personal' as const, emoji: '👤', label: 'Vida pessoal', sub: 'Lucas' },
+              { id: 'business' as const, emoji: '💼', label: 'Meu negócio', sub: 'Mariana' },
             ]).map(opt => (
               <button
                 key={opt.id}
                 onClick={() => switchPersona(opt.id)}
-                className={`relative px-4 md:px-5 py-2 rounded-full text-[13px] md:text-[14px] font-bold transition-colors ${
-                  persona === opt.id ? 'text-white' : 'text-[#64748b] hover:text-[#0f172a]'
+                className={`relative px-5 md:px-6 py-2.5 rounded-full text-[13px] md:text-[14px] font-bold transition-colors ${
+                  persona === opt.id ? 'text-white' : 'text-white/50 hover:text-white/80'
                 }`}
               >
                 {persona === opt.id && (
                   <motion.div
                     layoutId="persona-pill"
-                    className="absolute inset-0 bg-[#16a34a] rounded-full"
+                    className="absolute inset-0 bg-gradient-to-r from-[#7C3AED] to-[#8B5CF6] rounded-full shadow-[0_4px_20px_rgba(124,58,237,0.5)]"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
-                <span className="relative">{opt.label}</span>
+                <span className="relative flex items-center gap-2">
+                  <span>{opt.emoji}</span>
+                  <span>{opt.label}</span>
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${persona === opt.id ? 'bg-white/20' : 'bg-white/5'}`}>{opt.sub}</span>
+                </span>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-10 lg:gap-16 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-12 lg:gap-20 items-start">
           {/* Phone */}
           <motion.div
             initial={{ opacity: 0, scale: 0.92 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease }}
-            className="flex justify-center lg:sticky lg:top-24"
+            className="flex justify-center lg:sticky lg:top-24 relative"
           >
-            <div className="relative w-[320px] md:w-[360px] aspect-[9/19] rounded-[44px] border-[10px] border-[#0a0a0a] bg-[#0a0a0a] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.5)]">
+            {/* Glow halo behind phone */}
+            <div className="absolute -inset-10 bg-gradient-to-br from-[#7C3AED]/30 via-[#8B5CF6]/20 to-[#22c55e]/20 blur-3xl rounded-full pointer-events-none" />
+
+            {/* Floating decorative card — top right */}
+            <motion.div
+              initial={{ opacity: 0, x: 20, y: -10 }}
+              whileInView={{ opacity: 1, x: 0, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.4, ease }}
+              className="hidden md:flex absolute -right-6 top-12 z-10 items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-white/40 shadow-[0_20px_60px_-15px_rgba(124,58,237,0.5)] rotate-[6deg]"
+            >
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#5B21B6] flex items-center justify-center">
+                <Receipt className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <div className="text-[10px] font-bold text-[#7B6A9B] uppercase tracking-wide">Despesa</div>
+                <div className="text-[13px] font-[900] text-[#1A0D35] font-mono">-R$ 84,00</div>
+              </div>
+            </motion.div>
+
+            {/* Floating decorative card — bottom left */}
+            <motion.div
+              initial={{ opacity: 0, x: -20, y: 10 }}
+              whileInView={{ opacity: 1, x: 0, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.55, ease }}
+              className="hidden md:flex absolute -left-8 bottom-20 z-10 items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-white/40 shadow-[0_20px_60px_-15px_rgba(34,197,94,0.5)] -rotate-[5deg]"
+            >
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#16a34a] to-[#15803d] flex items-center justify-center">
+                <Target className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <div className="text-[10px] font-bold text-[#7B6A9B] uppercase tracking-wide">Meta · Viagem</div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-16 h-1.5 bg-[#e2e8f0] rounded-full overflow-hidden">
+                    <div className="h-full w-[68%] bg-gradient-to-r from-[#22c55e] to-[#16a34a] rounded-full" />
+                  </div>
+                  <span className="text-[11px] font-[900] text-[#16a34a] font-mono">68%</span>
+                </div>
+              </div>
+            </motion.div>
+
+            <div className="relative w-[320px] md:w-[360px] aspect-[9/19] rounded-[44px] border-[10px] border-[#0a0a0a] bg-[#0a0a0a] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.7),0_0_0_1px_rgba(167,139,250,0.15)]">
               <div className="absolute -left-[12px] top-[22%] w-[3px] h-8 rounded-l bg-[#1a1a1a]" />
               <div className="absolute -left-[12px] top-[32%] w-[3px] h-14 rounded-l bg-[#1a1a1a]" />
               <div className="absolute -left-[12px] top-[44%] w-[3px] h-14 rounded-l bg-[#1a1a1a]" />
@@ -639,67 +701,95 @@ export default function WhatsAppSection() {
 
           {/* Right side */}
           <div>
-            <motion.h3
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-[20px] md:text-[24px] font-[900] text-[#0f172a] tracking-[-0.5px] mb-2"
+              className="mb-6"
             >
-              💡 Sugestões pra testar
-            </motion.h3>
-            <p className="text-[13px] md:text-[14px] text-[#64748b] mb-5">
-              Toca em uma das opções abaixo ou digita o que quiser no celular ao lado.
-            </p>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#a78bfa]/10 border border-[#a78bfa]/20 mb-3">
+                <Sparkles className="w-3 h-3 text-[#a78bfa]" />
+                <span className="text-[10px] font-bold text-[#c4b5fd] uppercase tracking-[1.2px]">Toca pra testar</span>
+              </div>
+              <h3 className="text-[22px] md:text-[28px] font-[900] text-white tracking-[-0.8px] leading-tight">
+                Sugestões prontas pra<br />
+                <span className="bg-gradient-to-r from-[#a78bfa] to-[#86efac] bg-clip-text text-transparent">você experimentar.</span>
+              </h3>
+              <p className="text-[13px] md:text-[14px] text-white/50 mt-2">
+                Clica em qualquer card abaixo — ou digita o que quiser no celular.
+              </p>
+            </motion.div>
 
-            <div className="space-y-2.5 mb-7">
-              {suggestions.map((s, i) => (
-                <motion.button
-                  key={s + i}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  onClick={() => send(s)}
-                  disabled={loading}
-                  className="w-full group flex items-center gap-3 p-3.5 rounded-2xl bg-white border border-[#e2e8f0] hover:border-[#86efac] hover:shadow-[0_8px_24px_rgba(34,197,94,0.12)] disabled:opacity-50 transition-all duration-200 text-left"
-                >
-                  <div className="w-9 h-9 rounded-xl bg-[#f0fdf4] border border-[#bbf7d0] flex items-center justify-center flex-shrink-0 group-hover:bg-[#22c55e] group-hover:border-[#22c55e] transition-colors">
-                    {[Receipt, BarChart3, Target, Wallet][i % 4] && (() => {
-                      const Icon = [Receipt, BarChart3, Target, Wallet][i % 4];
-                      return <Icon className="w-4 h-4 text-[#16a34a] group-hover:text-white transition-colors" />;
-                    })()}
-                  </div>
-                  <span className="flex-1 text-[14px] font-semibold text-[#0f172a] truncate">"{s}"</span>
-                  <ArrowRight className="w-4 h-4 text-[#cbd5e1] group-hover:text-[#16a34a] group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-                </motion.button>
-              ))}
+            <div className="space-y-2.5 mb-8">
+              {suggestions.map((s, i) => {
+                const icons = [MessageCircle, Receipt, BarChart3, Target, Wallet];
+                const Icon = icons[i % icons.length];
+                return (
+                  <motion.button
+                    key={s + i}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    onClick={() => send(s)}
+                    disabled={loading}
+                    className="w-full group relative flex items-center gap-3 p-4 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.07] hover:border-[#a78bfa]/40 hover:-translate-y-0.5 hover:shadow-[0_12px_40px_-10px_rgba(124,58,237,0.5)] disabled:opacity-50 disabled:hover:translate-y-0 transition-all duration-300 text-left backdrop-blur-sm overflow-hidden"
+                  >
+                    {/* Hover gradient */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-[#7C3AED]/0 via-[#7C3AED]/5 to-[#22c55e]/10 pointer-events-none" />
+                    <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-[#7C3AED]/20 to-[#a78bfa]/10 border border-[#a78bfa]/20 flex items-center justify-center flex-shrink-0 group-hover:from-[#7C3AED] group-hover:to-[#8B5CF6] group-hover:border-[#a78bfa] transition-all">
+                      <Icon className="w-4 h-4 text-[#a78bfa] group-hover:text-white transition-colors" />
+                    </div>
+                    <span className="relative flex-1 text-[14px] font-semibold text-white/90 truncate">"{s}"</span>
+                    <div className="relative w-7 h-7 rounded-full bg-white/5 group-hover:bg-[#22c55e] flex items-center justify-center transition-all flex-shrink-0">
+                      <ArrowRight className="w-3.5 h-3.5 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                  </motion.button>
+                );
+              })}
             </div>
 
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="grid grid-cols-3 gap-3 mb-7">
               {[
-                { v: '<2s', l: 'resposta média' },
-                { v: '24/7', l: 'sempre online' },
-                { v: '🇧🇷', l: 'fala português' },
+                { Icon: Zap, v: '<2s', l: 'resposta média' },
+                { Icon: Shield, v: '24/7', l: 'sempre online' },
+                { Icon: Globe2, v: 'PT-BR', l: 'fala português' },
               ].map(s => (
-                <div key={s.l} className="text-center p-3 rounded-xl bg-white/60 border border-[#e2e8f0]">
-                  <div className="text-[18px] font-[900] text-[#16a34a]">{s.v}</div>
-                  <div className="text-[10px] text-[#64748b] mt-0.5">{s.l}</div>
+                <div key={s.l} className="relative p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-sm overflow-hidden group hover:border-[#a78bfa]/30 transition-colors">
+                  <s.Icon className="w-4 h-4 text-[#a78bfa] mb-2" />
+                  <div className="text-[16px] md:text-[18px] font-[900] text-white tracking-tight font-mono">{s.v}</div>
+                  <div className="text-[10px] text-white/50 mt-0.5 leading-tight">{s.l}</div>
                 </div>
               ))}
             </div>
 
-            <div className="rounded-2xl bg-gradient-to-br from-[#16a34a] to-[#15803d] p-5 md:p-6 text-white">
-              <div className="text-[13px] text-white/80 mb-1">Curtiu? 🎉</div>
-              <div className="text-[18px] md:text-[20px] font-[900] mb-3 leading-tight">
-                Conecta a Kora aos seus dados reais.
+            <div className="relative rounded-3xl p-[1px] bg-gradient-to-br from-[#a78bfa]/40 via-[#7C3AED]/30 to-[#22c55e]/40 overflow-hidden">
+              <div className="absolute inset-0 opacity-30 pointer-events-none">
+                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#22c55e]/30 blur-3xl" />
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-[#7C3AED]/40 blur-3xl" />
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                <Link
-                  to="/register"
-                  className="h-[46px] px-5 rounded-[12px] bg-white text-[#15803d] text-[14px] font-[800] hover:bg-[#f0fdf4] transition-colors inline-flex items-center justify-center gap-2"
-                >
-                  Criar conta grátis <ArrowRight className="w-4 h-4" />
-                </Link>
-                <span className="text-[12px] text-white/80">✓ Disponível em todos os planos</span>
+              <div className="relative rounded-[calc(1.5rem-1px)] bg-gradient-to-br from-[#1a0d35] via-[#2A1A4F] to-[#1a0d35] p-6 md:p-7">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center">
+                    <Sparkles className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  <div className="text-[12px] font-bold text-white/70 uppercase tracking-[1.2px]">Curtiu a Kora?</div>
+                </div>
+                <div className="text-[20px] md:text-[24px] font-[900] text-white mb-4 leading-[1.15] tracking-[-0.5px]">
+                  Conecta ela aos seus<br />
+                  <span className="bg-gradient-to-r from-[#a78bfa] to-[#86efac] bg-clip-text text-transparent">dados reais agora.</span>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                  <Link
+                    to="/register"
+                    className="group h-[50px] px-6 rounded-[14px] bg-white text-[#1a0d35] text-[14px] font-[800] hover:bg-[#f0eeff] transition-all inline-flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(255,255,255,0.15)] hover:shadow-[0_12px_32px_rgba(255,255,255,0.25)] hover:-translate-y-0.5"
+                  >
+                    Criar conta grátis
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                  <span className="text-[12px] text-white/60 flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-[#86efac]" /> Disponível em todos os planos
+                  </span>
+                </div>
               </div>
             </div>
           </div>
