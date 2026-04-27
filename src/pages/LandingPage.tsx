@@ -12,6 +12,7 @@ import { PLAN_BENEFITS } from '@/lib/plans';
 // Lazy-load below-the-fold sections
 const MetricsSection = lazy(() => import('@/components/landing/MetricsSection'));
 const FeaturesSection = lazy(() => import('@/components/landing/FeaturesSection'));
+const WhatsAppSection = lazy(() => import('@/components/landing/WhatsAppSection'));
 const UseCasesSection = lazy(() => import('@/components/landing/UseCasesSection'));
 const HowItWorks = lazy(() => import('@/components/landing/HowItWorks'));
 const ComparisonSection = lazy(() => import('@/components/landing/ComparisonSection'));
@@ -40,6 +41,7 @@ export default function LandingPage() {
       <Suspense fallback={<SectionFallback />}>
         <MetricsSection />
         <FeaturesSection />
+        <WhatsAppSection />
         <UseCasesSection />
         <HowItWorks />
         <ComparisonSection />
