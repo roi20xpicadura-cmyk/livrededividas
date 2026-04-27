@@ -425,7 +425,7 @@ export default function WhatsAppSection() {
           </div>
           <h2 className="text-[26px] sm:text-[34px] md:text-[56px] font-[900] text-white tracking-[-1px] sm:tracking-[-1.5px] md:tracking-[-2.5px] leading-[1.05]">
             Converse com a Kora<br className="hidden md:block" />
-            <span className="bg-gradient-to-r from-[#a78bfa] via-[#c4b5fd] to-[#86efac] bg-clip-text text-transparent"> no WhatsApp. Agora mesmo.</span>
+            <span className="bg-gradient-to-r from-[#a78bfa] via-[#c4b5fd] to-[#86efac] bg-clip-text text-transparent"> no WhatsApp.</span>
           </h2>
           <p className="text-[14px] sm:text-[15px] md:text-[18px] text-white/60 mt-4 sm:mt-5 max-w-[600px] mx-auto leading-[1.6] px-2">
             Não é vídeo. Não é gif. É a IA real do <span className="text-white font-semibold">KoraFinance</span> respondendo às suas mensagens com uma carteira fictícia.
