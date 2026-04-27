@@ -135,15 +135,15 @@ export default function FeaturesSection() {
           </BentoCard>
 
           {/* Mobile + Gamification + Security - 3 cards in a row on desktop, stacked on mobile */}
-          <BentoCard className="md:col-span-4 bg-gradient-to-br from-[#0f172a] via-[#0b2a1a] to-[#082f1f] text-white relative" index={4}>
+          <BentoCard className="md:col-span-4 bg-gradient-to-br from-[#0f172a] via-[#1A0D35] to-[#2A0E5E] text-white relative" index={4}>
             {/* glow */}
-            <div className="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[#4ade80]/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-10 w-56 h-56 rounded-full bg-[#22c55e]/10 blur-3xl" />
+            <div className="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[#7C3AED]/25 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-10 w-56 h-56 rounded-full bg-[#A78BFA]/15 blur-3xl" />
 
             <div className="relative flex md:block items-start gap-4">
               <div className="flex-1">
-                <span className="inline-flex items-center gap-1 text-[10px] md:text-[11px] font-semibold text-[#86efac] bg-[#4ade80]/10 border border-[#4ade80]/20 rounded-full px-2 py-0.5 mb-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse" /> iOS · Android
+                <span className="inline-flex items-center gap-1 text-[10px] md:text-[11px] font-semibold text-[#C4B5FD] bg-[#7C3AED]/15 border border-[#7C3AED]/30 rounded-full px-2 py-0.5 mb-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA] animate-pulse" /> iOS · Android
                 </span>
                 <h3 className="text-[18px] md:text-[20px] font-[900] mb-1 leading-tight">Nativo no celular</h3>
                 <p className="text-[12px] md:text-[13px] text-white/60 leading-snug">
@@ -160,7 +160,7 @@ export default function FeaturesSection() {
                   <div className="absolute -right-[5px] md:-right-[6px] top-[42%] w-[3px] md:w-[4px] h-10 md:h-14 rounded-r bg-[#1a1a1a]" />
 
                   {/* Screen */}
-                  <div className="relative w-full h-full rounded-[18px] md:rounded-[26px] bg-gradient-to-b from-[#0b1220] to-[#0a1a14] overflow-hidden flex flex-col">
+                  <div className="relative w-full h-full rounded-[18px] md:rounded-[26px] bg-gradient-to-b from-[#0b1220] to-[#1A0D35] overflow-hidden flex flex-col">
                     {/* notch */}
                     <div className="absolute top-1 md:top-1.5 left-1/2 -translate-x-1/2 w-[36%] h-[10px] md:h-[14px] rounded-full bg-black z-10" />
 
@@ -182,11 +182,11 @@ export default function FeaturesSection() {
                           <p className="text-[6px] md:text-[8px] text-white/50 leading-none">Olá,</p>
                           <p className="text-[8px] md:text-[10px] font-bold text-white leading-tight">Lucas 👋</p>
                         </div>
-                        <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-gradient-to-br from-[#4ade80] to-[#16a34a]" />
+                        <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-gradient-to-br from-[#A78BFA] to-[#7C3AED]" />
                       </div>
 
                       {/* Balance card — soft glow + shimmer sweep */}
-                      <div className="rounded-md md:rounded-lg p-1.5 md:p-2 bg-gradient-to-br from-[#16a34a] to-[#065f46] relative overflow-hidden animate-balance-glow motion-reduce:animate-none [will-change:box-shadow]">
+                      <div className="rounded-md md:rounded-lg p-1.5 md:p-2 bg-gradient-to-br from-[#7C3AED] to-[#4C1D95] relative overflow-hidden animate-balance-glow motion-reduce:animate-none [will-change:box-shadow]">
                         <div className="absolute -right-3 -top-3 w-10 h-10 rounded-full bg-white/10" />
                         {/* shimmer sweep */}
                         <div
@@ -206,7 +206,7 @@ export default function FeaturesSection() {
                         {[40, 65, 35, 80, 55, 90, 70].map((h, i) => (
                           <div
                             key={i}
-                            className="flex-1 rounded-[1px] md:rounded-sm bg-gradient-to-t from-[#4ade80]/30 to-[#4ade80] origin-bottom animate-bar-rise motion-reduce:animate-none [will-change:transform]"
+                            className="flex-1 rounded-[1px] md:rounded-sm bg-gradient-to-t from-[#7C3AED]/30 to-[#A78BFA] origin-bottom animate-bar-rise motion-reduce:animate-none [will-change:transform]"
                             style={{ height: `${h}%`, animationDelay: `${i * 0.18}s` }}
                           />
                         ))}
@@ -256,10 +256,10 @@ export default function FeaturesSection() {
                     {/* Bottom nav */}
                     <div className="relative mt-auto mb-1 md:mb-1.5 mx-1.5 md:mx-2 flex items-center justify-between bg-white/5 backdrop-blur rounded-full px-2 md:px-2.5 py-1 md:py-1.5 border border-white/10">
                       {[Home, BarChart3, Wallet, User].map((Icon, i) => (
-                        <Icon key={i} className={`w-2 h-2 md:w-2.5 md:h-2.5 ${i === 0 ? 'text-[#4ade80]' : 'text-white/40'}`} />
+                        <Icon key={i} className={`w-2 h-2 md:w-2.5 md:h-2.5 ${i === 0 ? 'text-[#A78BFA]' : 'text-white/40'}`} />
                       ))}
-                      <div className="absolute -top-2 md:-top-2.5 left-1/2 -translate-x-1/2 w-4 h-4 md:w-5 md:h-5 rounded-full bg-[#4ade80] flex items-center justify-center shadow-[0_4px_12px_rgba(74,222,128,0.5)]">
-                        <Plus className="w-2 h-2 md:w-2.5 md:h-2.5 text-[#052e16]" strokeWidth={3} />
+                      <div className="absolute -top-2 md:-top-2.5 left-1/2 -translate-x-1/2 w-4 h-4 md:w-5 md:h-5 rounded-full bg-[#7C3AED] flex items-center justify-center shadow-[0_4px_12px_rgba(124,58,237,0.5)]">
+                        <Plus className="w-2 h-2 md:w-2.5 md:h-2.5 text-white" strokeWidth={3} />
                       </div>
                     </div>
                   </div>
