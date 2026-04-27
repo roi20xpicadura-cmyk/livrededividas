@@ -367,6 +367,16 @@ export default function WhatsAppSection() {
                       {loading ? 'digitando...' : 'online'}
                     </div>
                   </div>
+                  {messages.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={resetConversation}
+                      title="Limpar conversa"
+                      className="ml-1 p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
 
                 {/* Messages */}
