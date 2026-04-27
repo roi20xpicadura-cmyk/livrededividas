@@ -1,12 +1,15 @@
 import { motion } from 'framer-motion';
-import { Check, CheckCheck, Mic, Plus, Camera, Smile, Send, ArrowRight, Zap, BarChart3, Receipt } from 'lucide-react';
+import { Check, CheckCheck, Mic, Plus, Camera, Smile, ArrowRight, Zap, BarChart3, Receipt } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-type Msg =
-  | { from: 'user'; text: string; time: string }
-  | { from: 'bot'; text?: string; time: string; card?: 'expense' | 'chart' | 'goal' };
+type Msg = {
+  from: 'user' | 'bot';
+  text?: string;
+  time: string;
+  card?: 'expense' | 'chart' | 'goal';
+};
 
 const conversation: Msg[] = [
   { from: 'user', text: 'gastei 84 no mercado agora', time: '14:32' },
