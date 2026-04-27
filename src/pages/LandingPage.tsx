@@ -13,6 +13,7 @@ import { PLAN_BENEFITS } from '@/lib/plans';
 const MetricsSection = lazy(() => import('@/components/landing/MetricsSection'));
 const FeaturesSection = lazy(() => import('@/components/landing/FeaturesSection'));
 const WhatsAppSection = lazy(() => import('@/components/landing/WhatsAppSection'));
+const LiveDemoSection = lazy(() => import('@/components/landing/demo/LiveDemoSection'));
 const UseCasesSection = lazy(() => import('@/components/landing/UseCasesSection'));
 const HowItWorks = lazy(() => import('@/components/landing/HowItWorks'));
 const ComparisonSection = lazy(() => import('@/components/landing/ComparisonSection'));
@@ -42,6 +43,7 @@ export default function LandingPage() {
         <MetricsSection />
         <FeaturesSection />
         <WhatsAppSection />
+        <LiveDemoSection />
         <UseCasesSection />
         <HowItWorks />
         <ComparisonSection />
