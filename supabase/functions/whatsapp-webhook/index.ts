@@ -34,23 +34,83 @@ function normalizeIntentText(value: string): string {
     .trim();
 }
 
+// Corrige erros comuns de digitação em PT-BR (foneticamente próximos)
+// para aumentar o recall do fast path SEM disparar o LLM por engano.
+// Mantemos a lista pequena e cirúrgica — só termos do domínio financeiro
+// que aparecem com frequência no WhatsApp.
+const TYPO_FIXES: Array<[RegExp, string]> = [
+  // saldo
+  [/\bsalda\b/g, "saldo"],
+  [/\bsald\b/g, "saldo"],
+  [/\bsaaldo\b/g, "saldo"],
+  // gasto / gastos
+  [/\bgastoss\b/g, "gastos"],
+  [/\bgastei\s+qto\b/g, "gastei quanto"],
+  [/\bqto\b/g, "quanto"],
+  [/\bqnt(o|os)?\b/g, "quanto"],
+  [/\bqnd(o)?\b/g, "quando"],
+  // mes / meses
+  [/\bmess\b/g, "mes"],
+  [/\bmeis\b/g, "mes"],
+  [/\bmesss?\b/g, "mes"],
+  // meta(s) / objetivo(s)
+  [/\bmetaa\b/g, "meta"],
+  [/\bmetass\b/g, "metas"],
+  [/\bobjetiv(o|os|us)\b/g, "objetivo"],
+  // orcamento
+  [/\borcament(o|os|u)\b/g, "orcamento"],
+  [/\bornament(o|os)\b/g, "orcamento"],
+  // divida
+  [/\bdivd(a|as)\b/g, "divida"],
+  [/\bdivid(as|aas)\b/g, "dividas"],
+  // score
+  [/\bscor\b/g, "score"],
+  [/\besccore\b/g, "score"],
+];
+
+function applyTypoFixes(text: string): string {
+  let out = text;
+  for (const [re, repl] of TYPO_FIXES) out = out.replace(re, repl);
+  return out.replace(/\s+/g, " ").trim();
+}
+
+function normalizeForIntent(text: string): string {
+  return applyTypoFixes(normalizeIntentText(text));
+}
+
+// Palavras que sinalizam AÇÃO (lançar, criar, exportar) — se aparecem,
+// o fast path NÃO responde e cai pro LLM. Lista ampla pra reduzir falso
+// positivo (ex.: "gastei 50 no mercado" não pode virar resposta de saldo).
+const ACTION_KEYWORDS = /\b(gastei|paguei|comprei|recebi|ganhei|entrou|saiu|tirei|coloquei|deposit(ei|ar|a|ou)|transferi|cria(r)?|cadastr(a|ar|ei)|salv(a|ar)|registr(a|ar|ei)|adicion(a|ar|ei)|quit(ei|ar)|defin(ir|e)|ajust(a|ar)|atualiz(a|ar)|exclu(i|ir)|delet(a|ar)|exporta(r)?|relatori(o|os)|pdf|csv|planilha|extrato|me manda|envia|enviar|manda)\b/;
+
+// Heurística: a pergunta é uma "consulta" curta e direta?
+// (sem números grandes nem frases compostas com "e" / vírgulas).
+function looksLikeQuery(t: string): boolean {
+  if (!t) return false;
+  if (t.length > 60) return false;
+  if (ACTION_KEYWORDS.test(t)) return false;
+  // se tem mais de 2 dígitos seguidos, provavelmente é valor → não é consulta
+  if (/\d{2,}/.test(t)) return false;
+  return true;
+}
+
 function getBasicFastReply(text: string): string | null {
-  const t = normalizeIntentText(text);
+  const t = normalizeForIntent(text);
   if (!t || t.length > 80) return null;
 
-  if (/^(oi|ola|opa|e ai|bom dia|boa tarde|boa noite|tudo bem|td bem|fala|salve)$/.test(t)) {
+  if (/^(oi+|ola+|opa+|eai|e ai|bom dia|boa tarde|boa noite|tudo bem|td bem|tudo certo|fala|salve|hey|hi|hello|alo)\b[\s!?.]*$/.test(t)) {
     return "Opa! Tô por aqui 🐨 Me manda um gasto, receita ou pergunta rápida sobre suas finanças.";
   }
 
-  if (/^(obrigado|obrigada|valeu|vlw|show|beleza|blz|perfeito)$/.test(t)) {
+  if (/^(obrigad[oa]+|valeu+|vlw|show|beleza|blz|perfeito|top|massa|otimo|legal|maravilha|tmj)\b[\s!?.]*$/.test(t)) {
     return "Fechado! Sempre que precisar, é só chamar 🐨";
   }
 
-  if (/^(ajuda|help|como funciona|o que voce faz|o que vc faz)$/.test(t)) {
+  if (/^(ajuda|help|socorro|como funciona|como (que )?funciona|o que (voce|vc|tu) faz|o que da pra fazer|menu|comandos)\b[\s!?.]*$/.test(t)) {
     return "Posso registrar gastos/receitas, consultar saldo, gastos, metas, dívidas, orçamentos e ler comprovantes ou extratos por foto/PDF.";
   }
 
-  if (/^(voce esta ai|vc esta ai|ta ai|esta online|teste)$/.test(t)) {
+  if (/^(voce|vc) (esta|ta) ai\??$/.test(t) || /^(ta ai|esta online|ta online|ta on|funciona|teste|ping)\b[\s!?.]*$/.test(t)) {
     return "Tô online sim 🐨 Pode mandar.";
   }
 
@@ -58,37 +118,44 @@ function getBasicFastReply(text: string): string | null {
 }
 
 function getContextFastReply(text: string, ctx: any): string | null {
-  const t = normalizeIntentText(text);
-  if (!t || /\b(gastei|paguei|comprei|recebi|ganhei|entrou|cria|criar|cadastra|cadastrar|salva|registrar|registra|adiciona|adicionar|depositar|quitei|quitar|exporta|relatorio|pdf|csv|planilha)\b/.test(t)) {
-    return null;
-  }
+  const t = normalizeForIntent(text);
+  if (!looksLikeQuery(t)) return null;
 
-  if (/\b(saldo|balanco|quanto tenho)\b/.test(t)) {
+  // SALDO — variações: "saldo", "balanco", "quanto tenho", "to no azul?", "sobra"
+  if (/\b(saldo|balanco|quanto (eu )?(tenho|sobr(a|ou))|quanto sobra|to no (azul|vermelho)|estou no (azul|vermelho)|como (esta|ta) (meu )?(saldo|caixa|dinheiro))\b/.test(t)
+      || /^(saldo|meu saldo|qual saldo|qual o saldo|saldo atual|saldo do mes)\??$/.test(t)) {
     return `${ctx.name}, seu saldo do mês está em *${fmt(ctx.balance)}* ${ctx.balance >= 0 ? "✅" : "⚠️"} Receitas: ${fmt(ctx.income)} | Despesas: ${fmt(ctx.expenses)}.`;
   }
 
-  if (/\b(quanto gastei|gastei quanto|gastos do mes|despesas do mes|minhas despesas)\b/.test(t)) {
+  // GASTOS DO MÊS — só consulta (sem valor). "gastei 50" cai fora pelo guard.
+  if (/\b(quanto (eu )?gastei|gastei quanto|meus gastos|total de gastos|gastos (do |no |neste |desse )?mes|gastos mes|despesas (do |no )?mes|minhas despesas|quanto (eu )?torrei|quanto saiu)\b/.test(t)
+      || /^(gastos|despesas)\??$/.test(t)) {
     const top = ctx.categories.slice(0, 3).map((c: any) => `${c.category}: ${fmt(c.amount)}`).join(" | ");
     return `${ctx.name}, você gastou *${fmt(ctx.expenses)}* este mês.${top ? ` Top gastos: ${top}.` : " Ainda não encontrei gastos este mês."}`;
   }
 
-  if (/\b(score|pontuacao|nota financeira)\b/.test(t)) {
+  if (/\b(score|pontuacao|nota financeira|minha nota)\b/.test(t)) {
     return `${ctx.name}, seu score financeiro atual é *${ctx.score}/1000*. ${ctx.score >= 700 ? "Você está bem encaminhado ✅" : ctx.score >= 450 ? "Dá pra melhorar com alguns ajustes 🟡" : "Vamos organizar isso com calma 🐨"}`;
   }
 
-  if (/\b(orcamento|orcamentos|limite do mes|limites)\b/.test(t)) {
+  if (/\b(orcamento|orcamentos|limite do mes|meus limites|como (estao|ta) (os )?orcamentos)\b/.test(t)) {
     const alerts = ctx.budgets.filter((b: any) => b.pct >= 80).slice(0, 3);
     if (!ctx.budgets.length) return `${ctx.name}, você ainda não tem orçamentos cadastrados.`;
     if (!alerts.length) return `${ctx.name}, seus orçamentos estão dentro do previsto ✅`;
     return `${ctx.name}, atenção em: ${alerts.map((b: any) => `${b.category} ${b.pct}%`).join(" | ")}.`;
   }
 
-  if (/\b(meta|metas|objetivos)\b/.test(t)) {
+  // METAS — cobre "minhas metas", "meta atingida?", "como estao meus objetivos"
+  if (/\b(minha(s)? )?(meta|metas)\b/.test(t)
+      || /\bobjetivo(s)?\b/.test(t)
+      || /\bmeta atingida\b/.test(t)
+      || /^(metas|meta)\??$/.test(t)) {
     if (!ctx.goals.length) return `${ctx.name}, você ainda não tem metas cadastradas.`;
     return `${ctx.name}, suas metas: ${ctx.goals.slice(0, 3).map((g: any) => `${g.name} ${g.pct}%`).join(" | ")}.`;
   }
 
-  if (/\b(divida|dividas|devo|devendo)\b/.test(t)) {
+  if (/\b(divida|dividas|quanto (eu )?devo|estou devendo|to devendo|minhas dividas)\b/.test(t)
+      || /^(dividas|divida)\??$/.test(t)) {
     if (!ctx.debts.length) return `${ctx.name}, você não tem dívidas ativas cadastradas ✅`;
     const total = ctx.debts.reduce((sum: number, d: any) => sum + Number(d.remaining || 0), 0);
     return `${ctx.name}, suas dívidas ativas somam *${fmt(total)}*. ${ctx.debts.slice(0, 2).map((d: any) => `${d.name}: ${fmt(d.remaining)}`).join(" | ")}.`;
