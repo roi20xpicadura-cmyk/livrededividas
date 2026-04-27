@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, CheckCheck, Mic, Plus, Camera, Smile, Send, ArrowRight, Sparkles, Receipt, BarChart3, Wallet, Target } from 'lucide-react';
+import { Check, CheckCheck, Mic, Plus, Camera, Smile, Send, ArrowRight, Sparkles, Receipt, BarChart3, Wallet, Target, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -43,6 +43,32 @@ const STARTER_SUGGESTIONS: Record<Persona, string[]> = {
   personal: ['gastei 84 no mercado', 'quanto torrei em delivery?', 'ta longe da meta?'],
   business: ['recebi 1200 de venda', 'qual meu lucro?', 'quanto gastei em tráfego?'],
 };
+
+const STORAGE_KEY = 'kora_wa_demo_v1';
+const STORAGE_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
+
+type PersistedState = {
+  persona: Persona;
+  messagesByPersona: Partial<Record<Persona, Msg[]>>;
+  suggestionsByPersona: Partial<Record<Persona, string[]>>;
+  savedAt: number;
+};
+
+function loadPersisted(): PersistedState | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PersistedState;
+    if (!parsed?.savedAt || Date.now() - parsed.savedAt > STORAGE_MAX_AGE_MS) {
+      window.localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 function formatBRL(v: number) {
   const abs = Math.abs(v);
@@ -154,20 +180,50 @@ function nowTime() {
 }
 
 export default function WhatsAppSection() {
-  const [persona, setPersona] = useState<Persona>('personal');
-  const [messages, setMessages] = useState<Msg[]>(INITIAL_MSGS.personal);
+  const persisted = typeof window !== 'undefined' ? loadPersisted() : null;
+  const initialPersona: Persona = persisted?.persona ?? 'personal';
+  const [persona, setPersona] = useState<Persona>(initialPersona);
+  const [messagesByPersona, setMessagesByPersona] = useState<Record<Persona, Msg[]>>({
+    personal: persisted?.messagesByPersona?.personal ?? INITIAL_MSGS.personal,
+    business: persisted?.messagesByPersona?.business ?? INITIAL_MSGS.business,
+  });
+  const [suggestionsByPersona, setSuggestionsByPersona] = useState<Record<Persona, string[]>>({
+    personal: persisted?.suggestionsByPersona?.personal ?? STARTER_SUGGESTIONS.personal,
+    business: persisted?.suggestionsByPersona?.business ?? STARTER_SUGGESTIONS.business,
+  });
+  const messages = messagesByPersona[persona];
+  const suggestions = suggestionsByPersona[persona];
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>(STARTER_SUGGESTIONS.personal);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Persist to localStorage whenever conversation changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const payload: PersistedState = {
+        persona,
+        messagesByPersona,
+        suggestionsByPersona,
+        savedAt: Date.now(),
+      };
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore quota errors
+    }
+  }, [persona, messagesByPersona, suggestionsByPersona]);
 
   // Switch persona resets conversation
   const switchPersona = (p: Persona) => {
     if (p === persona) return;
     setPersona(p);
-    setMessages(INITIAL_MSGS[p]);
-    setSuggestions(STARTER_SUGGESTIONS[p]);
+    setErrorMsg(null);
+  };
+
+  const resetConversation = () => {
+    setMessagesByPersona(prev => ({ ...prev, [persona]: INITIAL_MSGS[persona] }));
+    setSuggestionsByPersona(prev => ({ ...prev, [persona]: STARTER_SUGGESTIONS[persona] }));
     setErrorMsg(null);
   };
 
@@ -185,7 +241,7 @@ export default function WhatsAppSection() {
 
     const userMsg: Msg = { from: 'user', text, time: nowTime() };
     const newMsgs = [...messages, userMsg];
-    setMessages([...newMsgs, { from: 'bot', loading: true, time: nowTime() }]);
+    setMessagesByPersona(prev => ({ ...prev, [persona]: [...newMsgs, { from: 'bot', loading: true, time: nowTime() }] }));
     setLoading(true);
 
     try {
@@ -200,20 +256,23 @@ export default function WhatsAppSection() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      setMessages([
-        ...newMsgs,
-        {
-          from: 'bot',
-          text: data.text || '...',
-          cards: data.cards || [],
-          time: nowTime(),
-        },
-      ]);
+      setMessagesByPersona(prev => ({
+        ...prev,
+        [persona]: [
+          ...newMsgs,
+          {
+            from: 'bot',
+            text: data.text || '...',
+            cards: data.cards || [],
+            time: nowTime(),
+          },
+        ],
+      }));
       if (Array.isArray(data.suggestions) && data.suggestions.length) {
-        setSuggestions(data.suggestions);
+        setSuggestionsByPersona(prev => ({ ...prev, [persona]: data.suggestions }));
       }
     } catch (err: any) {
-      setMessages(newMsgs);
+      setMessagesByPersona(prev => ({ ...prev, [persona]: newMsgs }));
       setErrorMsg(err?.message || 'Erro ao conversar com a Kora. Tenta de novo?');
     } finally {
       setLoading(false);
@@ -308,6 +367,16 @@ export default function WhatsAppSection() {
                       {loading ? 'digitando...' : 'online'}
                     </div>
                   </div>
+                  {messages.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={resetConversation}
+                      title="Limpar conversa"
+                      className="ml-1 p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
 
                 {/* Messages */}
