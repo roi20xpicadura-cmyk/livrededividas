@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Sparkles, Shield, Smartphone, Zap } from 'lucide-react';
+import { Sparkles, Shield, Zap, Home, BarChart3, Wallet, User, ArrowUpRight, ArrowDownLeft, Plus } from 'lucide-react';
 
 const ease = [0.16, 1, 0.3, 1] as const;
 const cardBase = "rounded-[16px] md:rounded-[20px] border border-[#e2e8f0] p-5 md:p-8 overflow-hidden relative transition-all duration-300 hover:border-[#C4B5FD] hover:-translate-y-[3px]";
@@ -135,18 +135,104 @@ export default function FeaturesSection() {
           </BentoCard>
 
           {/* Mobile + Gamification + Security - 3 cards in a row on desktop, stacked on mobile */}
-          <BentoCard className="md:col-span-4 bg-gradient-to-br from-[#0f172a] to-[#1e3a1e] text-white" index={4}>
-            <div className="flex md:block items-center gap-4">
+          <BentoCard className="md:col-span-4 bg-gradient-to-br from-[#0f172a] via-[#0b2a1a] to-[#082f1f] text-white relative" index={4}>
+            {/* glow */}
+            <div className="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[#4ade80]/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-10 w-56 h-56 rounded-full bg-[#22c55e]/10 blur-3xl" />
+
+            <div className="relative flex md:block items-start gap-4">
               <div className="flex-1">
-                <h3 className="text-[18px] md:text-[20px] font-[900] mb-1">Nativo no celular</h3>
-                <p className="text-[13px] md:text-[14px] text-white/60">iOS, Android e PWA</p>
+                <span className="inline-flex items-center gap-1 text-[10px] md:text-[11px] font-semibold text-[#86efac] bg-[#4ade80]/10 border border-[#4ade80]/20 rounded-full px-2 py-0.5 mb-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse" /> iOS · Android · PWA
+                </span>
+                <h3 className="text-[18px] md:text-[20px] font-[900] mb-1 leading-tight">Nativo no celular</h3>
+                <p className="text-[12px] md:text-[13px] text-white/60 leading-snug">
+                  Tudo o que importa, na palma da sua mão.
+                </p>
               </div>
-              <div className="flex justify-center md:mt-4">
-                <div className="w-[80px] md:w-[120px] h-[140px] md:h-[220px] rounded-[16px] md:rounded-[24px] border-[3px] md:border-4 border-[#333] bg-[#1a1a1a] p-1 md:p-1.5 overflow-hidden">
-                  <div className="w-full h-full rounded-[12px] md:rounded-[18px] bg-gradient-to-b from-[#0f172a] to-[#1A0D35] flex flex-col items-center justify-center gap-1 md:gap-2 text-center">
-                    <Smartphone className="w-4 md:w-6 h-4 md:h-6 text-[#4ade80]" />
-                    <span className="text-[7px] md:text-[9px] text-white/70">KoraFinance</span>
-                    <span className="text-[12px] md:text-[16px] font-[900] text-white">R$ 3.200</span>
+
+              {/* Phone mockup */}
+              <div className="flex justify-center md:mt-5 shrink-0">
+                <div className="relative w-[120px] md:w-[180px] aspect-[9/19] rounded-[22px] md:rounded-[32px] border-[3px] md:border-[4px] border-[#1a1a1a] bg-[#0a0a0a] p-[3px] md:p-[4px] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.7)]">
+                  {/* side button */}
+                  <div className="absolute -left-[5px] md:-left-[6px] top-[38%] w-[3px] md:w-[4px] h-10 md:h-14 rounded-l bg-[#1a1a1a]" />
+                  <div className="absolute -right-[5px] md:-right-[6px] top-[28%] w-[3px] md:w-[4px] h-6 md:h-8 rounded-r bg-[#1a1a1a]" />
+                  <div className="absolute -right-[5px] md:-right-[6px] top-[42%] w-[3px] md:w-[4px] h-10 md:h-14 rounded-r bg-[#1a1a1a]" />
+
+                  {/* Screen */}
+                  <div className="relative w-full h-full rounded-[18px] md:rounded-[26px] bg-gradient-to-b from-[#0b1220] to-[#0a1a14] overflow-hidden flex flex-col">
+                    {/* notch */}
+                    <div className="absolute top-1 md:top-1.5 left-1/2 -translate-x-1/2 w-[36%] h-[10px] md:h-[14px] rounded-full bg-black z-10" />
+
+                    {/* status bar */}
+                    <div className="flex justify-between items-center px-2 md:px-3 pt-1 md:pt-1.5 text-[6px] md:text-[8px] font-semibold text-white/80">
+                      <span>9:41</span>
+                      <span className="flex gap-[2px] items-end">
+                        <span className="w-[2px] h-[3px] bg-white/80 rounded-[1px]" />
+                        <span className="w-[2px] h-[5px] bg-white/80 rounded-[1px]" />
+                        <span className="w-[2px] h-[7px] bg-white/80 rounded-[1px]" />
+                      </span>
+                    </div>
+
+                    {/* App content */}
+                    <div className="flex-1 px-2 md:px-2.5 pt-2 md:pt-3 flex flex-col gap-1.5 md:gap-2">
+                      {/* Greeting */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[6px] md:text-[8px] text-white/50 leading-none">Olá,</p>
+                          <p className="text-[8px] md:text-[10px] font-bold text-white leading-tight">Lucas 👋</p>
+                        </div>
+                        <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-gradient-to-br from-[#4ade80] to-[#16a34a]" />
+                      </div>
+
+                      {/* Balance card */}
+                      <div className="rounded-md md:rounded-lg p-1.5 md:p-2 bg-gradient-to-br from-[#16a34a] to-[#065f46] relative overflow-hidden">
+                        <div className="absolute -right-3 -top-3 w-10 h-10 rounded-full bg-white/10" />
+                        <p className="text-[5px] md:text-[7px] text-white/70 leading-none">Saldo do mês</p>
+                        <p className="text-[11px] md:text-[15px] font-[900] text-white leading-tight mt-0.5">R$ 3.200</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <ArrowUpRight className="w-1.5 h-1.5 md:w-2 md:h-2 text-white" />
+                          <span className="text-[5px] md:text-[7px] text-white/90 font-semibold">+12% vs mês ant.</span>
+                        </div>
+                      </div>
+
+                      {/* Mini chart bars */}
+                      <div className="flex items-end gap-[2px] md:gap-[3px] h-5 md:h-7">
+                        {[40, 65, 35, 80, 55, 90, 70].map((h, i) => (
+                          <div
+                            key={i}
+                            className="flex-1 rounded-[1px] md:rounded-sm bg-gradient-to-t from-[#4ade80]/30 to-[#4ade80]"
+                            style={{ height: `${h}%` }}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Tx list */}
+                      <div className="flex flex-col gap-1 md:gap-1.5">
+                        {[
+                          { icon: ArrowDownLeft, label: 'Mercado', val: '-R$ 84', color: '#f87171' },
+                          { icon: ArrowUpRight, label: 'Salário', val: '+R$ 5k', color: '#4ade80' },
+                        ].map((tx, i) => (
+                          <div key={i} className="flex items-center gap-1 md:gap-1.5">
+                            <div className="w-3 h-3 md:w-4 md:h-4 rounded-full flex items-center justify-center" style={{ background: `${tx.color}25` }}>
+                              <tx.icon className="w-1.5 h-1.5 md:w-2 md:h-2" style={{ color: tx.color }} />
+                            </div>
+                            <span className="text-[6px] md:text-[8px] text-white/80 flex-1 leading-none">{tx.label}</span>
+                            <span className="text-[6px] md:text-[8px] font-bold leading-none" style={{ color: tx.color }}>{tx.val}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Bottom nav */}
+                    <div className="relative mt-auto mb-1 md:mb-1.5 mx-1.5 md:mx-2 flex items-center justify-between bg-white/5 backdrop-blur rounded-full px-2 md:px-2.5 py-1 md:py-1.5 border border-white/10">
+                      {[Home, BarChart3, Wallet, User].map((Icon, i) => (
+                        <Icon key={i} className={`w-2 h-2 md:w-2.5 md:h-2.5 ${i === 0 ? 'text-[#4ade80]' : 'text-white/40'}`} />
+                      ))}
+                      <div className="absolute -top-2 md:-top-2.5 left-1/2 -translate-x-1/2 w-4 h-4 md:w-5 md:h-5 rounded-full bg-[#4ade80] flex items-center justify-center shadow-[0_4px_12px_rgba(74,222,128,0.5)]">
+                        <Plus className="w-2 h-2 md:w-2.5 md:h-2.5 text-[#052e16]" strokeWidth={3} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
