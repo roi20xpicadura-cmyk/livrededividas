@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, CheckCheck, Mic, Plus, Camera, Smile, Send, ArrowRight, Sparkles, Receipt, BarChart3, Wallet, Target, RotateCcw } from 'lucide-react';
+import { Check, CheckCheck, Mic, Plus, Camera, Smile, Send, ArrowRight, Sparkles, Receipt, BarChart3, Wallet, Target, RotateCcw, X, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -198,6 +198,16 @@ export default function WhatsAppSection() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Audio recording
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [recSeconds, setRecSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const recTimerRef = useRef<number | null>(null);
+  const recCanceledRef = useRef(false);
+  const MAX_REC_SECONDS = 30;
+
   // Persist to localStorage whenever conversation changes
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -226,6 +236,105 @@ export default function WhatsAppSection() {
     setSuggestionsByPersona(prev => ({ ...prev, [persona]: STARTER_SUGGESTIONS[persona] }));
     setErrorMsg(null);
   };
+
+  const stopTimer = () => {
+    if (recTimerRef.current) {
+      window.clearInterval(recTimerRef.current);
+      recTimerRef.current = null;
+    }
+  };
+
+  const startRecording = async () => {
+    if (recording || loading || transcribing) return;
+    setErrorMsg(null);
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setErrorMsg('Seu navegador não suporta gravação de áudio.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : MediaRecorder.isTypeSupported('audio/mp4')
+        ? 'audio/mp4'
+        : '';
+      const mr = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      chunksRef.current = [];
+      recCanceledRef.current = false;
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mr.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        stopTimer();
+        setRecording(false);
+        if (recCanceledRef.current) {
+          chunksRef.current = [];
+          return;
+        }
+        const blob = new Blob(chunksRef.current, { type: mr.mimeType || 'audio/webm' });
+        chunksRef.current = [];
+        if (blob.size < 1500) {
+          setErrorMsg('Áudio muito curto. Segura o botão por mais tempo.');
+          return;
+        }
+        await transcribeAndSend(blob);
+      };
+      mediaRecorderRef.current = mr;
+      mr.start();
+      setRecording(true);
+      setRecSeconds(0);
+      recTimerRef.current = window.setInterval(() => {
+        setRecSeconds(s => {
+          if (s + 1 >= MAX_REC_SECONDS) {
+            try { mr.stop(); } catch {}
+          }
+          return s + 1;
+        });
+      }, 1000);
+    } catch (err: any) {
+      setErrorMsg(err?.name === 'NotAllowedError' ? 'Permissão de microfone negada.' : 'Não foi possível acessar o microfone.');
+    }
+  };
+
+  const stopRecording = (cancel = false) => {
+    if (!recording || !mediaRecorderRef.current) return;
+    recCanceledRef.current = cancel;
+    try { mediaRecorderRef.current.stop(); } catch {}
+  };
+
+  const transcribeAndSend = async (blob: Blob) => {
+    setTranscribing(true);
+    try {
+      const buf = await blob.arrayBuffer();
+      // Convert to base64
+      let binary = '';
+      const bytes = new Uint8Array(buf);
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)));
+      }
+      const audioBase64 = btoa(binary);
+
+      const { data, error } = await supabase.functions.invoke('whatsapp-demo-transcribe', {
+        body: { audio: audioBase64, mime: blob.type },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const text: string = (data?.text || '').trim();
+      if (!text) {
+        setErrorMsg('Não consegui entender o áudio. Tenta de novo?');
+        return;
+      }
+      await send(text);
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Falha ao transcrever áudio.');
+    } finally {
+      setTranscribing(false);
+    }
+  };
+
+  useEffect(() => () => stopTimer(), []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -442,26 +551,84 @@ export default function WhatsAppSection() {
                   }}
                   className="bg-[#1f2c33] px-2 py-2 flex items-center gap-1.5 pb-4"
                 >
-                  <div className="flex-1 bg-[#2a3942] rounded-full px-3 py-1.5 flex items-center gap-2">
-                    <Smile className="w-4 h-4 text-white/50 flex-shrink-0" />
-                    <input
-                      value={input}
-                      onChange={e => setInput(e.target.value)}
-                      disabled={loading}
-                      placeholder={loading ? 'Kora pensando...' : 'Mensagem'}
-                      maxLength={300}
-                      className="flex-1 bg-transparent text-[13px] text-white placeholder:text-white/40 outline-none min-w-0"
-                    />
-                    <Plus className="w-4 h-4 text-white/50 flex-shrink-0" />
-                    <Camera className="w-4 h-4 text-white/50 flex-shrink-0" />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={loading || !input.trim()}
-                    className="w-9 h-9 rounded-full bg-[#22c55e] flex items-center justify-center disabled:opacity-50 hover:bg-[#16a34a] transition-colors"
-                  >
-                    {input.trim() ? <Send className="w-4 h-4 text-white" /> : <Mic className="w-4 h-4 text-white" />}
-                  </button>
+                  {recording ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => stopRecording(true)}
+                        className="w-9 h-9 rounded-full bg-[#2a3942] flex items-center justify-center text-white/70 hover:text-white"
+                        title="Cancelar"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                      <div className="flex-1 bg-[#2a3942] rounded-full px-3 py-1.5 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#ef4444] animate-pulse flex-shrink-0" />
+                        <span className="text-[12px] text-white font-mono">
+                          {String(Math.floor(recSeconds / 60)).padStart(1, '0')}:{String(recSeconds % 60).padStart(2, '0')}
+                        </span>
+                        <div className="flex-1 flex items-center gap-[2px] h-4 overflow-hidden">
+                          {Array.from({ length: 24 }).map((_, i) => (
+                            <span
+                              key={i}
+                              className="flex-1 bg-white/40 rounded-sm animate-pulse"
+                              style={{
+                                height: `${30 + Math.abs(Math.sin((recSeconds + i) * 0.7)) * 70}%`,
+                                animationDelay: `${i * 50}ms`,
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-[10px] text-white/50 flex-shrink-0">máx 30s</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => stopRecording(false)}
+                        className="w-9 h-9 rounded-full bg-[#22c55e] flex items-center justify-center hover:bg-[#16a34a] transition-colors"
+                        title="Enviar áudio"
+                      >
+                        <Send className="w-4 h-4 text-white" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex-1 bg-[#2a3942] rounded-full px-3 py-1.5 flex items-center gap-2">
+                        <Smile className="w-4 h-4 text-white/50 flex-shrink-0" />
+                        <input
+                          value={input}
+                          onChange={e => setInput(e.target.value)}
+                          disabled={loading || transcribing}
+                          placeholder={transcribing ? 'Transcrevendo...' : loading ? 'Kora pensando...' : 'Mensagem'}
+                          maxLength={300}
+                          className="flex-1 bg-transparent text-[13px] text-white placeholder:text-white/40 outline-none min-w-0"
+                        />
+                        <Plus className="w-4 h-4 text-white/50 flex-shrink-0" />
+                        <Camera className="w-4 h-4 text-white/50 flex-shrink-0" />
+                      </div>
+                      {input.trim() ? (
+                        <button
+                          type="submit"
+                          disabled={loading || transcribing}
+                          className="w-9 h-9 rounded-full bg-[#22c55e] flex items-center justify-center disabled:opacity-50 hover:bg-[#16a34a] transition-colors"
+                        >
+                          <Send className="w-4 h-4 text-white" />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={startRecording}
+                          disabled={loading || transcribing}
+                          title="Gravar áudio"
+                          className="w-9 h-9 rounded-full bg-[#22c55e] flex items-center justify-center disabled:opacity-50 hover:bg-[#16a34a] transition-colors"
+                        >
+                          {transcribing ? (
+                            <Loader2 className="w-4 h-4 text-white animate-spin" />
+                          ) : (
+                            <Mic className="w-4 h-4 text-white" />
+                          )}
+                        </button>
+                      )}
+                    </>
+                  )}
                 </form>
               </div>
             </div>
