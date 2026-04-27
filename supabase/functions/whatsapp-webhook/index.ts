@@ -1130,7 +1130,7 @@ Acesse seu dashboard pra revisar e ajustar categorias se quiser, ${ctx.name}! �
 
     // ── TEXT PROCESSING ──
     if (text) {
-      const fastReply = getBasicFastReply(text) || getContextFastReply(text, ctx);
+      const fastReply = getContextFastReply(text, ctx);
       if (fastReply) {
         await sendWhatsApp(phone, fastReply);
         await supabase.from("whatsapp_messages").insert({
