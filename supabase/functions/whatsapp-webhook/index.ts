@@ -895,6 +895,32 @@ serve(async (req) => {
     const userId = conn.user_id;
     const inboundLabel = text || (document ? "[documento]" : image ? "[imagem]" : audio ? "[áudio]" : "[mídia]");
 
+    const earlyBasicReply = text && !document && !image && !audio ? getBasicFastReply(text) : null;
+    if (earlyBasicReply) {
+      const createdAt = new Date().toISOString();
+      await Promise.all([
+        supabase.from("whatsapp_messages").insert({
+          user_id: userId,
+          phone,
+          phone_number: phone,
+          direction: "inbound",
+          role: "user",
+          message: inboundLabel,
+          content: inboundLabel,
+          created_at: createdAt,
+        }),
+        sendWhatsApp(phone, earlyBasicReply),
+      ]);
+      await supabase.from("whatsapp_messages").insert({
+        user_id: userId, phone, phone_number: phone,
+        direction: "outbound", role: "assistant",
+        message: earlyBasicReply, content: earlyBasicReply,
+        created_at: new Date().toISOString(),
+      });
+      console.log("[EARLY FAST REPLY]", normalizeIntentText(text), "→", earlyBasicReply.slice(0, 160));
+      return new Response("OK", { status: 200 });
+    }
+
     // Paraleliza as 4 chamadas independentes ao Supabase (contexto, insert do
     // inbound, histórico recente e pending). Antes eram serializadas e
     // somavam 600-1200ms; agora roda no tempo da query mais lenta (~250ms).
