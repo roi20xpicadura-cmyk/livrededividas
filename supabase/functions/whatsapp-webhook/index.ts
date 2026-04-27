@@ -1104,6 +1104,19 @@ Acesse seu dashboard pra revisar e ajustar categorias se quiser, ${ctx.name}! �
 
     // ── TEXT PROCESSING ──
     if (text) {
+      const fastReply = getBasicFastReply(text) || getContextFastReply(text, ctx);
+      if (fastReply) {
+        await sendWhatsApp(phone, fastReply);
+        await supabase.from("whatsapp_messages").insert({
+          user_id: userId, phone, phone_number: phone,
+          direction: "outbound", role: "assistant",
+          message: fastReply, content: fastReply,
+          created_at: new Date().toISOString(),
+        });
+        console.log("[FAST REPLY]", normalizeIntentText(text), "→", fastReply.slice(0, 160));
+        return new Response("OK", { status: 200 });
+      }
+
       const systemPrompt = buildSystemPrompt(ctx);
 
       const messages = (history?.reverse() || [])
