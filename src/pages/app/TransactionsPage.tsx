@@ -10,7 +10,6 @@ import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { normalizeTransactionName } from '@/lib/normalizeTransactionName';
-import { getCategoryStyle } from '@/lib/categoryIcons';
 import TransactionIcon from '@/components/app/TransactionIcon';
 
 type Tx = {
