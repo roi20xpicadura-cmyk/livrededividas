@@ -29,7 +29,7 @@ export default function AchievementsPage() {
   const ACCENT_BORDER = 'rgba(22,163,74,0.28)';
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-page)', paddingBottom: 100 }}>
+    <div style={{ background: 'var(--bg-page)' }}>
       <div style={{ padding: '20px 20px 0', maxWidth: 900, margin: '0 auto' }}>
         <h1 style={{ color: 'var(--text-primary)', fontSize: 22, fontWeight: 900, letterSpacing: '-0.5px', marginBottom: 20 }}>
           Conquistas
