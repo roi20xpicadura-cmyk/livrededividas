@@ -14,6 +14,11 @@ import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 import BottomSheet from '@/components/app/BottomSheet';
 import type { Database } from '@/integrations/supabase/types';
+import {
+  readGoalsCache,
+  writeGoalsCache,
+  applyDepositToCache,
+} from '@/lib/goalsCache';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 
@@ -61,22 +66,56 @@ export default function GoalsPage() {
 
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usingCache, setUsingCache] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editGoal, setEditGoal] = useState<EditGoalState>(null);
 
+  // Hydrate instantly from localStorage cache on mount so the UI never flashes
+  // empty values while Supabase loads — and survives offline reloads.
+  useEffect(() => {
+    if (!user) return;
+    const cached = readGoalsCache(user.id);
+    if (cached && cached.length > 0) {
+      setGoals(cached);
+      setLoading(false);
+    }
+  }, [user]);
+
   const fetchGoals = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('goals')
       .select('*')
       .eq('user_id', user.id)
       .is('deleted_at', null)
       .order('created_at', { ascending: false });
-    setGoals(data || []);
+
+    if (error || !data) {
+      // Supabase unreachable — fall back to cache so values + progress survive.
+      const cached = readGoalsCache(user.id);
+      if (cached) {
+        setGoals(cached);
+        setUsingCache(true);
+      }
+      setLoading(false);
+      return;
+    }
+
+    setGoals(data);
+    setUsingCache(false);
+    writeGoalsCache(user.id, data);
     setLoading(false);
   }, [user]);
 
   useEffect(() => { fetchGoals(); }, [fetchGoals]);
+
+  // When the network comes back online, refresh from Supabase.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onOnline = () => { void fetchGoals(); };
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, [fetchGoals]);
 
   const activeGoals = useMemo(() =>
     goals.filter(g => Number(g.current_amount) < Number(g.target_amount)),
@@ -98,6 +137,15 @@ export default function GoalsPage() {
 
     const newVal = Number(goal.current_amount) + amount;
     const today = format(new Date(), 'yyyy-MM-dd');
+
+    // Optimistic UI + cache write so a reload right after still shows the
+    // updated "Valor Guardado" and progress, even if the network drops.
+    setGoals((prev) =>
+      prev.map((g) =>
+        g.id === goalId ? { ...g, current_amount: newVal } : g,
+      ),
+    );
+    applyDepositToCache(user.id, goalId, amount);
 
     await Promise.all([
       supabase.from('goals').update({ current_amount: newVal }).eq('id', goalId),
@@ -194,6 +242,23 @@ export default function GoalsPage() {
       background: 'var(--color-bg-base)',
       paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
     }}>
+      {usingCache && (
+        <div
+          role="status"
+          style={{
+            margin: '8px 16px 0',
+            padding: '8px 12px',
+            borderRadius: 10,
+            background: 'var(--color-warning-soft, #FEF3C7)',
+            border: '1px solid var(--color-warning, #F59E0B)',
+            color: 'var(--color-warning-strong, #92400E)',
+            fontSize: 12,
+            fontWeight: 600,
+          }}
+        >
+          📡 Sem conexão — exibindo valores salvos no dispositivo. Vão sincronizar ao voltar online.
+        </div>
+      )}
       {/* Header */}
       <div style={{
         padding: '14px 20px 0',
