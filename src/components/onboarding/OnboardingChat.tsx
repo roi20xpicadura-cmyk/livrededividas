@@ -250,18 +250,6 @@ export default function OnboardingChat({ onComplete }: { onComplete: () => void 
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div className={`max-w-[85%] ${msg.role === 'user' ? '' : ''}`}>
-                {msg.role === 'assistant' && (
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <div className="flex items-center justify-center" style={{
-                      width: 24, height: 24, borderRadius: 8,
-                      background: 'linear-gradient(135deg, var(--color-green-500), var(--color-green-700))',
-                    }}>
-                      <Sparkles size={12} color="white" />
-                    </div>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-subtle)' }}>KoraFinance IA</span>
-                  </div>
-                )}
-
                 <div style={{
                   padding: '12px 16px',
                   borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '4px 16px 16px 16px',
