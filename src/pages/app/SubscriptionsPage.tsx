@@ -35,8 +35,9 @@ const fmt = (v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigi
 // Design tokens (light theme, violet accent)
 const C = {
   violet: '#7C3AED',
-  violetDeep: '#5B21B6',
-  violetGlow: '#A78BFA',
+  violetDeep: '#2E1065',
+  violetMid: '#4C1D95',
+  violetGlow: '#6D28D9',
   violetSoft: '#EDE9FE',
   violetSofter: '#F5F3FF',
   borderSoft: '#F0EEF8',
