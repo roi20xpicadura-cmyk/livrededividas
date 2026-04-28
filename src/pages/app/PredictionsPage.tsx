@@ -107,36 +107,103 @@ export default function PredictionsPage() {
   }
 
   return (
-    <div className="space-y-4 pb-4">
-      {/* Subtitle only — title comes from AppLayout */}
-      <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Seu futuro financeiro baseado em dados reais</p>
-
-      {/* Period tabs */}
-      <div className="flex gap-2">
-        {([30, 60, 90] as const).map(p => (
-          <button key={p} onClick={() => setPeriod(p)}
-            style={{
-              padding: '6px 16px', borderRadius: 99, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              background: period === p ? 'var(--color-green-600)' : 'var(--color-bg-surface)',
-              color: period === p ? 'white' : 'var(--color-text-muted)',
-              border: `1px solid ${period === p ? 'transparent' : 'var(--color-border-base)'}`,
+    <div className="space-y-5 pb-6">
+      {/* HERO — Health score + headline metric */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: 20,
+          padding: 22,
+          background: 'linear-gradient(135deg, var(--color-green-600) 0%, var(--color-green-700, #5b21b6) 100%)',
+          color: 'white',
+          boxShadow: '0 12px 32px -12px rgba(124,58,237,0.45)',
+        }}
+      >
+        {/* Decorative glow */}
+        <div style={{
+          position: 'absolute', top: -60, right: -60, width: 200, height: 200,
+          borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{ position: 'relative' }}>
+          <div className="flex items-center gap-2" style={{ marginBottom: 14 }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '4px 10px', borderRadius: 99,
+              background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)',
+              fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase',
             }}>
-            {p} dias
-          </button>
-        ))}
-      </div>
+              <Sparkles size={11} /> Análise preditiva
+            </div>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '4px 10px', borderRadius: 99,
+              background: status === 'danger' ? 'rgba(239,68,68,0.95)' : status === 'warning' ? 'rgba(245,158,11,0.95)' : 'rgba(34,197,94,0.95)',
+              fontSize: 10, fontWeight: 800, letterSpacing: 0.3, textTransform: 'uppercase',
+            }}>
+              <ShieldCheck size={11} /> {status === 'danger' ? 'Risco alto' : status === 'warning' ? 'Atenção' : 'Saudável'}
+            </div>
+          </div>
 
-      {/* Risk summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <StatCard icon={<TrendingDown size={18} />} label="Saldo mínimo previsto" value={formatCurrency(lowestBal, 'R$')}
-          sub={lowestBal < 0 ? 'Atenção: saldo negativo' : ''} status={lowestBal < 0 ? 'danger' : lowestBal < 500 ? 'warning' : 'good'} />
-        <StatCard icon={<AlertCircle size={18} />} label="Próximo evento crítico"
-          value={nextCritical ? nextCritical.description : 'Nenhum'}
-          sub={nextCritical ? `${formatCurrency(Math.abs(nextCritical.amount), 'R$')} em ${differenceInDays(new Date(nextCritical.date), new Date())} dias` : ''}
-          status={nextCritical && Math.abs(nextCritical.amount) > 1000 ? 'warning' : 'good'} />
-        <StatCard icon={<Activity size={18} />} label="Probabilidade de problema" value={`${negProb}%`}
-          sub={`de saldo negativo nos próximos ${period} dias`}
-          status={negProb > 50 ? 'danger' : negProb > 20 ? 'warning' : 'good'} />
+          <p style={{ fontSize: 11, fontWeight: 700, opacity: 0.85, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 6 }}>
+            Saldo mínimo previsto · {period} dias
+          </p>
+          <div className="flex items-baseline gap-2" style={{ marginBottom: 4 }}>
+            <span style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-1.2px', lineHeight: 1 }}>
+              {formatCurrency(lowestBal, 'R$')}
+            </span>
+            {firstNeg && (
+              <span style={{ fontSize: 12, fontWeight: 700, opacity: 0.9 }}>
+                em {format(new Date(firstNeg.date), "dd 'de' MMM", { locale: ptBR })}
+              </span>
+            )}
+          </div>
+          <p style={{ fontSize: 13, opacity: 0.9 }}>
+            Seu futuro financeiro com base em dados reais e padrões históricos
+          </p>
+
+          {/* Period segmented control */}
+          <div style={{
+            marginTop: 16, display: 'inline-flex', padding: 4, gap: 4,
+            background: 'rgba(0,0,0,0.18)', borderRadius: 12, backdropFilter: 'blur(8px)',
+          }}>
+            {([30, 60, 90] as const).map(p => (
+              <button key={p} onClick={() => setPeriod(p)}
+                style={{
+                  padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                  background: period === p ? 'white' : 'transparent',
+                  color: period === p ? 'var(--color-green-700, #5b21b6)' : 'rgba(255,255,255,0.85)',
+                  border: 'none', transition: 'all 0.2s',
+                }}>
+                {p} dias
+              </button>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Secondary metrics — refined neutral cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <MetricCard
+          icon={<AlertCircle size={16} />}
+          label="Próximo evento crítico"
+          value={nextCritical ? nextCritical.description : 'Nada à vista'}
+          sub={nextCritical
+            ? `${formatCurrency(Math.abs(nextCritical.amount), 'R$')} · em ${differenceInDays(new Date(nextCritical.date), new Date())} ${differenceInDays(new Date(nextCritical.date), new Date()) === 1 ? 'dia' : 'dias'}`
+            : 'Nenhum gasto relevante previsto'}
+          tone={nextCritical && Math.abs(nextCritical.amount) > 1000 ? 'warning' : 'neutral'}
+        />
+        <MetricCard
+          icon={<Activity size={16} />}
+          label="Probabilidade de saldo negativo"
+          value={`${negProb}%`}
+          sub={`nos próximos ${period} dias`}
+          tone={negProb > 50 ? 'danger' : negProb > 20 ? 'warning' : 'success'}
+          progress={negProb}
+        />
       </div>
 
       {/* Main chart */}
