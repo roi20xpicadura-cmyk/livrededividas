@@ -125,7 +125,7 @@ export default function IntegrationsPage() {
   const connectedList = userIntegrations.filter((i: IntegrationRow) => i.status === 'active');
 
   return (
-    <div className="scroll-container hide-scrollbar" style={{ padding: isMobile ? 16 : 28, maxWidth: 1280 }}>
+    <div style={{ padding: isMobile ? 16 : 28, maxWidth: 1280, width: '100%' }}>
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Conecte suas plataformas e importe dados automaticamente</p>
