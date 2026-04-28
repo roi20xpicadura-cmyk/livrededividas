@@ -5,7 +5,7 @@ import { detectSubscriptions, monthlyTotal } from '@/lib/subscriptionDetector';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, X, CheckCircle2, AlertCircle, Calendar, TrendingDown, Search, Wallet, Sparkles } from 'lucide-react';
+import { RefreshCw, X, AlertCircle, TrendingDown, Search, Wallet, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 import type { Database } from '@/integrations/supabase/types';
