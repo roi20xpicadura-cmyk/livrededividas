@@ -15,101 +15,76 @@ const LogoLoader = forwardRef<HTMLDivElement, LogoLoaderProps>(function LogoLoad
   const containerClass = fullScreen
     ? 'fixed inset-0 z-[9998] flex flex-col items-center justify-center'
     : 'absolute inset-0 w-full h-full min-h-screen flex flex-col items-center justify-center';
+  const deviceMemory = typeof navigator !== 'undefined'
+    ? Number((navigator as Navigator & { deviceMemory?: number }).deviceMemory || 8)
+    : 8;
+  const performanceMode = reduceMotion || deviceMemory <= 4;
 
   return (
     <div
       ref={ref}
-      className={`${containerClass} relative overflow-hidden`}
+      className={`${containerClass} relative overflow-hidden isolate`}
+      role="status"
+      aria-live="polite"
       style={{
         background:
-          'radial-gradient(ellipse at 50% 30%, var(--color-bg-elevated) 0%, var(--color-bg-base) 56%, var(--color-bg-sunken) 100%)',
-        gap: 24,
+          'radial-gradient(ellipse at 50% 24%, hsl(var(--primary) / 0.12), transparent 42%), linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-bg-base) 54%, var(--color-bg-sunken) 100%)',
+        gap: 22,
+        transform: 'translateZ(0)',
       }}
     >
-      {/* Soft grid backdrop */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage:
-            'linear-gradient(var(--color-border-strong) 1px, transparent 1px), linear-gradient(90deg, var(--color-border-strong) 1px, transparent 1px)',
-          backgroundSize: '44px 44px',
-          maskImage:
-            'radial-gradient(ellipse at center, black 0%, transparent 65%)',
-          WebkitMaskImage:
-            'radial-gradient(ellipse at center, black 0%, transparent 65%)',
-        }}
-      />
-
-      {/* Ambient gradient glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(circle at 50% 42%, hsl(var(--primary) / 0.18), transparent 55%), radial-gradient(circle at 50% 60%, hsl(var(--primary) / 0.10), transparent 60%)',
-        }}
-      />
+      {!performanceMode && (
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-1/2"
+          style={{
+            background:
+              'radial-gradient(ellipse at 50% 0%, hsl(var(--primary) / 0.18), transparent 64%)',
+            willChange: 'opacity, transform',
+          }}
+          animate={{ opacity: [0.65, 1, 0.65], scale: [1, 1.03, 1] }}
+          transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )}
 
       <div className="relative flex flex-col items-center" style={{ gap: 22 }}>
-        {/* Logo with pulsing rings */}
-        <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
-          {/* Conic rotating ring */}
+        <div className="relative flex items-center justify-center" style={{ width: 124, height: 124 }}>
           <motion.span
             aria-hidden
             className="absolute"
             style={{
-              inset: -6,
-              borderRadius: '28px',
-              background:
-                'conic-gradient(from 0deg, hsl(var(--primary) / 0) 0deg, hsl(var(--primary) / 0.42) 90deg, hsl(var(--primary) / 0.62) 180deg, hsl(var(--primary) / 0) 270deg)',
-              filter: 'blur(8px)',
-              opacity: reduceMotion ? 0.35 : 0.7,
+              inset: 12,
+              borderRadius: '32px',
+              border: '1px solid hsl(var(--primary) / 0.20)',
+              boxShadow: '0 0 0 10px hsl(var(--primary) / 0.045), 0 24px 70px hsl(var(--primary) / 0.20)',
+              willChange: performanceMode ? undefined : 'transform, opacity',
             }}
-            animate={reduceMotion ? undefined : { rotate: 360 }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+            animate={performanceMode ? undefined : { scale: [0.98, 1.06, 0.98], opacity: [0.85, 1, 0.85] }}
+            transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
           />
 
-          {[0, 1].map((i) => (
-            <motion.span
-              key={i}
-              aria-hidden
-              className="absolute inset-0 rounded-[28px]"
-              style={{
-                border: '1.5px solid hsl(var(--primary) / 0.34)',
-              }}
-              initial={{ scale: 0.92, opacity: 0.55 }}
-              animate={reduceMotion ? { scale: 1, opacity: 0.18 } : { scale: 1.5, opacity: 0 }}
-              transition={{
-                duration: 2.4,
-                repeat: Infinity,
-                ease: 'easeOut',
-                delay: i * 1.2,
-              }}
-            />
-          ))}
-
           <motion.div
-            initial={{ scale: 0.88, opacity: 0 }}
+            initial={{ scale: 0.94, opacity: 0, y: 4 }}
             animate={{
-              scale: reduceMotion ? 1 : [1, 1.04, 1],
+              scale: performanceMode ? 1 : [1, 1.025, 1],
               opacity: 1,
-              y: reduceMotion ? 0 : [0, -2, 0],
+              y: performanceMode ? 0 : [0, -2, 0],
             }}
             transition={{
-              scale: { duration: 2.4, repeat: Infinity, ease: 'easeInOut' },
-              y: { duration: 2.4, repeat: Infinity, ease: 'easeInOut' },
-              opacity: { duration: 0.5 },
+              scale: { duration: 2.6, repeat: Infinity, ease: 'easeInOut' },
+              y: { duration: 2.6, repeat: Infinity, ease: 'easeInOut' },
+              opacity: { duration: 0.32 },
             }}
             className="relative flex items-center justify-center overflow-hidden"
             style={{
-              width: 84,
-              height: 84,
-              borderRadius: 22,
+              width: 88,
+              height: 88,
+              borderRadius: 24,
               background:
                 'linear-gradient(135deg, var(--color-green-500) 0%, var(--color-green-600) 55%, var(--color-green-700) 100%)',
               boxShadow:
-                '0 22px 50px hsl(var(--primary) / 0.34), 0 0 0 1px var(--color-border-base), inset 0 1px 0 hsl(var(--primary-foreground) / 0.22)',
+                '0 20px 54px hsl(var(--primary) / 0.28), 0 0 0 1px hsl(var(--primary-foreground) / 0.16), inset 0 1px 0 hsl(var(--primary-foreground) / 0.22)',
+              willChange: performanceMode ? undefined : 'transform',
             }}
             aria-hidden
           >
@@ -117,12 +92,12 @@ const LogoLoader = forwardRef<HTMLDivElement, LogoLoaderProps>(function LogoLoad
               src={koraIcon}
               alt=""
               draggable={false}
-              decoding="async"
-              width={84}
-              height={84}
-              style={{ width: 84, height: 84, objectFit: 'cover' }}
+              decoding="sync"
+              loading="eager"
+              width={88}
+              height={88}
+              style={{ width: 88, height: 88, objectFit: 'cover' }}
             />
-            {/* Glossy highlight */}
             <span
               aria-hidden
               className="pointer-events-none absolute inset-0"
@@ -130,22 +105,6 @@ const LogoLoader = forwardRef<HTMLDivElement, LogoLoaderProps>(function LogoLoad
                 background:
                   'linear-gradient(180deg, hsl(var(--primary-foreground) / 0.18) 0%, hsl(var(--primary-foreground) / 0) 45%)',
               }}
-            />
-            {/* Shine sweep */}
-            <motion.span
-              aria-hidden
-              className="pointer-events-none absolute"
-              style={{
-                top: 0,
-                bottom: 0,
-                width: '40%',
-                background:
-                  'linear-gradient(90deg, transparent, hsl(var(--primary-foreground) / 0.35), transparent)',
-                filter: 'blur(2px)',
-                transform: 'skewX(-20deg)',
-              }}
-              animate={reduceMotion ? undefined : { x: ['-120%', '260%'] }}
-              transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.6 }}
             />
           </motion.div>
         </div>
