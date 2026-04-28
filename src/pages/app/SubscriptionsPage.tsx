@@ -5,7 +5,7 @@ import { detectSubscriptions, monthlyTotal } from '@/lib/subscriptionDetector';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, X, CheckCircle2, AlertCircle, Calendar, TrendingDown, Search, Wallet } from 'lucide-react';
+import { RefreshCw, X, AlertCircle, TrendingDown, Search, Wallet, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 import type { Database } from '@/integrations/supabase/types';
@@ -35,6 +35,8 @@ const fmt = (v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigi
 // Design tokens (light theme, violet accent)
 const C = {
   violet: '#7C3AED',
+  violetDeep: '#5B21B6',
+  violetGlow: '#A78BFA',
   violetSoft: '#EDE9FE',
   violetSofter: '#F5F3FF',
   borderSoft: '#F0EEF8',
@@ -182,57 +184,112 @@ export default function SubscriptionsPage() {
     <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-5">
       <SEO title="Assinaturas | KoraFinance" description="Detecte, acompanhe e cancele suas assinaturas recorrentes." />
 
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <h1 className="text-2xl md:text-3xl font-black truncate" style={{ color: C.textStrong }}>
-            Assinaturas
-          </h1>
-          {newCount > 0 && (
-            <span
-              className="text-[11px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
-              style={{ background: C.violetSoft, color: C.violet }}
-            >
-              {newCount} nova{newCount > 1 ? 's' : ''}
-            </span>
-          )}
-        </div>
-        <button
-          onClick={() => scan(false)}
-          disabled={scanning}
-          className="inline-flex items-center gap-2 px-3.5 h-11 rounded-xl text-[13px] font-bold transition-all disabled:opacity-50 active:scale-95"
+      {/* HERO — Total mensal premium */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden"
+        style={{
+          borderRadius: 24,
+          padding: '22px 20px 24px',
+          background: `linear-gradient(135deg, ${C.violetDeep} 0%, ${C.violet} 55%, ${C.violetGlow} 130%)`,
+          boxShadow: '0 20px 40px -18px rgba(124,58,237,0.55), 0 4px 12px -4px rgba(91,33,182,0.35)',
+        }}
+      >
+        {/* decorative orbs */}
+        <div
+          aria-hidden
+          className="absolute pointer-events-none"
           style={{
-            background: 'transparent',
-            border: `1.5px solid ${C.violet}`,
-            color: C.violet,
+            width: 220, height: 220, right: -70, top: -90,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 70%)',
           }}
-        >
-          <RefreshCw className={`w-4 h-4 ${scanning ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline">{scanning ? 'Analisando…' : 'Analisar agora'}</span>
-        </button>
-      </div>
+        />
+        <div
+          aria-hidden
+          className="absolute pointer-events-none"
+          style={{
+            width: 160, height: 160, left: -50, bottom: -70,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(167,139,250,0.45) 0%, rgba(167,139,250,0) 70%)',
+          }}
+        />
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4" style={{ gap: 10 }}>
-        <Kpi label="Total mensal" value={fmt(total)} icon={<Calendar size={18} />} />
-        <Kpi label="No ano" value={fmt(yearlyTotal)} icon={<TrendingDown size={18} />} />
-        <Kpi label="Ativas" value={String(activeCount)} icon={<CheckCircle2 size={18} />} />
-        <Kpi label="Canceladas" value={String(cancelledCount)} icon={<X size={18} />} />
-      </div>
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider"
+                style={{
+                  background: 'rgba(255,255,255,0.18)',
+                  color: '#fff',
+                  borderRadius: 99,
+                  backdropFilter: 'blur(8px)',
+                }}
+              >
+                <Sparkles size={11} /> Total mensal
+              </span>
+              {newCount > 0 && (
+                <span
+                  className="text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap"
+                  style={{ background: '#fff', color: C.violet }}
+                >
+                  {newCount} nova{newCount > 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+            <p
+              className="font-black mt-3 leading-none tracking-tight"
+              style={{ fontSize: 'clamp(34px, 9vw, 44px)', color: '#fff', textShadow: '0 2px 16px rgba(0,0,0,0.15)' }}
+            >
+              {fmt(total)}
+            </p>
+            <p className="mt-2 text-[12.5px] font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
+              <TrendingDown size={12} className="inline -mt-0.5 mr-1" />
+              {fmt(yearlyTotal)} por ano · {activeCount} ativa{activeCount !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <button
+            onClick={() => scan(false)}
+            disabled={scanning}
+            aria-label="Analisar agora"
+            className="flex items-center justify-center transition-all disabled:opacity-50 active:scale-90 flex-shrink-0"
+            style={{
+              width: 44, height: 44, borderRadius: 14,
+              background: 'rgba(255,255,255,0.18)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.28)',
+              color: '#fff',
+            }}
+          >
+            <RefreshCw className={`w-[18px] h-[18px] ${scanning ? 'animate-spin' : ''}`} strokeWidth={2.5} />
+          </button>
+        </div>
+
+        {/* Mini KPIs dentro do hero */}
+        <div className="relative grid grid-cols-3 gap-2 mt-5">
+          <MiniKpi label="Ativas" value={String(activeCount)} />
+          <MiniKpi label="Canceladas" value={String(cancelledCount)} />
+          <MiniKpi label="No ano" value={fmt(yearlyTotal).replace('R$ ', 'R$')} small />
+        </div>
+      </motion.div>
 
       {/* Filtros */}
       <div className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 pb-1 scrollbar-none">
           {(['all', 'active', 'cancelled', 'ignored'] as const).map(f => {
             const active = filter === f;
             return (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className="px-3.5 py-1.5 text-[13px] font-semibold transition-all active:scale-95"
+                className="px-4 py-2 text-[13px] font-semibold transition-all active:scale-95 whitespace-nowrap flex-shrink-0"
                 style={{
-                  background: active ? C.violet : C.violetSofter,
+                  background: active ? C.violet : C.white,
                   color: active ? C.white : C.textMuted,
+                  border: active ? 'none' : `1px solid ${C.borderSoft}`,
+                  boxShadow: active ? '0 6px 16px -6px rgba(124,58,237,0.45)' : 'none',
                   borderRadius: 99,
                 }}
               >
@@ -422,32 +479,27 @@ function StatusBadge({ label, bg, fg }: { label: string; bg: string; fg: string 
   );
 }
 
-function Kpi({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
+function MiniKpi({ label, value, small = false }: { label: string; value: string; small?: boolean }) {
   return (
     <div
       style={{
-        background: C.white,
-        border: `1px solid ${C.borderSoft}`,
-        borderRadius: 16,
-        boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-        padding: 14,
+        background: 'rgba(255,255,255,0.14)',
+        border: '1px solid rgba(255,255,255,0.22)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: 14,
+        padding: '10px 12px',
       }}
     >
-      <div className="flex items-center gap-2 mb-2">
-        <div
-          className="flex items-center justify-center"
-          style={{ width: 28, height: 28, borderRadius: 8, background: C.violetSofter, color: C.violet }}
-        >
-          {icon}
-        </div>
-        <p
-          className="font-bold uppercase tracking-wide"
-          style={{ fontSize: 11, color: C.textSubtle }}
-        >
-          {label}
-        </p>
-      </div>
-      <p className="font-black leading-tight" style={{ fontSize: 24, color: C.textStrong }}>
+      <p
+        className="font-semibold uppercase tracking-wider"
+        style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.78)' }}
+      >
+        {label}
+      </p>
+      <p
+        className="font-black leading-none mt-1.5"
+        style={{ fontSize: small ? 14 : 18, color: '#fff' }}
+      >
         {value}
       </p>
     </div>
