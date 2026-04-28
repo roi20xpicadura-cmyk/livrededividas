@@ -1,9 +1,12 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, forwardRef, type ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/plans';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { buildPrediction, generateAlerts, DayPrediction, PredictionAlert } from '@/lib/predictionEngine';
+import {
+  ResponsiveContainer, ComposedChart, XAxis, YAxis, ReferenceLine, Tooltip, Area,
+} from 'recharts';
 import {
   AlertCircle, Activity, Zap, Sparkles, ShieldCheck
 } from 'lucide-react';
@@ -12,40 +15,38 @@ import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 
-const LazyPredChart = lazy(() => import('recharts').then(m => ({
-  default: ({ predictions, status }: { predictions: DayPrediction[]; status: string }) => {
-    const data = predictions.map(p => ({
-      date: format(new Date(p.date), 'dd/MM'),
-      saldo: Math.round(p.projectedBalance),
-      upper: Math.round(p.projectedBalance * (1 + (1 - p.confidence) * 0.5)),
-      lower: Math.round(p.projectedBalance * (1 - (1 - p.confidence) * 0.5)),
-    }));
-    const strokeColor = status === 'danger' ? '#ef4444' : '#22c55e';
-    return (
-      <m.ResponsiveContainer width="100%" height="100%">
-        <m.ComposedChart data={data} margin={{ top: 10, right: 10, bottom: 0, left: -10 }}>
-          <defs>
-            <linearGradient id="predGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={strokeColor} stopOpacity={0.15} />
-              <stop offset="95%" stopColor={strokeColor} stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="confGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={strokeColor} stopOpacity={0.08} />
-              <stop offset="95%" stopColor={strokeColor} stopOpacity={0.02} />
-            </linearGradient>
-          </defs>
-          <m.XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} interval={6} />
-          <m.YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`} />
-          <m.ReferenceLine y={0} stroke="#ef4444" strokeDasharray="4 4" />
-          <m.Tooltip contentStyle={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-base)', borderRadius: 10, fontSize: 12 }} />
-          <m.Area type="monotone" dataKey="upper" stroke="none" fill="url(#confGrad)" name="Limite superior" />
-          <m.Area type="monotone" dataKey="lower" stroke="none" fill="url(#confGrad)" name="Limite inferior" />
-          <m.Area type="monotone" dataKey="saldo" stroke={strokeColor} strokeWidth={2.5} fill="url(#predGrad)" name="Saldo projetado" />
-        </m.ComposedChart>
-      </m.ResponsiveContainer>
-    );
-  }
-})));
+function PredChart({ predictions, status }: { predictions: DayPrediction[]; status: string }) {
+  const data = predictions.map(p => ({
+    date: format(new Date(p.date), 'dd/MM'),
+    saldo: Math.round(p.projectedBalance),
+    upper: Math.round(p.projectedBalance * (1 + (1 - p.confidence) * 0.5)),
+    lower: Math.round(p.projectedBalance * (1 - (1 - p.confidence) * 0.5)),
+  }));
+  const strokeColor = status === 'danger' ? 'var(--color-danger-solid)' : 'var(--color-success-solid)';
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <ComposedChart data={data} margin={{ top: 10, right: 10, bottom: 0, left: -10 }}>
+        <defs>
+          <linearGradient id="predGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={strokeColor} stopOpacity={0.15} />
+            <stop offset="95%" stopColor={strokeColor} stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id="confGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={strokeColor} stopOpacity={0.08} />
+            <stop offset="95%" stopColor={strokeColor} stopOpacity={0.02} />
+          </linearGradient>
+        </defs>
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} interval={6} />
+        <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`} />
+        <ReferenceLine y={0} stroke="var(--color-danger-solid)" strokeDasharray="4 4" />
+        <Tooltip contentStyle={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-base)', borderRadius: 10, fontSize: 12 }} />
+        <Area type="monotone" dataKey="upper" stroke="none" fill="url(#confGrad)" name="Limite superior" />
+        <Area type="monotone" dataKey="lower" stroke="none" fill="url(#confGrad)" name="Limite inferior" />
+        <Area type="monotone" dataKey="saldo" stroke={strokeColor} strokeWidth={2.5} fill="url(#predGrad)" name="Saldo projetado" />
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
+}
 
 export default function PredictionsPage() {
   const { user } = useAuth();
