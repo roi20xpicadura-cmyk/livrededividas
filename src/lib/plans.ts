@@ -66,7 +66,7 @@ export const PLANS = {
   business: {
     name: 'Business',
     price: 59.90,
-    color: '#2563EB',
+    color: '#7C3AED',
     limits: {
       transactions_per_month: Infinity,
       goals: Infinity,
@@ -108,8 +108,6 @@ export const PLAN_BENEFITS: Record<Plan, {
     items: [
       { label: 'Até 50 lançamentos por mês', included: true },
       { label: 'Até 2 metas financeiras', included: true },
-      { label: '1 cartão de crédito', included: true },
-      { label: 'Até 2 investimentos', included: true },
       { label: 'Dashboard com score financeiro', included: true },
       { label: 'Open Finance (conexão com bancos)', included: true },
       { label: 'App mobile (PWA)', included: true },
@@ -125,7 +123,7 @@ export const PLAN_BENEFITS: Record<Plan, {
     tagline: 'Para quem leva a vida financeira a sério',
     items: [
       { label: 'Lançamentos ilimitados', included: true },
-      { label: 'Metas, cartões e investimentos ilimitados', included: true },
+      { label: 'Metas e investimentos ilimitados', included: true },
       { label: 'Kora IA completa (app + WhatsApp)', included: true },
       { label: 'Controle de dívidas e simulador', included: true },
       { label: 'Orçamentos por categoria', included: true },
