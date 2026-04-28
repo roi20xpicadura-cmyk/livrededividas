@@ -438,11 +438,7 @@ export default function AppLayout() {
       {/* ═══ MAIN CONTENT ═══ */}
       <div
         className="flex-1 min-w-0 flex flex-col"
-        style={{
-          paddingBottom: isMobile
-            ? 'calc(72px + env(safe-area-inset-bottom, 0px))'
-            : 0,
-        }}
+        style={{ paddingBottom: 0 }}
       >
         {/* Header */}
         <header className="sticky top-0 z-30 flex items-center glass" style={{
@@ -575,7 +571,7 @@ export default function AppLayout() {
           </div>
         )}
 
-        <main style={{ maxWidth: 1400, margin: '0 auto', width: '100%', padding: isMobile ? '8px 16px 112px' : '24px 28px' }}>
+        <main style={{ maxWidth: 1400, margin: '0 auto', width: '100%', padding: isMobile ? '8px 16px calc(72px + env(safe-area-inset-bottom, 0px))' : '24px 28px' }}>
           <Suspense fallback={<InnerPageSkeleton />}>
            <Outlet context={{ openChat: () => setChatOpen(true), closeChat: () => setChatOpen(false), chatOpen }} />
           </Suspense>
