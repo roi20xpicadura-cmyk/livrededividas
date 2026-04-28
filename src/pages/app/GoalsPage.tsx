@@ -430,8 +430,17 @@ function EmptyState({ onAdd }: { onAdd: (prefill?: { name?: string }) => void })
   );
 }
 
-/* ─── Summary Bar ─── */
-function SummaryBar({ goals }: { goals: GoalRow[] }) {
+/* ─── Premium Hero ─── */
+function GoalsHero({
+  activeGoals,
+  completedGoals,
+  onAdd,
+}: {
+  activeGoals: GoalRow[];
+  completedGoals: GoalRow[];
+  onAdd: () => void;
+}) {
+  const goals = activeGoals;
   const totalTarget = goals.reduce((s, g) => s + Number(g.target_amount), 0);
   const totalSaved = goals.reduce((s, g) => s + Number(g.current_amount), 0);
   const overallPct = totalTarget > 0 ? Math.min(100, (totalSaved / totalTarget) * 100) : 0;
@@ -472,64 +481,126 @@ function SummaryBar({ goals }: { goals: GoalRow[] }) {
   const statusConfig = {
     'done': {
       label: 'Concluído',
-      dot: '#22c55e',
-      chipBg: 'rgba(34,197,94,0.12)',
-      chipText: '#16a34a',
-      barColor: 'linear-gradient(90deg, hsl(var(--primary)), #22c55e)',
-      hint: 'Todas as metas alcançadas! 🎉',
+      dot: '#34d399',
+      chipBg: 'rgba(52,211,153,0.18)',
+      chipText: '#a7f3d0',
+      barColor: 'linear-gradient(90deg, #a78bfa, #34d399)',
+      hint: 'Todas as metas alcançadas. Excelência!',
     },
     'on-track': {
       label: 'No ritmo',
-      dot: 'hsl(var(--primary))',
-      chipBg: 'hsl(var(--primary) / 0.10)',
-      chipText: 'hsl(var(--primary))',
-      barColor: 'hsl(var(--primary))',
+      dot: '#a7f3d0',
+      chipBg: 'rgba(167,243,208,0.16)',
+      chipText: '#d1fae5',
+      barColor: 'linear-gradient(90deg, #c4b5fd, #ffffff)',
       hint: null,
     },
     'warning': {
       label: 'Acelerar',
-      dot: '#d97706',
-      chipBg: 'rgba(217,119,6,0.10)',
-      chipText: '#b45309',
-      barColor: 'linear-gradient(90deg, hsl(var(--primary)), #f59e0b)',
+      dot: '#fbbf24',
+      chipBg: 'rgba(251,191,36,0.20)',
+      chipText: '#fde68a',
+      barColor: 'linear-gradient(90deg, #c4b5fd, #fbbf24)',
       hint: 'Um pequeno empurrão e você volta ao ritmo.',
     },
     'alert': {
       label: 'Atenção',
-      dot: '#d97706',
-      chipBg: 'rgba(217,119,6,0.14)',
-      chipText: '#b45309',
-      barColor: 'linear-gradient(90deg, hsl(var(--primary)), #f59e0b)',
+      dot: '#fbbf24',
+      chipBg: 'rgba(251,191,36,0.24)',
+      chipText: '#fef3c7',
+      barColor: 'linear-gradient(90deg, #c4b5fd, #fbbf24)',
       hint: 'Você está atrás do planejado. Que tal um depósito hoje?',
     },
   }[status];
 
   return (
-    <div style={{
-      margin: '14px 16px 0',
-      background: 'var(--color-bg-surface)',
-      borderRadius: 18,
-      padding: '16px 18px 18px',
-      boxShadow: 'var(--shadow-sm)',
-      border: '0.5px solid var(--color-border-weak)',
-    }}>
-      {/* Header row */}
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      style={{
+        position: 'relative',
+        margin: '8px 16px 0',
+        borderRadius: 24,
+        padding: '20px 20px 22px',
+        background: 'linear-gradient(135deg, #1e1b4b 0%, #4c1d95 45%, #6d28d9 100%)',
+        color: 'white',
+        overflow: 'hidden',
+        boxShadow: '0 20px 50px -12px rgba(76, 29, 149, 0.55), 0 8px 20px -8px rgba(15, 23, 42, 0.3), inset 0 1px 0 rgba(255,255,255,0.10)',
+      }}
+    >
+      {/* Decorative orbs */}
+      <div aria-hidden style={{
+        position: 'absolute', top: -60, right: -40,
+        width: 200, height: 200, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(167,139,250,0.45), transparent 70%)',
+        filter: 'blur(24px)', pointerEvents: 'none',
+      }} />
+      <div aria-hidden style={{
+        position: 'absolute', bottom: -80, left: -60,
+        width: 240, height: 240, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(124,58,237,0.4), transparent 70%)',
+        filter: 'blur(32px)', pointerEvents: 'none',
+      }} />
+      {/* Subtle grid texture */}
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0,
+        backgroundImage:
+          'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
+        backgroundSize: '24px 24px',
+        maskImage: 'radial-gradient(ellipse at top right, black 30%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* Top row: title + status chip */}
       <div style={{
-        display: 'flex', justifyContent: 'space-between',
-        alignItems: 'center', marginBottom: 10,
+        position: 'relative',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 18,
       }}>
-        <div style={{
-          fontSize: 11, fontWeight: 700,
-          color: 'var(--color-text-subtle)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.1em',
-        }}>
-          Progresso geral
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(255,255,255,0.12)',
+            border: '0.5px solid rgba(255,255,255,0.22)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18)',
+          }}>
+            <Target size={16} color="white" strokeWidth={2.25} />
+          </div>
+          <div>
+            <div style={{
+              fontSize: 10.5, fontWeight: 800,
+              color: 'rgba(255,255,255,0.65)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.14em',
+              lineHeight: 1,
+              marginBottom: 4,
+            }}>
+              Progresso geral
+            </div>
+            <div style={{
+              fontSize: 13, fontWeight: 700, color: 'white',
+              letterSpacing: '-0.01em', lineHeight: 1,
+            }}>
+              {activeGoals.length} ativa{activeGoals.length !== 1 ? 's' : ''}
+              {completedGoals.length > 0 && (
+                <span style={{ color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>
+                  {' · '}{completedGoals.length} concluída{completedGoals.length !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
         <div style={{
           display: 'inline-flex', alignItems: 'center',
-          gap: 6, padding: '3px 10px',
+          gap: 6, padding: '5px 11px',
           background: statusConfig.chipBg,
+          border: '0.5px solid rgba(255,255,255,0.18)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
           borderRadius: 99,
           fontSize: 11, fontWeight: 800,
           color: statusConfig.chipText,
@@ -538,48 +609,56 @@ function SummaryBar({ goals }: { goals: GoalRow[] }) {
           <span style={{
             width: 6, height: 6, borderRadius: '50%',
             background: statusConfig.dot,
-            boxShadow: `0 0 0 3px ${statusConfig.dot}22`,
+            boxShadow: `0 0 0 3px ${statusConfig.dot}33, 0 0 8px ${statusConfig.dot}88`,
           }} />
           {statusConfig.label}
         </div>
       </div>
 
-      {/* Amount */}
-      <div style={{
-        display: 'flex', alignItems: 'baseline',
-        gap: 6, marginBottom: 10, flexWrap: 'wrap',
-      }}>
-        <span style={{
-          fontSize: 24, fontWeight: 900,
-          fontFamily: 'var(--font-mono)',
-          letterSpacing: '-0.03em',
-          color: 'var(--color-text-strong)',
-          lineHeight: 1,
+      {/* Big amount */}
+      <div style={{ position: 'relative', marginBottom: 14 }}>
+        <div style={{
+          display: 'flex', alignItems: 'baseline', gap: 8,
+          flexWrap: 'wrap',
         }}>
-          R$ {formatMoney(totalSaved)}
-        </span>
-        <span style={{
-          fontSize: 12, color: 'var(--color-text-subtle)',
+          <span style={{
+            fontSize: 11, color: 'rgba(255,255,255,0.55)',
+            fontWeight: 700, letterSpacing: '0.02em',
+          }}>R$</span>
+          <span style={{
+            fontSize: 34, fontWeight: 900,
+            fontFamily: 'var(--font-mono)',
+            letterSpacing: '-0.04em',
+            color: 'white',
+            lineHeight: 1,
+            textShadow: '0 2px 16px rgba(0,0,0,0.25)',
+          }}>
+            {formatMoney(totalSaved)}
+          </span>
+        </div>
+        <div style={{
+          marginTop: 6,
+          fontSize: 12, color: 'rgba(255,255,255,0.6)',
           fontWeight: 500,
         }}>
-          de R$ {formatMoney(totalTarget)}
-        </span>
-        <span style={{
-          marginLeft: 'auto',
-          fontSize: 12, fontWeight: 800,
-          fontFamily: 'var(--font-mono)',
-          color: 'var(--color-text-strong)',
-          letterSpacing: '-0.02em',
-        }}>
-          {overallPct.toFixed(0)}%
-        </span>
+          de <span style={{
+            color: 'rgba(255,255,255,0.85)', fontWeight: 700,
+            fontFamily: 'var(--font-mono)',
+          }}>R$ {formatMoney(totalTarget)}</span>
+          {' · '}
+          <span style={{
+            color: 'white', fontWeight: 800,
+            fontFamily: 'var(--font-mono)',
+          }}>{overallPct.toFixed(0)}%</span>
+        </div>
       </div>
 
-      {/* Progress bar — status aware, with expected marker */}
+      {/* Progress bar */}
       <div style={{
         position: 'relative',
-        height: 8, background: 'var(--color-bg-sunken)',
+        height: 10, background: 'rgba(255,255,255,0.10)',
         borderRadius: 99, overflow: 'visible',
+        boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.18)',
       }}>
         <div style={{
           position: 'absolute', inset: 0,
@@ -587,57 +666,89 @@ function SummaryBar({ goals }: { goals: GoalRow[] }) {
         }}>
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${overallPct}%` }}
+            animate={{ width: `${Math.max(overallPct, overallPct > 0 ? 3 : 0)}%` }}
             transition={{ duration: 1.2, ease: 'easeOut' }}
             style={{
               height: '100%', borderRadius: 99,
               background: statusConfig.barColor,
+              position: 'relative',
+              boxShadow: '0 0 16px rgba(255,255,255,0.35)',
             }}
-          />
+          >
+            <div style={{
+              position: 'absolute', top: 1, left: 4, right: 4, height: 3,
+              background: 'rgba(255,255,255,0.45)',
+              borderRadius: 99,
+            }} />
+          </motion.div>
         </div>
-        {/* Expected-progress marker (only if deadline data exists and makes sense) */}
         {expectedPct > 1 && expectedPct < 100 && Math.abs(expectedPct - overallPct) > 1 && (
           <div
             title={`Esperado: ${expectedPct.toFixed(0)}%`}
             style={{
               position: 'absolute',
               left: `${Math.min(99, expectedPct)}%`,
-              top: -2, bottom: -2,
+              top: -3, bottom: -3,
               width: 2,
-              background: 'var(--color-text-subtle)',
-              opacity: 0.45,
+              background: 'rgba(255,255,255,0.55)',
               borderRadius: 2,
+              boxShadow: '0 0 6px rgba(255,255,255,0.55)',
             }}
           />
         )}
       </div>
 
-      {/* Footer: status-aware hint or remaining amount */}
+      {/* Footer: hint + CTA */}
       <div style={{
-        marginTop: 10,
-        fontSize: 11.5,
-        color: 'var(--color-text-subtle)',
-        fontWeight: 500,
-        lineHeight: 1.4,
+        position: 'relative',
+        marginTop: 14,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: 12,
       }}>
-        {statusConfig.hint ? (
-          <span style={{ color: statusConfig.chipText, fontWeight: 600 }}>
-            {statusConfig.hint}
-          </span>
-        ) : remaining > 0 ? (
-          <>
-            Falta{' '}
-            <span style={{
-              color: 'var(--color-text-base)', fontWeight: 700,
-              fontFamily: 'var(--font-mono)',
-            }}>
-              R$ {formatMoney(remaining)}
+        <div style={{
+          fontSize: 11.5,
+          color: 'rgba(255,255,255,0.72)',
+          fontWeight: 500, lineHeight: 1.4,
+          flex: 1, minWidth: 0,
+        }}>
+          {statusConfig.hint ? (
+            <span style={{ color: statusConfig.chipText, fontWeight: 700 }}>
+              {statusConfig.hint}
             </span>
-            {' '}para alcançar todas as metas
-          </>
-        ) : null}
+          ) : remaining > 0 ? (
+            <>
+              Falta{' '}
+              <span style={{
+                color: 'white', fontWeight: 800,
+                fontFamily: 'var(--font-mono)',
+              }}>
+                R$ {formatMoney(remaining)}
+              </span>
+              {' '}para o objetivo total
+            </>
+          ) : null}
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={onAdd}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            height: 36, padding: '0 14px',
+            background: 'white',
+            border: 'none', borderRadius: 11,
+            color: '#4c1d95', fontSize: 12.5, fontWeight: 800,
+            letterSpacing: '-0.01em',
+            cursor: 'pointer',
+            boxShadow: '0 6px 20px rgba(0,0,0,0.25), inset 0 -1px 0 rgba(0,0,0,0.05)',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <Plus size={14} strokeWidth={2.75} />
+          Nova meta
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
