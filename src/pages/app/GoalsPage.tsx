@@ -239,6 +239,7 @@ export default function GoalsPage() {
   return (
     <div style={{
       background: 'var(--color-bg-base)',
+      paddingBottom: 24,
     }}>
       {usingCache && (
         <div
@@ -257,60 +258,65 @@ export default function GoalsPage() {
           📡 Sem conexão — exibindo valores salvos no dispositivo. Vão sincronizar ao voltar online.
         </div>
       )}
-      {/* Header */}
-      <div style={{
-        padding: '14px 20px 0',
-        display: 'flex',
-        alignItems: 'flex-end',
-        justifyContent: 'space-between',
-        gap: 12,
-      }}>
-        <div style={{ minWidth: 0 }}>
-          {goals.length > 0 ? (
-            <p style={{
-              fontSize: 13,
-              color: 'var(--color-text-subtle)',
-              fontWeight: 500,
-              lineHeight: 1.3,
+      {/* Header — Premium */}
+      {goals.length > 0 && (
+        <div style={{
+          padding: '8px 20px 4px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+        }}>
+          <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '5px 10px',
+              borderRadius: 99,
+              background: 'hsl(var(--primary) / 0.10)',
+              border: '0.5px solid hsl(var(--primary) / 0.18)',
+              fontSize: 11.5, fontWeight: 800,
+              color: 'hsl(var(--primary))',
+              letterSpacing: '-0.01em',
+              fontFeatureSettings: '"tnum"',
             }}>
-              <span style={{ color: 'var(--color-text-strong)', fontWeight: 700 }}>
-                {activeGoals.length}
-              </span>
-              {' '}meta{activeGoals.length !== 1 ? 's' : ''} ativa{activeGoals.length !== 1 ? 's' : ''}
-              {completedGoals.length > 0 && (
-                <>
-                  {' · '}
-                  <span style={{ color: 'hsl(var(--primary))', fontWeight: 700 }}>
-                    {completedGoals.length}
-                  </span>
-                  {' '}concluída{completedGoals.length !== 1 ? 's' : ''}
-                </>
-              )}
-            </p>
-          ) : (
-            <p style={{ fontSize: 13, color: 'var(--color-text-subtle)' }}>
-              Defina onde você quer chegar
-            </p>
-          )}
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: 'hsl(var(--primary))',
+                boxShadow: '0 0 0 3px hsl(var(--primary) / 0.18)',
+              }} />
+              {activeGoals.length} ativa{activeGoals.length !== 1 ? 's' : ''}
+            </div>
+            {completedGoals.length > 0 && (
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                fontSize: 11.5, fontWeight: 700,
+                color: 'var(--color-text-subtle)',
+              }}>
+                <Trophy size={11} color="#d97706" />
+                {completedGoals.length} concluída{completedGoals.length !== 1 ? 's' : ''}
+              </div>
+            )}
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => openAddGoal()}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              height: 36, padding: '0 14px',
+              background: 'hsl(var(--primary))',
+              border: 'none', borderRadius: 11,
+              color: 'white', fontSize: 13, fontWeight: 800,
+              letterSpacing: '-0.01em',
+              cursor: 'pointer',
+              boxShadow: '0 6px 18px hsl(var(--primary) / 0.32), inset 0 1px 0 rgba(255,255,255,0.18)',
+              flexShrink: 0,
+            }}
+          >
+            <Plus size={14} strokeWidth={2.75} />
+            Nova meta
+          </motion.button>
         </div>
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => openAddGoal()}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            height: 34, padding: '0 12px',
-            background: 'hsl(var(--primary))',
-            border: 'none', borderRadius: 10,
-            color: 'white', fontSize: 12.5, fontWeight: 700,
-            cursor: 'pointer',
-            boxShadow: '0 2px 8px hsl(var(--primary) / 0.28)',
-            flexShrink: 0,
-          }}
-        >
-          <Plus size={14} strokeWidth={2.5} />
-          Nova meta
-        </motion.button>
-      </div>
+      )}
 
       {/* Empty state */}
       {goals.length === 0 && (
