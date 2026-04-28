@@ -275,19 +275,23 @@ export default function PredictionsPage() {
       )}
 
       {/* Event timeline */}
-      <div style={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-base)', borderRadius: 16, padding: 20 }}>
-        <div className="flex items-center justify-between mb-3">
-          <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-strong)' }}>Eventos previstos</p>
+      <div style={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-base)', borderRadius: 18, padding: 20 }}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text-strong)', letterSpacing: '-0.2px' }}>Eventos previstos</p>
+            <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>{filteredEvents.length} {filteredEvents.length === 1 ? 'evento' : 'eventos'} no período</p>
+          </div>
         </div>
 
         <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-hide">
           {(['all', 'confirmed', 'estimated', 'income', 'expense'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
               style={{
-                padding: '4px 12px', borderRadius: 99, fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
-                background: filter === f ? 'var(--color-green-600)' : 'var(--color-bg-sunken)',
+                padding: '5px 12px', borderRadius: 99, fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                background: filter === f ? 'var(--color-green-600)' : 'transparent',
                 color: filter === f ? 'white' : 'var(--color-text-muted)',
-                border: 'none',
+                border: `1px solid ${filter === f ? 'transparent' : 'var(--color-border-base)'}`,
+                transition: 'all 0.15s',
               }}>
               {{ all: 'Todos', confirmed: 'Confirmados', estimated: 'Estimados', income: 'Receitas', expense: 'Despesas' }[f]}
             </button>
