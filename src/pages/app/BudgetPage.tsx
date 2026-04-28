@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { formatCurrency, PLAN_LIMITS, type PlanType } from '@/lib/plans';
-import { Wallet, TrendingDown, AlertTriangle, PiggyBank, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
+import { Wallet, AlertTriangle, PiggyBank, ChevronLeft, ChevronRight, Settings2, Plus, ArrowRight } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -223,11 +223,11 @@ export default function BudgetPage() {
   if (loading) return <div className="p-7"><div className="h-96 rounded-2xl skeleton-shimmer" /></div>;
 
   const globalPct = totalBudget > 0 ? Math.min(100, (totalSpent / totalBudget) * 100) : 0;
+  // Removidos "Orçamento" e "Gasto" porque já aparecem em destaque no hero.
+  // Mantemos apenas KPIs complementares: Disponível e Em alerta.
   const kpis = [
-    { label: 'Orçamento', value: formatCompact(totalBudget), Icon: Wallet, tint: 'violet' as const },
-    { label: 'Gasto', value: formatCompact(totalSpent), Icon: TrendingDown, tint: 'red' as const },
-    { label: 'Disponível', value: formatCompact(Math.max(0, totalBudget - totalSpent)), Icon: PiggyBank, tint: 'green' as const },
-    { label: 'Em alerta', value: String(overBudgetCount), Icon: AlertTriangle, tint: 'amber' as const },
+    { label: 'Disponível', value: totalBudget > 0 ? formatCompact(Math.max(0, totalBudget - totalSpent)) : '—', sub: totalBudget > 0 ? `${Math.round(100 - globalPct)}% restante` : 'sem orçamento', Icon: PiggyBank, tint: 'green' as const },
+    { label: 'Em alerta', value: String(overBudgetCount), sub: overBudgetCount === 0 ? 'tudo no controle' : overBudgetCount === 1 ? 'categoria' : 'categorias', Icon: AlertTriangle, tint: 'amber' as const },
   ];
   const tintMap = {
     violet: { bg: 'rgba(124,58,237,0.10)', border: 'rgba(124,58,237,0.22)', icon: '#7C3AED', val: C.textStrong },
@@ -263,115 +263,144 @@ export default function BudgetPage() {
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
           className="mx-4 relative overflow-hidden"
           style={{
-            borderRadius: 20,
-            background: 'linear-gradient(135deg, #2a0f5f 0%, #4c1d95 45%, #7c3aed 100%)',
-            padding: '18px 18px 20px',
-            boxShadow: '0 18px 40px -18px rgba(124,58,237,0.55), inset 0 1px 0 rgba(255,255,255,0.10)',
+            borderRadius: 22,
+            background: 'linear-gradient(155deg, #1e0a47 0%, #3b1685 35%, #6d28d9 75%, #7c3aed 100%)',
+            padding: '14px 16px 18px',
+            boxShadow: '0 22px 48px -20px rgba(76,29,149,0.65), 0 1px 0 rgba(255,255,255,0.06) inset',
           }}
         >
-          {/* sheen sutil no topo */}
+          {/* Sheen no topo */}
           <span aria-hidden style={{
-            position: 'absolute', inset: '0 0 auto 0', height: 1,
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)',
+            position: 'absolute', inset: '0 12% auto 12%', height: 1,
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent)',
           }} />
-          {/* glow ambiente */}
+          {/* Glow decorativo */}
           <span aria-hidden style={{
-            position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(167,139,250,0.35), transparent 70%)',
-            filter: 'blur(8px)', pointerEvents: 'none',
+            position: 'absolute', top: -50, right: -30, width: 200, height: 200, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(167,139,250,0.32), transparent 70%)',
+            filter: 'blur(14px)', pointerEvents: 'none',
+          }} />
+          <span aria-hidden style={{
+            position: 'absolute', bottom: -60, left: -40, width: 180, height: 180, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(124,58,237,0.30), transparent 70%)',
+            filter: 'blur(20px)', pointerEvents: 'none',
           }} />
 
-          {/* linha 1: navegador de mês + CTA */}
+          {/* Linha 1 — month nav inline + Configurar (compacto, sem quebra de texto) */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, position: 'relative' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center',
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.14)',
+              borderRadius: 999,
+              padding: 3,
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+            }}>
               <button
                 onClick={() => setCurrentMonth(m => subMonths(m, 1))}
                 aria-label="Mês anterior"
-                style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                style={{ width: 28, height: 28, borderRadius: 999, background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                <ChevronLeft style={{ width: 16, height: 16 }} />
+                <ChevronLeft style={{ width: 15, height: 15 }} />
               </button>
-              <div style={{ minWidth: 0, flex: 1, textAlign: 'center' }}>
-                <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Orçamento mensal</div>
-                <div style={{ color: '#fff', fontSize: 17, fontWeight: 800, textTransform: 'capitalize', letterSpacing: '-0.01em', lineHeight: 1.15 }}>
-                  {monthLabel}
-                </div>
+              <div style={{
+                color: '#fff', fontSize: 13, fontWeight: 800, textTransform: 'capitalize',
+                padding: '0 10px', minWidth: 96, textAlign: 'center', letterSpacing: '-0.005em',
+              }}>
+                {monthLabel}
               </div>
               <button
                 onClick={() => setCurrentMonth(m => addMonths(m, 1))}
                 aria-label="Próximo mês"
-                style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                style={{ width: 28, height: 28, borderRadius: 999, background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                <ChevronRight style={{ width: 16, height: 16 }} />
+                <ChevronRight style={{ width: 15, height: 15 }} />
               </button>
             </div>
             <button
               onClick={openSetup}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: '#fff', color: '#5B21B6', border: 'none', borderRadius: 10,
-                padding: '8px 12px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
-                boxShadow: '0 6px 14px -4px rgba(0,0,0,0.25)',
-                flexShrink: 0,
+                background: 'rgba(255,255,255,0.12)', color: '#fff',
+                border: '1px solid rgba(255,255,255,0.22)', borderRadius: 999,
+                padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
               }}
             >
               <Settings2 style={{ width: 13, height: 13 }} /> Configurar
             </button>
           </div>
 
-          {/* linha 2: total destaque + barra global */}
-          <div style={{ marginTop: 16, position: 'relative' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 600 }}>Gasto este mês</div>
-                <div style={{ color: '#fff', fontSize: 26, fontWeight: 900, letterSpacing: '-0.025em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
-                  {formatCurrency(totalSpent)}
-                </div>
+          {/* Linha 2 — Hero balance: valor gigante centralizado, label discreto */}
+          <div style={{ marginTop: 14, position: 'relative', textAlign: 'center' }}>
+            <div style={{ color: 'rgba(255,255,255,0.62)', fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
+              Gasto este mês
+            </div>
+            <div style={{
+              color: '#fff', marginTop: 4,
+              fontSize: 34, fontWeight: 900, letterSpacing: '-0.035em',
+              fontVariantNumeric: 'tabular-nums', lineHeight: 1.05,
+              textShadow: '0 1px 2px rgba(0,0,0,0.15)',
+            }}>
+              {formatCurrency(totalSpent)}
+            </div>
+            <div style={{ marginTop: 6, color: 'rgba(255,255,255,0.78)', fontSize: 12, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+              {totalBudget > 0
+                ? <>de <span style={{ color: '#fff', fontWeight: 800 }}>{formatCurrency(totalBudget)}</span> orçados</>
+                : 'nenhum orçamento definido'}
+            </div>
+          </div>
+
+          {/* Linha 3 — Barra global OU CTA inline pra definir orçamento */}
+          {totalBudget > 0 ? (
+            <div style={{ marginTop: 14, position: 'relative' }}>
+              <div style={{ background: 'rgba(255,255,255,0.16)', borderRadius: 99, height: 6, overflow: 'hidden' }}>
+                <motion.div
+                  initial={{ width: '0%' }}
+                  animate={{ width: `${globalPct}%` }}
+                  transition={{ duration: 0.95, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+                  style={{
+                    height: '100%', borderRadius: 99,
+                    background: globalPct >= 100
+                      ? 'linear-gradient(90deg, #fca5a5, #ef4444)'
+                      : globalPct >= 80
+                        ? 'linear-gradient(90deg, #fcd34d, #f59e0b)'
+                        : 'linear-gradient(90deg, #ddd6fe, #ffffff)',
+                    boxShadow: '0 0 14px rgba(255,255,255,0.55)',
+                  }}
+                />
               </div>
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 600 }}>de</div>
-                <div style={{ color: '#fff', fontSize: 14, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                  {totalBudget > 0 ? formatCurrency(totalBudget) : '— sem limite'}
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+                <span style={{ color: 'rgba(255,255,255,0.78)', fontSize: 11, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                  {Math.round(globalPct)}% utilizado
+                </span>
+                <span style={{ color: 'rgba(255,255,255,0.78)', fontSize: 11, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                  {formatCurrency(Math.max(0, totalBudget - totalSpent))} restante
+                </span>
               </div>
             </div>
-            {totalBudget > 0 && (
-              <>
-                <div style={{ background: 'rgba(255,255,255,0.14)', borderRadius: 99, height: 8, overflow: 'hidden', position: 'relative' }}>
-                  <motion.div
-                    initial={{ width: '0%' }}
-                    animate={{ width: `${globalPct}%` }}
-                    transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
-                    style={{
-                      height: '100%',
-                      background: globalPct >= 100
-                        ? 'linear-gradient(90deg, #f87171, #ef4444)'
-                        : globalPct >= 80
-                          ? 'linear-gradient(90deg, #fbbf24, #f59e0b)'
-                          : 'linear-gradient(90deg, #c4b5fd, #ffffff)',
-                      borderRadius: 99,
-                      boxShadow: '0 0 12px rgba(255,255,255,0.45)',
-                    }}
-                  />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                  <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: 600 }}>
-                    {Math.round(globalPct)}% utilizado
-                  </span>
-                  <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-                    {formatCurrency(Math.max(0, totalBudget - totalSpent))} restante
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
+          ) : (
+            <button
+              onClick={openSetup}
+              style={{
+                marginTop: 14, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                background: '#fff', color: '#5B21B6', border: 'none', borderRadius: 12,
+                padding: '11px 14px', fontSize: 13, fontWeight: 800, cursor: 'pointer',
+                boxShadow: '0 8px 20px -8px rgba(0,0,0,0.35)',
+                position: 'relative',
+              }}
+            >
+              Definir orçamento mensal <ArrowRight style={{ width: 14, height: 14 }} />
+            </button>
+          )}
         </motion.div>
 
-        {/* ─────── KPI cards premium ─────── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 px-4">
+        {/* ─────── KPI cards (apenas complementares ao hero) ─────── */}
+        <div className="grid grid-cols-2 gap-2.5 px-4">
           {kpis.map((s, i) => {
             const t = tintMap[s.tint];
             return (
@@ -383,27 +412,29 @@ export default function BudgetPage() {
                 style={{
                   background: C.white,
                   border: `1px solid ${C.cardBorder}`,
-                  borderRadius: 14,
-                  padding: '12px 14px',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.03), 0 4px 12px -6px rgba(124,58,237,0.08)',
+                  borderRadius: 16,
+                  padding: '14px 14px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.03), 0 6px 18px -10px rgba(124,58,237,0.10)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 11,
+                  gap: 12,
                   minWidth: 0,
                   position: 'relative',
                   overflow: 'hidden',
                 }}
               >
                 <div style={{
-                  width: 38, height: 38, borderRadius: 11,
-                  background: t.bg, border: `1px solid ${t.border}`,
+                  width: 42, height: 42, borderRadius: 12,
+                  background: `linear-gradient(135deg, ${t.bg}, ${t.bg.replace(/0\.\d+\)/, '0.04)')})`,
+                  border: `1px solid ${t.border}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
-                  <s.Icon style={{ width: 18, height: 18, color: t.icon, strokeWidth: 2.2 }} />
+                  <s.Icon style={{ width: 20, height: 20, color: t.icon, strokeWidth: 2.2 }} />
                 </div>
                 <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <p style={{ color: C.textMuted, fontSize: 10, fontWeight: 700, lineHeight: 1.1, letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</p>
-                  <p style={{ color: t.val, fontSize: 16, fontWeight: 800, lineHeight: 1.15, letterSpacing: '-0.015em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={s.value}>{s.value}</p>
+                  <p style={{ color: C.textMuted, fontSize: 10, fontWeight: 700, lineHeight: 1.1, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</p>
+                  <p style={{ color: t.val, fontSize: 19, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={s.value}>{s.value}</p>
+                  <p style={{ color: C.textMuted, fontSize: 10.5, fontWeight: 600, lineHeight: 1.1, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.sub}</p>
                 </div>
               </motion.div>
             );
@@ -605,9 +636,15 @@ export default function BudgetPage() {
                           ) : (
                             <button
                               onClick={() => { setBudgetInputs(prev => ({ ...prev, [row.category]: '' })); setShowSetup(true); }}
-                              style={{ background: 'rgba(124,58,237,0.08)', border: '1px dashed rgba(124,58,237,0.35)', borderRadius: 10, padding: '9px 12px', color: C.violet, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', width: '100%' }}
+                              style={{
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                background: 'transparent',
+                                border: '1px dashed rgba(124,58,237,0.35)', borderRadius: 10,
+                                padding: '8px 12px', color: C.violet, fontSize: 12, fontWeight: 700,
+                                cursor: 'pointer', whiteSpace: 'nowrap', width: '100%',
+                              }}
                             >
-                              + Definir limite
+                              <Plus style={{ width: 13, height: 13, strokeWidth: 2.5 }} /> Definir limite
                             </button>
                           )}
                         </div>
