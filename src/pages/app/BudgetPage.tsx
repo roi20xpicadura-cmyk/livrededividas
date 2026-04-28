@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { formatCurrency, PLAN_LIMITS, type PlanType } from '@/lib/plans';
-import { DollarSign, TrendingUp, AlertCircle, PieChart } from 'lucide-react';
+import { Wallet, TrendingDown, AlertTriangle, PiggyBank, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -210,12 +210,6 @@ export default function BudgetPage() {
     fetchData();
   };
 
-  const getProgressColor = (pct: number) => {
-    if (pct >= 100) return C.red;
-    if (pct >= 80) return C.amber;
-    return C.violet;
-  };
-
   const getCatEmoji = (cat: string) => {
     const map: Record<string, string> = {
       'Moradia': '🏠', 'Alimentação': '🍕', 'Transporte': '🚗', 'Saúde': '💊',
@@ -228,12 +222,19 @@ export default function BudgetPage() {
 
   if (loading) return <div className="p-7"><div className="h-96 rounded-2xl skeleton-shimmer" /></div>;
 
+  const globalPct = totalBudget > 0 ? Math.min(100, (totalSpent / totalBudget) * 100) : 0;
   const kpis = [
-    { label: 'Orçamento', value: formatCompact(totalBudget), Icon: DollarSign, iconBg: C.violetSoft, iconColor: C.violet, valColor: C.violet },
-    { label: 'Gasto', value: formatCompact(totalSpent), Icon: TrendingUp, iconBg: C.redSoft, iconColor: C.red, valColor: C.red },
-    { label: 'Disponível', value: formatCompact(Math.max(0, totalBudget - totalSpent)), Icon: PieChart, iconBg: C.greenSoft, iconColor: C.green, valColor: C.green },
-    { label: 'No limite', value: String(overBudgetCount), Icon: AlertCircle, iconBg: C.amberSoft, iconColor: C.amber, valColor: C.amber },
+    { label: 'Orçamento', value: formatCompact(totalBudget), Icon: Wallet, tint: 'violet' as const },
+    { label: 'Gasto', value: formatCompact(totalSpent), Icon: TrendingDown, tint: 'red' as const },
+    { label: 'Disponível', value: formatCompact(Math.max(0, totalBudget - totalSpent)), Icon: PiggyBank, tint: 'green' as const },
+    { label: 'Em alerta', value: String(overBudgetCount), Icon: AlertTriangle, tint: 'amber' as const },
   ];
+  const tintMap = {
+    violet: { bg: 'rgba(124,58,237,0.10)', border: 'rgba(124,58,237,0.22)', icon: '#7C3AED', val: C.textStrong },
+    red:    { bg: 'rgba(220,38,38,0.10)',  border: 'rgba(220,38,38,0.22)',  icon: '#DC2626', val: '#DC2626' },
+    green:  { bg: 'rgba(22,163,74,0.10)',  border: 'rgba(22,163,74,0.22)',  icon: '#16A34A', val: '#16A34A' },
+    amber:  { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.25)', icon: '#D97706', val: '#D97706' },
+  };
 
   // Combine budgeted + unbudgeted into one unified category list
   const allCategoryRows = [
@@ -256,62 +257,157 @@ export default function BudgetPage() {
   ];
 
   return (
-    <div className="min-h-screen" style={{ background: '#FAFAFB' }}>
-      <div className="py-5 md:p-7 pb-4 flex flex-col gap-5 max-w-[1400px] mx-auto">
-        {/* Header row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button
-              onClick={() => setCurrentMonth(m => subMonths(m, 1))}
-              style={{ width: 32, height: 32, borderRadius: '50%', background: C.violetSoft, border: 'none', color: C.violet, fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              aria-label="Mês anterior"
-            >‹</button>
-            <div style={{ color: C.textStrong, fontSize: 16, fontWeight: 800, textTransform: 'capitalize', minWidth: 110, textAlign: 'center' }}>
-              {monthLabel}
+    <div className="min-h-screen" style={{ background: 'var(--color-bg-base, #FAFAFB)' }}>
+      <div className="py-4 md:p-7 pb-4 flex flex-col gap-4 max-w-[1400px] mx-auto">
+        {/* ─────── HERO HEADER (gradiente roxo premium) ─────── */}
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className="mx-4 relative overflow-hidden"
+          style={{
+            borderRadius: 20,
+            background: 'linear-gradient(135deg, #2a0f5f 0%, #4c1d95 45%, #7c3aed 100%)',
+            padding: '18px 18px 20px',
+            boxShadow: '0 18px 40px -18px rgba(124,58,237,0.55), inset 0 1px 0 rgba(255,255,255,0.10)',
+          }}
+        >
+          {/* sheen sutil no topo */}
+          <span aria-hidden style={{
+            position: 'absolute', inset: '0 0 auto 0', height: 1,
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)',
+          }} />
+          {/* glow ambiente */}
+          <span aria-hidden style={{
+            position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(167,139,250,0.35), transparent 70%)',
+            filter: 'blur(8px)', pointerEvents: 'none',
+          }} />
+
+          {/* linha 1: navegador de mês + CTA */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+              <button
+                onClick={() => setCurrentMonth(m => subMonths(m, 1))}
+                aria-label="Mês anterior"
+                style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+              >
+                <ChevronLeft style={{ width: 16, height: 16 }} />
+              </button>
+              <div style={{ minWidth: 0, flex: 1, textAlign: 'center' }}>
+                <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Orçamento mensal</div>
+                <div style={{ color: '#fff', fontSize: 17, fontWeight: 800, textTransform: 'capitalize', letterSpacing: '-0.01em', lineHeight: 1.15 }}>
+                  {monthLabel}
+                </div>
+              </div>
+              <button
+                onClick={() => setCurrentMonth(m => addMonths(m, 1))}
+                aria-label="Próximo mês"
+                style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+              >
+                <ChevronRight style={{ width: 16, height: 16 }} />
+              </button>
             </div>
             <button
-              onClick={() => setCurrentMonth(m => addMonths(m, 1))}
-              style={{ width: 32, height: 32, borderRadius: '50%', background: C.violetSoft, border: 'none', color: C.violet, fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              aria-label="Próximo mês"
-            >›</button>
-          </div>
-          <button
-            onClick={openSetup}
-            style={{ background: C.violet, color: C.white, border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
-          >
-            + Configurar
-          </button>
-        </div>
-
-        {/* KPI cards — 2x2 on mobile, 4 across on tablet+ so values never truncate */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 px-4">
-          {kpis.map((s, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
+              onClick={openSetup}
               style={{
-                background: C.white,
-                border: `1px solid ${C.cardBorder}`,
-                borderRadius: 14,
-                padding: '12px 14px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                minWidth: 0,
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: '#fff', color: '#5B21B6', border: 'none', borderRadius: 10,
+                padding: '8px 12px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                boxShadow: '0 6px 14px -4px rgba(0,0,0,0.25)',
+                flexShrink: 0,
               }}
             >
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: s.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <s.Icon style={{ width: 18, height: 18, color: s.iconColor }} />
+              <Settings2 style={{ width: 13, height: 13 }} /> Configurar
+            </button>
+          </div>
+
+          {/* linha 2: total destaque + barra global */}
+          <div style={{ marginTop: 16, position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 600 }}>Gasto este mês</div>
+                <div style={{ color: '#fff', fontSize: 26, fontWeight: 900, letterSpacing: '-0.025em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
+                  {formatCurrency(totalSpent)}
+                </div>
               </div>
-              <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <p style={{ color: C.textMuted, fontSize: 11, fontWeight: 600, lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</p>
-                <p style={{ color: s.valColor, fontSize: 16, fontWeight: 800, lineHeight: 1.15, letterSpacing: '-0.015em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={s.value}>{s.value}</p>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 600 }}>de</div>
+                <div style={{ color: '#fff', fontSize: 14, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                  {totalBudget > 0 ? formatCurrency(totalBudget) : '— sem limite'}
+                </div>
               </div>
-            </motion.div>
-          ))}
+            </div>
+            {totalBudget > 0 && (
+              <>
+                <div style={{ background: 'rgba(255,255,255,0.14)', borderRadius: 99, height: 8, overflow: 'hidden', position: 'relative' }}>
+                  <motion.div
+                    initial={{ width: '0%' }}
+                    animate={{ width: `${globalPct}%` }}
+                    transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+                    style={{
+                      height: '100%',
+                      background: globalPct >= 100
+                        ? 'linear-gradient(90deg, #f87171, #ef4444)'
+                        : globalPct >= 80
+                          ? 'linear-gradient(90deg, #fbbf24, #f59e0b)'
+                          : 'linear-gradient(90deg, #c4b5fd, #ffffff)',
+                      borderRadius: 99,
+                      boxShadow: '0 0 12px rgba(255,255,255,0.45)',
+                    }}
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: 600 }}>
+                    {Math.round(globalPct)}% utilizado
+                  </span>
+                  <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                    {formatCurrency(Math.max(0, totalBudget - totalSpent))} restante
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+        </motion.div>
+
+        {/* ─────── KPI cards premium ─────── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 px-4">
+          {kpis.map((s, i) => {
+            const t = tintMap[s.tint];
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                  background: C.white,
+                  border: `1px solid ${C.cardBorder}`,
+                  borderRadius: 14,
+                  padding: '12px 14px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.03), 0 4px 12px -6px rgba(124,58,237,0.08)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 11,
+                  minWidth: 0,
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                <div style={{
+                  width: 38, height: 38, borderRadius: 11,
+                  background: t.bg, border: `1px solid ${t.border}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                  <s.Icon style={{ width: 18, height: 18, color: t.icon, strokeWidth: 2.2 }} />
+                </div>
+                <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <p style={{ color: C.textMuted, fontSize: 10, fontWeight: 700, lineHeight: 1.1, letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</p>
+                  <p style={{ color: t.val, fontSize: 16, fontWeight: 800, lineHeight: 1.15, letterSpacing: '-0.015em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={s.value}>{s.value}</p>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Empty state OR category list */}
@@ -351,10 +447,30 @@ export default function BudgetPage() {
           </div>
         ) : (
           <div className="px-4">
-            {/* Section title */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: 12 }}>
-              <div style={{ color: C.textStrong, fontSize: 15, fontWeight: 800 }}>Categorias</div>
-              <div style={{ color: C.textMuted, fontSize: 12 }}>{categoriesWithSpend} com gastos</div>
+            {/* Section title premium */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2px', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 9,
+                  background: 'linear-gradient(135deg, rgba(124,58,237,0.16), rgba(124,58,237,0.06))',
+                  border: '1px solid rgba(124,58,237,0.20)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Wallet style={{ width: 14, height: 14, color: '#7C3AED', strokeWidth: 2.4 }} />
+                </div>
+                <div>
+                  <div style={{ color: C.textStrong, fontSize: 15, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.1 }}>Categorias</div>
+                  <div style={{ color: C.textMuted, fontSize: 11, fontWeight: 500 }}>Acompanhe gastos por área</div>
+                </div>
+              </div>
+              <div style={{
+                color: '#5B21B6', fontSize: 11, fontWeight: 700,
+                background: 'rgba(124,58,237,0.08)',
+                border: '1px solid rgba(124,58,237,0.18)',
+                padding: '4px 10px', borderRadius: 99,
+              }}>
+                {categoriesWithSpend} com gastos
+              </div>
             </div>
 
             {/* Category rows */}
@@ -362,67 +478,109 @@ export default function BudgetPage() {
               {allCategoryRows.map((row, i) => {
                 const overspent = row.hasLimit && row.spent > row.limit;
                 const pct = row.hasLimit ? Math.min((row.spent / row.limit) * 100, 100) : 0;
+                const isWarn = row.hasLimit && !overspent && row.pct >= 80;
+                const isOk = row.hasLimit && row.pct < 80;
+                // cor de status para a faixa superior e barra
+                const statusColor = overspent ? '#DC2626'
+                  : isWarn ? '#F59E0B'
+                  : isOk ? '#7C3AED'
+                  : '#A78BFA'; // sem limite
                 return (
                   <motion.div
                     key={row.id}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: Math.min(i * 0.04, 0.3) }}
+                    whileHover={{ y: -2 }}
+                    transition={{ delay: Math.min(i * 0.04, 0.3), duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
                     style={{
                       background: C.white,
                       border: `1px solid ${C.cardBorder}`,
-                      borderRadius: 14,
-                      padding: '14px 16px',
-                      boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
+                      borderRadius: 16,
+                      padding: '14px 16px 16px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.03), 0 6px 18px -10px rgba(124,58,237,0.10)',
+                      position: 'relative',
+                      overflow: 'hidden',
                     }}
                   >
+                    {/* Top accent strip por status */}
+                    <span aria-hidden style={{
+                      position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+                      background: `linear-gradient(90deg, ${statusColor}, ${statusColor}88)`,
+                      borderTopLeftRadius: 16, borderTopRightRadius: 16,
+                    }} />
+
                     {row.hasLimit ? (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
-                          <div style={{ width: 36, height: 36, borderRadius: 10, background: C.violetSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0, flex: 1 }}>
+                          <div style={{
+                            width: 40, height: 40, borderRadius: 12,
+                            background: `linear-gradient(135deg, ${statusColor}1f, ${statusColor}0a)`,
+                            border: `1px solid ${statusColor}33`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0,
+                          }}>
                             {getCatEmoji(row.category)}
                           </div>
                           <div style={{ minWidth: 0, flex: 1 }}>
-                            <div style={{ color: C.textStrong, fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {row.category}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                              <div style={{ color: C.textStrong, fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.005em' }}>
+                                {row.category}
+                              </div>
+                              {overspent && (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(220,38,38,0.10)', color: '#DC2626', border: '1px solid rgba(220,38,38,0.22)', borderRadius: 6, padding: '1px 6px', fontSize: 9, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                                  Estourado
+                                </span>
+                              )}
+                              {isWarn && (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(245,158,11,0.12)', color: '#D97706', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 6, padding: '1px 6px', fontSize: 9, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                                  No limite
+                                </span>
+                              )}
                             </div>
-                            <div style={{ color: overspent ? C.red : C.textMuted, fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {formatCurrency(row.spent)} de {formatCurrency(row.limit)}
+                            <div style={{ color: C.textMuted, fontSize: 11, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                              <span style={{ color: overspent ? '#DC2626' : C.textBody, fontWeight: 700 }}>{formatCurrency(row.spent)}</span>
+                              {' · de '}{formatCurrency(row.limit)}
                             </div>
                           </div>
                         </div>
-                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ color: overspent ? C.red : C.violet, fontSize: 15, fontWeight: 800 }}>
-                            {formatCurrency(row.limit)}
+                        <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+                          <div style={{ color: statusColor, fontSize: 18, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
+                            {Math.round(row.pct)}%
                           </div>
-                          <div style={{ fontSize: 10, color: overspent ? C.red : C.textMuted, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
-                            {overspent ? '⚠️ Estourado' : 'limite'}
-                            {!overspent && historyAvg[row.category] === row.limit && (
-                              <button
-                                onClick={() => setAuditCategory(row.category)}
-                                title="Limite veio da média dos últimos 3 meses + 10%. Clique para auditar."
-                                style={{ background: C.violetSoft, color: C.violetText, border: `1px solid ${C.violetBorder}`, borderRadius: 6, padding: '1px 6px', fontSize: 9, fontWeight: 700, cursor: 'pointer' }}
-                              >
-                                ✨ histórico
-                              </button>
-                            )}
-                          </div>
+                          {!overspent && historyAvg[row.category] === row.limit && (
+                            <button
+                              onClick={() => setAuditCategory(row.category)}
+                              title="Limite veio da média dos últimos 3 meses + 10%."
+                              style={{ background: 'rgba(124,58,237,0.08)', color: C.violetText, border: '1px solid rgba(124,58,237,0.20)', borderRadius: 6, padding: '1px 6px', fontSize: 9, fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              ✨ histórico
+                            </button>
+                          )}
                         </div>
                       </div>
                     ) : (() => {
                       const suggested = historyAvg[row.category] || 0;
                       return (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                            <div style={{ width: 36, height: 36, borderRadius: 10, background: C.violetSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
+                            <div style={{
+                              width: 40, height: 40, borderRadius: 12,
+                              background: 'linear-gradient(135deg, rgba(167,139,250,0.18), rgba(167,139,250,0.06))',
+                              border: '1px solid rgba(167,139,250,0.30)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0,
+                            }}>
                               {getCatEmoji(row.category)}
                             </div>
                             <div style={{ minWidth: 0, flex: 1 }}>
-                              <div style={{ color: C.textStrong, fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {row.category}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                                <div style={{ color: C.textStrong, fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.005em' }}>
+                                  {row.category}
+                                </div>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(148,163,184,0.14)', color: C.textMuted, border: '1px solid rgba(148,163,184,0.22)', borderRadius: 6, padding: '1px 6px', fontSize: 9, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                                  Sem limite
+                                </span>
                               </div>
-                              <div style={{ color: C.textMuted, fontSize: 11, fontWeight: 500 }}>
-                                {formatCurrency(row.spent)} gasto · sem limite
+                              <div style={{ color: C.textMuted, fontSize: 11, fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>
+                                <span style={{ color: C.textBody, fontWeight: 700 }}>{formatCurrency(row.spent)}</span> gasto este mês
                               </div>
                             </div>
                           </div>
@@ -430,14 +588,14 @@ export default function BudgetPage() {
                             <div style={{ display: 'flex', gap: 6 }}>
                               <button
                                 onClick={() => handleAcceptSuggestion(row.category, suggested)}
-                                style={{ flex: 1, background: C.violetSoft, border: `1px solid ${C.violetBorder}`, borderRadius: 8, padding: '8px 12px', color: C.violetText, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                                style={{ flex: 1, background: 'linear-gradient(135deg, #7C3AED, #6d28d9)', border: 'none', borderRadius: 10, padding: '9px 12px', color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 6px 14px -6px rgba(124,58,237,0.55)' }}
                                 title="Sugestão baseada na média dos últimos 3 meses + 10%"
                               >
                                 ✨ Usar: {formatCurrency(suggested)}
                               </button>
                               <button
                                 onClick={() => setAuditCategory(row.category)}
-                                style={{ background: C.white, border: `1px solid ${C.violetBorder}`, borderRadius: 8, padding: '8px 10px', color: C.violet, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.20)', borderRadius: 10, padding: '9px 12px', color: C.violet, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                                 title="Ver como foi calculado"
                                 aria-label="Ver detalhes do cálculo"
                               >
@@ -447,7 +605,7 @@ export default function BudgetPage() {
                           ) : (
                             <button
                               onClick={() => { setBudgetInputs(prev => ({ ...prev, [row.category]: '' })); setShowSetup(true); }}
-                              style={{ background: C.violetSoft, border: `1px solid ${C.violetBorder}`, borderRadius: 8, padding: '8px 12px', color: C.violet, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', width: '100%' }}
+                              style={{ background: 'rgba(124,58,237,0.08)', border: '1px dashed rgba(124,58,237,0.35)', borderRadius: 10, padding: '9px 12px', color: C.violet, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', width: '100%' }}
                             >
                               + Definir limite
                             </button>
@@ -456,12 +614,17 @@ export default function BudgetPage() {
                       );
                     })()}
                     {row.hasLimit && (
-                      <div style={{ background: C.trackBg, borderRadius: 99, height: 6, overflow: 'hidden' }}>
+                      <div style={{ background: 'rgba(148,163,184,0.16)', borderRadius: 99, height: 7, overflow: 'hidden', position: 'relative' }}>
                         <motion.div
                           initial={{ width: '0%' }}
                           animate={{ width: `${pct}%` }}
-                          transition={{ duration: 0.7, ease: 'easeOut', delay: 0.2 }}
-                          style={{ height: '100%', background: getProgressColor(row.pct), borderRadius: 99 }}
+                          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+                          style={{
+                            height: '100%',
+                            background: `linear-gradient(90deg, ${statusColor}, ${statusColor}cc)`,
+                            borderRadius: 99,
+                            boxShadow: pct > 0 ? `0 0 8px ${statusColor}80` : 'none',
+                          }}
                         />
                       </div>
                     )}
