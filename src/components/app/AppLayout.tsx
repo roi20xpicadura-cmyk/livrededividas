@@ -570,7 +570,7 @@ export default function AppLayout() {
 
         <main style={{ maxWidth: 1400, margin: '0 auto', width: '100%', padding: isMobile ? '8px 16px 112px' : '24px 28px' }}>
           <Suspense fallback={<InnerPageSkeleton />}>
-            <Outlet />
+           <Outlet context={{ openChat: () => setChatOpen(true), closeChat: () => setChatOpen(false), chatOpen }} />
           </Suspense>
         </main>
       </div>
