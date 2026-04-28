@@ -3,29 +3,41 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    <!-- ─── Network hints PRIMEIRO: o navegador começa a abrir conexões enquanto
+         ainda parseia o restante do <head>. Ordem importa: hints > meta > scripts. ─── -->
+    <link rel="preconnect" href="https://chkgnqrfrtovcpqwogeg.supabase.co" crossorigin />
+    <link rel="dns-prefetch" href="https://chkgnqrfrtovcpqwogeg.supabase.co" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Preload do entry: navegador baixa /src/main.tsx em paralelo com CSS/fontes -->
+    <link rel="modulepreload" href="/src/main.tsx" />
+    <!-- Preload do brand icon usado pelo splash + LogoLoader -->
+    <link rel="preload" as="image" href="/favicon.png" fetchpriority="high" />
+
     <meta name="theme-color" content="#7C3AED" />
     <meta name="background-color" content="#08080F" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="KoraFinance" />
-    <!-- Preconnect to Supabase for faster API calls -->
-    <link rel="preconnect" href="https://chkgnqrfrtovcpqwogeg.supabase.co" crossorigin />
-    <link rel="dns-prefetch" href="https://chkgnqrfrtovcpqwogeg.supabase.co" />
-    <!-- Non-blocking fonts (load async, fallback to system fonts during) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700;800&display=swap" />
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <!-- Fontes: pesos reduzidos (400/600/800 cobrem regular/semi/black) e
+         carregamento NON-blocking via media="print" + onload swap. Cada peso
+         removido = 1 arquivo a menos no critical path. -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;800&family=Geist+Mono:wght@400;600&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;800&family=Geist+Mono:wght@400;600&display=swap" />
+    </noscript>
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
     <link rel="apple-touch-startup-image" href="/icons/icon-512.png" />
-    <!-- Preload critical brand icon used by splash + first paint of LogoLoader -->
-    <link rel="preload" as="image" href="/favicon.png" fetchpriority="high" />
     <title>KoraFinance — Controle total das suas finanças</title>
     <meta name="description" content="O painel financeiro mais completo do Brasil. Controle pessoal e empresarial, DRE automático, IA financeira e conexão bancária via Open Finance.">
     <meta name="author" content="KoraFinance" />
