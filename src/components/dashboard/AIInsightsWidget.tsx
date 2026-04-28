@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, MessageCircle, RefreshCw, X, CheckCircle2, BarChart3, AlertTriangle, TrendingUp, ChevronRight } from 'lucide-react';
+import { MessageCircle, RefreshCw, X, CheckCircle2, BarChart3, AlertTriangle, TrendingUp, ChevronRight } from 'lucide-react';
+import koalaMascot from '@/assets/koala-mascot.png';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -65,25 +66,39 @@ function InsightCard({ item, index }: { item: CardItem; index: number }) {
       exit={{ opacity: 0, height: 0 }}
       transition={{ delay: index * 0.05 }}
       style={{
-        padding: '14px',
+        position: 'relative',
+        padding: '14px 14px 14px 16px',
         borderRadius: 14,
         background: 'var(--color-bg-surface)',
-        border: '0.5px solid var(--color-border-weak)',
+        border: '1px solid var(--color-border-weak)',
+        boxShadow: '0 1px 2px rgba(15,23,42,0.03)',
         display: 'flex',
         gap: 12,
         alignItems: 'flex-start',
+        overflow: 'hidden',
       }}
     >
+      {/* Left accent stripe */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: 0, bottom: 0, left: 0,
+          width: 3,
+          background: `linear-gradient(180deg, ${meta.accentHsl}, ${meta.accentHsl}55)`,
+        }}
+      />
       {/* Icon chip */}
       <div
         style={{
-          width: 36, height: 36, borderRadius: 10,
-          background: meta.bgHsl,
+          width: 38, height: 38, borderRadius: 11,
+          background: `linear-gradient(135deg, ${meta.accentHsl}1f, ${meta.accentHsl}0a)`,
+          border: `1px solid ${meta.accentHsl}33`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
         }}
       >
-        <Icon style={{ width: 16, height: 16, color: meta.accentHsl }} />
+        <Icon style={{ width: 17, height: 17, color: meta.accentHsl }} strokeWidth={2.4} />
       </div>
 
       {/* Body */}
@@ -258,63 +273,112 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
       transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
       style={{
         background: 'var(--color-bg-surface)',
-        border: '0.5px solid var(--color-border-weak)',
-        borderRadius: 16,
+        border: '1px solid var(--color-border-weak)',
+        borderRadius: 18,
         overflow: 'hidden',
+        boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 12px 32px -20px rgba(124,58,237,0.22)',
       }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between" style={{ padding: '14px 16px 0' }}>
-        <div className="flex items-center gap-2">
-          <div style={{
-            width: 28, height: 28, borderRadius: 8,
-            background: 'linear-gradient(135deg, hsl(262 83% 58%), hsl(262 83% 48%))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 2px 8px hsl(262 83% 58% / 0.25)',
-          }}>
-            <Sparkles className="w-3.5 h-3.5 text-white" />
+      {/* Premium Header — purple gradient */}
+      <div
+        style={{
+          position: 'relative',
+          padding: '14px 16px',
+          background: 'linear-gradient(135deg, #1a0b3d 0%, #3b1080 55%, #7c3aed 100%)',
+          overflow: 'hidden',
+        }}
+      >
+        {/* animated orbs */}
+        <motion.div
+          animate={{ x: [0, 20, 0], y: [0, -10, 0] }}
+          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+          style={{
+            position: 'absolute', top: -30, right: -20, width: 110, height: 110,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(236,72,153,0.35), transparent 70%)',
+            filter: 'blur(14px)', pointerEvents: 'none',
+          }}
+        />
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.12, pointerEvents: 'none',
+          backgroundImage:
+            'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+          maskImage: 'radial-gradient(ellipse at top right, black 20%, transparent 70%)',
+        }} />
+
+        <div className="flex items-center justify-between" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="flex items-center gap-2.5">
+            <div style={{
+              width: 38, height: 38, borderRadius: 12,
+              background: 'rgba(255,255,255,0.14)',
+              border: '1px solid rgba(255,255,255,0.22)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              backdropFilter: 'blur(8px)',
+              padding: 4, flexShrink: 0,
+            }}>
+              <img
+                src={koalaMascot}
+                alt="Koala"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div className="flex items-center gap-1.5">
+                <span style={{ fontSize: 13.5, fontWeight: 800, color: '#fff', letterSpacing: '-0.2px' }}>
+                  IA Financeira
+                </span>
+                <span style={{
+                  fontSize: 8.5, fontWeight: 800, padding: '2px 6px', borderRadius: 99,
+                  background: 'rgba(253,230,138,0.18)',
+                  border: '1px solid rgba(253,230,138,0.4)',
+                  color: '#fde68a', letterSpacing: '0.5px',
+                }}>KORA</span>
+              </div>
+              <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.7)', margin: '1px 0 0', fontWeight: 500 }}>
+                Análises em tempo real
+              </p>
+            </div>
           </div>
-          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-base)' }}>IA Financeira</span>
-          <span style={{
-            fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 99,
-            background: 'hsl(262 83% 58% / 0.10)', color: 'hsl(262 83% 58%)',
-          }}>KORA</span>
-        </div>
-        <div className="flex items-center" style={{ gap: 4 }}>
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => fetchAgents(true)}
-            disabled={refreshing}
-            aria-label="Atualizar insights"
-            style={{
-              width: 28, height: 28, borderRadius: 8,
-              background: 'var(--color-bg-sunken)', border: '1px solid var(--color-border-weak)',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            <RefreshCw style={{
-              width: 12, height: 12, color: 'var(--color-text-muted)',
-              animation: refreshing ? 'spin 1s linear infinite' : 'none',
-            }} />
-          </motion.button>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={onOpenChat}
-            className="flex items-center gap-1.5"
-            style={{
-              height: 28, padding: '0 12px', borderRadius: 99, border: 'none',
-              background: 'linear-gradient(135deg, hsl(262 83% 58%), hsl(262 83% 48%))',
-              color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer',
-            }}
-          >
-            <MessageCircle className="w-3 h-3" />
-            Conversar
-          </motion.button>
+          <div className="flex items-center" style={{ gap: 6 }}>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => fetchAgents(true)}
+              disabled={refreshing}
+              aria-label="Atualizar insights"
+              style={{
+                width: 32, height: 32, borderRadius: 10,
+                background: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.22)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              <RefreshCw style={{
+                width: 13, height: 13, color: '#fff',
+                animation: refreshing ? 'spin 1s linear infinite' : 'none',
+              }} />
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={onOpenChat}
+              className="flex items-center gap-1.5"
+              style={{
+                height: 32, padding: '0 14px', borderRadius: 99, border: 'none',
+                background: '#fff',
+                color: '#5b21b6', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                boxShadow: '0 6px 16px -4px rgba(0,0,0,0.25)',
+              }}
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              Conversar
+            </motion.button>
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div style={{ padding: '12px 16px 14px' }}>
+      <div style={{ padding: '14px 14px 14px' }}>
         {loading ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
@@ -323,7 +387,7 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
           </div>
         ) : allCards.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '16px 0' }}>
-            <CheckCircle2 style={{ width: 28, height: 28, color: 'var(--color-green-600)', margin: '0 auto 8px' }} />
+            <CheckCircle2 style={{ width: 28, height: 28, color: 'hsl(var(--primary))', margin: '0 auto 8px' }} />
             <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-strong)' }}>Tudo sob controle ✨</p>
             <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>Kora monitora seus dados 24/7</p>
           </div>
@@ -336,12 +400,14 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
             </AnimatePresence>
 
             {hiddenCount > 0 && (
-              <button
+              <motion.button
+                whileTap={{ scale: 0.985 }}
                 onClick={() => setShowAll((v) => !v)}
                 style={{
-                  marginTop: 4, padding: '10px 12px', borderRadius: 10,
-                  background: 'var(--color-bg-sunken)', border: 'none',
-                  fontSize: 12.5, fontWeight: 700, color: 'var(--color-text-muted)',
+                  marginTop: 6, padding: '12px 14px', borderRadius: 12,
+                  background: 'linear-gradient(135deg, hsl(var(--primary) / 0.10), hsl(var(--primary) / 0.04))',
+                  border: '1px solid hsl(var(--primary) / 0.25)',
+                  fontSize: 12.5, fontWeight: 800, color: 'hsl(var(--primary))',
                   cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                 }}
@@ -349,7 +415,7 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
                 {showAll
                   ? 'Mostrar menos'
                   : <>Ver todos os insights ({allCards.length}) <ChevronRight style={{ width: 13, height: 13 }} /></>}
-              </button>
+              </motion.button>
             )}
           </div>
         )}
