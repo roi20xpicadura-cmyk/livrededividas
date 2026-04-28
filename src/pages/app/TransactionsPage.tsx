@@ -395,8 +395,13 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                                 fontSize: isLarge ? 15 : 14, fontWeight: 600,
                                 color: 'var(--color-text-strong)',
                                 letterSpacing: '-0.01em',
-                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                                minWidth: 0, flex: '0 1 auto',
+                                overflow: 'hidden',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical' as const,
+                                wordBreak: 'break-word',
+                                lineHeight: 1.25,
+                                minWidth: 0, flex: '1 1 auto',
                               }}>
                                 {displayName}
                               </div>

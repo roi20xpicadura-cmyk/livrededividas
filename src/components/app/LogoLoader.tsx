@@ -41,7 +41,7 @@ export default function LogoLoader({ fullScreen = false, label }: LogoLoaderProp
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(circle at 50% 42%, rgba(124,58,237,0.28), transparent 55%), radial-gradient(circle at 50% 60%, rgba(34,197,94,0.16), transparent 60%)',
+            'radial-gradient(circle at 50% 42%, rgba(124,58,237,0.28), transparent 55%), radial-gradient(circle at 50% 60%, rgba(167,139,250,0.18), transparent 60%)',
         }}
       />
 
@@ -56,7 +56,7 @@ export default function LogoLoader({ fullScreen = false, label }: LogoLoaderProp
               inset: -6,
               borderRadius: '28px',
               background:
-                'conic-gradient(from 0deg, rgba(124,58,237,0) 0deg, rgba(124,58,237,0.55) 90deg, rgba(34,197,94,0.55) 180deg, rgba(124,58,237,0) 270deg)',
+                'conic-gradient(from 0deg, rgba(124,58,237,0) 0deg, rgba(124,58,237,0.55) 90deg, rgba(167,139,250,0.65) 180deg, rgba(124,58,237,0) 270deg)',
               filter: 'blur(8px)',
               opacity: 0.7,
             }}
@@ -207,7 +207,7 @@ export default function LogoLoader({ fullScreen = false, label }: LogoLoaderProp
               width: '45%',
               borderRadius: 999,
               background:
-                'linear-gradient(90deg, transparent, #a78bfa 40%, #22c55e 70%, transparent)',
+                'linear-gradient(90deg, transparent, #a78bfa 40%, #c4b5fd 70%, transparent)',
             }}
             animate={{ x: ['-110%', '240%'] }}
             transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}

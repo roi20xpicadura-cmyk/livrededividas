@@ -69,6 +69,15 @@ function AuthenticatedRoutePrefetcher() {
       void import("./pages/app/OverviewPage");
       void import("./pages/app/TransactionsPage");
       void import("./pages/app/GoalsPage");
+      void import("./pages/app/SettingsPage");
+      void import("./pages/app/CardsPage");
+      void import("./pages/app/BudgetPage");
+      void import("./pages/app/DebtsPage");
+      void import("./pages/app/AchievementsPage");
+      void import("./pages/app/CategoriesPage");
+      void import("./pages/app/InvestmentsPage");
+      void import("./pages/app/SubscriptionsPage");
+      void import("./pages/app/BillingPage");
     };
     const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number };
     if (typeof w.requestIdleCallback === 'function') {

@@ -9,6 +9,7 @@ import OnboardingChat from '@/components/onboarding/OnboardingChat';
 const AIChatDrawer = lazy(() => import('@/components/app/AIChatDrawer'));
 import OfflineBanner from '@/components/app/OfflineBanner';
 import QuickAddFAB from '@/components/app/QuickAddFAB';
+import InnerPageSkeleton from '@/components/app/InnerPageSkeleton';
 import icon from '@/assets/korafinance-icon.png';
 import {
   LayoutDashboard, ArrowLeftRight, Target, TrendingUp, FileText,
@@ -568,7 +569,9 @@ export default function AppLayout() {
         )}
 
         <main style={{ maxWidth: 1400, margin: '0 auto', width: '100%', padding: isMobile ? '8px 16px 112px' : '24px 28px' }}>
-          <Outlet />
+          <Suspense fallback={<InnerPageSkeleton />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
 

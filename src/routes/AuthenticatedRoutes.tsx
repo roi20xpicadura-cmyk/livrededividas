@@ -6,6 +6,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
 import LogoLoader from "@/components/app/LogoLoader";
+import InnerPageSkeleton from "@/components/app/InnerPageSkeleton";
 import Paywall from "@/components/app/Paywall";
 import { useProfile } from "@/hooks/useProfile";
 
@@ -83,7 +84,7 @@ export default function AuthenticatedRoutes() {
               <Route path="debts" element={<Paywall feature="debts" requiredPlan="pro" title="Gestão de Dívidas" description="Organize, priorize e quite suas dívidas com estratégias inteligentes (Snowball / Avalanche)."><DebtsPage /></Paywall>} />
               <Route path="budget" element={<Paywall feature="budget" requiredPlan="pro" title="Orçamentos" description="Crie orçamentos por categoria e receba alertas antes de estourar."><BudgetPage /></Paywall>} />
               <Route path="cards" element={<CardsPage />} />
-              <Route path="export" element={<Paywall feature="export" requiredPlan="pro" title="Exportar dados" description="Exporte seus dados em PDF, Excel e CSV a qualquer momento."><Suspense fallback={<PageSkeleton />}><ExportPage /></Suspense></Paywall>} />
+              <Route path="export" element={<Paywall feature="export" requiredPlan="pro" title="Exportar dados" description="Exporte seus dados em PDF, Excel e CSV a qualquer momento."><Suspense fallback={<InnerPageSkeleton />}><ExportPage /></Suspense></Paywall>} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="settings/security" element={<SecuritySettingsPage />} />
               <Route path="billing" element={<BillingPage />} />
