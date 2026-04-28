@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Suspense } from "react";
+import { forwardRef, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -61,10 +61,11 @@ function TransactionsRouter() {
   return <Navigate to="/app/transactions/personal" replace />;
 }
 
-export default function AuthenticatedRoutes() {
+const AuthenticatedRoutes = forwardRef<HTMLDivElement>(function AuthenticatedRoutes(_, ref) {
   return (
-    <AuthProvider>
-      <ThemeProvider>
+    <div ref={ref} style={{ minHeight: '100dvh' }}>
+      <AuthProvider>
+        <ThemeProvider>
         <Suspense fallback={<PageSkeleton />}>
           <Routes>
             {/* Estas rotas agora ficam sob um único wildcard no nível raiz,
@@ -114,7 +115,10 @@ export default function AuthenticatedRoutes() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
-      </ThemeProvider>
-    </AuthProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </div>
   );
-}
+});
+
+export default AuthenticatedRoutes;
