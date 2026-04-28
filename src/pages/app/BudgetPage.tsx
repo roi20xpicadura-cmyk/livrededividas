@@ -26,23 +26,24 @@ const formatCompact = (v: number): string => {
   return `R$ ${Math.round(v).toLocaleString('pt-BR')}`;
 };
 
+// Use design tokens so dark/light mode adapts automatically.
 const C = {
-  violet: '#7C3AED',
-  violetSoft: '#F5F3FF',
-  violetBorder: '#DDD6FE',
-  violetText: '#5B21B6',
-  red: '#DC2626',
-  redSoft: '#FEE2E2',
-  green: '#16A34A',
-  greenSoft: '#DCFCE7',
-  amber: '#F59E0B',
-  amberSoft: '#FEF3C7',
-  textStrong: '#1A0D35',
-  textMuted: '#9CA3AF',
-  textBody: '#374151',
-  cardBorder: '#F0EEF8',
-  trackBg: '#F3F4F6',
-  white: '#FFFFFF',
+  violet: 'var(--color-primary, #7C3AED)',
+  violetSoft: 'var(--color-primary-soft, #F5F3FF)',
+  violetBorder: 'var(--color-primary-border, #DDD6FE)',
+  violetText: 'var(--color-primary-strong, #5B21B6)',
+  red: 'var(--color-danger, #DC2626)',
+  redSoft: 'var(--color-danger-soft, #FEE2E2)',
+  green: 'var(--color-success, #16A34A)',
+  greenSoft: 'var(--color-success-soft, #DCFCE7)',
+  amber: 'var(--color-warning, #F59E0B)',
+  amberSoft: 'var(--color-warning-soft, #FEF3C7)',
+  textStrong: 'var(--color-text-strong, #1A0D35)',
+  textMuted: 'var(--color-text-muted, #9CA3AF)',
+  textBody: 'var(--color-text-base, #374151)',
+  cardBorder: 'var(--color-border-weak, #F0EEF8)',
+  trackBg: 'var(--color-bg-sunken, #F3F4F6)',
+  white: 'var(--color-surface-base, #FFFFFF)',
 };
 
 export default function BudgetPage() {
