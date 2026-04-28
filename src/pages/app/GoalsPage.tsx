@@ -6,7 +6,7 @@ import { PLAN_LIMITS, PlanType } from '@/lib/plans';
 import { OBJECTIVES } from '@/lib/objectives';
 import {
   Plus, ChevronDown, Pencil, Check, Trophy,
-  PiggyBank, Archive
+  PiggyBank, Archive, Target, Sparkles, TrendingUp,
 } from 'lucide-react';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
