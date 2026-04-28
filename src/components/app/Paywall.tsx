@@ -49,9 +49,8 @@ export default function Paywall({ feature, requiredPlan, title, description, chi
 
   return (
     <div style={{
-      minHeight: 'calc(100vh - 80px)',
       display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-      padding: '20px 16px',
+      padding: '8px 0 0',
     }}>
       <motion.div
         initial={{ opacity: 0, y: 12 }}
