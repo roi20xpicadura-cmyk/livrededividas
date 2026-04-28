@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import { Suspense, useState, useEffect } from "react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import LandingPage from "./pages/LandingPage";
+import { isNativeApp } from "@/lib/platform";
 
 // Rotas usam retries mas SEM fallback pra null — se o chunk realmente
 // não carregar, é melhor o ErrorBoundary aparecer do que uma tela em branco.
@@ -9,7 +10,7 @@ const lazy = <T extends ComponentType<any>>(imp: () => Promise<{ default: T }>) 
   lazyWithRetry(imp, { fallbackToEmpty: false });
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -149,8 +150,16 @@ const App = () => {
             <AuthenticatedRoutePrefetcher />
            <Suspense fallback={<PageSkeleton />}>
              <Routes>
-               <Route path="/" element={<LandingPage />} />
-               <Route path="/pricing" element={<PricingPage />} />
+               {/* No app nativo (Play Store), pular landing e pricing — política do Google
+                   proíbe vendas via gateway externo (Hotmart) dentro do app. */}
+               <Route
+                 path="/"
+                 element={isNativeApp() ? <Navigate to="/login" replace /> : <LandingPage />}
+               />
+               <Route
+                 path="/pricing"
+                 element={isNativeApp() ? <Navigate to="/login" replace /> : <PricingPage />}
+               />
                <Route path="/termos-de-uso" element={<TermosDeUsoPage />} />
                <Route path="/politica-de-privacidade" element={<PoliticaPrivacidadePage />} />
                <Route path="/politica-de-cookies" element={<PoliticaCookiesPage />} />
