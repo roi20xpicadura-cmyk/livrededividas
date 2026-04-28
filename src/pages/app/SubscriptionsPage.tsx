@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, X, AlertCircle, TrendingDown, Search, Wallet, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
+import ServiceLogo from '@/components/app/ServiceLogo';
 import type { Database } from '@/integrations/supabase/types';
 
 type DetectedSubscriptionInsert = Database['public']['Tables']['detected_subscriptions']['Insert'];
@@ -392,12 +393,13 @@ export default function SubscriptionsPage() {
                   opacity: r.status === 'active' ? 1 : 0.7,
                 }}
               >
-                <div
-                  className="flex items-center justify-center text-2xl flex-shrink-0"
-                  style={{ width: 48, height: 48, borderRadius: 12, background: C.violetSofter }}
-                >
-                  {r.icon || '🔁'}
-                </div>
+                <ServiceLogo
+                  matchPattern={r.match_pattern}
+                  serviceName={r.service_name}
+                  fallbackEmoji={r.icon}
+                  size={48}
+                  rounded={12}
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-bold truncate" style={{ fontSize: 15, color: C.textStrong }}>
