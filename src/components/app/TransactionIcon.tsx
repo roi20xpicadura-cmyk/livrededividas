@@ -230,10 +230,13 @@ export default function TransactionIcon({
   const style = getCategoryStyle(category, isIncome);
   // 1) palavra-chave na descrição vence
   const kw = matchKeyword(description);
-  // 2) categoria específica (não genérica) vence sobre favicon
+  // 2) marca real reconhecida vence sobre categoria específica
   const hasSpecificCategory = !isGenericCategory(category);
+  const hasBrand = Boolean(domain);
   let finalStyle: { Icon: LucideIcon; bg: string; fg: string };
-  if (kw) {
+  if (hasBrand) {
+    finalStyle = { Icon: Wallet, ...tone.neutral };
+  } else if (kw) {
     finalStyle = kw;
   } else if (hasSpecificCategory) {
     finalStyle = { Icon: style.Icon, bg: style.bg, fg: style.fg };
@@ -242,9 +245,9 @@ export default function TransactionIcon({
     const iconIdx = hashIdx(description || 'x', FALLBACK_ICONS.length);
     finalStyle = { Icon: FALLBACK_ICONS[iconIdx], ...FALLBACK_PALETTE[idx] };
   }
-  // Favicon só entra quando NÃO há keyword nem categoria específica —
-  // evita que "Mercado/Almoço/Praia" virem favicons genéricos do Google.
-  const useFavicon = !kw && !hasSpecificCategory && domain && !imgFailed;
+  // Favicons entram sempre que uma marca real foi reconhecida — evita ícone
+  // falso/genérico em Netflix, Spotify, McDonald's, bancos, mercados etc.
+  const useFavicon = hasBrand && !imgFailed;
   const Icon = finalStyle.Icon;
 
   const container: React.CSSProperties = {

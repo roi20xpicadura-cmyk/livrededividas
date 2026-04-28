@@ -15,6 +15,7 @@ import { format, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { lazyWithRetry } from '@/lib/lazyWithRetry';
+import TransactionIcon from '@/components/app/TransactionIcon';
 // Heavy below-the-fold widgets are lazy-loaded so the dashboard hero paints fast.
 // lazyWithRetry: se o chunk falhar (deploy novo, glitch de rede), tenta de novo
 // e cai pra null em vez de derrubar a Overview com o ErrorBoundary.
@@ -74,24 +75,6 @@ function useCountUp(target: number, duration = 800) {
 function AnimatedCurrency({ value, currency }: { value: number; currency: string }) {
   const v = useCountUp(value);
   return <>{formatCurrency(v, currency)}</>;
-}
-
-const CATEGORY_EMOJI: Record<string, string> = {
-  'Salário': '💼', 'Freelance': '💻', 'Vendas': '📦', 'Investimentos': '📈',
-  'Renda Extra': '💵', 'Aluguel Recebido': '🏠', 'Dividendos': '💰',
-  'Supermercado': '🛒', 'Alimentação': '🍽️', 'Delivery': '🛵', 'Restaurante': '🍴',
-  'Transporte': '🚗', 'Combustível': '⛽', 'Uber/Taxi': '🚕',
-  'Moradia': '🏠', 'Aluguel': '🏘️', 'Contas': '💡',
-  'Saúde': '❤️', 'Farmácia': '💊', 'Academia': '🏋️',
-  'Educação': '📚', 'Cursos': '🎓',
-  'Lazer': '🎮', 'Streaming': '📺', 'Assinaturas': '📱',
-  'Financeiro': '💳', 'Investimento': '📊', 'Poupança': '🐷', 'Dívidas': '⚠️',
-  'Vestuário': '👕', 'Beleza': '💄', 'Pets': '🐾', 'Tecnologia': '💻',
-  'Seguros': '🛡️', 'Outros': '💸',
-};
-
-function getCategoryEmoji(cat: string): string {
-  return CATEGORY_EMOJI[cat] || '💸';
 }
 
 function getGoalEmoji(name: string): string {
@@ -625,13 +608,13 @@ export default function OverviewPage() {
           ) : (
             recent.map((tx, i) => (
               <div key={tx.id} className="flex items-center gap-3" style={{ padding: '14px 16px', borderBottom: i < recent.length - 1 ? '0.5px solid var(--color-border-weak)' : 'none' }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: 12, flexShrink: 0,
-                  background: tx.type === 'income' ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
-                }}>
-                  {getCategoryEmoji(tx.category)}
-                </div>
+                <TransactionIcon
+                  description={tx.description}
+                  category={tx.category}
+                  isIncome={tx.type === 'income'}
+                  size={40}
+                  rounded={12}
+                />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-base)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tx.description}</div>
                   <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 2 }}>
