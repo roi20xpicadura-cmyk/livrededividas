@@ -436,7 +436,14 @@ export default function AppLayout() {
       </aside>
 
       {/* ═══ MAIN CONTENT ═══ */}
-      <div className="flex-1 min-w-0 flex flex-col" style={{ paddingBottom: isMobile ? 80 : 0 }}>
+      <div
+        className="flex-1 min-w-0 flex flex-col"
+        style={{
+          paddingBottom: isMobile
+            ? 'calc(72px + env(safe-area-inset-bottom, 0px))'
+            : 0,
+        }}
+      >
         {/* Header */}
         <header className="sticky top-0 z-30 flex items-center glass" style={{
           height: isMobile ? 56 : 58,
