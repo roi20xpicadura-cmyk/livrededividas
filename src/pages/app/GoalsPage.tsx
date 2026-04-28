@@ -238,9 +238,7 @@ export default function GoalsPage() {
 
   return (
     <div style={{
-      minHeight: '100vh',
       background: 'var(--color-bg-base)',
-      paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
     }}>
       {usingCache && (
         <div

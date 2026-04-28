@@ -409,7 +409,7 @@ export default function DebtsPage() {
   const actionColor: Record<string, string> = { critical: '#f87171', warning: '#fbbf24', active: '#4ade80' };
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', paddingBottom: 40 }}>
+    <div style={{ maxWidth: 640, margin: '0 auto' }}>
 
       {/* ── Header ── */}
       <div style={{ padding: '16px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
