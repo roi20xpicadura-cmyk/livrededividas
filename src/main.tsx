@@ -55,17 +55,32 @@ window.addEventListener('unhandledrejection', (event) => {
   }
 });
 
-// Limpeza de SW/cache legados acontece UMA vez por device, não a cada boot.
-// Antes, fazíamos isso sempre — derrubava o cache do PWA e forçava refetch
-// pesado em toda abertura, deixando o app lento.
-try {
-  const FLAG = 'kora:legacy-sw-cleanup-v1';
-  if (!localStorage.getItem(FLAG)) {
-    localStorage.setItem(FLAG, '1');
-    void clearRuntimeCaches();
-  }
-} catch {
-  // Sem storage (modo privado): segue sem limpar — não vale travar boot.
-}
-
+// 1) RENDERIZA PRIMEIRO — nada deve ficar entre o parse do bundle e a primeira
+// chamada a render(). Isso garante TTFB→FCP o mais curto possível.
 createRoot(document.getElementById("root")!).render(<App />);
+
+// 2) Limpeza de SW/cache legados (UMA vez por device) movida para idle:
+// roda quando o navegador estiver ocioso, sem competir com hidratação,
+// fontes e fetch inicial de dados.
+const runIdle = (cb: () => void) => {
+  const w = window as Window & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+  };
+  if (typeof w.requestIdleCallback === 'function') {
+    w.requestIdleCallback(cb, { timeout: 4000 });
+  } else {
+    setTimeout(cb, 2000);
+  }
+};
+
+runIdle(() => {
+  try {
+    const FLAG = 'kora:legacy-sw-cleanup-v1';
+    if (!localStorage.getItem(FLAG)) {
+      localStorage.setItem(FLAG, '1');
+      void clearRuntimeCaches();
+    }
+  } catch {
+    // Sem storage (modo privado): segue sem limpar.
+  }
+});
