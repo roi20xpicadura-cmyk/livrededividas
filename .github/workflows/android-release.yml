@@ -77,11 +77,15 @@ jobs:
 
           # Lista TODOS os aliases (sem filtrar) para diagnóstico, sem expor a senha
           echo "Tentando listar aliases do keystore..."
-          keytool -list -v -keystore android/app/release.keystore -storepass "$KEYSTORE_PASSWORD" 2> /tmp/kt.err | grep -E "Alias name|Keystore type|Your keystore contains" || true
-          KT_RC=${PIPESTATUS[0]}
+          keytool -list -keystore android/app/release.keystore -storepass "$KEYSTORE_PASSWORD" > /tmp/kt.out 2> /tmp/kt.err
+          KT_RC=$?
+          echo "--- saída do keytool ---"
+          cat /tmp/kt.out || true
+          echo "--- stderr do keytool ---"
+          cat /tmp/kt.err || true
+          echo "------------------------"
           if [ $KT_RC -ne 0 ]; then
-            echo "::error::keytool falhou (rc=$KT_RC). Provavelmente a senha do keystore (ANDROID_KEYSTORE_PASSWORD) está errada ou o arquivo não é um JKS/PKCS12 válido."
-            cat /tmp/kt.err || true
+            echo "::error::keytool falhou (rc=$KT_RC). Geralmente: ANDROID_KEYSTORE_PASSWORD incorreta, ou arquivo não é JKS/PKCS12 válido."
             exit 1
           fi
 
