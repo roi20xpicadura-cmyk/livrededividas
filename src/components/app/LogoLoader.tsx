@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion';
+import { forwardRef } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import koraIcon from '@/assets/korafinance-icon.png';
 
 interface LogoLoaderProps {
@@ -6,17 +7,22 @@ interface LogoLoaderProps {
   label?: string;
 }
 
-export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps) {
+const LogoLoader = forwardRef<HTMLDivElement, LogoLoaderProps>(function LogoLoader(
+  { fullScreen = true, label },
+  ref,
+) {
+  const reduceMotion = useReducedMotion();
   const containerClass = fullScreen
     ? 'fixed inset-0 z-[9998] flex flex-col items-center justify-center'
     : 'absolute inset-0 w-full h-full min-h-screen flex flex-col items-center justify-center';
 
   return (
     <div
+      ref={ref}
       className={`${containerClass} relative overflow-hidden`}
       style={{
         background:
-          'radial-gradient(ellipse at 50% 30%, #0f172a 0%, #050816 70%)',
+          'radial-gradient(ellipse at 50% 30%, var(--color-bg-elevated) 0%, var(--color-bg-base) 56%, var(--color-bg-sunken) 100%)',
         gap: 24,
       }}
     >
@@ -26,7 +32,7 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
         className="pointer-events-none absolute inset-0 opacity-[0.06]"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
+            'linear-gradient(var(--color-border-strong) 1px, transparent 1px), linear-gradient(90deg, var(--color-border-strong) 1px, transparent 1px)',
           backgroundSize: '44px 44px',
           maskImage:
             'radial-gradient(ellipse at center, black 0%, transparent 65%)',
@@ -41,7 +47,7 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(circle at 50% 42%, rgba(124,58,237,0.28), transparent 55%), radial-gradient(circle at 50% 60%, rgba(167,139,250,0.18), transparent 60%)',
+            'radial-gradient(circle at 50% 42%, hsl(var(--primary) / 0.18), transparent 55%), radial-gradient(circle at 50% 60%, hsl(var(--primary) / 0.10), transparent 60%)',
         }}
       />
 
@@ -56,11 +62,11 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
               inset: -6,
               borderRadius: '28px',
               background:
-                'conic-gradient(from 0deg, rgba(124,58,237,0) 0deg, rgba(124,58,237,0.55) 90deg, rgba(167,139,250,0.65) 180deg, rgba(124,58,237,0) 270deg)',
+                'conic-gradient(from 0deg, hsl(var(--primary) / 0) 0deg, hsl(var(--primary) / 0.42) 90deg, hsl(var(--primary) / 0.62) 180deg, hsl(var(--primary) / 0) 270deg)',
               filter: 'blur(8px)',
-              opacity: 0.7,
+              opacity: reduceMotion ? 0.35 : 0.7,
             }}
-            animate={{ rotate: 360 }}
+            animate={reduceMotion ? undefined : { rotate: 360 }}
             transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
           />
 
@@ -70,10 +76,10 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
               aria-hidden
               className="absolute inset-0 rounded-[28px]"
               style={{
-                border: '1.5px solid rgba(167,139,250,0.40)',
+                border: '1.5px solid hsl(var(--primary) / 0.34)',
               }}
               initial={{ scale: 0.92, opacity: 0.55 }}
-              animate={{ scale: 1.5, opacity: 0 }}
+              animate={reduceMotion ? { scale: 1, opacity: 0.18 } : { scale: 1.5, opacity: 0 }}
               transition={{
                 duration: 2.4,
                 repeat: Infinity,
@@ -86,9 +92,9 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
           <motion.div
             initial={{ scale: 0.88, opacity: 0 }}
             animate={{
-              scale: [1, 1.04, 1],
+              scale: reduceMotion ? 1 : [1, 1.04, 1],
               opacity: 1,
-              y: [0, -2, 0],
+              y: reduceMotion ? 0 : [0, -2, 0],
             }}
             transition={{
               scale: { duration: 2.4, repeat: Infinity, ease: 'easeInOut' },
@@ -101,9 +107,9 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
               height: 84,
               borderRadius: 22,
               background:
-                'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 55%, #6d28d9 100%)',
+                'linear-gradient(135deg, var(--color-green-500) 0%, var(--color-green-600) 55%, var(--color-green-700) 100%)',
               boxShadow:
-                '0 22px 50px rgba(124,58,237,0.45), 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.25)',
+                '0 22px 50px hsl(var(--primary) / 0.34), 0 0 0 1px var(--color-border-base), inset 0 1px 0 hsl(var(--primary-foreground) / 0.22)',
             }}
             aria-hidden
           >
@@ -112,7 +118,6 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
               alt=""
               draggable={false}
               decoding="async"
-              fetchPriority="high"
               width={84}
               height={84}
               style={{ width: 84, height: 84, objectFit: 'cover' }}
@@ -123,7 +128,7 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
               className="pointer-events-none absolute inset-0"
               style={{
                 background:
-                  'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 45%)',
+                  'linear-gradient(180deg, hsl(var(--primary-foreground) / 0.18) 0%, hsl(var(--primary-foreground) / 0) 45%)',
               }}
             />
             {/* Shine sweep */}
@@ -135,11 +140,11 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
                 bottom: 0,
                 width: '40%',
                 background:
-                  'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)',
+                  'linear-gradient(90deg, transparent, hsl(var(--primary-foreground) / 0.35), transparent)',
                 filter: 'blur(2px)',
                 transform: 'skewX(-20deg)',
               }}
-              animate={{ x: ['-120%', '260%'] }}
+              animate={reduceMotion ? undefined : { x: ['-120%', '260%'] }}
               transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.6 }}
             />
           </motion.div>
@@ -157,8 +162,8 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
             style={{
               fontSize: 26,
               fontWeight: 900,
-              letterSpacing: '-0.035em',
-              color: '#f8fafc',
+              letterSpacing: 0,
+              color: 'var(--color-text-strong)',
             }}
           >
             Kora
@@ -167,8 +172,8 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
             style={{
               fontSize: 26,
               fontWeight: 900,
-              letterSpacing: '-0.035em',
-              background: 'linear-gradient(90deg, #a78bfa, #c4b5fd)',
+              letterSpacing: 0,
+              background: 'linear-gradient(90deg, var(--color-green-500), var(--color-green-300))',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -186,9 +191,9 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
           style={{
             marginTop: -8,
             fontSize: 12,
-            letterSpacing: '0.18em',
+            letterSpacing: 0,
             textTransform: 'uppercase',
-            color: 'rgba(203,213,225,0.55)',
+            color: 'var(--color-text-subtle)',
             fontWeight: 600,
           }}
         >
@@ -202,7 +207,7 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
             width: 160,
             height: 2,
             borderRadius: 999,
-            background: 'rgba(148,163,184,0.14)',
+            background: 'var(--color-border-weak)',
           }}
         >
           <motion.div
@@ -211,9 +216,9 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
               width: '45%',
               borderRadius: 999,
               background:
-                'linear-gradient(90deg, transparent, #a78bfa 40%, #c4b5fd 70%, transparent)',
+                'linear-gradient(90deg, transparent, var(--color-green-400) 40%, var(--color-green-300) 70%, transparent)',
             }}
-            animate={{ x: ['-110%', '240%'] }}
+            animate={reduceMotion ? { x: '70%' } : { x: ['-110%', '240%'] }}
             transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
           />
         </div>
@@ -225,9 +230,9 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
             transition={{ delay: 0.3 }}
             style={{
               fontSize: 13,
-              color: 'rgba(148,163,184,0.85)',
+              color: 'var(--color-text-muted)',
               fontWeight: 500,
-              letterSpacing: '0.01em',
+              letterSpacing: 0,
             }}
           >
             {label}
@@ -236,4 +241,6 @@ export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps
       </div>
     </div>
   );
-}
+});
+
+export default LogoLoader;
