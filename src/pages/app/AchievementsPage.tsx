@@ -24,22 +24,20 @@ export default function AchievementsPage() {
   const levelPct = Math.max(0, Math.min(100, Math.round(((totalXP - level.min) / (level.max - level.min)) * 100)));
   const nextLevelName = getNextLevelName(level.name);
 
-  const ACCENT = '#16a34a'; // green-600 (tema do app)
-  const ACCENT_SOFT = 'rgba(22,163,74,0.10)';
-  const ACCENT_BORDER = 'rgba(22,163,74,0.28)';
+  const ACCENT = 'hsl(var(--primary))';
+  const ACCENT_SOFT = 'hsl(var(--primary) / 0.10)';
+  const ACCENT_BORDER = 'hsl(var(--primary) / 0.28)';
+  const ACCENT_STRONG = 'hsl(var(--primary) / 0.18)';
+  const XP_COLOR = 'hsl(var(--primary))';
 
   return (
     <div style={{ background: 'var(--bg-page)' }}>
-      <div style={{ padding: '20px 20px 0', maxWidth: 900, margin: '0 auto' }}>
-        <h1 style={{ color: 'var(--text-primary)', fontSize: 22, fontWeight: 900, letterSpacing: '-0.5px', marginBottom: 20 }}>
-          Conquistas
-        </h1>
-
+      <div style={{ padding: '4px 20px 0', maxWidth: 900, margin: '0 auto' }}>
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
           {[
             { label: 'CONQUISTAS', value: `${count}/${total}`, color: ACCENT },
-            { label: 'TOTAL XP', value: totalXP.toLocaleString('pt-BR'), color: '#d97706' },
+            { label: 'TOTAL XP', value: totalXP.toLocaleString('pt-BR'), color: XP_COLOR },
             { label: 'NÍVEL', value: level.name, color: ACCENT },
           ].map(stat => (
             <div key={stat.label} style={{
@@ -77,7 +75,7 @@ export default function AchievementsPage() {
               initial={{ width: 0 }}
               animate={{ width: `${levelPct}%` }}
               transition={{ duration: 1, ease: 'easeOut' }}
-              style={{ height: '100%', background: `linear-gradient(90deg, ${ACCENT}, #22c55e)`, borderRadius: 99 }}
+              style={{ height: '100%', background: `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.6))`, borderRadius: 99 }}
             />
           </div>
           <div style={{ color: 'var(--text-hint)', fontSize: 10, marginTop: 6, textAlign: 'right' }}>
@@ -132,13 +130,13 @@ export default function AchievementsPage() {
                 borderRadius: 16,
                 padding: 16,
                 opacity: isUnlocked ? 1 : 0.78,
-                boxShadow: isUnlocked ? '0 4px 16px rgba(22,163,74,0.08)' : 'none',
+                boxShadow: isUnlocked ? '0 4px 16px hsl(var(--primary) / 0.10)' : 'none',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                 <div style={{
                   width: 48, height: 48, borderRadius: 14,
-                  background: isUnlocked ? 'rgba(22,163,74,0.18)' : 'var(--bg-elevated)',
+                  background: isUnlocked ? ACCENT_STRONG : 'var(--bg-elevated)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 24, flexShrink: 0,
                   filter: isUnlocked ? 'none' : 'grayscale(0.6)',
@@ -155,10 +153,10 @@ export default function AchievementsPage() {
                       {a.name}
                     </div>
                     <div style={{
-                      background: isUnlocked ? 'rgba(217,119,6,0.12)' : 'var(--bg-elevated)',
-                      border: `1px solid ${isUnlocked ? 'rgba(217,119,6,0.3)' : 'var(--border-default)'}`,
+                      background: isUnlocked ? 'hsl(var(--primary) / 0.12)' : 'var(--bg-elevated)',
+                      border: `1px solid ${isUnlocked ? 'hsl(var(--primary) / 0.3)' : 'var(--border-default)'}`,
                       borderRadius: 99, padding: '2px 8px', fontSize: 11, fontWeight: 700,
-                      color: isUnlocked ? '#d97706' : 'var(--text-hint)',
+                      color: isUnlocked ? XP_COLOR : 'var(--text-hint)',
                       flexShrink: 0,
                     }}>
                       +{a.xp} XP
