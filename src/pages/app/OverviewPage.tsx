@@ -8,7 +8,8 @@ import { calculateFinancialScore, getScoreColor, getScoreLevel, ScoreData } from
 import {
   TrendingUp, TrendingDown, Eye, EyeOff, ChevronDown, Check,
   PlusCircle, Target, Shield, Flame, PiggyBank,
-  DollarSign, Percent, Hash, BarChart2, Calendar as CalendarIcon
+  DollarSign, Percent, Hash, BarChart2, Calendar as CalendarIcon,
+  ArrowDownLeft, ArrowUpRight, Home, Briefcase,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns';
