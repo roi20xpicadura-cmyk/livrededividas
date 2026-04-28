@@ -423,6 +423,61 @@ function buildSystemPrompt(ctx: any): string {
       ).join("\n")
     : "  📭 Sem lançamentos este mês";
 
+  // ─── PROATIVIDADE: detecta oportunidades de valor ───
+  const opportunities: string[] = [];
+
+  // 1. Saldo negativo crítico
+  if (ctx.balance < 0) {
+    opportunities.push(`SALDO NEGATIVO: gastou ${fmt(Math.abs(ctx.balance))} a mais que recebeu este mês. Sugira revisar maior categoria (${ctx.categories[0]?.category || "—"}) ou criar orçamento.`);
+  }
+
+  // 2. Orçamento estourado
+  const overspent = ctx.budgets.filter((b: any) => b.pct >= 100);
+  if (overspent.length > 0) {
+    opportunities.push(`ORÇAMENTO ESTOURADO em ${overspent.map((b: any) => b.category).join(", ")}. Mencione com leveza e ofereça ajuda pra reorganizar.`);
+  }
+
+  // 3. Categoria dominante (>40% das despesas)
+  if (ctx.expenses > 0 && ctx.categories.length > 0) {
+    const top = ctx.categories[0];
+    const share = (top.amount / ctx.expenses) * 100;
+    if (share >= 40 && ctx.expenses > 500) {
+      opportunities.push(`CONCENTRAÇÃO: ${Math.round(share)}% das despesas estão em "${top.category}" (${fmt(top.amount)}). Pode sugerir criar orçamento se ainda não tem.`);
+    }
+  }
+
+  // 4. Dívida cara (>5% a.m.)
+  const expensiveDebt = ctx.debts.find((d: any) => d.rate > 5);
+  if (expensiveDebt) {
+    opportunities.push(`DÍVIDA CARA: "${expensiveDebt.name}" com ${expensiveDebt.rate}% a.m. — juros corroem rápido. Pode sugerir priorizar quitação.`);
+  }
+
+  // 5. Meta sem progresso recente com prazo apertado
+  const today = new Date();
+  const stuckGoal = ctx.goals.find((g: any) => {
+    if (!g.deadline || g.pct >= 100) return false;
+    const daysLeft = Math.ceil((new Date(g.deadline).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return daysLeft > 0 && daysLeft < 90 && g.pct < 50;
+  });
+  if (stuckGoal) {
+    opportunities.push(`META EM RISCO: "${stuckGoal.name}" está em ${stuckGoal.pct}% e vence em breve. Pode incentivar um aporte.`);
+  }
+
+  // 6. Sem orçamentos cadastrados mas tem gastos
+  if (ctx.budgets.length === 0 && ctx.expenses > 1000) {
+    opportunities.push(`SEM ORÇAMENTOS: usuário tem ${fmt(ctx.expenses)} em despesas mas zero orçamentos. Sugira começar pelo "${ctx.categories[0]?.category || "maior categoria"}" se fizer sentido.`);
+  }
+
+  // 7. Gasto diário insustentável
+  const avgDailySpend = ctx.expenses / Math.max(1, today.getDate());
+  if (Number(ctx.dailyBudget) < 0 && avgDailySpend > 0) {
+    opportunities.push(`RITMO INSUSTENTÁVEL: gastando ~${fmt(avgDailySpend)}/dia, mas o saldo restante não cobre os ${ctx.daysLeft} dias que faltam. Alerte com cuidado.`);
+  }
+
+  const proactiveSection = opportunities.length > 0
+    ? opportunities.map((o, i) => `  ${i + 1}. ${o}`).join("\n")
+    : "  (Nada urgente. Foco total na pergunta do usuário.)";
+
   return `Você é a Kora IA 🐨, assistente financeira pessoal do KoraFinance.
 Você está conversando com ${ctx.name} pelo WhatsApp.
 
@@ -451,6 +506,9 @@ ${goalInfo}
 📝 ÚLTIMOS LANÇAMENTOS:
 ${recentTxInfo}
 
+🚨 OPORTUNIDADES PROATIVAS DETECTADAS:
+${proactiveSection}
+
 ━━━ COMO AGIR ━━━
 
 PERSONALIDADE:
@@ -459,6 +517,13 @@ PERSONALIDADE:
 - Emoji moderado (não exagere)
 - Respostas curtas para WhatsApp (máx 5 linhas)
 - Português brasileiro informal
+
+PROATIVIDADE (MUITO IMPORTANTE):
+- Após responder a pergunta principal, se houver OPORTUNIDADES PROATIVAS relevantes ao contexto, mencione UMA (no máximo) de forma natural e curta no final.
+- NUNCA empurre todas as oportunidades de uma vez — escolha a mais relevante pra mensagem atual.
+- Se a pessoa só registrou um gasto simples, não despeje alertas — só comente se for diretamente conectado (ex.: gastou em comida e o orçamento de comida está estourado).
+- Se está respondendo APENAS um JSON de action (expense/income/goal/debt/etc), NÃO inclua proatividade — só o JSON puro.
+- Tom de amigo que percebe, nunca de robô que cobra. Ex.: "Aliás, percebi que..." / "Já que tocou no assunto..." / "Quando puder, dá uma olhada em..."
 
 PARA REGISTRAR GASTO (gastei, paguei, comprei, saiu):
 Responda APENAS com JSON:
