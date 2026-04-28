@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, forwardRef, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, forwardRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/plans';
@@ -230,9 +230,7 @@ export default function PredictionsPage() {
           </div>
         </div>
         <div style={{ height: isMobile ? 220 : 320 }}>
-          <Suspense fallback={<div className="skeleton-shimmer w-full h-full" style={{ borderRadius: 12 }} />}>
-            <LazyPredChart predictions={visiblePreds} status={status} />
-          </Suspense>
+          <PredChart predictions={visiblePreds} status={status} />
         </div>
       </div>
 
@@ -388,7 +386,7 @@ function MetricCard({ icon, label, value, sub, tone, progress }: {
   );
 }
 
-function AlertCard({ alert, onAction }: { alert: PredictionAlert; onAction: () => void }) {
+const AlertCard = forwardRef<HTMLDivElement, { alert: PredictionAlert; onAction: () => void }>(function AlertCard({ alert, onAction }, ref) {
   const colors = {
     danger: { bg: 'var(--color-danger-bg)', border: 'var(--color-danger-border)', text: 'var(--color-danger-text)' },
     warning: { bg: '#fffbeb', border: '#fde68a', text: '#92400e' },
@@ -397,7 +395,7 @@ function AlertCard({ alert, onAction }: { alert: PredictionAlert; onAction: () =
   }[alert.type];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+    <motion.div ref={ref} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 14, padding: 16 }}>
       <div className="flex items-start gap-3">
         <span style={{ fontSize: 20 }}>{alert.icon}</span>
@@ -413,4 +411,4 @@ function AlertCard({ alert, onAction }: { alert: PredictionAlert; onAction: () =
       </div>
     </motion.div>
   );
-}
+});
