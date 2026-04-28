@@ -853,10 +853,17 @@ function GoalCard({ goal, index, onDeposit, onEdit, onDelete, onComplete }: {
           gap: 12, marginBottom: 14,
         }}>
           <div style={{
-            width: 48, height: 48, borderRadius: 14,
-            background: isCompleted ? 'var(--color-success-bg)' : 'var(--color-bg-sunken)',
+            position: 'relative',
+            width: 52, height: 52, borderRadius: 15,
+            background: isCompleted
+              ? 'linear-gradient(135deg, hsl(var(--primary) / 0.18), hsl(var(--primary) / 0.06))'
+              : 'linear-gradient(135deg, hsl(var(--primary) / 0.10), hsl(var(--primary) / 0.02))',
+            border: isCompleted
+              ? '1px solid hsl(var(--primary) / 0.35)'
+              : '0.5px solid hsl(var(--primary) / 0.14)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 24, flexShrink: 0,
+            fontSize: 26, flexShrink: 0,
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5), 0 1px 3px hsl(var(--primary) / 0.08)',
           }}>
             {obj?.emoji || emoji}
           </div>
