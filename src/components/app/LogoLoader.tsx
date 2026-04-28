@@ -156,15 +156,14 @@ const LogoLoader = forwardRef<HTMLDivElement, LogoLoaderProps>(function LogoLoad
             fontWeight: 600,
           }}
         >
-          IA financeira pessoal
+          Preparando sua inteligência financeira
         </motion.p>
 
-        {/* Animated progress bar */}
         <div
           className="relative overflow-hidden"
           style={{
-            width: 160,
-            height: 2,
+            width: 168,
+            height: 3,
             borderRadius: 999,
             background: 'var(--color-border-weak)',
           }}
@@ -177,8 +176,8 @@ const LogoLoader = forwardRef<HTMLDivElement, LogoLoaderProps>(function LogoLoad
               background:
                 'linear-gradient(90deg, transparent, var(--color-green-400) 40%, var(--color-green-300) 70%, transparent)',
             }}
-            animate={reduceMotion ? { x: '70%' } : { x: ['-110%', '240%'] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+            animate={performanceMode ? { x: '78%' } : { x: ['-110%', '245%'] }}
+            transition={{ duration: 1.55, repeat: Infinity, ease: 'easeInOut' }}
           />
         </div>
 
