@@ -140,7 +140,7 @@ export default function Paywall({ feature, requiredPlan, title, description, chi
               fontFamily: 'var(--font-mono)',
               color: 'var(--color-text-strong)',
               transform: 'translateY(-22px)',
-            }},{dec}</span>
+            }}>,{dec}</span>
             <span style={{
               fontSize: 13, fontWeight: 600,
               color: 'var(--color-text-muted)',
