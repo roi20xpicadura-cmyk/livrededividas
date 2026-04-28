@@ -436,12 +436,17 @@ export default function OverviewPage() {
         <div style={{ position: 'relative', marginBottom: 18 }}>
           {showValues ? (
             <div>
-              <div className="text-[30px] md:text-[42px]" style={{
+              <div style={{
                 fontWeight: 900, color: 'white',
-                letterSpacing: '-0.04em', lineHeight: 1,
+                letterSpacing: '-0.035em', lineHeight: 1,
                 fontVariantNumeric: 'tabular-nums',
                 fontFeatureSettings: '"tnum"',
                 textShadow: '0 2px 18px rgba(0,0,0,0.30)',
+                fontSize: 'clamp(26px, 8.4vw, 42px)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '100%',
               }}>
                 <AnimatedCurrency value={heroBalance} currency={currency} />
               </div>
