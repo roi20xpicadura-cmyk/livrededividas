@@ -904,45 +904,59 @@ function GoalCard({ goal, index, onDeposit, onEdit, onDelete, onComplete }: {
           </motion.button>
         </div>
 
-        {/* Amount row */}
+        {/* Amount row — never truncates, scales fluidly on small screens */}
         <div style={{
-          display: 'flex', justifyContent: 'space-between',
-          alignItems: 'baseline', marginBottom: 10,
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: 12,
+          marginBottom: 10,
         }}>
-          <div>
+          <div style={{ minWidth: 0, flex: '1 1 auto' }}>
             <div style={{
-              fontSize: 11, fontWeight: 600,
+              fontSize: 10.5, fontWeight: 700,
               color: 'var(--color-text-subtle)',
               textTransform: 'uppercase',
-              letterSpacing: '0.08em', marginBottom: 3,
+              letterSpacing: '0.10em', marginBottom: 4,
+              lineHeight: 1,
             }}>
               Guardado
             </div>
             <div style={{
-              fontSize: 22, fontWeight: 900,
+              fontSize: 'clamp(17px, 5.6vw, 22px)',
+              fontWeight: 900,
               fontFamily: 'var(--font-mono)',
               letterSpacing: '-0.03em',
               color: isCompleted ? 'hsl(var(--primary))' : 'var(--color-text-strong)',
               lineHeight: 1,
+              whiteSpace: 'nowrap',
+              fontFeatureSettings: '"tnum"',
             }}>
               R$ {formatMoney(current)}
             </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
+          <div style={{
+            textAlign: 'right',
+            flex: '0 0 auto',
+            minWidth: 0,
+          }}>
             <div style={{
-              fontSize: 11, fontWeight: 600,
+              fontSize: 10.5, fontWeight: 700,
               color: 'var(--color-text-subtle)',
               textTransform: 'uppercase',
-              letterSpacing: '0.08em', marginBottom: 3,
+              letterSpacing: '0.10em', marginBottom: 4,
+              lineHeight: 1,
             }}>
               Meta
             </div>
             <div style={{
-              fontSize: 15, fontWeight: 700,
+              fontSize: 'clamp(13px, 4vw, 15px)',
+              fontWeight: 700,
               fontFamily: 'var(--font-mono)',
               letterSpacing: '-0.02em',
               color: 'var(--color-text-muted)',
               whiteSpace: 'nowrap',
+              lineHeight: 1,
+              fontFeatureSettings: '"tnum"',
             }}>
               R$ {formatMoney(target)}
             </div>
