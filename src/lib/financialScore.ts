@@ -55,8 +55,8 @@ export function calculateFinancialScore(data: ScoreData): { total: number; crite
 }
 
 export function getScoreColor(score: number): string {
-  if (score >= 800) return '#7C3AED';
-  if (score >= 600) return '#22c55e';
+  if (score >= 800) return '#7C3AED'; // primary
+  if (score >= 600) return '#a855f7'; // violet
   if (score >= 400) return '#d97706';
   if (score >= 200) return '#f97316';
   return '#dc2626';

@@ -544,59 +544,230 @@ export default function OverviewPage() {
 
       {/* SCORE CARD — personal only, compact */}
       {showPersonal && (
-        <motion.div {...stagger(7)} className="card-glow" style={{ padding: '16px 20px' }}>
-          <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
-            <div className="flex items-center gap-1.5" style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              <Shield size={14} color="var(--color-green-600)" /> Score Financeiro
-            </div>
-            <button onClick={() => navigate('/app/achievements')} style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-green-600)', background: 'none', border: 'none', cursor: 'pointer' }}>
-              Detalhes →
-            </button>
-          </div>
+        (() => {
+          const scoreColor = getScoreColor(scoreResult.total);
+          const scorePct = Math.min(100, (scoreResult.total / 1000) * 100);
+          const RING_SIZE = 96;
+          const RING_STROKE = 9;
+          const RING_R = (RING_SIZE - RING_STROKE) / 2;
+          const RING_C = 2 * Math.PI * RING_R;
+          return (
+            <motion.div
+              {...stagger(7)}
+              style={{
+                position: 'relative',
+                padding: '18px 20px 16px',
+                borderRadius: 18,
+                background: 'var(--color-bg-surface)',
+                border: '1px solid var(--color-border-weak)',
+                boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 12px 32px -22px rgba(124,58,237,0.22)',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Top accent */}
+              <div
+                aria-hidden
+                style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+                  background: `linear-gradient(90deg, ${scoreColor}, ${scoreColor}55)`,
+                }}
+              />
 
-          <div className="flex items-center gap-4" style={{ marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-              <span style={{ fontSize: 48, fontWeight: 900, color: getScoreColor(scoreResult.total), letterSpacing: '-2px', lineHeight: 1, fontFamily: 'var(--font-mono)' }}>
-                {showValues ? Math.round(scoreResult.total) : '•••'}
-              </span>
-              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-subtle)', fontFamily: 'var(--font-mono)' }}>
-                /1000
-              </span>
-            </div>
-            <div className="inline-flex items-center gap-1" style={{ padding: '4px 10px', borderRadius: 99, background: getScoreColor(scoreResult.total) + '18' }}>
-              <div style={{ width: 7, height: 7, borderRadius: '50%', background: getScoreColor(scoreResult.total) }} />
-              <span style={{ fontSize: 12, fontWeight: 800, color: getScoreColor(scoreResult.total) }}>
-                {getScoreLevel(scoreResult.total).label}
-              </span>
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ height: 6, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden' }}>
-                <motion.div initial={{ width: 0 }} animate={{ width: `${(scoreResult.total / 1000) * 100}%` }}
-                  transition={{ duration: 1.2, ease: 'easeOut' }}
-                  style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${getScoreColor(scoreResult.total)}, #22c55e)` }} />
-              </div>
-            </div>
-          </div>
-
-          <div style={{ paddingTop: 12, borderTop: '0.5px solid var(--color-border-weak)' }}>
-            {sortedCriteria.map(c => (
-              <div key={c.label} className="flex items-center gap-2.5" style={{ marginBottom: 8 }}>
-                <span style={{ fontSize: 12, color: 'var(--color-text-muted)', flex: 1, fontWeight: 500 }}>{c.label}</span>
-                <div style={{ width: 80, height: 4, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden' }}>
-                  <div style={{ width: `${Math.max((c.points / c.max) * 100, c.points > 0 ? 5 : 0)}%`, height: '100%', borderRadius: 99, minWidth: c.points > 0 ? 4 : 0, background: c.points / c.max > 0.6 ? 'var(--color-green-500)' : c.points / c.max > 0.3 ? '#f59e0b' : '#ef4444' }} />
+              {/* Header */}
+              <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+                <div className="flex items-center gap-2">
+                  <div
+                    style={{
+                      width: 28, height: 28, borderRadius: 9,
+                      background: `linear-gradient(135deg, ${scoreColor}1f, ${scoreColor}0a)`,
+                      border: `1px solid ${scoreColor}33`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    <Shield size={14} color={scoreColor} strokeWidth={2.4} />
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-text-strong)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                    Score Financeiro
+                  </span>
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', minWidth: 32, textAlign: 'right' }}>{c.points}/{c.max}</span>
+                <button
+                  onClick={() => navigate('/app/achievements')}
+                  style={{
+                    fontSize: 12, fontWeight: 800,
+                    color: 'hsl(var(--primary))',
+                    background: 'hsl(var(--primary) / 0.08)',
+                    border: '1px solid hsl(var(--primary) / 0.2)',
+                    padding: '4px 10px', borderRadius: 99,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Detalhes →
+                </button>
               </div>
-            ))}
-          </div>
-        </motion.div>
+
+              {/* Hero: ring + level */}
+              <div className="flex items-center gap-5" style={{ marginBottom: 18 }}>
+                {/* Circular progress ring */}
+                <div style={{ position: 'relative', width: RING_SIZE, height: RING_SIZE, flexShrink: 0 }}>
+                  <svg width={RING_SIZE} height={RING_SIZE} style={{ transform: 'rotate(-90deg)' }}>
+                    <defs>
+                      <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor={scoreColor} />
+                        <stop offset="100%" stopColor="#7C3AED" />
+                      </linearGradient>
+                    </defs>
+                    <circle
+                      cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_R}
+                      fill="none"
+                      stroke="var(--color-bg-sunken)"
+                      strokeWidth={RING_STROKE}
+                    />
+                    <motion.circle
+                      cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_R}
+                      fill="none"
+                      stroke="url(#scoreGrad)"
+                      strokeWidth={RING_STROKE}
+                      strokeLinecap="round"
+                      strokeDasharray={RING_C}
+                      initial={{ strokeDashoffset: RING_C }}
+                      animate={{ strokeDashoffset: RING_C * (1 - scorePct / 100) }}
+                      transition={{ duration: 1.4, ease: 'easeOut' }}
+                    />
+                  </svg>
+                  <div
+                    style={{
+                      position: 'absolute', inset: 0,
+                      display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    <span style={{
+                      fontSize: 28, fontWeight: 900,
+                      color: 'var(--color-text-strong)',
+                      letterSpacing: '-1px', lineHeight: 1,
+                      fontFamily: 'var(--font-mono)',
+                    }}>
+                      {showValues ? Math.round(scoreResult.total) : '•••'}
+                    </span>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700,
+                      color: 'var(--color-text-subtle)',
+                      marginTop: 2, fontFamily: 'var(--font-mono)',
+                    }}>
+                      / 1000
+                    </span>
+                  </div>
+                </div>
+
+                {/* Level + meta */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    className="inline-flex items-center gap-1.5"
+                    style={{
+                      padding: '5px 11px', borderRadius: 99,
+                      background: `${scoreColor}14`,
+                      border: `1px solid ${scoreColor}33`,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: scoreColor, boxShadow: `0 0 8px ${scoreColor}` }} />
+                    <span style={{ fontSize: 12, fontWeight: 800, color: scoreColor }}>
+                      {getScoreLevel(scoreResult.total).label}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.4, margin: 0 }}>
+                    {scoreResult.total >= 800
+                      ? 'Sua saúde financeira está excelente. Continue assim!'
+                      : scoreResult.total >= 600
+                      ? 'Bom progresso! Pequenos ajustes podem te levar ao topo.'
+                      : scoreResult.total >= 400
+                      ? 'Você está no caminho. Foque nos critérios abaixo.'
+                      : 'Vamos juntos melhorar sua saúde financeira.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Criteria breakdown */}
+              <div style={{ paddingTop: 14, borderTop: '1px solid var(--color-border-weak)' }}>
+                <div style={{
+                  fontSize: 10, fontWeight: 800, color: 'var(--color-text-subtle)',
+                  textTransform: 'uppercase', letterSpacing: '0.7px', marginBottom: 10,
+                }}>
+                  A melhorar
+                </div>
+                {sortedCriteria.map(c => {
+                  const ratio = c.points / c.max;
+                  const barColor = ratio > 0.6 ? '#7C3AED' : ratio > 0.3 ? '#f59e0b' : '#ef4444';
+                  return (
+                    <div key={c.label} className="flex items-center gap-3" style={{ marginBottom: 9 }}>
+                      <span style={{ fontSize: 12.5, color: 'var(--color-text-base)', flex: 1, fontWeight: 600 }}>{c.label}</span>
+                      <div style={{ width: 90, height: 5, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden' }}>
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.max(ratio * 100, c.points > 0 ? 6 : 0)}%` }}
+                          transition={{ duration: 0.9, ease: 'easeOut' }}
+                          style={{
+                            height: '100%', borderRadius: 99,
+                            background: `linear-gradient(90deg, ${barColor}, ${barColor}99)`,
+                          }}
+                        />
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: barColor, minWidth: 42, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                        {c.points}/{c.max}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          );
+        })()
       )}
 
       {/* CHART */}
-      <motion.div {...stagger(8)} className="card-glow" style={{ padding: '16px 20px' }}>
-        <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
-          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-base)' }}>Evolução do saldo</span>
-          <span style={{ fontSize: 11, color: 'var(--color-text-subtle)' }}>Últimos 6 meses</span>
+      <motion.div
+        {...stagger(8)}
+        style={{
+          position: 'relative',
+          padding: '18px 20px 14px',
+          borderRadius: 18,
+          background: 'var(--color-bg-surface)',
+          border: '1px solid var(--color-border-weak)',
+          boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 12px 32px -22px rgba(124,58,237,0.18)',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+            background: 'linear-gradient(90deg, #7C3AED, #a855f7)',
+          }}
+        />
+        <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
+          <div className="flex items-center gap-2">
+            <div style={{
+              width: 28, height: 28, borderRadius: 9,
+              background: 'linear-gradient(135deg, hsl(var(--primary) / 0.18), hsl(var(--primary) / 0.06))',
+              border: '1px solid hsl(var(--primary) / 0.25)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <BarChart2 size={14} style={{ color: 'hsl(var(--primary))' }} strokeWidth={2.4} />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-strong)' }}>Evolução do saldo</span>
+          </div>
+          <span
+            style={{
+              fontSize: 10.5, fontWeight: 700,
+              color: 'var(--color-text-muted)',
+              padding: '3px 9px', borderRadius: 99,
+              background: 'var(--color-bg-sunken)',
+              border: '1px solid var(--color-border-weak)',
+              textTransform: 'uppercase', letterSpacing: '0.5px',
+            }}
+          >
+            6 meses
+          </span>
         </div>
         <div style={{ height: 140 }}>
           {transactions.length === 0 ? (
