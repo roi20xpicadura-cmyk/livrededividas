@@ -653,7 +653,7 @@ export default function OverviewPage() {
             </div>
 
             {/* Content */}
-            <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ position: 'relative', zIndex: 1, minWidth: 0 }}>
               <div
                 style={{
                   fontSize: 10.5,
@@ -662,18 +662,26 @@ export default function OverviewPage() {
                   textTransform: 'uppercase',
                   letterSpacing: '0.7px',
                   marginBottom: 6,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
                 }}
               >
                 {s.label}
               </div>
               <div
                 style={{
-                  fontSize: 22,
+                  fontSize: s.isCurrency ? 'clamp(15px, 5vw, 22px)' : 'clamp(17px, 5.6vw, 22px)',
                   fontWeight: 900,
                   color: 'var(--color-text-strong)',
-                  letterSpacing: '-0.7px',
+                  letterSpacing: '-0.03em',
                   fontVariantNumeric: 'tabular-nums',
+                  fontFeatureSettings: '"tnum"',
                   lineHeight: 1.05,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxWidth: '100%',
                 }}
               >
                 {showValues ? (
