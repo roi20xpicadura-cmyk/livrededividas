@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { formatCurrency, PLAN_LIMITS, type PlanType } from '@/lib/plans';
-import { Wallet, TrendingDown, AlertTriangle, PiggyBank, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
+import { Wallet, AlertTriangle, PiggyBank, ChevronLeft, ChevronRight, Settings2, Plus, ArrowRight } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -223,11 +223,11 @@ export default function BudgetPage() {
   if (loading) return <div className="p-7"><div className="h-96 rounded-2xl skeleton-shimmer" /></div>;
 
   const globalPct = totalBudget > 0 ? Math.min(100, (totalSpent / totalBudget) * 100) : 0;
+  // Removidos "Orçamento" e "Gasto" porque já aparecem em destaque no hero.
+  // Mantemos apenas KPIs complementares: Disponível e Em alerta.
   const kpis = [
-    { label: 'Orçamento', value: formatCompact(totalBudget), Icon: Wallet, tint: 'violet' as const },
-    { label: 'Gasto', value: formatCompact(totalSpent), Icon: TrendingDown, tint: 'red' as const },
-    { label: 'Disponível', value: formatCompact(Math.max(0, totalBudget - totalSpent)), Icon: PiggyBank, tint: 'green' as const },
-    { label: 'Em alerta', value: String(overBudgetCount), Icon: AlertTriangle, tint: 'amber' as const },
+    { label: 'Disponível', value: totalBudget > 0 ? formatCompact(Math.max(0, totalBudget - totalSpent)) : '—', sub: totalBudget > 0 ? `${Math.round(100 - globalPct)}% restante` : 'sem orçamento', Icon: PiggyBank, tint: 'green' as const },
+    { label: 'Em alerta', value: String(overBudgetCount), sub: overBudgetCount === 0 ? 'tudo no controle' : overBudgetCount === 1 ? 'categoria' : 'categorias', Icon: AlertTriangle, tint: 'amber' as const },
   ];
   const tintMap = {
     violet: { bg: 'rgba(124,58,237,0.10)', border: 'rgba(124,58,237,0.22)', icon: '#7C3AED', val: C.textStrong },
