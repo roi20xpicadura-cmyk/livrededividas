@@ -210,12 +210,6 @@ export default function BudgetPage() {
     fetchData();
   };
 
-  const getProgressColor = (pct: number) => {
-    if (pct >= 100) return C.red;
-    if (pct >= 80) return C.amber;
-    return C.violet;
-  };
-
   const getCatEmoji = (cat: string) => {
     const map: Record<string, string> = {
       'Moradia': '🏠', 'Alimentação': '🍕', 'Transporte': '🚗', 'Saúde': '💊',
