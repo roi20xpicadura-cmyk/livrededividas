@@ -367,56 +367,161 @@ export default function OverviewPage() {
       {/* WHATSAPP PROMO */}
       <Suspense fallback={null}><WhatsAppPromoWidget /></Suspense>
 
-      {/* 2. HERO BALANCE CARD */}
+      {/* 2. HERO BALANCE CARD — premium */}
       <motion.div {...stagger(1)} className="p-5 md:p-6" style={{
-        background: '#1A0D35',
-        borderRadius: 22, position: 'relative', overflow: 'hidden',
-        border: '1.5px solid rgba(167, 139, 250, 0.20)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)',
+        background: 'linear-gradient(135deg, #1e1b4b 0%, #3b0764 50%, #4c1d95 100%)',
+        borderRadius: 24, position: 'relative', overflow: 'hidden',
+        border: '1px solid rgba(167, 139, 250, 0.22)',
+        boxShadow:
+          '0 24px 60px -16px rgba(76, 29, 149, 0.55), 0 8px 24px -12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)',
       }}>
-        
+        {/* Decorative glow orbs */}
+        <div aria-hidden style={{
+          position: 'absolute', top: -90, right: -60,
+          width: 240, height: 240, borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(167,139,250,0.45), transparent 70%)',
+          filter: 'blur(28px)', pointerEvents: 'none',
+        }} />
+        <div aria-hidden style={{
+          position: 'absolute', bottom: -100, left: -70,
+          width: 280, height: 280, borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(124,58,237,0.38), transparent 70%)',
+          filter: 'blur(36px)', pointerEvents: 'none',
+        }} />
+        {/* Subtle grid texture */}
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0,
+          backgroundImage:
+            'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+          maskImage: 'radial-gradient(ellipse at top right, black 25%, transparent 70%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at top right, black 25%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
 
-        <div className="flex items-center justify-between" style={{ marginBottom: 16, position: 'relative' }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-            {heroLabel}
-          </span>
+        <div className="flex items-center justify-between" style={{ marginBottom: 14, position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: 9,
+              background: 'rgba(255,255,255,0.10)',
+              border: '0.5px solid rgba(255,255,255,0.20)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.16)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <DollarSign size={15} color="white" strokeWidth={2.4} />
+            </div>
+            <span style={{
+              fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.72)',
+              textTransform: 'uppercase', letterSpacing: '0.14em',
+            }}>
+              {heroLabel}
+            </span>
+          </div>
           <motion.button whileTap={{ scale: 0.88 }} onClick={() => setShowValues(!showValues)}
-            style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            {showValues ? <Eye size={15} color="rgba(255,255,255,0.8)" /> : <EyeOff size={15} color="rgba(255,255,255,0.8)" />}
+            style={{
+              background: 'rgba(255,255,255,0.10)',
+              border: '0.5px solid rgba(255,255,255,0.18)',
+              backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+              borderRadius: 10, width: 34, height: 34,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.14)',
+            }}>
+            {showValues ? <Eye size={15} color="rgba(255,255,255,0.85)" /> : <EyeOff size={15} color="rgba(255,255,255,0.85)" />}
           </motion.button>
         </div>
 
-        <div style={{ position: 'relative', marginBottom: 20 }}>
+        <div style={{ position: 'relative', marginBottom: 18 }}>
           {showValues ? (
             <div>
-              <div className="text-[28px] md:text-[38px]" style={{ fontWeight: 900, color: 'white', letterSpacing: '-1.5px', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+              <div className="text-[30px] md:text-[42px]" style={{
+                fontWeight: 900, color: 'white',
+                letterSpacing: '-0.04em', lineHeight: 1,
+                fontVariantNumeric: 'tabular-nums',
+                fontFeatureSettings: '"tnum"',
+                textShadow: '0 2px 18px rgba(0,0,0,0.30)',
+              }}>
                 <AnimatedCurrency value={heroBalance} currency={currency} />
               </div>
-              <div className="flex items-center gap-1" style={{ marginTop: 8 }}>
-                {heroBalance >= 0
-                  ? <TrendingUp size={13} color="#A78BFA" />
-                  : <TrendingDown size={13} color="#fca5a5" />}
-                <span style={{ fontSize: 13, color: heroBalance >= 0 ? '#A78BFA' : '#fca5a5', fontWeight: 600 }}>
-                  vs mês anterior
-                </span>
+              <div className="flex items-center gap-1.5" style={{ marginTop: 10 }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '3px 9px',
+                  background: heroBalance >= 0
+                    ? 'rgba(167,139,250,0.18)'
+                    : 'rgba(252,165,165,0.18)',
+                  border: heroBalance >= 0
+                    ? '0.5px solid rgba(167,139,250,0.32)'
+                    : '0.5px solid rgba(252,165,165,0.32)',
+                  borderRadius: 99,
+                  backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+                }}>
+                  {heroBalance >= 0
+                    ? <TrendingUp size={11} color="#C4B5FD" strokeWidth={2.6} />
+                    : <TrendingDown size={11} color="#fca5a5" strokeWidth={2.6} />}
+                  <span style={{
+                    fontSize: 11, color: heroBalance >= 0 ? '#DDD6FE' : '#fecaca',
+                    fontWeight: 800, letterSpacing: '-0.01em',
+                  }}>
+                    vs mês anterior
+                  </span>
+                </div>
               </div>
             </div>
           ) : (
-            <div style={{ fontSize: 38, fontWeight: 900, color: 'white', letterSpacing: '4px' }}>••••••</div>
+            <div style={{ fontSize: 42, fontWeight: 900, color: 'white', letterSpacing: '6px' }}>••••••</div>
           )}
         </div>
 
-        {/* Receitas / Despesas — always show */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: '12px 16px', position: 'relative' }}>
+        {/* Receitas / Despesas — glass card with divider */}
+        <div style={{
+          position: 'relative',
+          display: 'grid', gridTemplateColumns: '1fr 1px 1fr',
+          background: 'rgba(255,255,255,0.06)',
+          border: '0.5px solid rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+          borderRadius: 14, padding: '13px 16px',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+        }}>
           <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Receitas</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#DDD6FE', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              fontSize: 10, color: 'rgba(255,255,255,0.6)',
+              fontWeight: 800, textTransform: 'uppercase',
+              letterSpacing: '0.10em', marginBottom: 5,
+            }}>
+              <ArrowDownLeft size={10} color="#C4B5FD" strokeWidth={2.8} />
+              Receitas
+            </div>
+            <div style={{
+              fontSize: 16, fontWeight: 800, color: '#E9D5FF',
+              fontVariantNumeric: 'tabular-nums',
+              fontFeatureSettings: '"tnum"',
+              letterSpacing: '-0.02em',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>
               {showValues ? formatCurrency(heroIncome, currency) : '••••'}
             </div>
           </div>
-          <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Despesas</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#fca5a5', fontVariantNumeric: 'tabular-nums' }}>
+          <div style={{ background: 'rgba(255,255,255,0.10)', margin: '2px 0' }} />
+          <div style={{ paddingLeft: 14 }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              fontSize: 10, color: 'rgba(255,255,255,0.6)',
+              fontWeight: 800, textTransform: 'uppercase',
+              letterSpacing: '0.10em', marginBottom: 5,
+            }}>
+              <ArrowUpRight size={10} color="#fca5a5" strokeWidth={2.8} />
+              Despesas
+            </div>
+            <div style={{
+              fontSize: 16, fontWeight: 800, color: '#fca5a5',
+              fontVariantNumeric: 'tabular-nums',
+              fontFeatureSettings: '"tnum"',
+              letterSpacing: '-0.02em',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>
               {showValues ? formatCurrency(heroExpense, currency) : '••••'}
             </div>
           </div>
@@ -424,16 +529,54 @@ export default function OverviewPage() {
 
         {/* PESSOAL / NEGÓCIO rows — only for 'both' */}
         {profileType === 'both' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
-            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 14px' }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase' }}>🏠 Pessoal</div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: 'white', marginTop: 2 }}>
+          <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '0.5px solid rgba(255,255,255,0.12)',
+              backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+              borderRadius: 12, padding: '11px 14px',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+            }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                fontSize: 10, color: 'rgba(255,255,255,0.55)',
+                fontWeight: 800, textTransform: 'uppercase',
+                letterSpacing: '0.10em',
+              }}>
+                <Home size={10} color="rgba(255,255,255,0.65)" strokeWidth={2.6} />
+                Pessoal
+              </div>
+              <div style={{
+                fontSize: 15, fontWeight: 800, color: 'white', marginTop: 4,
+                letterSpacing: '-0.02em',
+                fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum"',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>
                 {showValues ? formatCurrency(stats.personalBalance, currency) : '••••'}
               </div>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 14px' }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase' }}>💼 Negócio</div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: 'white', marginTop: 2 }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '0.5px solid rgba(255,255,255,0.12)',
+              backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+              borderRadius: 12, padding: '11px 14px',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+            }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                fontSize: 10, color: 'rgba(255,255,255,0.55)',
+                fontWeight: 800, textTransform: 'uppercase',
+                letterSpacing: '0.10em',
+              }}>
+                <Briefcase size={10} color="rgba(255,255,255,0.65)" strokeWidth={2.6} />
+                Negócio
+              </div>
+              <div style={{
+                fontSize: 15, fontWeight: 800, color: 'white', marginTop: 4,
+                letterSpacing: '-0.02em',
+                fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum"',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>
                 {showValues ? formatCurrency(stats.bizProfit, currency) : '••••'}
               </div>
             </div>
