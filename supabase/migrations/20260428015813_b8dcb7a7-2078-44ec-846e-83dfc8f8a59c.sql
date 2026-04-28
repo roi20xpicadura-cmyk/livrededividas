@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Anon can insert webhooks" ON public.pluggy_webhooks;
