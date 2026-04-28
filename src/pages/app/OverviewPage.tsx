@@ -466,21 +466,6 @@ export default function OverviewPage() {
               minHeight: 128,
             }}
           >
-            {/* Accent corner glow */}
-            <div
-              aria-hidden
-              style={{
-                position: 'absolute',
-                top: -40,
-                right: -40,
-                width: 110,
-                height: 110,
-                borderRadius: '50%',
-                background: `radial-gradient(circle, ${s.color}26, transparent 70%)`,
-                filter: 'blur(8px)',
-                pointerEvents: 'none',
-              }}
-            />
             {/* Top accent bar */}
             <div
               aria-hidden
