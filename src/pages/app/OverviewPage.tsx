@@ -13,7 +13,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { lazyWithRetry } from '@/lib/lazyWithRetry';
 // Heavy below-the-fold widgets are lazy-loaded so the dashboard hero paints fast.
 // lazyWithRetry: se o chunk falhar (deploy novo, glitch de rede), tenta de novo
@@ -22,7 +22,6 @@ const PredictiveWidget = lazyWithRetry(() => import('@/components/dashboard/Pred
 const AIInsightsWidget = lazyWithRetry(() => import('@/components/dashboard/AIInsightsWidget'));
 const WelcomeChecklist = lazyWithRetry(() => import('@/components/app/WelcomeChecklist'));
 const PushNotificationOptIn = lazyWithRetry(() => import('@/components/app/PushNotificationOptIn'));
-const AIChatDrawer = lazyWithRetry(() => import('@/components/app/AIChatDrawer'));
 const WhatsAppPromoWidget = lazyWithRetry(() => import('@/components/app/WhatsAppPromoWidget'));
 const SmartAlertsWidget = lazyWithRetry(() => import('@/components/dashboard/SmartAlertsWidget'));
 import { useIsMobile } from '@/hooks/use-mobile';
