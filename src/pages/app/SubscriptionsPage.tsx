@@ -479,38 +479,6 @@ function StatusBadge({ label, bg, fg }: { label: string; bg: string; fg: string 
   );
 }
 
-function Kpi({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        background: C.white,
-        border: `1px solid ${C.borderSoft}`,
-        borderRadius: 16,
-        boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-        padding: 14,
-      }}
-    >
-      <div className="flex items-center gap-2 mb-2">
-        <div
-          className="flex items-center justify-center"
-          style={{ width: 28, height: 28, borderRadius: 8, background: C.violetSofter, color: C.violet }}
-        >
-          {icon}
-        </div>
-        <p
-          className="font-bold uppercase tracking-wide"
-          style={{ fontSize: 11, color: C.textSubtle }}
-        >
-          {label}
-        </p>
-      </div>
-      <p className="font-black leading-tight" style={{ fontSize: 24, color: C.textStrong }}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
 function MiniKpi({ label, value, small = false }: { label: string; value: string; small?: boolean }) {
   return (
     <div
