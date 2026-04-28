@@ -590,7 +590,8 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
                     alt="Kora, mascote koala"
                     width={36}
                     height={36}
-                    loading="lazy"
+                    loading="eager"
+                    decoding="async"
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 </div>
