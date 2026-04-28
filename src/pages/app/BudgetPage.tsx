@@ -399,8 +399,8 @@ export default function BudgetPage() {
           )}
         </motion.div>
 
-        {/* ─────── KPI cards premium ─────── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 px-4">
+        {/* ─────── KPI cards (apenas complementares ao hero) ─────── */}
+        <div className="grid grid-cols-2 gap-2.5 px-4">
           {kpis.map((s, i) => {
             const t = tintMap[s.tint];
             return (
@@ -412,27 +412,29 @@ export default function BudgetPage() {
                 style={{
                   background: C.white,
                   border: `1px solid ${C.cardBorder}`,
-                  borderRadius: 14,
-                  padding: '12px 14px',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.03), 0 4px 12px -6px rgba(124,58,237,0.08)',
+                  borderRadius: 16,
+                  padding: '14px 14px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.03), 0 6px 18px -10px rgba(124,58,237,0.10)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 11,
+                  gap: 12,
                   minWidth: 0,
                   position: 'relative',
                   overflow: 'hidden',
                 }}
               >
                 <div style={{
-                  width: 38, height: 38, borderRadius: 11,
-                  background: t.bg, border: `1px solid ${t.border}`,
+                  width: 42, height: 42, borderRadius: 12,
+                  background: `linear-gradient(135deg, ${t.bg}, ${t.bg.replace(/0\.\d+\)/, '0.04)')})`,
+                  border: `1px solid ${t.border}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
-                  <s.Icon style={{ width: 18, height: 18, color: t.icon, strokeWidth: 2.2 }} />
+                  <s.Icon style={{ width: 20, height: 20, color: t.icon, strokeWidth: 2.2 }} />
                 </div>
                 <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <p style={{ color: C.textMuted, fontSize: 10, fontWeight: 700, lineHeight: 1.1, letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</p>
-                  <p style={{ color: t.val, fontSize: 16, fontWeight: 800, lineHeight: 1.15, letterSpacing: '-0.015em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={s.value}>{s.value}</p>
+                  <p style={{ color: C.textMuted, fontSize: 10, fontWeight: 700, lineHeight: 1.1, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</p>
+                  <p style={{ color: t.val, fontSize: 19, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={s.value}>{s.value}</p>
+                  <p style={{ color: C.textMuted, fontSize: 10.5, fontWeight: 600, lineHeight: 1.1, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.sub}</p>
                 </div>
               </motion.div>
             );
