@@ -49,7 +49,7 @@ export type CategoryStyle = {
 // Light/dark: usamos opacity no bg via rgba para funcionar nos dois temas.
 const palette = {
   orange: { bg: "rgba(249, 115, 22, 0.12)", fg: "#EA580C" },
-  rose:   { bg: "rgba(244, 63, 94, 0.12)",  fg: "#E11D48" },
+  rose:   { bg: "rgba(236, 72, 153, 0.10)", fg: "#DB2777" },
   amber:  { bg: "rgba(245, 158, 11, 0.12)", fg: "#D97706" },
   yellow: { bg: "rgba(234, 179, 8, 0.14)",  fg: "#CA8A04" },
   green:  { bg: "rgba(34, 197, 94, 0.12)",  fg: "#16A34A" },
@@ -76,8 +76,8 @@ const MAP: Record<string, CategoryStyle> = {
   "Moradia":        { Icon: Home,            ...palette.teal   },
   "Aluguel":        { Icon: Home,            ...palette.teal   },
   "Contas":         { Icon: Receipt,         ...palette.slate  },
-  "Saúde":          { Icon: Heart,           ...palette.rose   },
-  "Farmácia":       { Icon: Pill,            ...palette.rose   },
+  "Saúde":          { Icon: Heart,           ...palette.teal   },
+  "Farmácia":       { Icon: Pill,            ...palette.teal   },
   "Academia":       { Icon: Dumbbell,        ...palette.violet },
   "Educação":       { Icon: GraduationCap,   ...palette.indigo },
   "Cursos":         { Icon: BookOpen,        ...palette.indigo },
@@ -90,7 +90,7 @@ const MAP: Record<string, CategoryStyle> = {
   "Financeiro":     { Icon: Briefcase,       ...palette.slate  },
   "Cartão":         { Icon: CreditCard,      ...palette.slate  },
   "Cartão de Crédito": { Icon: CreditCard,   ...palette.slate  },
-  "Dívidas":        { Icon: TrendingDown,    ...palette.rose   },
+  "Dívidas":        { Icon: TrendingDown,    ...palette.amber  },
   "Pets":           { Icon: PawPrint,        ...palette.amber  },
   "Outros":         { Icon: CircleDot,       ...palette.slate  },
   "Outro":          { Icon: CircleDot,       ...palette.slate  },
