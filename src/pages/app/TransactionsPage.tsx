@@ -165,6 +165,13 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
   const periodLabel = format(new Date(), "MMMM yyyy", { locale: ptBR });
   const balance = totals.inc - totals.exp;
 
+  // Counts by filter — used in chips
+  const counts = useMemo(() => {
+    const inc = txs.filter(t => t.type === 'income').length;
+    const exp = txs.filter(t => t.type === 'expense').length;
+    return { all: txs.length, income: inc, expense: exp };
+  }, [txs]);
+
   if (loading) {
     return (
       <div style={{ padding: 24 }}>
@@ -175,96 +182,173 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg-base)', paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
-      {/* Page header */}
-      <div style={{ padding: '14px 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <p style={{ fontSize: 12, color: 'var(--color-text-muted)', textTransform: 'capitalize' }}>
-            {periodLabel}
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <motion.button whileTap={{ scale: 0.95 }} onClick={() => setShowImport(true)}
-            style={{
-              width: 36, height: 36, borderRadius: 10,
-              background: 'var(--color-bg-surface)',
-              border: '1px solid var(--color-border-base)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: 'var(--color-text-muted)',
-            }}>
-            <Upload style={{ width: 15, height: 15 }} />
-          </motion.button>
-          <motion.button whileTap={{ scale: 0.95 }} onClick={() => setShowSheet(true)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px',
-              background: 'hsl(var(--primary))', border: 'none', borderRadius: 10,
-              color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              boxShadow: '0 2px 8px hsl(var(--primary) / 0.3)',
-            }}>
-            <Plus style={{ width: 14, height: 14 }} /> Novo
-          </motion.button>
-        </div>
-      </div>
-
-      {/* Summary — minimal inline: saldo discreto */}
-      <div style={{
-        padding: '10px 20px 14px',
-        display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
-      }}>
-        <span style={{
-          fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)',
-          textTransform: 'uppercase', letterSpacing: '0.08em',
-        }}>
-          Saldo
-        </span>
-        <span style={{
-          fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-mono)',
-          letterSpacing: '-0.02em',
-          color: balance < 0 ? 'var(--color-danger-text)' : 'var(--color-text-strong)',
-        }}>
-          {balance < 0 ? '−' : ''}R$ {formatBRL(Math.abs(balance))}
-        </span>
-      </div>
-
-      {/* Filter chips */}
-      <div style={{ padding: '0 16px', display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}
-        className="hide-scrollbar">
-        {filters.map(f => (
-          <motion.button key={f.id} whileTap={{ scale: 0.95 }}
-            onClick={() => { setFilter(f.id); setPage(1); }}
-            style={{
-              height: 32, padding: '0 14px', borderRadius: 99,
-              border: `1px solid ${filter === f.id ? 'hsl(var(--primary))' : 'var(--color-border-base)'}`,
-              background: filter === f.id ? 'hsl(var(--primary))' : 'var(--color-bg-surface)',
-              fontSize: 13, fontWeight: filter === f.id ? 700 : 500,
-              color: filter === f.id ? 'hsl(var(--primary-foreground))' : 'var(--color-text-muted)',
-              cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-              transition: 'all 150ms',
-            }}>
-            {f.label}
-          </motion.button>
-        ))}
-      </div>
-
-      {/* Search */}
-      <div style={{
-        margin: '8px 16px', display: 'flex', alignItems: 'center', gap: 8,
-        background: 'var(--color-bg-surface)',
-        border: '1.5px solid var(--color-border-base)',
-        borderRadius: 12, padding: '0 14px', height: 40,
-      }}>
-        <Search style={{ width: 15, height: 15, color: 'var(--color-text-muted)' }} />
-        <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
-          placeholder="Buscar lançamentos..."
+      {/* HERO — gradiente roxo com saldo + KPIs */}
+      <div style={{ padding: '12px 16px 0' }}>
+        <div
           style={{
-            flex: 1, background: 'none', border: 'none', outline: 'none',
-            fontSize: 14, color: 'var(--color-text-base)',
-          }} />
-        {search && (
-          <button onClick={() => setSearch('')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
-            <X style={{ width: 14, height: 14, color: 'var(--color-text-muted)' }} />
-          </button>
-        )}
+            position: 'relative',
+            borderRadius: 24,
+            padding: '18px 18px 16px',
+            background:
+              'radial-gradient(120% 100% at 0% 0%, #4C1D95 0%, transparent 55%), radial-gradient(120% 100% at 100% 100%, #6D28D9 0%, transparent 60%), linear-gradient(135deg, #1E0B4D 0%, #3B1397 60%, #5B21B6 100%)',
+            color: '#fff',
+            overflow: 'hidden',
+            boxShadow: '0 16px 40px -16px rgba(76, 29, 149, 0.55), 0 4px 12px -4px rgba(76, 29, 149, 0.35)',
+          }}
+        >
+          {/* Glow decorativo */}
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute', top: -40, right: -40, width: 180, height: 180,
+              borderRadius: '50%',
+              background: 'radial-gradient(closest-side, rgba(167, 139, 250, 0.45), transparent 70%)',
+              pointerEvents: 'none',
+            }}
+          />
+
+          {/* Top row: período + ações */}
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <span
+              style={{
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.72)',
+                background: 'rgba(255,255,255,0.10)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                padding: '5px 10px', borderRadius: 99,
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              {periodLabel}
+            </span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <motion.button whileTap={{ scale: 0.94 }} onClick={() => setShowImport(true)}
+                aria-label="Importar"
+                style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  background: 'rgba(255,255,255,0.10)',
+                  border: '1px solid rgba(255,255,255,0.16)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: '#fff',
+                  backdropFilter: 'blur(8px)',
+                }}>
+                <Upload style={{ width: 15, height: 15 }} />
+              </motion.button>
+              <motion.button whileTap={{ scale: 0.94 }} onClick={() => setShowSheet(true)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px',
+                  background: '#fff', border: 'none', borderRadius: 10,
+                  color: '#3B1397', fontSize: 13, fontWeight: 800, cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.18)',
+                }}>
+                <Plus style={{ width: 14, height: 14 }} /> Novo
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Saldo */}
+          <div style={{ position: 'relative', marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', marginBottom: 4 }}>
+              Saldo do período
+            </div>
+            <div style={{
+              fontSize: 30, fontWeight: 800, fontFamily: 'var(--font-mono)',
+              letterSpacing: '-0.025em', lineHeight: 1.05,
+              color: '#fff',
+              textShadow: '0 2px 12px rgba(0,0,0,0.25)',
+            }}>
+              {balance < 0 ? '−' : ''}R$ {formatBRL(Math.abs(balance))}
+            </div>
+          </div>
+
+          {/* Mini KPIs */}
+          <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {[
+              { label: 'Receitas', value: totals.inc, dot: '#34D399' },
+              { label: 'Despesas', value: totals.exp, dot: '#F472B6' },
+            ].map(kpi => (
+              <div key={kpi.label} style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 14, padding: '10px 12px',
+                backdropFilter: 'blur(10px)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: 99, background: kpi.dot, boxShadow: `0 0 8px ${kpi.dot}` }} />
+                  <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>{kpi.label}</span>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 800, fontFamily: 'var(--font-mono)', letterSpacing: '-0.02em', color: '#fff' }}>
+                  R$ {formatBRL(kpi.value)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Filtros + busca (sticky) */}
+      <div
+        style={{
+          position: 'sticky', top: 0, zIndex: 5,
+          background: 'var(--color-bg-base)',
+          padding: '12px 16px 8px',
+          marginTop: 4,
+        }}
+      >
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 8 }} className="hide-scrollbar">
+          {filters.map(f => {
+            const active = filter === f.id;
+            const countMap: Record<string, number> = { all: counts.all, income: counts.income, expense: counts.expense };
+            const c = countMap[f.id];
+            return (
+              <motion.button key={f.id} whileTap={{ scale: 0.95 }}
+                onClick={() => { setFilter(f.id); setPage(1); }}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  height: 32, padding: '0 12px', borderRadius: 99,
+                  border: `1px solid ${active ? 'transparent' : 'var(--color-border-base)'}`,
+                  background: active ? 'hsl(var(--primary))' : 'var(--color-bg-surface)',
+                  fontSize: 13, fontWeight: active ? 700 : 500,
+                  color: active ? 'hsl(var(--primary-foreground))' : 'var(--color-text-muted)',
+                  cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                  transition: 'all 150ms',
+                  boxShadow: active ? '0 4px 14px hsl(var(--primary) / 0.32)' : 'none',
+                }}>
+                {f.label}
+                {c !== undefined && (
+                  <span style={{
+                    fontSize: 10.5, fontWeight: 700,
+                    padding: '1px 7px', borderRadius: 99, lineHeight: 1.4,
+                    background: active ? 'rgba(255,255,255,0.22)' : 'var(--color-bg-sunken)',
+                    color: active ? '#fff' : 'var(--color-text-muted)',
+                  }}>{c}</span>
+                )}
+              </motion.button>
+            );
+          })}
+        </div>
+
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: 'var(--color-bg-surface)',
+          border: '1.5px solid var(--color-border-base)',
+          borderRadius: 12, padding: '0 14px', height: 40,
+        }}>
+          <Search style={{ width: 15, height: 15, color: 'var(--color-text-muted)' }} />
+          <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Buscar lançamentos..."
+            style={{
+              flex: 1, background: 'none', border: 'none', outline: 'none',
+              fontSize: 14, color: 'var(--color-text-base)',
+            }} />
+          {search && (
+            <button onClick={() => setSearch('')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+              <X style={{ width: 14, height: 14, color: 'var(--color-text-muted)' }} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* List */}
