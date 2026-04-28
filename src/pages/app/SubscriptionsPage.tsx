@@ -189,18 +189,58 @@ export default function SubscriptionsPage() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden"
-        style={{
-          borderRadius: 24,
-          padding: '22px 20px 24px',
-          background: `linear-gradient(135deg, ${C.violetDeep} 0%, ${C.violetMid} 50%, ${C.violetGlow} 100%)`,
-          boxShadow: '0 20px 40px -18px rgba(46,16,101,0.6), 0 4px 12px -4px rgba(46,16,101,0.4)',
-        }}
+        className="subs-hero relative overflow-hidden"
       >
+        <style>{`
+          .subs-hero {
+            border-radius: 22px;
+            padding: 20px 18px 22px;
+            background:
+              radial-gradient(120% 80% at 0% 0%, rgba(124,58,237,0.45) 0%, rgba(124,58,237,0) 55%),
+              linear-gradient(160deg, #1E0B4D 0%, #2E1065 45%, #3B1397 100%);
+            box-shadow:
+              0 12px 28px -16px rgba(30,11,77,0.55),
+              0 2px 8px -2px rgba(30,11,77,0.35);
+          }
+          @media (min-width: 480px) {
+            .subs-hero {
+              border-radius: 24px;
+              padding: 24px 22px;
+              background:
+                radial-gradient(110% 80% at 0% 0%, rgba(139,92,246,0.4) 0%, rgba(139,92,246,0) 55%),
+                linear-gradient(150deg, #2E1065 0%, #4C1D95 50%, #5B21B6 100%);
+              box-shadow:
+                0 16px 36px -18px rgba(46,16,101,0.55),
+                0 3px 10px -3px rgba(46,16,101,0.4);
+            }
+          }
+          @media (min-width: 768px) {
+            .subs-hero {
+              padding: 28px 26px;
+              background:
+                radial-gradient(100% 75% at 0% 0%, rgba(167,139,250,0.32) 0%, rgba(167,139,250,0) 60%),
+                linear-gradient(135deg, #2E1065 0%, #4C1D95 45%, #6D28D9 100%);
+              box-shadow:
+                0 22px 44px -20px rgba(46,16,101,0.6),
+                0 4px 12px -4px rgba(46,16,101,0.4);
+            }
+          }
+          @media (prefers-color-scheme: dark) {
+            .subs-hero {
+              background:
+                radial-gradient(110% 80% at 0% 0%, rgba(124,58,237,0.3) 0%, rgba(124,58,237,0) 55%),
+                linear-gradient(160deg, #170836 0%, #220A52 50%, #2E1065 100%) !important;
+            }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .subs-hero-orb { display: none; }
+          }
+        `}</style>
+
         {/* decorative orbs */}
         <div
           aria-hidden
-          className="absolute pointer-events-none"
+          className="subs-hero-orb absolute pointer-events-none hidden sm:block"
           style={{
             width: 220, height: 220, right: -70, top: -90,
             borderRadius: '50%',
@@ -209,7 +249,7 @@ export default function SubscriptionsPage() {
         />
         <div
           aria-hidden
-          className="absolute pointer-events-none"
+          className="subs-hero-orb absolute pointer-events-none hidden sm:block"
           style={{
             width: 160, height: 160, left: -50, bottom: -70,
             borderRadius: '50%',
