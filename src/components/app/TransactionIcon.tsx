@@ -218,17 +218,21 @@ export default function TransactionIcon({
   const style = getCategoryStyle(category, isIncome);
   // 1) palavra-chave na descrição vence
   const kw = matchKeyword(description);
-  // 2) se categoria for genérica, varia por hash do nome
+  // 2) categoria específica (não genérica) vence sobre favicon
+  const hasSpecificCategory = !isGenericCategory(category);
   let finalStyle: { Icon: LucideIcon; bg: string; fg: string };
   if (kw) {
     finalStyle = kw;
-  } else if (isGenericCategory(category)) {
+  } else if (hasSpecificCategory) {
+    finalStyle = { Icon: style.Icon, bg: style.bg, fg: style.fg };
+  } else {
     const idx = hashIdx(description || 'x', FALLBACK_PALETTE.length);
     const iconIdx = hashIdx(description || 'x', FALLBACK_ICONS.length);
     finalStyle = { Icon: FALLBACK_ICONS[iconIdx], ...FALLBACK_PALETTE[idx] };
-  } else {
-    finalStyle = { Icon: style.Icon, bg: style.bg, fg: style.fg };
   }
+  // Favicon só entra quando NÃO há keyword nem categoria específica —
+  // evita que "Mercado/Almoço/Praia" virem favicons genéricos do Google.
+  const useFavicon = !kw && !hasSpecificCategory && domain && !imgFailed;
   const Icon = finalStyle.Icon;
 
   const container: React.CSSProperties = {
@@ -245,7 +249,7 @@ export default function TransactionIcon({
     boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.03)',
   };
 
-  if (domain && !imgFailed) {
+  if (useFavicon) {
     const url = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
     return (
       <div style={{
