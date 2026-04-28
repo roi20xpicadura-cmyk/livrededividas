@@ -531,6 +531,10 @@ export default function WhatsAppSection() {
                   <img
                     src={koraIcon}
                     alt="Kora Finance"
+                    loading="lazy"
+                    decoding="async"
+                    width={36}
+                    height={36}
                     className="w-9 h-9 rounded-full object-cover shadow-md flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
