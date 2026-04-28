@@ -7,7 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const FROM = 'KoraFinance <oi@notify.korafinance.app>';
+// Use Resend's default verified sender until notify.korafinance.app is verified.
+const FROM = 'KoraFinance <onboarding@resend.dev>';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -66,9 +67,14 @@ serve(async (req) => {
       }),
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      throw new Error(`Resend error [${res.status}]: ${JSON.stringify(data)}`);
+      // Don't break signup if email provider fails (e.g. unverified domain).
+      console.error(`send-welcome-email skipped [${res.status}]:`, data);
+      return new Response(
+        JSON.stringify({ success: false, skipped: true, status: res.status, error: data }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
 
     return new Response(JSON.stringify({ success: true, data }), {
@@ -78,8 +84,9 @@ serve(async (req) => {
   } catch (error) {
     console.error('send-welcome-email error:', error);
     const msg = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ success: false, error: msg }), {
-      status: 500,
+    // Best-effort: never block signup on email failure.
+    return new Response(JSON.stringify({ success: false, skipped: true, error: msg }), {
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
