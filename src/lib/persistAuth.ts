@@ -98,3 +98,8 @@ export function bootstrapPersistentAuth() {
     keys.forEach((k) => safeRemove(local, k));
   };
 }
+
+// Executa imediatamente quando o módulo é importado, garantindo que o
+// sessionStorage já contenha o token salvo antes do client do Supabase
+// ler sua chave de auth na inicialização.
+bootstrapPersistentAuth();
