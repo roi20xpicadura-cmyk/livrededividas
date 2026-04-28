@@ -5,7 +5,7 @@ import {
   ArrowDownLeft, ArrowUpRight, Banknote, Coins, Wallet, Gift, TrendingUp,
   PiggyBank, Briefcase, Building2, Receipt, ShoppingBag, Ticket, Plane,
   Coffee, Pizza, Bus, Bike, Smartphone, Wifi, Zap, Droplet, Flame,
-  Stethoscope, Baby, Cat, Dog, Music, Camera, Gamepad2, Sparkles,
+  Stethoscope, Baby, Dog, Music, Camera, Gamepad2, Sparkles,
   Hammer, GraduationCap, ShieldCheck, MapPin, Heart, type LucideIcon,
 } from 'lucide-react';
 // Heurística por palavra-chave na descrição (vence sobre categoria)
@@ -198,25 +198,43 @@ export default function TransactionIcon({
   const [imgFailed, setImgFailed] = useState(false);
 
   const style = getCategoryStyle(category, isIncome);
-  const Icon = style.Icon;
+  // 1) palavra-chave na descrição vence
+  const kw = matchKeyword(description);
+  // 2) se categoria for genérica, varia por hash do nome
+  let finalStyle: { Icon: LucideIcon; bg: string; fg: string };
+  if (kw) {
+    finalStyle = kw;
+  } else if (isGenericCategory(category)) {
+    const idx = hashIdx(description || 'x', FALLBACK_PALETTE.length);
+    const iconIdx = hashIdx(description || 'x', FALLBACK_ICONS.length);
+    finalStyle = { Icon: FALLBACK_ICONS[iconIdx], ...FALLBACK_PALETTE[idx] };
+  } else {
+    finalStyle = { Icon: style.Icon, bg: style.bg, fg: style.fg };
+  }
+  const Icon = finalStyle.Icon;
 
   const container: React.CSSProperties = {
     width: size,
     height: size,
     borderRadius: rounded,
-    background: style.bg,
+    background: finalStyle.bg,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     flexShrink: 0,
     border: '1px solid rgba(0,0,0,0.04)',
+    boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.03)',
   };
 
   if (domain && !imgFailed) {
     const url = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
     return (
-      <div style={{ ...container, background: '#fff' }}>
+      <div style={{
+        ...container,
+        background: 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)',
+        boxShadow: 'inset 0 0 0 1px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)',
+      }}>
         <img
           src={url}
           alt={description}
@@ -225,7 +243,7 @@ export default function TransactionIcon({
           loading="lazy"
           decoding="async"
           onError={() => setImgFailed(true)}
-          style={{ width: '70%', height: '70%', objectFit: 'contain', display: 'block' }}
+          style={{ width: '66%', height: '66%', objectFit: 'contain', display: 'block' }}
         />
       </div>
     );
@@ -233,7 +251,10 @@ export default function TransactionIcon({
 
   return (
     <div style={container}>
-      <Icon style={{ width: size * 0.5, height: size * 0.5, color: style.fg }} />
+      <Icon
+        style={{ width: size * 0.5, height: size * 0.5, color: finalStyle.fg }}
+        strokeWidth={2.2}
+      />
     </div>
   );
 }
