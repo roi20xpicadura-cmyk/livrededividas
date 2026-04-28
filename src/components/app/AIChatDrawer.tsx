@@ -12,6 +12,7 @@ import { useKora, type KoraPendingAction } from '@/hooks/useKora';
 import KoraPendingActionCard from '@/components/app/KoraPendingActionCard';
 import AudioRecordButton from '@/components/app/AudioRecordButton';
 import { toast } from 'sonner';
+import koalaMascot from '@/assets/koala-mascot.png';
 
 type Msg = {
   role: 'user' | 'assistant';
@@ -582,9 +583,16 @@ export default function AIChatDrawer({ open, onClose }: { open: boolean; onClose
                 minHeight: isMobile ? 'calc(56px + env(safe-area-inset-top))' : 56,
               }}>
               <div className="relative flex-shrink-0">
-                <div className="w-9 h-9 rounded-[10px] flex items-center justify-center"
+                <div className="w-9 h-9 rounded-[10px] flex items-center justify-center overflow-hidden"
                   style={{ background: 'var(--color-green-600)' }}>
-                  <Sparkles className="w-4 h-4 text-white" />
+                  <img
+                    src={koalaMascot}
+                    alt="Kora, mascote koala"
+                    width={36}
+                    height={36}
+                    loading="lazy"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
                 </div>
                 <div className="absolute -bottom-[1px] -right-[1px] w-[9px] h-[9px] rounded-full"
                   style={{ background: 'var(--color-success-solid)', border: '2px solid var(--color-bg-surface)' }} />
