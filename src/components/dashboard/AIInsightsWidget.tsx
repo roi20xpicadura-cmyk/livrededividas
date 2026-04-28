@@ -279,43 +279,34 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
         boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 12px 32px -20px rgba(124,58,237,0.22)',
       }}
     >
-      {/* Premium Header — purple gradient */}
+      {/* Clean Header — purple gradient, single row */}
       <div
         style={{
           position: 'relative',
-          padding: '14px 16px',
-          background: 'linear-gradient(135deg, #1a0b3d 0%, #3b1080 55%, #7c3aed 100%)',
+          padding: '12px 14px',
+          background: 'linear-gradient(135deg, #2a0f5f 0%, #5b21b6 60%, #7c3aed 100%)',
           overflow: 'hidden',
         }}
       >
-        {/* animated orbs */}
-        <motion.div
-          animate={{ x: [0, 20, 0], y: [0, -10, 0] }}
-          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+        {/* subtle top sheen */}
+        <div
+          aria-hidden
           style={{
-            position: 'absolute', top: -30, right: -20, width: 110, height: 110,
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(236,72,153,0.35), transparent 70%)',
-            filter: 'blur(14px)', pointerEvents: 'none',
+            position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)',
+            pointerEvents: 'none',
           }}
         />
-        <div style={{
-          position: 'absolute', inset: 0, opacity: 0.12, pointerEvents: 'none',
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-          maskImage: 'radial-gradient(ellipse at top right, black 20%, transparent 70%)',
-        }} />
 
-        <div className="flex items-center justify-between" style={{ position: 'relative', zIndex: 1 }}>
-          <div className="flex items-center gap-2.5">
+        <div className="flex items-center justify-between gap-2" style={{ position: 'relative', zIndex: 1 }}>
+          {/* Left: koala + title */}
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div style={{
-              width: 38, height: 38, borderRadius: 12,
-              background: 'rgba(255,255,255,0.14)',
-              border: '1px solid rgba(255,255,255,0.22)',
+              width: 36, height: 36, borderRadius: 10,
+              background: 'rgba(255,255,255,0.12)',
+              border: '1px solid rgba(255,255,255,0.18)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              backdropFilter: 'blur(8px)',
-              padding: 4, flexShrink: 0,
+              padding: 3, flexShrink: 0,
             }}>
               <img
                 src={koalaMascot}
@@ -323,35 +314,40 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               />
             </div>
-            <div style={{ minWidth: 0 }}>
-              <div className="flex items-center gap-1.5">
-                <span style={{ fontSize: 13.5, fontWeight: 800, color: '#fff', letterSpacing: '-0.2px' }}>
-                  IA Financeira
-                </span>
-                <span style={{
-                  fontSize: 8.5, fontWeight: 800, padding: '2px 6px', borderRadius: 99,
-                  background: 'rgba(253,230,138,0.18)',
-                  border: '1px solid rgba(253,230,138,0.4)',
-                  color: '#fde68a', letterSpacing: '0.5px',
-                }}>KORA</span>
+            <div style={{ minWidth: 0 }} className="min-w-0">
+              <div
+                style={{
+                  fontSize: 14, fontWeight: 800, color: '#fff',
+                  letterSpacing: '-0.2px', lineHeight: 1.15,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}
+              >
+                Kora IA
               </div>
-              <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.7)', margin: '1px 0 0', fontWeight: 500 }}>
+              <div
+                style={{
+                  fontSize: 10.5, color: 'rgba(255,255,255,0.65)',
+                  fontWeight: 500, marginTop: 1,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}
+              >
                 Análises em tempo real
-              </p>
+              </div>
             </div>
           </div>
-          <div className="flex items-center" style={{ gap: 6 }}>
+
+          {/* Right: actions */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => fetchAgents(true)}
               disabled={refreshing}
               aria-label="Atualizar insights"
               style={{
-                width: 32, height: 32, borderRadius: 10,
-                background: 'rgba(255,255,255,0.12)',
-                border: '1px solid rgba(255,255,255,0.22)',
+                width: 30, height: 30, borderRadius: 9,
+                background: 'rgba(255,255,255,0.10)',
+                border: '1px solid rgba(255,255,255,0.18)',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                backdropFilter: 'blur(8px)',
               }}
             >
               <RefreshCw style={{
@@ -364,10 +360,9 @@ export default function AIInsightsWidget({ onOpenChat }: { onOpenChat: () => voi
               onClick={onOpenChat}
               className="flex items-center gap-1.5"
               style={{
-                height: 32, padding: '0 14px', borderRadius: 99, border: 'none',
+                height: 30, padding: '0 12px', borderRadius: 99, border: 'none',
                 background: '#fff',
                 color: '#5b21b6', fontSize: 12, fontWeight: 800, cursor: 'pointer',
-                boxShadow: '0 6px 16px -4px rgba(0,0,0,0.25)',
               }}
             >
               <MessageCircle className="w-3.5 h-3.5" />
