@@ -31,7 +31,6 @@ export default function ReferralPage() {
 
   const referralLink = `${window.location.origin}/register?ref=${referralCode}`;
   const subscribedCount = referrals.filter(r => r.status === 'subscribed').length;
-  const registeredCount = referrals.filter(r => r.status === 'registered').length;
   const conversionRate = referrals.length > 0 ? Math.round((subscribedCount / referrals.length) * 100) : 0;
   const rewardPct = Math.min(100, (subscribedCount / REWARD_GOAL) * 100);
 
