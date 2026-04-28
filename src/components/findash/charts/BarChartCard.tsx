@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { axisStyle, tooltipStyle, fmt, fmtCompact } from "./_shared";
 
 interface Props {
