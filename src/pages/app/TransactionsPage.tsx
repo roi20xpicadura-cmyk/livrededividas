@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { normalizeTransactionName } from '@/lib/normalizeTransactionName';
 import { getCategoryStyle } from '@/lib/categoryIcons';
+import TransactionIcon from '@/components/app/TransactionIcon';
 
 type Tx = {
   id: string; date: string; description: string; amount: number;
@@ -439,7 +440,6 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                     const displayName = normalizeTransactionName(tx.description) || tx.description;
                     const isIncome = tx.type === 'income';
                     const style = getCategoryStyle(tx.category, isIncome);
-                    const Icon = style.Icon;
                     const amountAbs = Math.abs(group.total);
                     const isLarge = amountAbs >= 500;
                     const isSmall = amountAbs < 100;
@@ -471,15 +471,14 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                             borderBottom: i < groups.length - 1 ? '0.5px solid var(--color-border-weak)' : 'none',
                             cursor: 'pointer',
                           }}>
-                          {/* Icon */}
-                          <div style={{
-                            width: 40, height: 40, borderRadius: 12,
-                            background: style.bg,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexShrink: 0,
-                          }}>
-                            <Icon style={{ width: 20, height: 20, color: style.fg }} />
-                          </div>
+                          {/* Icon — favicon real da marca quando reconhecida, com fallback ao ícone da categoria */}
+                          <TransactionIcon
+                            description={tx.description}
+                            category={tx.category}
+                            isIncome={isIncome}
+                            size={40}
+                            rounded={12}
+                          />
 
                           {/* Description + meta */}
                           <div style={{ flex: 1, minWidth: 0 }}>
