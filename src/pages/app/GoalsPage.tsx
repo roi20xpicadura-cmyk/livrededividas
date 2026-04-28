@@ -242,6 +242,23 @@ export default function GoalsPage() {
       background: 'var(--color-bg-base)',
       paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
     }}>
+      {usingCache && (
+        <div
+          role="status"
+          style={{
+            margin: '8px 16px 0',
+            padding: '8px 12px',
+            borderRadius: 10,
+            background: 'var(--color-warning-soft, #FEF3C7)',
+            border: '1px solid var(--color-warning, #F59E0B)',
+            color: 'var(--color-warning-strong, #92400E)',
+            fontSize: 12,
+            fontWeight: 600,
+          }}
+        >
+          📡 Sem conexão — exibindo valores salvos no dispositivo. Vão sincronizar ao voltar online.
+        </div>
+      )}
       {/* Header */}
       <div style={{
         padding: '14px 20px 0',
