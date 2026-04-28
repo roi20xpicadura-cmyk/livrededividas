@@ -47,6 +47,14 @@ const queryClient = new QueryClient({
 });
 
 function PageSkeleton() {
+  // Evita o flash do LogoLoader fullscreen em navega\u00e7\u00f5es r\u00e1pidas
+  // (chunks j\u00e1 em cache resolvem em < 150ms). S\u00f3 mostra se realmente demorar.
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setShow(true), 220);
+    return () => clearTimeout(t);
+  }, []);
+  if (!show) return null;
   return <LogoLoader />;
 }
 
