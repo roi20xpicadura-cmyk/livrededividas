@@ -527,7 +527,7 @@ export default function TransactionsPage({ profile }: TransactionsPageProps = {}
                                   {tx.category}
                                 </span>
                               )}
-                              {profileType === 'both' && tx.origin && (
+                              {profileType === 'both' && !lockedOrigin && tx.origin && (
                                 <span style={{
                                   display: 'inline-flex', alignItems: 'center', gap: 4,
                                   fontSize: 10, fontWeight: 600,
