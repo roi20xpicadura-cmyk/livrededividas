@@ -786,47 +786,151 @@ export default function OverviewPage() {
       {/* GOALS PREVIEW — personal only */}
       {showPersonal && (
         <motion.div {...stagger(9)}>
-          <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
-            <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text-strong)' }}>Minhas Metas</span>
-            <button onClick={() => navigate('/app/goals')} style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-green-600)', background: 'none', border: 'none', cursor: 'pointer' }}>
+          <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
+            <div className="flex items-center gap-2">
+              <div style={{
+                width: 28, height: 28, borderRadius: 9,
+                background: 'linear-gradient(135deg, hsl(var(--primary) / 0.18), hsl(var(--primary) / 0.06))',
+                border: '1px solid hsl(var(--primary) / 0.25)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Target size={14} style={{ color: 'hsl(var(--primary))' }} strokeWidth={2.4} />
+              </div>
+              <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text-strong)', letterSpacing: '-0.2px' }}>
+                Minhas Metas
+              </span>
+            </div>
+            <button
+              onClick={() => navigate('/app/goals')}
+              style={{
+                fontSize: 12, fontWeight: 800,
+                color: 'hsl(var(--primary))',
+                background: 'hsl(var(--primary) / 0.08)',
+                border: '1px solid hsl(var(--primary) / 0.2)',
+                padding: '5px 11px', borderRadius: 99,
+                cursor: 'pointer',
+              }}
+            >
               Ver todas →
             </button>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide" style={{ paddingLeft: 1, paddingRight: 1 }}>
             {activeGoals.slice(0, 4).map(goal => {
               const pct = Math.min(100, (Number(goal.current_amount || 0) / Number(goal.target_amount)) * 100);
               const obj = OBJECTIVES.find(o => o.key === goal.objective_type);
-              // Cinza neutro p/ metas em estágio inicial (0–40%); âmbar p/ andamento; roxo p/ quase lá.
-              // Vermelho NÃO é usado em meta saudável — só em estados realmente críticos (não cobertos aqui).
-              const barColor = pct >= 75 ? '#7C3AED' : pct >= 40 ? '#f59e0b' : 'var(--color-border-base)';
+              const isComplete = pct >= 100;
+              const isClose = pct >= 75;
+              const isMid = pct >= 40;
+              // Roxo da marca em todos os estágios (intensidade muda)
+              const barColor = isComplete ? '#22c55e' : isClose ? '#7C3AED' : isMid ? '#a855f7' : '#c4b5fd';
+              const labelColor = isComplete ? '#16a34a' : isClose || isMid ? '#7C3AED' : 'var(--color-text-muted)';
               const emoji = obj?.emoji || getGoalEmoji(goal.name);
               return (
-                <motion.div key={goal.id} whileTap={{ scale: 0.97 }} onClick={() => navigate('/app/goals')}
-                  style={{ flexShrink: 0, width: 155, background: 'var(--color-bg-surface)', border: '0.5px solid var(--color-border-weak)', borderRadius: 14, padding: 14, cursor: 'pointer' }}>
-                  <div style={{ fontSize: 24, marginBottom: 10, lineHeight: 1 }}>{emoji}</div>
+                <motion.div
+                  key={goal.id}
+                  whileTap={{ scale: 0.97 }}
+                  whileHover={{ y: -2 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                  onClick={() => navigate('/app/goals')}
+                  style={{
+                    position: 'relative',
+                    flexShrink: 0,
+                    width: 168,
+                    background: 'var(--color-bg-surface)',
+                    border: '1px solid var(--color-border-weak)',
+                    borderRadius: 16,
+                    padding: 14,
+                    cursor: 'pointer',
+                    overflow: 'hidden',
+                    boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 20px -16px rgba(124,58,237,0.25)',
+                  }}
+                >
+                  {/* Top accent */}
+                  <div
+                    aria-hidden
+                    style={{
+                      position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+                      background: `linear-gradient(90deg, ${barColor}, ${barColor}55)`,
+                    }}
+                  />
+                  {/* Emoji chip */}
                   <div style={{
-                    fontSize: 12, fontWeight: 700, color: 'var(--color-text-base)', marginBottom: 4, lineHeight: 1.4,
-                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden', minHeight: 33,
+                    width: 40, height: 40, borderRadius: 12,
+                    background: `linear-gradient(135deg, ${barColor}1f, ${barColor}0a)`,
+                    border: `1px solid ${barColor}33`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 22, lineHeight: 1, marginBottom: 12,
+                  }}>
+                    {emoji}
+                  </div>
+                  <div style={{
+                    fontSize: 13, fontWeight: 800, color: 'var(--color-text-strong)',
+                    marginBottom: 4, lineHeight: 1.3, letterSpacing: '-0.2px',
+                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const,
+                    overflow: 'hidden', minHeight: 34,
                   }}>{goal.name}</div>
                   {/* Current / Target */}
-                  <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginBottom: 8, fontFamily: 'var(--font-mono)', fontWeight: 500 }}>
+                  <div style={{
+                    fontSize: 11, color: 'var(--color-text-muted)',
+                    marginBottom: 10, fontFamily: 'var(--font-mono)', fontWeight: 600,
+                    fontVariantNumeric: 'tabular-nums',
+                  }}>
                     R$ {formatCompact(Number(goal.current_amount || 0))}
                     <span style={{ color: 'var(--color-text-disabled)' }}> / R$ {formatCompact(Number(goal.target_amount))}</span>
                   </div>
-                  <div style={{ height: 4, background: 'var(--color-bg-sunken)', borderRadius: 99, overflow: 'hidden', marginBottom: 5 }}>
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, ease: 'easeOut' }}
-                      style={{ height: '100%', borderRadius: 99, background: barColor }} />
+                  <div style={{
+                    height: 6, background: 'var(--color-bg-sunken)',
+                    borderRadius: 99, overflow: 'hidden', marginBottom: 6,
+                  }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.max(pct, pct > 0 ? 4 : 0)}%` }}
+                      transition={{ duration: 1, ease: 'easeOut' }}
+                      style={{
+                        height: '100%', borderRadius: 99,
+                        background: `linear-gradient(90deg, ${barColor}, ${barColor}cc)`,
+                        boxShadow: pct > 0 ? `0 0 8px ${barColor}80` : 'none',
+                      }}
+                    />
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: barColor }}>{pct.toFixed(0)}%</span>
+                  <div className="flex items-center justify-between">
+                    <span style={{ fontSize: 12, fontWeight: 900, color: labelColor, fontVariantNumeric: 'tabular-nums' }}>
+                      {pct.toFixed(0)}%
+                    </span>
+                    {isComplete && (
+                      <span style={{ fontSize: 9, fontWeight: 800, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        ✓ Concluída
+                      </span>
+                    )}
+                  </div>
                 </motion.div>
               );
             })}
-            <motion.div whileTap={{ scale: 0.95 }} onClick={() => navigate('/app/goals')}
-              style={{ flexShrink: 0, width: 140, background: 'var(--color-bg-sunken)', border: '1.5px dashed var(--color-border-base)', borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '20px 12px', cursor: 'pointer' }}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--color-green-50)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <PlusCircle size={18} color="var(--color-green-600)" />
+            <motion.div
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ y: -2 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+              onClick={() => navigate('/app/goals')}
+              style={{
+                flexShrink: 0, width: 130,
+                background: 'linear-gradient(135deg, hsl(var(--primary) / 0.06), hsl(var(--primary) / 0.02))',
+                border: '1.5px dashed hsl(var(--primary) / 0.35)',
+                borderRadius: 16,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                gap: 8, padding: '20px 12px', cursor: 'pointer',
+              }}
+            >
+              <div style={{
+                width: 38, height: 38, borderRadius: 12,
+                background: 'linear-gradient(135deg, hsl(var(--primary)), #6d28d9)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 6px 14px -4px hsl(var(--primary) / 0.5)',
+              }}>
+                <PlusCircle size={20} color="#fff" strokeWidth={2.4} />
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', textAlign: 'center' }}>Nova meta</span>
+              <span style={{ fontSize: 11.5, fontWeight: 800, color: 'hsl(var(--primary))', textAlign: 'center', letterSpacing: '-0.1px' }}>
+                Nova meta
+              </span>
             </motion.div>
           </div>
         </motion.div>
