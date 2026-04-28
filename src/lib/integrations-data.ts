@@ -45,8 +45,6 @@ export const INTEGRATIONS: IntegrationDef[] = [
   { id: 'pagseguro', name: 'PagSeguro', domain: 'pagseguro.com.br', color: '#00B140', description: 'Conecte o PagSeguro e acompanhe todos os recebimentos.', imports: ['Recebimentos', 'Extrato', 'Maquininha'], status: 'available', category: 'pagamentos', method: 'webhook', plan: 'pro' },
   { id: 'stripe', name: 'Stripe', domain: 'stripe.com', color: '#635BFF', description: 'Importe receitas de assinaturas e pagamentos do Stripe.', imports: ['Receitas', 'Assinaturas', 'Reembolsos'], status: 'available', category: 'pagamentos', method: 'webhook', plan: 'pro' },
   { id: 'paypal', name: 'PayPal', domain: 'paypal.com', color: '#003087', description: 'Sincronize recebimentos e pagamentos do PayPal.', imports: ['Recebimentos', 'Pagamentos', 'Extrato'], status: 'available', category: 'pagamentos', method: 'webhook', plan: 'pro' },
-  { id: 'pix', name: 'Pix (Banco Central)', domain: 'bcb.gov.br', color: '#32BCAD', description: 'Importe recebimentos via Pix direto de qualquer banco brasileiro.', imports: ['Recebimentos Pix', 'QR Codes'], status: 'coming_soon', category: 'pagamentos', method: 'api_key' },
-  { id: 'cielo', name: 'Cielo', domain: 'cielo.com.br', color: '#004B8D', description: 'Conecte sua maquininha Cielo e importe todas as vendas.', imports: ['Vendas', 'Recebíveis', 'Antecipações'], status: 'coming_soon', category: 'pagamentos', method: 'api_key' },
 
   // ─── INFOPRODUTOS ───
   { id: 'hotmart', name: 'Hotmart', domain: 'hotmart.com', color: '#F04E23', description: 'Importe vendas, comissões e afiliados da Hotmart automaticamente.', imports: ['Vendas', 'Comissões', 'Reembolsos', 'Afiliados'], status: 'available', category: 'infoprodutos', method: 'webhook', plan: 'pro' },
