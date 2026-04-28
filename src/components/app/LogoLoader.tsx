@@ -6,10 +6,10 @@ interface LogoLoaderProps {
   label?: string;
 }
 
-export default function LogoLoader({ fullScreen = false, label }: LogoLoaderProps) {
+export default function LogoLoader({ fullScreen = true, label }: LogoLoaderProps) {
   const containerClass = fullScreen
     ? 'fixed inset-0 z-[9998] flex flex-col items-center justify-center'
-    : 'min-h-[60vh] w-full flex flex-col items-center justify-center';
+    : 'absolute inset-0 w-full h-full min-h-screen flex flex-col items-center justify-center';
 
   return (
     <div
