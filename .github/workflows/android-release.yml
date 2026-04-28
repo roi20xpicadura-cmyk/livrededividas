@@ -54,13 +54,44 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
-          test -n "$KEYSTORE_BASE64" || { echo "::error::Secret ANDROID_KEYSTORE_BASE64 não configurado"; exit 1; }
-          test -n "$KEYSTORE_PASSWORD" || { echo "::error::Secret ANDROID_KEYSTORE_PASSWORD não configurado"; exit 1; }
-          test -n "$KEY_ALIAS" || { echo "::error::Secret ANDROID_KEY_ALIAS não configurado"; exit 1; }
-          printf '%s' "$KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
-          test -s android/app/release.keystore || { echo "::error::Keystore vazio ou inválido"; exit 1; }
-          keytool -list -keystore android/app/release.keystore -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
+          set +e
+          if [ -z "$KEYSTORE_BASE64" ]; then echo "::error::Secret ANDROID_KEYSTORE_BASE64 não configurado"; exit 1; fi
+          if [ -z "$KEYSTORE_PASSWORD" ]; then echo "::error::Secret ANDROID_KEYSTORE_PASSWORD não configurado"; exit 1; fi
+          if [ -z "$KEY_ALIAS" ]; then echo "::error::Secret ANDROID_KEY_ALIAS não configurado"; exit 1; fi
+
+          echo "Tamanho do secret base64 (chars): $(printf '%s' "$KEYSTORE_BASE64" | wc -c)"
+
+          mkdir -p android/app
+          # -i ignora caracteres inválidos (newlines, espaços) que costumam vir colados no secret
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d -i > android/app/release.keystore 2> /tmp/b64.err
+          B64_RC=$?
+          if [ $B64_RC -ne 0 ] || [ ! -s android/app/release.keystore ]; then
+            echo "::error::Falha ao decodificar o keystore (rc=$B64_RC). O secret ANDROID_KEYSTORE_BASE64 provavelmente não é base64 válido."
+            echo "Stderr do base64:"; cat /tmp/b64.err || true
+            exit 1
+          fi
+
+          echo "Keystore decodificado:"
           ls -lh android/app/release.keystore
+          file android/app/release.keystore || true
+
+          # Lista TODOS os aliases (sem filtrar) para diagnóstico, sem expor a senha
+          echo "Tentando listar aliases do keystore..."
+          keytool -list -v -keystore android/app/release.keystore -storepass "$KEYSTORE_PASSWORD" 2> /tmp/kt.err | grep -E "Alias name|Keystore type|Your keystore contains" || true
+          KT_RC=${PIPESTATUS[0]}
+          if [ $KT_RC -ne 0 ]; then
+            echo "::error::keytool falhou (rc=$KT_RC). Provavelmente a senha do keystore (ANDROID_KEYSTORE_PASSWORD) está errada ou o arquivo não é um JKS/PKCS12 válido."
+            cat /tmp/kt.err || true
+            exit 1
+          fi
+
+          # Verifica especificamente o alias informado
+          if ! keytool -list -keystore android/app/release.keystore -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null 2> /tmp/kt2.err; then
+            echo "::error::Alias '$KEY_ALIAS' não encontrado no keystore (ou senha incorreta). Veja a lista de aliases acima e ajuste o secret ANDROID_KEY_ALIAS."
+            cat /tmp/kt2.err || true
+            exit 1
+          fi
+          echo "✅ Keystore e alias validados."
 
       - name: Configure signing in build.gradle
         run: |
