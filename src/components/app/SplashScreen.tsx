@@ -1,34 +1,46 @@
-import { motion } from 'framer-motion';
-import { BarChart3 } from 'lucide-react';
+import { forwardRef } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
+import koraIcon from '@/assets/korafinance-icon.png';
 
-export default function SplashScreen() {
+const SplashScreen = forwardRef<HTMLDivElement>(function SplashScreen(_, ref) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <div
+      ref={ref}
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
       // Background hardcoded como fallback caso CSS vars não tenham carregado.
-      style={{ background: 'var(--color-bg-base, #0b0f14)' }}
+      style={{ background: 'var(--color-bg-base, hsl(var(--background)))' }}
     >
       <motion.div
-        initial={{ scale: 0.7, opacity: 0 }}
+        initial={{ scale: 0.96, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
         className="flex flex-col items-center"
         style={{ gap: 16 }}
       >
         <motion.div
-          initial={{ rotate: -10 }}
-          animate={{ rotate: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="flex items-center justify-center"
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.32, ease: 'easeOut' }}
+          className="relative flex items-center justify-center overflow-hidden"
           style={{
             width: 72,
             height: 72,
             borderRadius: 'var(--radius-2xl)',
             background: 'linear-gradient(135deg, var(--color-green-500), var(--color-green-700))',
-            boxShadow: '0 12px 40px rgba(124, 58, 237, 0.3)',
+            boxShadow: '0 12px 40px hsl(var(--primary) / 0.26), 0 0 0 1px var(--color-border-base)',
           }}
         >
-          <BarChart3 className="text-white" style={{ width: 36, height: 36 }} />
+          <img
+            src={koraIcon}
+            alt=""
+            draggable={false}
+            decoding="async"
+            width={72}
+            height={72}
+            style={{ width: 72, height: 72, objectFit: 'cover' }}
+          />
         </motion.div>
 
         <div className="flex items-center" style={{ gap: 4 }}>
@@ -38,7 +50,7 @@ export default function SplashScreen() {
             transition={{ delay: 0.3, duration: 0.4 }}
             style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-text-strong)' }}
           >
-            KoraFinance
+            Kora
           </motion.span>
           <motion.span
             initial={{ opacity: 0, x: 10 }}
@@ -46,7 +58,7 @@ export default function SplashScreen() {
             transition={{ delay: 0.4, duration: 0.4 }}
             style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-green-600)' }}
           >
-            Pro
+            Finance
           </motion.span>
         </div>
 
@@ -71,7 +83,7 @@ export default function SplashScreen() {
         {[0, 1, 2].map(i => (
           <motion.div
             key={i}
-            animate={{ scale: [1, 1.3, 1], opacity: [0.3, 1, 0.3] }}
+            animate={reduceMotion ? { opacity: 0.65 } : { scale: [1, 1.3, 1], opacity: [0.3, 1, 0.3] }}
             transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
             style={{
               width: 6,
@@ -84,4 +96,6 @@ export default function SplashScreen() {
       </motion.div>
     </div>
   );
-}
+});
+
+export default SplashScreen;
