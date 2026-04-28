@@ -14,7 +14,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppErrorBoundary } from "@/components/app/ErrorBoundary";
-import { AnimatePresence } from "framer-motion";
 import SplashScreen from "@/components/app/SplashScreen";
 import SWUpdateBanner from "@/components/app/SWUpdateBanner";
 import LogoLoader from "@/components/app/LogoLoader";
@@ -145,9 +144,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <SWUpdateBanner />
-        <AnimatePresence>
-          {showSplash && <SplashScreen key="splash" />}
-        </AnimatePresence>
+        {showSplash && <SplashScreen />}
          <BrowserRouter>
             <AuthenticatedRoutePrefetcher />
            <Suspense fallback={<PageSkeleton />}>
