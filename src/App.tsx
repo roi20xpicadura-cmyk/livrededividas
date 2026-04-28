@@ -103,11 +103,30 @@ const App = () => {
 
   useEffect(() => {
     if (!showSplash) return;
-    // Splash normal: 1.8s. Fail-safe absoluto: 3.5s — se algo segurar o
-    // unmount (raro), garante que o usuário nunca fica preso na splash.
-    const t1 = setTimeout(() => setShowSplash(false), 1800);
-    const t2 = setTimeout(() => setShowSplash(false), 3500);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    // Esconde a splash assim que a primeira pintura acontecer:
+    //   1) rAF aninhado garante que estamos depois do commit + paint do React.
+    //   2) Se o navegador estiver "throttled" (aba em background), um fail-safe
+    //      absoluto de 3.5s evita o usuário ficar preso.
+    let raf1 = 0;
+    let raf2 = 0;
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      setShowSplash(false);
+    };
+
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(finish);
+    });
+
+    const failSafe = setTimeout(finish, 3500);
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      clearTimeout(failSafe);
+    };
   }, [showSplash]);
 
   return (

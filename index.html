@@ -76,22 +76,35 @@
     <div id="initial-splash" aria-hidden="true"><div class="mark"></div></div>
     <div id="root"></div>
     <script>
-      // Remove o splash inline assim que o React fizer a primeira render.
-      // MutationObserver evita race condition com o lazy boot do main.tsx.
+      // Remove o splash inline com base em eventos REAIS de pintura, não timeout:
+      //   1) MutationObserver detecta o primeiro commit do React em #root.
+      //   2) Dois requestAnimationFrame aninhados garantem que o frame com a UI
+      //      já foi pintado antes de esconder o splash (evita flash branco).
+      //   3) Fail-safe de 6s para abas em background ou tabs throttled.
       (function () {
         var splash = document.getElementById('initial-splash');
         var root = document.getElementById('root');
         if (!splash || !root) return;
+        var hidden = false;
         var hide = function () {
+          if (hidden) return;
+          hidden = true;
           splash.classList.add('is-hidden');
           setTimeout(function () { splash.remove(); }, 280);
         };
-        if (root.children.length > 0) { hide(); return; }
+        var hideAfterPaint = function () {
+          // Dois rAF: o primeiro callback roda ANTES do paint, o segundo
+          // garante que o frame com a UI hidratada já foi para a tela.
+          requestAnimationFrame(function () {
+            requestAnimationFrame(hide);
+          });
+        };
+        if (root.children.length > 0) { hideAfterPaint(); return; }
         var obs = new MutationObserver(function () {
-          if (root.children.length > 0) { obs.disconnect(); hide(); }
+          if (root.children.length > 0) { obs.disconnect(); hideAfterPaint(); }
         });
         obs.observe(root, { childList: true });
-        // Fail-safe: nunca prender o usuário no splash.
+        // Fail-safe: tab em background pode travar rAF/MutationObserver.
         setTimeout(function () { obs.disconnect(); hide(); }, 6000);
       })();
     </script>
