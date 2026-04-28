@@ -1131,7 +1131,10 @@ export default function OverviewPage() {
                   </div>
                 </div>
                 <div style={{
-                  fontSize: 15, fontWeight: 900, letterSpacing: '-0.3px', fontVariantNumeric: 'tabular-nums', flexShrink: 0,
+                  fontSize: 'clamp(13px, 4vw, 15px)',
+                  fontWeight: 900, letterSpacing: '-0.02em',
+                  fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum"',
+                  flexShrink: 0, whiteSpace: 'nowrap',
                   color: tx.type === 'income' ? 'var(--color-success-text)' : 'var(--color-danger-text)',
                 }}>
                   {showValues
